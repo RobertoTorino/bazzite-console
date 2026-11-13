@@ -1,3 +1,8 @@
+Changelog: 13-11-2026 22:59:26
+
+Fixed. tools/requirements-dev.txt names Pillow, which the test of tools/sync_icons.py needs: CI's tools job installs
+only that file and failed on the import.
+
 Changelog: 13-11-2026 22:54:30
 
 Fixed. The wiki's chapters of Webcam, Controller and Remote Play show the app's icon above the title, as every other
