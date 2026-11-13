@@ -1,0 +1,12 @@
+Changelog: 11-11-2026
+
+Release 0.2.0. The diagnostics: ported from the BC250 Bazzite Suite's BC-250 Bazzite Test 2.0.1 (the window, the test
+runner, the results and the history, and test-bazzite.sh). PS5 versions of the hardware tests: platform (DMI
+PlayStation 5, the ps5-linux kernel's PS5 drivers, the loader's bzImage), GPU governor and clock scaling (the kernel's
+ps5-gpufreq devfreq instead of the BC-250's SMU governor), CU count (36), sensors (ps5_fan), IOMMU (information only),
+mitigations (advice), CPU cores (8C/16T), CPU power (no cpufreq; ps5-linux-tools' boost), suspend (s2idle), display
+(the PS5 HDMI state), VRAM (/boot/efi/vram.txt), throttling, HDMI-CEC (ps5-cec), Wi-Fi (the IW620 on moal), updates
+on a flattened image (dnf). Dropped: CPU voltage (the BC-250's SuperIO). Later, with PS5 baselines: the stress test,
+the benchmark, the system score and the game page (ported, hidden). The core gets the Wi-Fi reader (wifi.py); a
+switched-off Wi-Fi while a cable network is up is a note, not a warning.
+

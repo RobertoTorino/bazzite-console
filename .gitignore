@@ -1,0 +1,42 @@
+# Each app (and core/, portal/) has its own .gitignore for what is specific to it; this one covers the whole repo.
+__pycache__/
+*.pyc
+.pytest_cache/
+/.idea/
+.vscode/
+*.log
+
+# Local venvs: per app (python/, _python/ as in the old repos) and the suite-wide one. A venv only works on the
+# OS that created it (bin/ on Linux, Scripts/ on Windows), so never share one between Linux and Windows.
+python/
+_python/
+/.venv/
+/.venv-*/
+
+# MkDocs output, and the cache of its privacy plugin (the fonts it downloads at build time), which lands in the
+# folder mkdocs is run from: anywhere, not only the root (29-10-2026: tools/.cache was committed)
+/site/
+/nexus/site/
+/bc250-bazzite/site/
+/windows-portable/site/
+.cache/
+/bc250-bazzite/.cache/
+
+# The design panel's mock while `mkdocs serve` runs (tools/mkdocs/design_panel.py)
+.design-mock.json
+
+# OS and editor droppings (Linux/KDE, Windows, macOS)
+*~
+*.swp
+.directory
+.Trash-*/
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Windows' NUL device written as a real file by a Git Bash command meant for cmd (podman machine ssh's known-hosts
+# file): git cannot add it, "unable to index file 'NUL'" (06-11-2026)
+NUL
+*.dmp

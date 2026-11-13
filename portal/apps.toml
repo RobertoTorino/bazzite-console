@@ -1,0 +1,235 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Each [apps.<name>] table pins one release of a suite app. The required app is always installed and listed first.
+
+[apps.bazzite]
+name = "Bazzite Test"
+summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
+tag = "ps5-bazzite-v0.1.0"
+sha256 = ""
+required = true
+changes_board = false
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bazzite-test"]
+launch = [["Open", "~/.local/bin/bazzite-test"]]
+
+[apps.rpcs3]
+name = "RPCS3 Manager"
+summary = "Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode."
+tag = "ps5-rpcs3-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-rpcs3-manager"]
+launch = [["Open", "~/.local/bin/ps5-rpcs3-manager"]]
+
+[apps.remoteplay]
+name = "Remote Play"
+summary = "Find, wake, and register PS4 and PS5 consoles on the network, and stream Remote Play."
+tag = "ps5-remoteplay-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-remoteplay"]
+launch = [["Open", "~/.local/bin/ps5-remoteplay"]]
+
+[apps.clb]
+name = "Xbox Remote Play"
+summary = "Stream Xbox consoles or Xbox Cloud Gaming after signing in with a Microsoft account."
+tag = "ps5-clb-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-xbox-remoteplay"]
+launch = [["Open", "~/.local/bin/ps5-xbox-remoteplay"]]
+
+[apps.shadps4]
+name = "shadPS4 Manager"
+summary = "Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode."
+tag = "ps5-shadps4-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-shadps4-manager"]
+launch = [["Open", "~/.local/bin/ps5-shadps4-manager"]]
+
+[apps.datstation]
+name = "Bazzite DatStation"
+summary = "Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news."
+tag = "ps5-datstation-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-datstation"]
+launch = [["Open", "~/.local/bin/ps5-datstation"]]
+
+[apps.ppsspp]
+name = "PPSSPP Manager"
+summary = "Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode."
+tag = "ps5-ppsspp-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-ppsspp-manager"]
+launch = [["Open", "~/.local/bin/ps5-ppsspp-manager"]]
+
+[apps.pcsx2]
+name = "PCSX2 Manager"
+summary = "Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode."
+tag = "ps5-pcsx2-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-pcsx2-manager"]
+launch = [["Open", "~/.local/bin/ps5-pcsx2-manager"]]
+
+[apps.vita3k]
+name = "Vita3K Manager"
+summary = "Install Vita3K for PS Vita games and add installed titles to Game Mode."
+tag = "ps5-vita3k-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-vita3k-manager"]
+launch = [["Open", "~/.local/bin/ps5-vita3k-manager"]]
+
+[apps.xenia]
+name = "Xenia Manager"
+summary = "Install Xenia Canary for Xbox 360 games and add games to Game Mode."
+tag = "ps5-xenia-v0.2.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-xenia-manager"]
+launch = [["Open", "~/.local/bin/ps5-xenia-manager"]]
+
+[apps.sftp]
+name = "SFTP Tools"
+summary = "Transfer files over SFTP and manage SSH servers on Bazzite hosts."
+tag = "ps5-sftp-v0.1.0"
+sha256 = ""
+required = false
+changes_board = true
+board_change = "Starting or configuring an SSH server changes the local or remote Bazzite host. Starting the local server enables it at boot and may open the firewall for SSH. Review access and firewall rules before enabling it."
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-sftp-tools"]
+launch = [["Open", "~/.local/bin/ps5-sftp-tools"]]
+
+[apps.webcam]
+name = "Webcam"
+summary = "Use supported Sony PlayStation cameras as webcams on Bazzite."
+tag = "ps5-webcam-v0.1.0"
+sha256 = ""
+required = false
+changes_board = true
+board_change = "Allow access installs a system-wide udev rule for supported camera identifiers. A per-user service loads camera firmware when the camera connects. The udev rule is removed when the app is uninstalled."
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-webcam"]
+launch = [["Open", "~/.local/bin/ps5-webcam"]]
+
+[apps.controller]
+name = "Controller"
+summary = "Manage DualSense and DualSense Edge controllers on Bazzite."
+tag = "ps5-controller-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-controller"]
+launch = [["Open", "~/.local/bin/ps5-controller"]]
+
+[apps.ssd]
+name = "SSD Check"
+summary = "Inspect drive health and information exposed by Bazzite; run an optional filesystem speed test."
+tag = "ps5-ssd-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-ssd-check"]
+launch = [["Open", "~/.local/bin/ps5-ssd-check"]]
+
+[apps.overlay]
+name = "System Overlay"
+summary = "A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values."
+tag = "ps5-overlay-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-system-overlay"]
+launch = [["Open", "~/.local/bin/ps5-system-overlay"]]
+
+[apps.fan]
+name = "Fan Control"
+summary = "The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature."
+tag = "ps5-fan-v0.1.0"
+sha256 = ""
+required = false
+changes_board = true
+board_change = """
+The thermal guard is a root system service, ps5-fan-control-guard.service with its files in /etc/ps5-fan-control,
+that reads the temperatures every two seconds. At the cool limit it sets the fan to full speed in sysfs (ps5_fan's
+full mode) and turns the CPU boost off (ps5_control --boost off); at the shutdown limit, held for the set number of
+seconds, it powers the PS5 off cleanly with systemctl poweroff. The service stays enabled across reboots and power
+offs. The fan setting is written in memory only, and the guard puts the saved mode back when it re-arms or stops.
+Nothing is written to the firmware or the kernel's arguments. Turn off disables the service and removes its files;
+the fan is back on its previous mode, and the boost, once the guard turned it off, stays off until you turn it on
+again or reboot.
+"""
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-fan-control"]
+launch = [["Open", "~/.local/bin/ps5-fan-control"]]
+
+[apps.cec]
+name = "HDMI CEC Manager"
+summary = "Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC."
+tag = "ps5-cec-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-hdmi-cec"]
+launch = [["Open", "~/.local/bin/ps5-hdmi-cec"]]

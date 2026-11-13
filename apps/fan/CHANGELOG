@@ -1,0 +1,8 @@
+Changelog: 11-11-2026
+
+Release 0.1.0. First PS5 version, ported from the BC250 Bazzite Suite's BC-250 Fan Control 2.0.1. Watches the SoC
+(ps5_fan MainSoC), the CPU (k10temp Tctl) and, on kernel 7.3.1 and later, the GPU (amdgpu ps5_sensors). The guard's
+cool step uses ps5_fan's full mode (pwm1_enable 0) and turns the CPU boost off with ps5-linux-tools' ps5_control
+instead of the BC-250's SuperIO channels and GPU governor; no stopped-fan check, the PS5's fan reports no RPM.
+Defaults follow the kernel: warn at 85 °C (ps5_gpufreq temp_limit), cool at 88 °C (after the curve's full duty at
+87 °C, before ps5_fan's emergency at 90 °C), shut down at 95 °C held for 10 s.
