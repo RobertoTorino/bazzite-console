@@ -91,7 +91,10 @@ PY
         args+=(--bundle "$WORK/bundle")
     fi
     if [[ "$app" == remoteplay ]]; then
-        command -v maturin >/dev/null || {
+        # maturin: on the PATH, or in the virtual environment of the Python used here (requirements-dev.txt).
+        MATURIN=$(command -v maturin || true)
+        [[ -n "$MATURIN" || ! -x "$(dirname "$PY")/maturin" ]] || MATURIN="$(dirname "$PY")/maturin"
+        [[ -n "$MATURIN" ]] || {
             echo "maturin is required to build the Remote Play release wheel." >&2
             exit 1
         }
@@ -102,7 +105,8 @@ PY
         mkdir "$WORK/wheel"
         (
             cd "$SUITE/apps/remoteplay/native"
-            PS5_FFMPEG_DIR="$ffmpeg_dir" maturin build --release --features decoder --out "$WORK/wheel"
+            PS5_FFMPEG_DIR="$ffmpeg_dir" "$MATURIN" build --release --locked --compatibility linux \
+                --features python,pyo3/extension-module,decoder --out "$WORK/wheel"
         )
         PS5_NATIVE_WHEEL_DIR="$WORK/wheel" "$PY" "$SUITE/tools/build_release.py" "${args[@]}"
     else

@@ -19,7 +19,6 @@ export QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}
 "$PY" "$SUITE/tools/check_manifest.py"
 "$PY" -m pytest -q "$SUITE/tools/tests"
 "$PY" -m pytest -q "$SUITE/dev/dash/tests"
-for app in demo itests; do
+for app in demo itests nrt sounds deps; do
     "$PY" -m pytest -q --import-mode=importlib "$SUITE/dev/$app/tests"
 done
-"$PY" -m pytest -q "$SUITE/dev/deps/tests/test_bazzite.py"

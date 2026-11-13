@@ -1,0 +1,13 @@
+Changelog: 13-11-2026 21:54:16
+
+Fixed. The catalog of the Bazzite Console Suite knows the suite's three new apps and what they need: System Overlay,
+Fan Control and HDMI CEC Manager with their PyQt6, pkexec, systemctl and notify-send for Fan Control's thermal guard,
+systemctl and cec-ctl (v4l-utils, which Fix can layer) for HDMI CEC Manager, and PyQt6-Charts for Bazzite Test, which
+its requirements.txt names. An installed app the catalog did not list was not checked at all. New in the catalog too:
+the FFmpeg inside Remote Play's native core. The check for it asked a module that is not this suite's
+(bazzite_console_link_core); it asks ps5_remoteplay_core, the core Remote Play imports, in the app's own venv. The
+tests are this suite's again: 31 of them still asked for the tools, apps and names of the suite the app came from
+(stress-ng, setpci, flashrom, Decky Loader, Sony's firmware lists, "nexus-suite") and failed. They read this suite's
+catalog now, and the checks it has no tool for (a tool that needs root, one of two commands, flashrom's internal
+programmer, Homebrew before rpm-ostree, Decky and Sony's lists) run on entries the tests make themselves.
+

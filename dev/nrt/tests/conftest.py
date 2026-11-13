@@ -32,3 +32,15 @@ def settings_in_a_temp_folder(tmp_path):
     """The .ini settings in a temp folder: no test reads or moves the user's own (those of the earlier name too)."""
     from PyQt6.QtCore import QSettings
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "config"))
+
+
+@pytest.fixture(autouse=True)
+def plain_tags_for_the_fixture_suites(monkeypatch):
+    """The tests' suites without a TAG_PREFIX tag <app>-v<x.y.z>, and the tool reads them with this checkout's
+    manifest tools (plan.check_manifest), which ask for this suite's ps5-: here they take a tag with or without."""
+    import re
+
+    from nexus_release_tool import plan
+    monkeypatch.setattr(plan.check_manifest.manifest, "_TAG",
+                        re.compile(r"^(?:ps5-)?(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$"))
+    monkeypatch.setattr(plan.check_manifest, "_PORTAL_TAG", re.compile(r"^(?:ps5-)?portal-v(\d+\.\d+\.\d+)$"))

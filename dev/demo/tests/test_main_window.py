@@ -50,7 +50,7 @@ def test_without_a_release_in_downloads_the_suite_in_the_checkout_is_used(qapp, 
 
     assert window.release_dir == main_window.SUITE_IN_CHECKOUT == main_window.CHECKOUT
     assert "using the suite in this checkout" in window.release_status.text()
-    assert window.app_choice.count() > 5 and window._selected_app().key == "rpcs3"
+    assert window.app_choice.count() > 5 and window._selected_app().key == "overlay"
     window.close()
 
 

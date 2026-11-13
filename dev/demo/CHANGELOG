@@ -1,0 +1,6 @@
+Changelog: 13-11-2026 21:38:35
+
+Fixed. The test of the window on the suite in the checkout expects System Overlay as the app chosen first: the window
+prefers it when the suite has it, and the suite's portal/apps.toml lists it again. The test still expected RPCS3, the
+first app of the list, and stopped tools/ci-local.sh.
+

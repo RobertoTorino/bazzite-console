@@ -1,3 +1,18 @@
+Changelog: 13-11-2026 21:55:19
+
+Fixed. tools/ci-local.sh runs every test of the development apps: Nexus Release Tool's and Nexus Sound Lab's, which
+it left out, and all of Nexus Deps's, of which it ran one file. Nexus Release Tool's and Nexus Deps's had gone stale
+unnoticed since the suite got its own tooling back (58 and 31 tests failing); their CHANGELOGs say what was wrong.
+
+Changelog: 13-11-2026 21:45:19
+
+Fixed. tools/tag-release.sh builds Remote Play's release. It built the native wheel with --features decoder alone,
+which replaces the features pyproject.toml names, so maturin made cffi bindings instead of the Python module and
+stopped ("only supports one of the following syntax: #define PACKET_LOSS_MAX"). It now passes python,
+pyo3/extension-module and decoder, with --locked and --compatibility linux. It also asked for maturin on the PATH,
+where the development machine has it only in the virtual environment (apps/remoteplay/requirements-dev.txt): it takes
+that one when the PATH has none.
+
 Changelog: 13-11-2026 21:18:02
 
 Fixed. Nexus Release Tool's Commit step works again: it runs tools/fix-modes.sh after git add, and the script did not

@@ -61,6 +61,18 @@ launchers = ["~/.local/bin/ps5-controller"]
 name = "SSD Check"
 launchers = ["~/.local/bin/ps5-ssd-check"]
 
+[app.overlay]
+name = "System Overlay"
+launchers = ["~/.local/bin/ps5-system-overlay"]
+
+[app.fan]
+name = "Fan Control"
+launchers = ["~/.local/bin/ps5-fan-control"]
+
+[app.cec]
+name = "HDMI CEC Manager"
+launchers = ["~/.local/bin/ps5-hdmi-cec"]
+
 [[dependency]]
 name = "PyQt6"
 description = "The Qt widget toolkit used by every app and the portal."
@@ -123,6 +135,26 @@ specifier = ">=6.11,<7"
 
 [[dependency.source]]
 owner = "ssd"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "overlay"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "fan"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "cec"
+specifier = ">=6.11,<7"
+
+[[dependency]]
+name = "PyQt6-Charts"
+description = "The Qt charts used for Bazzite Test's graphs."
+
+[[dependency.source]]
+owner = "bazzite"
 specifier = ">=6.11,<7"
 
 [[dependency]]
@@ -208,6 +240,11 @@ owner = "webcam"
 usage = "Install or remove the camera udev rule."
 need = "required"
 
+[[tool.source]]
+owner = "fan"
+usage = "Turn the thermal guard on and off, and change it."
+need = "required"
+
 [[tool]]
 name = "udevadm"
 description = "Reloads and triggers device rules after Webcam installs a rule."
@@ -220,13 +257,23 @@ need = "required"
 
 [[tool]]
 name = "systemctl"
-description = "Controls the optional local SSH server."
+description = "Controls system and user services."
 executables = ["systemctl"]
 
 [[tool.source]]
 owner = "sftp"
 usage = "Start or stop the local SSH server."
 need = "optional"
+
+[[tool.source]]
+owner = "fan"
+usage = "Read the thermal guard's service; the guard powers the PS5 off with it at the shutdown limit."
+need = "required"
+
+[[tool.source]]
+owner = "cec"
+usage = "Start and stop the watcher that follows the TV, and reload Valve's CEC daemon."
+need = "required"
 
 [[tool]]
 name = "firewall-cmd"
@@ -240,12 +287,17 @@ need = "optional"
 
 [[tool]]
 name = "notify-send"
-description = "Shows Controller's optional desktop notifications."
+description = "Shows desktop notifications."
 executables = ["notify-send"]
 
 [[tool.source]]
 owner = "controller"
 usage = "Show controller status notifications."
+need = "optional"
+
+[[tool.source]]
+owner = "fan"
+usage = "The thermal guard's warning on the desktop before it cools or shuts down."
 need = "optional"
 
 [[tool]]
@@ -257,3 +309,26 @@ executables = ["paplay"]
 owner = "sftp"
 usage = "Play connection and transfer sounds."
 need = "optional"
+
+[[tool]]
+name = "cec-ctl"
+rpm = "v4l-utils"
+description = "Sends and reads HDMI-CEC messages through the kernel's CEC adapters (v4l-utils). Part of Bazzite."
+executables = ["cec-ctl"]
+
+[[tool.source]]
+owner = "cec"
+usage = "Every message to the TV: power, input and the remote's keys."
+need = "required"
+
+[[tool]]
+name = "FFmpeg"
+description = "The audio and video codec library. Remote Play carries its own inside the app's native core, so nothing is installed on the system for it; checked by asking the installed core which version it holds."
+executables = []
+locations = ["~/.local/share/ps5-remoteplay/venv/bin/python"]
+probe = "console-link-ffmpeg"
+
+[[tool.source]]
+owner = "remoteplay"
+usage = "Decodes the stream's picture and sound; without it there is no stream. It comes with the app: install the app again through the portal when it is missing."
+need = "required"

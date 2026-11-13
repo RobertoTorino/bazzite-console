@@ -12,14 +12,20 @@ import pytest
 
 from nexus_deps import CATALOG, LOGO_PATH
 from nexus_deps.dependencies import (
-    App, DependencyCatalogError, DependencyCheckError, DependencyStatus, EnvironmentVersion, ToolStatus,
-    Vulnerability, check_dependencies, check_tools, environment_versions, find_executable, installed_environments,
-    known_vulnerabilities, latest_pypi_version, launcher_python, load_apps, load_catalog, load_tools, satisfies, too_old,
-    tool_need,
+    App, Dependency, DependencyCatalogError, DependencyCheckError, DependencySource, DependencyStatus,
+    EnvironmentVersion, ExternalTool, ToolSource, ToolStatus, Vulnerability, check_dependencies, check_tools,
+    environment_versions, find_executable, installed_environments, known_vulnerabilities, latest_pypi_version,
+    launcher_python, load_apps, load_catalog, load_tools, satisfies, too_old, tool_need,
 )
 
 SUITE = Path(__file__).resolve().parents[3]
 PREFIX = "nexus_deps.dependencies"
+TOOLS = {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "paplay", "cec-ctl", "FFmpeg"}
+# Tools of the kinds this suite's catalog has none of, for the checks every catalog may ask for: one of two commands,
+# and a flashrom that must have the internal programmer.
+SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("bazzite", "Internet speed test."),))
+FLASHROM = ExternalTool("flashrom", ("flashrom",), (ToolSource("bazzite", "Reads the firmware."),),
+                        ("~/flashrom/usr/bin/flashrom",), "flashrom-internal")
 
 
 def NO_CVES(_name, _version, _agent):
@@ -69,12 +75,12 @@ def test_catalog_lists_python_and_external_dependencies():
     tools = load_tools(CATALOG)
 
     assert {dependency.name for dependency in dependencies} == {
-        "PyQt6", "pygame-ce", "aiortc", "cryptography", "paramiko",
+        "PyQt6", "PyQt6-Charts", "pygame-ce", "aiortc", "cryptography", "paramiko",
     }
     pyqt = next(dependency for dependency in dependencies if dependency.name == "PyQt6")
     assert {source.owner for source in pyqt.sources} >= {"portal", "bazzite"}
     assert "package" not in {source.owner for source in pyqt.sources}   # Nexus Deps runs in the checkout's venv
-    assert {tool.name for tool in tools} == {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "paplay"}
+    assert {tool.name for tool in tools} == TOOLS
     assert next(tool for tool in tools if tool.name == "pkexec").executables == ("pkexec",)
     assert all(item.description for item in [*dependencies, *tools])
     assert LOGO_PATH.name == "nexus-deps.webp"
@@ -128,6 +134,8 @@ def test_every_tool_names_its_need_and_root():
     assert tool_need(tools["systemctl"], {"sftp"}) == "optional"
     assert tool_need(tools["pkexec"], {"webcam"}) == "required"
     assert tool_need(tools["notify-send"], {"controller"}) == "optional"
+    assert tool_need(tools["cec-ctl"], {"cec"}) == "required" and tool_need(tools["cec-ctl"], {"fan"}) == ""
+    assert tool_need(tools["pkexec"], {"fan"}) == "required"
 
 
 def test_external_tool_catalog_covers_app_specific_tools():
@@ -135,7 +143,8 @@ def test_external_tool_catalog_covers_app_specific_tools():
     assert tools["pkexec"].sources[0].owner == "sftp"
     assert "webcam" in {source.owner for source in tools["udevadm"].sources}
     assert "sftp" in {source.owner for source in tools["systemctl"].sources}
-    assert {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "paplay"} == set(tools)
+    assert {source.owner for source in tools["cec-ctl"].sources} == {"cec"} and tools["cec-ctl"].rpm == "v4l-utils"
+    assert TOOLS == set(tools)
 
 
 def test_catalog_tools_are_used_by_the_apps_that_list_them():
@@ -210,17 +219,17 @@ def test_packages_are_checked_in_each_app_environment(tmp_path):
     dependencies = {dependency.name: dependency for dependency in load_catalog(CATALOG)}
     shared = _venv(tmp_path / "shared", {"PyQt6": "6.11.0", "PyQt6-Charts": "6.11.0"})
     demo = _venv(tmp_path / "demo", {"PyQt6": "6.11.0", "paramiko": "5.1.0"})
-    environments = {"portal": (shared,), "check": (shared,), "sftp": (demo,)}
+    environments = {"portal": (shared,), "bazzite": (shared,), "sftp": (demo,)}
 
     results = {result.dependency.name: result for result in check_dependencies(
         list(dependencies.values()), "test-agent", environments, get_latest=lambda name, _agent: {
-            "PyQt6": "6.12.0", "PyQt6-Charts": "6.11.0", "pygame-ce": "2.5.8", "paramiko": "5.1.0", "pygame-ce": "2.5.8",
-            "pillow": "12.3.0", "paramiko": "5.1.0", "cryptography": "46.0.0", "aiortc": "1.15.0"}[name],
+            "PyQt6": "6.12.0", "PyQt6-Charts": "6.11.0", "pygame-ce": "2.5.8", "paramiko": "5.1.0",
+            "cryptography": "46.0.0", "aiortc": "1.15.0"}[name],
         get_vulnerabilities=NO_CVES)}
 
     pyqt = results["PyQt6"]
     assert [(Path(env.environment), env.owners, env.version) for env in pyqt.environments] == [
-        (shared, ("portal", "check"), "6.11.0"), (demo, ("sftp",), "6.11.0")]
+        (shared, ("portal", "bazzite"), "6.11.0"), (demo, ("sftp",), "6.11.0")]
     assert pyqt.update_available and not pyqt.missing
     assert results["PyQt6-Charts"].needed and not results["PyQt6-Charts"].update_available
     assert results["paramiko"].environments[0].version == "5.1.0" and not results["paramiko"].missing
@@ -229,20 +238,20 @@ def test_packages_are_checked_in_each_app_environment(tmp_path):
 
 def test_packages_of_apps_that_are_not_installed_are_not_needed():
     dependency = next(dependency for dependency in load_catalog(CATALOG) if dependency.name == "paramiko")
-    result = check_dependencies([dependency], "agent", {"check": (Path("/x"),)},
+    result = check_dependencies([dependency], "agent", {"bazzite": (Path("/x"),)},
                                 get_versions=lambda _venv: {}, get_latest=lambda *_args: "5.1.0",
                                 get_vulnerabilities=NO_CVES)[0]
     assert not result.needed and not result.missing and not result.update_available
 
 
 def test_package_version_that_misses_the_requirement_is_reported(tmp_path):
-    dependency = next(dependency for dependency in load_catalog(CATALOG) if dependency.name == "PyQt6")
+    """Two apps in one venv that ask differently (this suite's apps all ask the same of a package)."""
+    dependency = Dependency("PyQt6", (DependencySource("fan", ">=6.11,<7"), DependencySource("cec", ">=6.5,<7")))
     old = _venv(tmp_path / "old", {"PyQt6": "6.9.1"})
-    result = check_dependencies([dependency], "agent", {"cores": (old,), "gpu": (old,)},
+    result = check_dependencies([dependency], "agent", {"cec": (old,), "fan": (old,)},
                                 get_latest=lambda *_args: "6.11.0", get_vulnerabilities=NO_CVES)[0]
-    # cores accepts >=6.5, the governor wants >=6.11.
-    assert result.unmet == (EnvironmentVersion(str(old), ("gpu", "cores"), "6.9.1", ("gpu",), (),
-                                               ("gpu",)),)                    # older than wanted: outdated
+    assert result.unmet == (EnvironmentVersion(str(old), ("fan", "cec"), "6.9.1", ("fan",), (),
+                                               ("fan",)),)                    # older than wanted: outdated
     assert result.needs_update == result.unmet
 
 
@@ -292,8 +301,7 @@ def test_tools_are_found_in_the_apps_extra_folders(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("PATH", str(tmp_path / "empty"))
     assert find_executable("speedtest") == str(speedtest)
-    tool = next(tool for tool in load_tools(CATALOG) if tool.name == "speedtest")
-    assert check_tools([tool])[0].path == str(speedtest)
+    assert check_tools([SPEEDTEST])[0].path == str(speedtest)
 
 
 def test_either_speed_test_will_do(tmp_path, monkeypatch):
@@ -303,8 +311,7 @@ def test_either_speed_test_will_do(tmp_path, monkeypatch):
     (bin_dir / "speedtest-cli").chmod(0o755)
     monkeypatch.setenv("PATH", str(bin_dir))
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    tool = next(tool for tool in load_tools(CATALOG) if tool.name == "speedtest")
-    assert check_tools([tool])[0].path == str(bin_dir / "speedtest-cli")
+    assert check_tools([SPEEDTEST])[0].path == str(bin_dir / "speedtest-cli")
 
 
 @pytest.mark.parametrize(
@@ -324,8 +331,7 @@ def test_flashrom_check_requires_internal_programmer(tmp_path, monkeypatch, prog
         stderr = ""
 
     monkeypatch.setattr(f"{PREFIX}.subprocess.run", lambda *args, **kwargs: Result())
-    tool = next(tool for tool in load_tools(CATALOG) if tool.name == "flashrom")
-    status = check_tools([tool])[0]
+    status = check_tools([FLASHROM])[0]
 
     assert status.path == str(flashrom)
     assert status.note == expected_note
@@ -407,7 +413,7 @@ def test_vulnerabilities_are_checked_once_per_installed_version(tmp_path):
         asked.append((name, version))
         return (cve,)
 
-    result = check_dependencies([dependency], "agent", {"portal": (shared,), "gpu": (own,)},
+    result = check_dependencies([dependency], "agent", {"portal": (shared,), "sftp": (own,)},
                                 get_latest=lambda *_args: "6.11.0", get_vulnerabilities=vulns)[0]
     assert result.vulnerabilities == (("6.10.0", cve),)
     assert result.cve_checked
@@ -432,9 +438,9 @@ def test_a_failed_vulnerability_check_is_not_reported_as_clean(tmp_path):
     ("", 1, "ImportError: libva.so.2: cannot open shared object file", "",
      "The native core does not load: ImportError: libva.so.2: cannot open shared object file"),
 ])
-def test_ffmpeg_is_asked_of_console_links_native_core(tmp_path, monkeypatch, stdout, returncode, stderr, version,
-                                                      note):
-    python = tmp_path / "home" / ".local" / "share" / "bazzite-console-link" / "venv" / "bin" / "python"
+def test_ffmpeg_is_asked_of_remote_plays_native_core(tmp_path, monkeypatch, stdout, returncode, stderr, version,
+                                                     note):
+    python = tmp_path / "home" / ".local" / "share" / "ps5-remoteplay" / "venv" / "bin" / "python"
     python.parent.mkdir(parents=True)
     python.write_text("#!/bin/sh\n", encoding="utf-8")
     python.chmod(0o755)
@@ -453,7 +459,7 @@ def test_ffmpeg_is_asked_of_console_links_native_core(tmp_path, monkeypatch, std
     monkeypatch.setattr(f"{PREFIX}.subprocess.run", run)
     tool = next(tool for tool in load_tools(CATALOG) if tool.name == "FFmpeg")
     status = check_tools([tool])[0]
-    assert calls[0][:3] == [str(python), "-I", "-c"] and "bazzite_console_link_core" in calls[0][3]
+    assert calls[0][:3] == [str(python), "-I", "-c"] and "ps5_remoteplay_core" in calls[0][3]
     assert (status.version, status.note) == (version, note)
     assert status.path == ("/venv/core.so" if stdout else str(python))
 
@@ -462,7 +468,7 @@ def test_ffmpeg_not_found_without_the_app_or_its_core(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     tool = next(tool for tool in load_tools(CATALOG) if tool.name == "FFmpeg")
     assert check_tools([tool])[0] == ToolStatus(tool)                       # the app is not installed
-    python = tmp_path / "home" / ".local" / "share" / "bazzite-console-link" / "venv" / "bin" / "python"
+    python = tmp_path / "home" / ".local" / "share" / "ps5-remoteplay" / "venv" / "bin" / "python"
     python.parent.mkdir(parents=True)
     python.write_text("#!/bin/sh\n", encoding="utf-8")
     python.chmod(0o755)
@@ -474,11 +480,15 @@ def test_ffmpeg_not_found_without_the_app_or_its_core(tmp_path, monkeypatch):
     assert check_tools([tool])[0] == ToolStatus(tool)                       # installed without its native core
 
 
-def test_console_link_lists_what_the_stream_needs():
-    tools = {tool.name: tool for tool in load_tools(CATALOG)}
-    needs = {name: tool_need(tools[name], {"consoles"}) for name in ("FFmpeg", "libva", "SDL3", "Steam", "Rust")}
-    assert needs == {"FFmpeg": "required", "libva": "required", "SDL3": "optional", "Steam": "optional",
-                     "Rust": "optional"}
+def test_remote_play_lists_the_ffmpeg_in_its_native_core():
+    """Its python is where the installer puts the app's venv, and the probe asks the core the app imports."""
+    ffmpeg = next(tool for tool in load_tools(CATALOG) if tool.name == "FFmpeg")
+    assert tool_need(ffmpeg, {"remoteplay"}) == "required" and tool_need(ffmpeg, {"clb"}) == ""
+    assert ffmpeg.probe == "console-link-ffmpeg" and not ffmpeg.executables
+    installer = (SUITE / "apps" / "remoteplay" / "install.sh").read_text(encoding="utf-8")
+    assert 'APP_ID="ps5-remoteplay"' in installer and 'VENV="$DATA_DIR/$APP_ID/venv"' in installer
+    assert ffmpeg.locations == ("~/.local/share/ps5-remoteplay/venv/bin/python",)
+    assert 'name = "ps5_remoteplay_core"' in (SUITE / "apps/remoteplay/native/Cargo.toml").read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(("version", "specifier", "expected"), [

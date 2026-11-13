@@ -1,0 +1,11 @@
+Changelog: 13-11-2026 21:54:15
+
+Fixed. The app's tests pass again (58 of 155 failed or stopped in their fixtures since the suite got its own tooling
+back), and tools/ci-local.sh runs them. The files of a suite with tools of its own, which the tests copy into their
+fixtures, are back in tests/fixtures/windows-suite/. The fixtures' suites without a TAG_PREFIX are read with this
+checkout's manifest tools, which ask for ps5-: in the tests they take a tag with or without it (tests/conftest.py),
+and the fixtures' apps name a category, as this suite's apps.toml must. The fixtures hold the suite's own core
+(core/bazzite_console_core, what the tool looks at for a core change) instead of nexus_core, the test of a suite's
+name and icon reads this checkout, and the tag button's test expects the hint the button gives ("Nothing to
+publish"). The tool itself is unchanged, apart from one docstring that named the wrong core folder.
+

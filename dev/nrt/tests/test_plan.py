@@ -25,7 +25,8 @@ SUITE_DIR = "nexus-suite"                 # the first suite's folder, as Nexus l
 
 def card(key: str, required: bool = False) -> str:
     return (f'[apps.{key}]\nname = "{key}"\nsummary = "s"\ntag = "{key}-v0.1.0"\nsha256 = ""\n'
-            f'required = {"true" if required else "false"}\nchanges_board = false\ninstall = ["bash install.sh"]\n'
+            f'required = {"true" if required else "false"}\ncategory = "gaming"\nchanges_board = false\n'
+            f'install = ["bash install.sh"]\n'
             f'uninstall = ["bash install.sh --uninstall"]\ndetect = ["~/.local/bin/{key}"]\n\n')
 
 
@@ -57,7 +58,7 @@ def sh(root: Path, *args: str) -> None:
 def repo(tmp_path) -> Path:
     root = tmp_path / "suite"
     write(root / "core/VERSION", "0.1.0\n")
-    write(root / "core/nexus_core/__init__.py", '__version__ = "0.1.0"\n')
+    write(root / "core/bazzite_console_core/__init__.py", '__version__ = "0.1.0"\n')
     write(root / "core/pyproject.toml", '[project]\nname = "c"\nversion = "0.1.0"\n')
     write(root / "core/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nCore.\n")
     write(root / "portal/VERSION", "0.1.0\n")
@@ -75,7 +76,7 @@ def repo(tmp_path) -> Path:
     write(root / "apps/releases/VERSION", "0.1.0\n")                  # like this app: never released
     write(root / "apps/releases/.standalone", "Not in the portal.\n")
     write(root / "apps/releases/.checkout-only", "No releases.\n")
-    write(root / "apps/alpha/alpha/ui.py", "from nexus_core import widgets\n")      # alpha bundles core, beta not
+    write(root / "apps/alpha/alpha/ui.py", "from bazzite_console_core import widgets\n")  # alpha bundles core
     # A Rust crate, as Console Link has: Cargo.lock repeats the crate's version, next to another crate's.
     write(root / "apps/alpha/native/Cargo.toml", '[package]\nname = "alpha-core"\nversion = "0.1.0"\n')
     write(root / "apps/alpha/native/Cargo.lock", 'version = 4\n\n[[package]]\nname = "aes"\nversion = "0.1.0"\n\n'
@@ -103,7 +104,7 @@ def two_suites(tmp_path) -> Path:
     and check_manifest.py, copied from the checkout)."""
     root = tmp_path / "nexus"
     write(root / "core/VERSION", "0.1.0\n")
-    write(root / "core/nexus_core/__init__.py", '__version__ = "0.1.0"\n')
+    write(root / "core/bazzite_console_core/__init__.py", '__version__ = "0.1.0"\n')
     write(root / "bc/portal/VERSION", "3.0.0\n")
     write(root / "bc/portal/apps.toml", card("check", required=True))
     write(root / "bc/apps/check/VERSION", "0.1.0\n")
@@ -113,10 +114,9 @@ def two_suites(tmp_path) -> Path:
     write(wp / "portal/VERSION", "0.1.0\n")
     write(wp / "apps/test/VERSION", "0.2.0\n")
     write(wp / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nAdded. More.\n")
-    real = rp.CHECKOUT / "wp"
+    real = Path(__file__).resolve().parent / "fixtures" / "windows-suite"     # a suite's own manifest tools
     for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
-        if (real / path).is_file():
-            write(wp / path, (real / path).read_text(encoding="utf-8"))
+        write(wp / path, (real / path).read_text(encoding="utf-8"))
     write(wp / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "wp-test-v0.1.0"\nsha256 = ""\n'
                                    'required = true\ncategory = "sustainable"\ninstall = ["i"]\nuninstall = ["u"]\n'
                                    'detect = ["d"]\n')
@@ -540,7 +540,7 @@ def test_window_tag_buttons_on_steps_1_and_2(window, repo, monkeypatch):
     assert window.portal_page.tag_button.isEnabled() == (not portal.released)
     sh(repo, "tag", "beta-v0.1.0")
     window.reload()
-    assert window.tags_to_push(window.apps_page) == [] and not tag.isEnabled() and "Nothing to tag" in tag.toolTip()
+    assert window.tags_to_push(window.apps_page) == [] and not tag.isEnabled() and "Nothing to publish" in tag.toolTip()
 
 
 def test_window_apply_bumps_the_portal_when_the_push_needs_it(window, repo):
@@ -819,12 +819,12 @@ def test_needs_release_follows_what_ships(repo):
 def test_core_and_manual_changes_count_for_the_apps_that_ship_them(repo):
     sh(repo, "tag", "alpha-v0.1.1")
     sh(repo, "tag", "beta-v0.1.0")
-    write(repo / "core/nexus_core/widgets.py", "class StatusText: pass\n")
+    write(repo / "core/bazzite_console_core/widgets.py", "class StatusText: pass\n")
     state = needs(repo)
     assert state["alpha"][:2] == (True, "yes: core") and state["beta"][0] is False   # beta does not import core
     core = next(u for u in rp.load_units(repo) if u.kind == "core")
     assert (core.in_apps, core.changed, core.release_reason) == (
-        ["alpha"], ["core/nexus_core/widgets.py"], "changed: goes into 1 app release")
+        ["alpha"], ["core/bazzite_console_core/widgets.py"], "changed: goes into 1 app release")
     assert not core.needs_release                                                 # core itself is never tagged
     write(repo / "docs/apps/alpha.md", "# Alpha\n\nMore.\n")                      # shipped as MANUAL.md
     assert needs(repo)["alpha"][1] == "yes: 1 file + core"
@@ -834,7 +834,7 @@ def test_core_bumped_with_its_change_needs_no_new_version(repo):
     """Core went to a new version with its change (released with some apps), and another app's release still
     carries it: that version already holds the change, so core offers itself as it is, not a higher one."""
     sh(repo, "tag", "alpha-v0.1.1")
-    write(repo / "core/nexus_core/widgets.py", "class StatusText: pass\n")
+    write(repo / "core/bazzite_console_core/widgets.py", "class StatusText: pass\n")
     assert rp.core_is_current(repo) is False                                      # changed, not bumped
     core = unit(repo, "core")
     rp.set_version(repo, core, "0.1.1")
@@ -844,20 +844,20 @@ def test_core_bumped_with_its_change_needs_no_new_version(repo):
     core = unit(repo, "core")
     assert core.current and core.in_apps == ["alpha"]                             # alpha-v0.1.1 has the old core
     assert core.release_reason == "0.1.1 has it: goes into 1 app release"
-    write(repo / "core/nexus_core/widgets.py", "class StatusText: pass\n# more\n")
+    write(repo / "core/bazzite_console_core/widgets.py", "class StatusText: pass\n# more\n")
     assert not unit(repo, "core").current                                         # a change after the bump
 
 
 def test_window_offers_a_current_core_as_it_is(window, repo):
     sh(repo, "tag", "alpha-v0.1.1")
-    write(repo / "core/nexus_core/widgets.py", "class StatusText: pass\n")
+    write(repo / "core/bazzite_console_core/widgets.py", "class StatusText: pass\n")
     rp.set_version(repo, unit(repo, "core"), "0.1.1")
     window.reload()
     core, tick, combo, _ = window.apps_page.rows[0]
     assert core.key == "core" and combo.itemText(0) == "0.1.1" and not tick.isEnabled()
     write(repo / "core/VERSION", "0.1.0\n")                                      # changed, not bumped
     sh(repo, "checkout", "-q", "--", "core")
-    write(repo / "core/nexus_core/widgets.py", "class StatusText: pass\n")
+    write(repo / "core/bazzite_console_core/widgets.py", "class StatusText: pass\n")
     window.reload()
     core, tick, combo, _ = window.apps_page.rows[0]
     assert combo.itemText(0) == "0.1.1" and tick.isEnabled()                      # the next version, to tick
@@ -1499,7 +1499,7 @@ def test_counted_from_the_last_tag_not_a_bump_already_made(repo):
 
 def test_a_core_change_counts_for_the_apps_that_carry_it(repo):
     entry(repo / "core/CHANGELOG", "Added. A widget.")
-    write(repo / "core/nexus_core/widgets.py", "x = 1\n")
+    write(repo / "core/bazzite_console_core/widgets.py", "x = 1\n")
     assert rp.version_choices(repo, unit(repo, "alpha"))[0][0] == "0.2.0"     # alpha bundles core
     core = unit(repo, "core")
     assert rp.version_choices(repo, core)[0][0] == "0.2.0"
@@ -1672,12 +1672,10 @@ def test_window_suite_column(repo, tmp_path):
 
 
 def test_the_suites_names_and_icons(tmp_path):
-    """The first column's rows: each suite by its portal's name, with its portal's icon (both suites since the
-    portal got its images, 28-10-2026), or its own drawing while a portal has no images."""
-    assert rp.suite_name(rp.CHECKOUT, "nexus-suite") == "Nexus Suite"
-    assert rp.suite_name(rp.CHECKOUT, "wp") == "Portal Suite"
-    assert rp.suite_icon(rp.CHECKOUT, "nexus-suite").name == "nexus-suite.webp"
-    assert rp.suite_icon(rp.CHECKOUT, "wp").name == "suite.webp"
+    """The first column's rows: a suite by its portal's name, with its portal's icon (this checkout, which is the
+    suite itself), or its own drawing while a portal has no images."""
+    assert rp.suite_name(rp.CHECKOUT) == "Bazzite Console Suite"
+    assert rp.suite_icon(rp.CHECKOUT).name == "bazzite-console-suite.webp"
     bare = tmp_path / "wp"
     (bare / "portal").mkdir(parents=True)
     (bare / "portal" / "apps.toml").write_text("")

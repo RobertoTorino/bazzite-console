@@ -578,12 +578,12 @@ def check_tools(tools: list[ExternalTool]) -> list[ToolStatus]:
 
 # Run with the app's python, in isolated mode: the native core's file and the FFmpeg it was built with ("" when built
 # without the video decoder). Importing it loads the system's libva too, so a missing libva shows here as well.
-_CORE_PROBE = ("import os, bazzite_console_link_core as core; print(os.path.dirname(core.__file__)); "
+_CORE_PROBE = ("import os, ps5_remoteplay_core as core; print(os.path.dirname(core.__file__)); "
                "print(getattr(core, 'FFMPEG_VERSION', '') if getattr(core, 'DECODER', False) else '')")
 
 
 def console_link_ffmpeg(tool: ExternalTool, pythons: list[Path]) -> ToolStatus:
-    """FFmpeg inside Console Link's native core: the core is asked, through the app's own python (the tool's
+    """FFmpeg inside Remote Play's native core: the core is asked, through the app's own python (the tool's
     location), which FFmpeg it carries. Not found when the app or its core is not installed."""
     for python in pythons:
         try:

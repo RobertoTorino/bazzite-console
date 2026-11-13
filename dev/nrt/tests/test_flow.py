@@ -36,7 +36,7 @@ def nexus(tmp_path) -> Path:
     write(root / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.5.0.\n")
     write(root / "core/VERSION", "0.1.0\n")
     write(root / "core/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nVersion 0.1.0.\n")
-    write(root / "core/nexus_core/__init__.py", '__version__ = "0.1.0"\n')
+    write(root / "core/bazzite_console_core/__init__.py", '__version__ = "0.1.0"\n')
     wp = root / "wp"
     write(wp / "SYSTEM", "windows\n")
     write(wp / "TAG_PREFIX", "wp-\n")
@@ -45,10 +45,9 @@ def nexus(tmp_path) -> Path:
     write(wp / "apps/test/VERSION", "0.1.0\n")
     write(wp / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
     write(wp / "apps/test/app.py", "print('hi')\n")
-    real = rp.CHECKOUT / "wp"
+    real = Path(__file__).resolve().parent / "fixtures" / "windows-suite"     # a suite's own manifest tools
     for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
-        if (real / path).is_file():
-            write(wp / path, (real / path).read_text(encoding="utf-8"))
+        write(wp / path, (real / path).read_text(encoding="utf-8"))
     write(wp / "portal/apps.toml", APPS_TOML)
     write(root / ".github/workflows/release-wp.yml", "on:\n  workflow_call:\n")
     sh(root, "init", "-q", "-b", "main")

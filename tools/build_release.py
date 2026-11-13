@@ -178,7 +178,8 @@ def native_wheel(app: str, src: Path, version: str) -> str | None:
     wheels = sorted(folder.glob("*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"{app} ships the wheel of its native core: {folder} must hold exactly one .whl, built with "
-                         "native/ffmpeg/build.sh and maturin build --release --features decoder")
+                         "native/ffmpeg/build.sh and maturin build --release --features "
+                         "python,pyo3/extension-module,decoder (tools/tag-release.sh does both)")
     if wheels[0].name.split("-")[1] != version:
         raise SystemExit(f"{wheels[0].name} is not version {version}; build the wheel again")
     return wheels[0].name

@@ -8,14 +8,21 @@ from PyQt6.QtWidgets import QLabel
 from nexus_deps import CATALOG
 from nexus_deps.bazzite import BazziteState, Deployment
 from nexus_deps.dependencies import (
-    CheckResult, DependencyStatus, EnvironmentVersion, ToolStatus, Vulnerability, load_apps, load_catalog,
-    load_tools,
+    CheckResult, DependencyStatus, EnvironmentVersion, ExternalTool, ToolSource, ToolStatus, Vulnerability, load_apps,
+    load_catalog, load_tools,
 )
 from nexus_deps.fixes import Plan, Step
 from nexus_deps.main_window import DependencyWindow, FixDialog, about_text, confirm_text, tool_advice
 
 SHARED = "/home/test/.local/share/bazzite-console-suite/venv"
-SFTP = "/home/test/.local/share/bazzite-console-sftp-tools/venv"   # an app with a venv of its own
+SFTP = "/home/test/.local/share/ps5-sftp-tools/venv"               # an app with a venv of its own
+# Tools of the kinds this suite's catalog has none of: one that works only as root, one of two commands, and a
+# flashrom that must have the internal programmer.
+ROOTED = ExternalTool("umr", ("umr",), (ToolSource("bazzite", "Reads the GPU's registers."),),
+                      description="AMD's register debugger.", root=True)
+SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("bazzite", "Internet speed test."),))
+FLASHROM = ExternalTool("flashrom", ("flashrom",), (ToolSource("bazzite", "Reads the firmware."),),
+                        probe="flashrom-internal")
 
 
 def _wait_for(predicate, ms=3000):
@@ -29,11 +36,13 @@ def _wait_for(predicate, ms=3000):
     return predicate()
 
 
-def _window(result: CheckResult, bazzite=None, system=(), **kwargs) -> DependencyWindow:
+def _window(result: CheckResult, bazzite=None, system=(), extra_tools=(), **kwargs) -> DependencyWindow:
     """The window on *result*; Bazzite's state from *bazzite*, else none, and the machine's updates from *system* (the
-    board's own are never read here). Fix's question is answered No unless a test passes its own *ask*."""
+    board's own are never read here). Fix's question is answered No unless a test passes its own *ask*.
+    *extra_tools* get a card after the catalog's."""
     kwargs.setdefault("ask", lambda text: False)
-    window = DependencyWindow(load_catalog(CATALOG), load_tools(CATALOG), load_apps(CATALOG), check=lambda: result,
+    window = DependencyWindow(load_catalog(CATALOG), [*load_tools(CATALOG), *extra_tools], load_apps(CATALOG),
+                              check=lambda: result,
                               bazzite=bazzite or (lambda: BazziteState(error="Not read in a test.")),
                               system=lambda: tuple(system), **kwargs)
     assert _wait_for(lambda: window.check_button.isEnabled())
@@ -47,33 +56,33 @@ def _catalog():
 def test_window_displays_package_and_tool_results(qapp):
     dependencies, tools = _catalog()
     result = CheckResult(
-        [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal", "check"), "6.11.0"),
+        [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal", "bazzite"), "6.11.0"),
                                                   EnvironmentVersion(SFTP, ("sftp",), "6.11.0")), "6.12.0"),
          DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "5.1.0"),),
                           "5.1.0"),
          DependencyStatus(dependencies["pygame-ce"], (), "2.5.8")],
-        [ToolStatus(tools["flashrom"], "/home/test/flashrom/usr/bin/flashrom"),
-         ToolStatus(tools["speedtest"], "/home/test/.local/bin/speedtest"),
-         ToolStatus(tools["mprime"]),
-         ToolStatus(tools["setpci"])],
-        frozenset({"portal", "check", "sftp", "bios", "cores"}),
+        [ToolStatus(tools["pkexec"], "/usr/bin/pkexec"),
+         ToolStatus(tools["notify-send"], "/home/test/.local/bin/notify-send"),
+         ToolStatus(tools["paplay"]),
+         ToolStatus(tools["cec-ctl"])],
+        frozenset({"portal", "bazzite", "sftp", "cec"}),
     )
     window = _window(result)
     try:
         pyqt = window.cards["PyQt6"]
         assert pyqt.status.text() == "Update available"
         assert pyqt.latest.text() == "Latest on PyPI: 6.12.0"
-        assert "Bazzite Test" in pyqt.installed.text() and "Bazzite SFTP Tools" in pyqt.installed.text()
+        assert "Bazzite Test" in pyqt.installed.text() and "SFTP Tools" in pyqt.installed.text()
         assert window.cards["paramiko"].status.text() == "Up to date"
         assert window.cards["pygame-ce"].status.text() == "Not needed"
-        assert window.tool_cards["flashrom"].status.text() == "Available"
-        assert window.tool_cards["flashrom"].location.text().endswith("/flashrom")
-        assert window.tool_cards["speedtest"].status.text() == "Available"
-        assert window.tool_cards["mprime"].status.text() == "Not installed"
-        assert window.tool_cards["setpci"].status.text() == "Missing"
+        assert window.tool_cards["pkexec"].status.text() == "Available"
+        assert window.tool_cards["pkexec"].location.text().endswith("/pkexec")
+        assert window.tool_cards["notify-send"].status.text() == "Available"
+        assert window.tool_cards["paplay"].status.text() == "Not installed"
+        assert window.tool_cards["cec-ctl"].status.text() == "Missing"
         text = window.result_label.text()
-        assert "Missing, needed by an installed app:</b> setpci" in text
-        assert "Optional, not installed: mprime" in text
+        assert "Missing, needed by an installed app:</b> cec-ctl" in text
+        assert "Optional, not installed: paplay" in text
         assert window.box_missing.value.text() == "1"
         assert window.box_updates.value.text() == "1"
     finally:
@@ -95,13 +104,12 @@ def test_missing_package_in_an_app_environment_is_reported(qapp):
 
 
 def test_tools_that_need_root_say_so(qapp):
-    _dependencies, tools = _catalog()
-    window = _window(CheckResult([], [], frozenset()))
+    window = _window(CheckResult([], [], frozenset()), extra_tools=[ROOTED])
     try:
         def says_root(name):
             return any("Needs root." in label.text() for label in window.tool_cards[name].findChildren(QLabel))
-        assert says_root("umr") and says_root("setpci")
-        assert not says_root("pkexec") and not says_root("stress-ng")
+        assert says_root("umr")
+        assert not says_root("pkexec") and not says_root("cec-ctl")
         assert window.tool_cards["umr"].status.text() == "Not checked"
     finally:
         window.close()
@@ -112,13 +120,13 @@ def test_about_popup_describes_the_purpose(qapp):
     apps = load_apps(CATALOG)
     text = about_text(tools["cec-ctl"], apps)
     assert "HDMI-CEC" in text and "HDMI CEC Manager" in text and "(required)" in text
-    assert "Needs root." in about_text(tools["umr"], apps)
+    assert "Needs root." in about_text(ROOTED, apps) and "Needs root." not in text
     window = _window(CheckResult([], [], frozenset()))
     try:
         card = window.cards["paramiko"]
         card.about_button.click()
         assert card.about_box is not None and card.about_box.isVisible()
-        assert "SSH" in card.about_box.text() and "Bazzite SFTP Tools" in card.about_box.text()
+        assert "SSH" in card.about_box.text() and "<b>SFTP Tools</b>" in card.about_box.text()
         card.about_box.close()
     finally:
         window.close()
@@ -142,7 +150,7 @@ def test_cve_marks(qapp):
         assert "href='https://security.snyk.io/vuln/?search=CVE-2099-1234'>CVE-2099-1234</a> in 6.11.0" in \
             pyqt.vulnerabilities.text()
         assert "fixed in 6.12.1" in pyqt.vulnerabilities.text()
-        assert "Update PyQt6 6.11.0 to 6.12.1 or newer for Portal" in pyqt.advice.text()
+        assert "Update PyQt6 6.11.0 to 6.12.1 or newer for Bazzite Console Suite" in pyqt.advice.text()
         assert "✓ CVE" in window.cards["paramiko"].cve.text()
         assert window.cards["paramiko"].advice.isHidden()
         assert "CVE ?" in window.cards["pygame-ce"].cve.text()
@@ -155,22 +163,23 @@ def test_cve_marks(qapp):
 
 def test_missing_tools_advise_what_they_are_needed_for(qapp):
     dependencies, tools = _catalog()
-    installed = frozenset({"bios", "bazzite"})
-    advice = tool_advice(tools["stress-ng"], installed, load_apps(CATALOG))
-    assert advice.startswith("<b>Advice:</b> Install stress-ng to be able to use:")
-    assert "Bazzite Test</a>: CPU stress/load tests and CPU benchmark.</li>" in advice
-    assert "Install speedtest or speedtest-cli" in tool_advice(tools["speedtest"], installed, load_apps(CATALOG))
-    assert "Install a flashrom that has it" in tool_advice(tools["flashrom"], installed, load_apps(CATALOG),
+    installed = frozenset({"fan", "bazzite", "webcam"})
+    advice = tool_advice(tools["pkexec"], installed, load_apps(CATALOG))       # two of its three apps are installed
+    assert advice.startswith("<b>Advice:</b> Install pkexec to be able to use:") and "SFTP Tools" not in advice
+    assert "Webcam</a>: Install or remove the camera udev rule. <b>(required)</b></li>" in advice
+    assert "Fan Control</a>: Turn the thermal guard on and off, and change it. <b>(required)</b></li>" in advice
+    assert "Install speedtest or speedtest-cli" in tool_advice(SPEEDTEST, installed, load_apps(CATALOG))
+    assert "Install a flashrom that has it" in tool_advice(FLASHROM, installed, load_apps(CATALOG),
                                                            "No internal programmer found.")
-    assert tool_advice(tools["radeontop"], installed, load_apps(CATALOG)) == ""   # the governor is not installed
+    assert tool_advice(tools["cec-ctl"], installed, load_apps(CATALOG)) == ""  # HDMI CEC Manager is not installed
     window = _window(CheckResult(
         [DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), ""),), "2.5.8")],
-        [ToolStatus(tools["mprime"]), ToolStatus(tools["umr"], "/usr/bin/umr")], installed | {"sftp"}))
+        [ToolStatus(tools["paplay"]), ToolStatus(tools["pkexec"], "/usr/bin/pkexec")], installed | {"sftp"}))
     try:
-        assert "Install mprime to be able to use <a href=" in window.tool_cards["mprime"].advice.text()
-        assert "Prime95 torture test for a longer burn-in." in window.tool_cards["mprime"].advice.text()
-        assert window.tool_cards["umr"].advice.isHidden()
-        assert f"Fix installs pygame-ce in {SFTP}, which Bazzite SFTP Tools needs" in \
+        assert "Install paplay to be able to use <a href=" in window.tool_cards["paplay"].advice.text()
+        assert "Play connection and transfer sounds." in window.tool_cards["paplay"].advice.text()
+        assert window.tool_cards["pkexec"].advice.isHidden()
+        assert f"Fix installs pygame-ce in {SFTP}, which SFTP Tools needs" in \
             window.cards["pygame-ce"].advice.text()
     finally:
         window.close()
@@ -179,7 +188,6 @@ def test_missing_tools_advise_what_they_are_needed_for(qapp):
 def test_needs_update_when_an_app_wants_newer_or_a_release_fixes_a_vulnerability(qapp):
     dependencies, _tools = _catalog()
     link = "/home/test/.local/share/ps5-remoteplay/venv"
-    sftp = "/home/test/.local/share/ps5-sftp-tools/venv"
     CLB = "/home/test/.local/share/ps5-xbox-remoteplay/venv"
     fixed = Vulnerability("CVE-2026-1", "a hole", "3.4.1")
     unfixed = Vulnerability("CVE-2026-2", "another hole")
@@ -187,7 +195,7 @@ def test_needs_update_when_an_app_wants_newer_or_a_release_fixes_a_vulnerability
         [DependencyStatus(dependencies["cryptography"],
                           (EnvironmentVersion(link, ("remoteplay",), "41.0.0", ("remoteplay",), (),
                                               ("remoteplay",)),), "46.0.0"),
-         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(sftp, ("sftp",), "3.4.0", (),
+         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "3.4.0", (),
                                                                         (fixed,)),), "3.5.0"),
          DependencyStatus(dependencies["aiortc"], (EnvironmentVersion(CLB, ("clb",), "1.14.0", (),
                                                                        (unfixed,)),), "1.14.0"),
@@ -234,7 +242,7 @@ def _broken() -> CheckResult:
     dependencies, tools = _catalog()
     return CheckResult(
         [DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), ""),))],
-        [ToolStatus(tools["setpci"])], frozenset({"sftp", "cores"}))
+        [ToolStatus(tools["cec-ctl"])], frozenset({"sftp", "cec"}))
 
 
 def test_fix_is_off_until_there_is_something_to_fix(qapp):

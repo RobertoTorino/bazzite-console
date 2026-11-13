@@ -621,9 +621,10 @@ def last_release(changelog: str) -> str:
 
 
 def core_is_current(root: Path, new_files: list[str] | None = None) -> bool:
-    """Whether core's VERSION already covers what it ships: nothing under core/nexus_core changed since the commit
-    that last changed core/VERSION, or that VERSION is changed and not committed yet (a bump in progress). Then an
-    app release carries core as it is, and core needs no new version. *new_files*: untracked(), read already."""
+    """Whether core's VERSION already covers what it ships: nothing under core/bazzite_console_core changed since
+    the commit that last changed core/VERSION, or that VERSION is changed and not committed yet (a bump in
+    progress). Then an app release carries core as it is, and core needs no new version. *new_files*: untracked(),
+    read already."""
     if git(root, "diff", "--quiet", "HEAD", "--", "core/VERSION") is None:
         return True
     bump = (git(root, "log", "-1", "--format=%H", "--", "core/VERSION") or "").strip()

@@ -9,13 +9,17 @@ import subprocess
 from nexus_deps import CATALOG
 from nexus_deps.bazzite import BazziteState, Deployment
 from nexus_deps.dependencies import (
-    CheckResult, DependencyStatus, EnvironmentVersion, ToolStatus, Vulnerability, load_catalog, load_tools,
+    CheckResult, DependencyStatus, EnvironmentVersion, ExternalTool, ToolSource, ToolStatus, Vulnerability,
+    load_catalog, load_tools,
 )
 from nexus_deps.fixes import Plan, Step, notify, plan, problems, reminder_text, requirement
 from nexus_deps.system import Source, Update
 
 VENV = "/home/u/.local/share/bazzite-console-suite/venv"
-OWN = "/home/u/.local/share/bazzite-sftp-tools/venv"
+OWN = "/home/u/.local/share/ps5-sftp-tools/venv"
+# A tool Homebrew has: this suite's catalog names none (cec-ctl comes with Fedora's v4l-utils alone).
+BREWED = ExternalTool("stress-ng", ("stress-ng",), (ToolSource("cec", "A load test.", need="required"),),
+                      brew="stress-ng", rpm="stress-ng")
 
 
 def dependencies():
@@ -34,14 +38,14 @@ def no_brew(name):
     return None if name == "brew" else which_all(name)
 
 
-def result(packages=(), tool_results=(), installed=("check", "cores", "sftp", "portal")):
+def result(packages=(), tool_results=(), installed=("bazzite", "cec", "sftp", "portal")):
     return CheckResult(list(packages), list(tool_results), frozenset(installed))
 
 
 def test_nothing_broken_needs_no_fix():
     pyqt = dependencies()["PyQt6"]
-    fine = DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "check"), "6.11.0"),))
-    found = ToolStatus(tools()["stress-ng"], "/usr/bin/stress-ng")
+    fine = DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "bazzite"), "6.11.0"),))
+    found = ToolStatus(tools()["cec-ctl"], "/usr/bin/cec-ctl")
     assert not plan(result([fine], [found]), which_all)
     assert problems(result([fine], [found])) == []
 
@@ -52,7 +56,7 @@ def test_missing_and_outdated_packages_go_into_their_own_venv():
     pyqt = deps["PyQt6"]
     vuln = Vulnerability("CVE-1", fixed="5.0.1")
     statuses = [
-        DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "check"), ""),)),           # missing
+        DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "bazzite"), ""),)),         # missing
         DependencyStatus(paramiko, (EnvironmentVersion(OWN, ("sftp",), "5.0.0", vulnerabilities=(vuln,)),)),
     ]
     steps = plan(result(statuses), which_all).steps
@@ -66,32 +70,31 @@ def test_missing_and_outdated_packages_go_into_their_own_venv():
 
 
 def test_a_missing_required_tool_comes_from_homebrew_first_then_rpm_ostree():
-    t = tools()
-    missing = [ToolStatus(t["stress-ng"]), ToolStatus(t["setpci"])]             # both required by Cores Bisect
+    missing = [ToolStatus(BREWED), ToolStatus(tools()["cec-ctl"])]              # both required by HDMI CEC Manager
     steps = plan(result(tool_results=missing), which_all).steps
     assert [(s.kind, s.command) for s in steps] == [
         ("brew", ("/usr/bin/brew", "install", "stress-ng")),
-        ("rpm-ostree", ("rpm-ostree", "install", "--idempotent", "--allow-inactive", "pciutils"))]
+        ("rpm-ostree", ("rpm-ostree", "install", "--idempotent", "--allow-inactive", "v4l-utils"))]
     assert steps[1].restart and not steps[0].restart
     without_brew = plan(result(tool_results=missing), no_brew)
-    assert [s.command[-2:] for s in without_brew.steps] == [("stress-ng", "pciutils")] and without_brew.restart
+    assert [s.command[-2:] for s in without_brew.steps] == [("stress-ng", "v4l-utils")] and without_brew.restart
 
 
 def test_optional_and_unfixable_tools_stay_out():
     t = tools()
-    optional = ToolStatus(t["stress-ng"])                                         # optional for check alone
-    assert not plan(result(tool_results=[optional], installed=("check",)), which_all)
-    governor = ToolStatus(t["cyan-skillfish-governor-smu"])          # required by GPU Manager; no brew, no rpm
-    fixed = plan(result(tool_results=[governor], installed=("gpu",)), which_all)
-    assert fixed.manual == ("cyan-skillfish-governor-smu",) and not fixed
+    optional = ToolStatus(t["notify-send"])                                     # optional for Controller
+    assert not plan(result(tool_results=[optional], installed=("controller",)), which_all)
+    assert not plan(result(tool_results=[ToolStatus(t["cec-ctl"])], installed=("sftp",)), which_all)   # no CEC app
+    pkexec = ToolStatus(t["pkexec"])                                 # required by SFTP Tools; no brew, no rpm
+    fixed = plan(result(tool_results=[pkexec], installed=("sftp",)), which_all)
+    assert fixed.manual == ("pkexec",) and not fixed
 
 
 def test_every_tool_names_at_most_one_formula_and_package():
     for tool in load_tools(CATALOG):
         assert " " not in tool.brew and " " not in tool.rpm, tool.name
     named = {name for name, tool in tools().items() if tool.rpm}
-    assert {"stress-ng", "setpci", "smartctl", "vkmark", "SDL3"} <= named
-    assert not {"Steam", "ujust", "cecd", "FFmpeg", "cyan-skillfish-governor-smu"} & named
+    assert named == {"cec-ctl"}                 # FFmpeg comes inside Remote Play; the others are part of Bazzite
 
 
 def test_the_reminder_says_what_needs_the_user():
@@ -100,8 +103,8 @@ def test_the_reminder_says_what_needs_the_user():
                            datetime.datetime.now().astimezone())
     quiet = BazziteState(waiting.running, None, "", waiting.updater_last)
     assert reminder_text(quiet, result()).text == ""
-    note = reminder_text(quiet, result(tool_results=[ToolStatus(t["setpci"])]), which_all)
-    assert note.text == "Tools an installed app needs: setpci." and list(note.actions) == ["fix", "open"]
+    note = reminder_text(quiet, result(tool_results=[ToolStatus(t["cec-ctl"])]), which_all)
+    assert note.text == "Tools an installed app needs: cec-ctl." and list(note.actions) == ["fix", "open"]
     note = reminder_text(waiting, None)                                          # the check failed: Bazzite alone
     assert note.text.startswith("Bazzite 44.2 waits for a reboot") and list(note.actions) == ["open"]
 
@@ -141,7 +144,7 @@ def test_remind_opens_the_app_on_a_click(monkeypatch):
     monkeypatch.setattr("sys.argv", ["nexus_deps", "--remind"])
     assert entry.main() == 0
     assert len(started) == 1 and started[0][0].endswith("dev/deps/run.sh")
-    assert started[0][1:] == ["--suite", "nexus-suite"]
+    assert started[0][1:] == ["--suite", "bazzite-console"]
     monkeypatch.setattr(entry, "notify", lambda *args: "fix")
     started.clear()
     assert entry.main() == 0 and started[0][-1] == "--fix"
