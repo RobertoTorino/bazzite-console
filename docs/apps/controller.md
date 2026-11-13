@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+![Controller](../assets/controller/ps5-controller.webp){ .app-logo }
+
 # Controller
 
 Controller is an optional utility for Sony DualSense and DualSense Edge controllers. Its code recognizes USB

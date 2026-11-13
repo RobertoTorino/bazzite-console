@@ -17,6 +17,7 @@ fi
 export QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}
 "$PY" "$SUITE/tools/check_versions.py"
 "$PY" "$SUITE/tools/check_manifest.py"
+"$PY" "$SUITE/tools/sync_icons.py" --check
 "$PY" -m pytest -q "$SUITE/tools/tests"
 "$PY" -m pytest -q "$SUITE/dev/dash/tests"
 for app in demo itests nrt sounds deps; do

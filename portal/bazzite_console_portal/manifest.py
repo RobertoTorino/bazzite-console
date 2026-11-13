@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The apps listed by the Bazzite Bazzite Console versional."""
+"""The apps listed by the Bazzite Console Suite portal."""
 
 from __future__ import annotations
 

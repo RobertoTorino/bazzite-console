@@ -1,3 +1,9 @@
+Changelog: 13-11-2026 22:48:09
+
+Fixed. Packages installed in a venv's lib64/ are found. On Fedora with Python 3.15 a venv's lib64/ is a folder of
+its own, not a link to lib/, and pip puts packages with compiled parts there: PyQt6 and PyQt6-Charts were reported
+missing in every app's venv while they were installed.
+
 Changelog: 13-11-2026 21:54:16
 
 Fixed. The catalog of the Bazzite Console Suite knows the suite's three new apps and what they need: System Overlay,

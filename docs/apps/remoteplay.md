@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+![Remote Play](../assets/remoteplay/ps5-remoteplay.webp){ .app-logo }
+
 # Remote Play
 
 The app finds PS4 and PS5 consoles on the local network, can wake a console from rest mode, and registers the

@@ -17,7 +17,7 @@ The installer is for the logged-in user; do not run it with `sudo`.
 
 ## Install a release
 
-Download the Bazzite Bazzite Console versional release and its `SHA256SUMS` from the
+Download the Bazzite Console Suite portal release and its `SHA256SUMS` from the
 [Releases page](https://github.com/RobertoTorino/bazzite-console/releases).
 Check the archive against the checksum file, extract it, and run `./install.sh` from the extracted folder.
 

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Bazzite Bazzite Console versional: installs, opens and removes the suite's apps."""
+"""The Bazzite Console Suite portal: installs, opens and removes the suite's apps."""
 
 APP_NAME = "Bazzite Console Suite"
 APP_ID = "bazzite-console-suite"

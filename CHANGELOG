@@ -1,3 +1,27 @@
+Changelog: 13-11-2026 22:54:30
+
+Fixed. The wiki's chapters of Webcam, Controller and Remote Play show the app's icon above the title, as every other
+app's chapter does.
+
+Changelog: 13-11-2026 22:48:09
+
+Fixed. The apps' icons and the portal's tile pictures are their categories' current pictures again: most were still
+the earlier ones (the wiki's App categories page showed them). tools/sync_icons.py is back as this repository's own
+tool and writes the copies from icons/<category>/ as icons/categories.toml assigns them; --check lists the ones that
+differ, in CI and tools/ci-local.sh. categories.toml lists the suite's apps as portal/apps.toml does: Webcam and
+Controller were missing, and three apps that are not in the suite were still listed. The wiki's icon (header, home
+page and favicon) is the suite's current logo.
+
+Added. .github/workflows/docs.yml builds the wiki from main and publishes it on GitHub Pages, at
+robertotorino.github.io/bazzite-console/; until now nothing published it. The repository's Pages source must be
+GitHub Actions. The wiki's Development chapter says so, and has a section on the icons.
+
+Fixed. The portal tour's --wiki copy failed with "No such file or directory": docs/videos/ did not exist and
+tools/portal_tour.py made only the poster's folder. It makes both.
+
+Fixed. The root requirements-dev.txt installs what the development apps in dev/ need too (obsws-python and dbus-fast
+for Nexus Demo Recorder, which said the OBS WebSocket client was missing).
+
 Changelog: 13-11-2026 21:55:19
 
 Fixed. tools/ci-local.sh runs every test of the development apps: Nexus Release Tool's and Nexus Sound Lab's, which

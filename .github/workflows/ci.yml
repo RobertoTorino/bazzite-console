@@ -66,6 +66,8 @@ jobs:
           python-version: "3.12"
       - name: Check release manifest
         run: python tools/check_manifest.py
+      - name: Check the category icons' copies
+        run: python tools/sync_icons.py --check
 
   shell:
     runs-on: ubuntu-latest

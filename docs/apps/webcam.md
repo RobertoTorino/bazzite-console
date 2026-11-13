@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+![Webcam](../assets/webcam/ps5-webcam.webp){ .app-logo }
+
 # Webcam
 
 !!! warning "Changes the board"

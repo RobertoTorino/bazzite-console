@@ -31,7 +31,7 @@ die() { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
 usage() {
     cat <<'EOF'
 Usage: ./install.sh [--no-desktop-shortcut] [--uninstall [--purge]]
-Install or update the Bazzite Bazzite Console versional and Bazzite Test.
+Install or update the Bazzite Console Suite portal and Bazzite Test.
 EOF
 }
 

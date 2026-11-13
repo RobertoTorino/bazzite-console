@@ -47,12 +47,13 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
   `~/.local/share/bazzite-console-suite/`) and addresses.
 - `tools/`: the release and check tools (`build_release.py`, `stage_app.py`, `check_versions.py`,
   `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `check-release.sh`,
-  `suites.py`, `fix-modes.sh`), the CHANGELOG merge driver and check, the tours, `mkdocs/` (the wiki's hooks and overrides),
+  `suites.py`, `fix-modes.sh`, `sync_icons.py`), the CHANGELOG merge driver and check, the tours, `mkdocs/` (the wiki's hooks and overrides),
   `tools/tests/` and `tools/installer-tests/` (one per app, the portal and a release).
 - `dev/`: the development apps, run from the checkout and never released.
 - `docs/` and `mkdocs.yml`: the wiki, robertotorino.github.io/bazzite-console/; `icons/`: the category icons and
   `categories.toml`, which assigns them to the apps.
-- `.github/workflows/ci.yml`: the checks on every push.
+- `.github/workflows/ci.yml`: the checks on every push; `docs.yml`: the wiki, built from `main` and published on
+  GitHub Pages.
 
 ## Design and naming
 
@@ -67,6 +68,7 @@ From the repository root, as `.github/workflows/ci.yml` runs them (a venv with t
 ```bash
 (cd <folder> && python -m pytest tests)                     # portal, tools and each apps/<name>
 python3 tools/check_manifest.py
+python3 tools/sync_icons.py --check
 find apps portal tools -name '*.sh' -print0 | xargs -0 -n1 bash -n
 for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done   # needs fakeroot
 mkdocs build --strict

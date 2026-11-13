@@ -28,5 +28,29 @@ pull-request base and also works when this suite is nested in a larger checkout.
 wiki stylesheet, run `python3 tools/apply_design.py mkdocs.yml`; the Bazzite Console palette samples are in
 `design/colors/`. `git-setup.sh` registers the local CHANGELOG merge driver; it does not install Git hooks.
 
+## Icons
+
+Every app's icon is its category's. The category icons are in `icons/<category>/`, at 1024, 512 and 256 px as WebP
+and at 128 px as PNG; `icons/categories.toml` names each app's category and where its copies go. After changing an
+icon, write the copies:
+
+```sh
+python3 tools/sync_icons.py                                    # write the copies that differ
+python3 tools/sync_icons.py --check                            # only list them (CI runs this)
+python3 tools/sync_icons.py --category gaming --from new.png   # a category's four icons from one square image
+```
+
+The copies are each app's `images/<icon>.webp` and `<icon>-128.png`, the portal's tile pictures in
+`portal/images/apps/` (the wiki shows these too) and `portal/images/categories/`. A changed copy reaches an
+installed app with that app's next release.
+
+## The wiki
+
+`.github/workflows/docs.yml` builds the wiki from `main` on every push and publishes it on GitHub Pages at
+<https://robertotorino.github.io/bazzite-console/>. The repository's Pages source must be **GitHub Actions**
+(Settings, Pages). `mkdocs serve` shows it locally.
+
+## Git
+
 After `git add`, `tools/fix-modes.sh` marks every `.sh` executable in the git index, so a script added from Windows
 still runs from a Linux checkout or a release. Nexus Release Tool's Commit step runs it.

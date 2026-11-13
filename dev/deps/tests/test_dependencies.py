@@ -214,6 +214,15 @@ def test_environment_versions_read_site_packages(tmp_path):
     assert environment_versions(tmp_path / "nothing") == {}
 
 
+def test_environment_versions_read_lib64_too(tmp_path):
+    """Fedora's Python 3.15 keeps lib64/ apart from lib/: a compiled package (PyQt6) is in lib64/, pip in lib/."""
+    venv = _venv(tmp_path / "venv", {"pip": "26.3"})
+    dist = venv / "lib64" / "python3.15" / "site-packages" / "pyqt6-6.11.0.dist-info"
+    dist.mkdir(parents=True)
+    (dist / "METADATA").write_text("Metadata-Version: 2.1\nName: PyQt6\nVersion: 6.11.0\n", encoding="utf-8")
+    assert environment_versions(venv) == {"pip": "26.3", "pyqt6": "6.11.0"}
+
+
 def test_packages_are_checked_in_each_app_environment(tmp_path):
     """A package of an app with its own venv is found there, not reported missing from the shared one."""
     dependencies = {dependency.name: dependency for dependency in load_catalog(CATALOG)}

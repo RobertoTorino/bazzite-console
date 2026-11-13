@@ -1,3 +1,10 @@
+Changelog: 13-11-2026 22:48:09
+
+Fixed. The example wallpaper is in the portal again (images/wallpaper-example.webp): the file was missing, so
+Example wallpaper in the Wallpaper pill's menu stayed grayed out. The tile pictures and the category pictures are the
+categories' current ones. The portal's name reads Bazzite Console Suite portal where a replace had garbled it
+(install.sh --help, the wiki's Install page).
+
 Changelog: 13-11-2026 22:03:17
 
 Release 0.2.1.

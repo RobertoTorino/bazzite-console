@@ -351,6 +351,7 @@ def wiki_copy(video: Path) -> int:
     """The wiki's copy of *video*: 1280 x 720 and about a third of the size, so the repository stays small, and the
     title card as its poster. ffmpeg's exit code."""
     WIKI_POSTER.parent.mkdir(parents=True, exist_ok=True)
+    WIKI_VIDEO.parent.mkdir(parents=True, exist_ok=True)
     code = subprocess.run(
         ["ffmpeg", "-loglevel", "error", "-y", "-i", str(video), "-vf", "scale=1280:720:flags=lanczos",
          "-c:v", "libx264", "-preset", "slow", "-crf", "26", "-tune", "stillimage", "-pix_fmt", "yuv420p",

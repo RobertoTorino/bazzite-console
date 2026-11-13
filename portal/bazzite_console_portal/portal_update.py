@@ -18,7 +18,7 @@ from bazzite_console_core.updates import ReleaseInfo, latest_release
 from .manifest import AppEntry, ManifestError, parse
 from .sources import expected_sha256
 
-# The manifest shipped with the Bazzite Bazzite Console versional release.
+# The manifest shipped with the Bazzite Console Suite portal release.
 RAW_URLS = ("https://raw.githubusercontent.com/{repo}/{tag}/portal/apps.toml",)
 SUMS_URL = "https://github.com/{repo}/releases/download/{tag}/SHA256SUMS"
 BUILD_FILE = "build.sha256"                 # beside the installed program: the sha256 of the tarball it came from

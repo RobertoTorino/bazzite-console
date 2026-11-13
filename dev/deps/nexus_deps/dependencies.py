@@ -327,8 +327,10 @@ def installed_environments(apps: dict[str, App]) -> dict[str, tuple[Path, ...]]:
 
 
 def environment_versions(venv: Path) -> dict[str, str]:
-    """normalized distribution name -> version in a venv, read from its site-packages without running it."""
-    site = [str(path) for path in sorted(venv.glob("lib/python*/site-packages"))]
+    """normalized distribution name -> version in a venv, read from its site-packages without running it. Both
+    lib/ and lib64/: where the two are folders of their own (Fedora, from Python 3.15), pip puts packages with
+    compiled parts, as PyQt6, in lib64/."""
+    site = [str(path) for path in sorted(venv.glob("lib*/python*/site-packages"))]
     if not site:
         return {}
     versions = {}

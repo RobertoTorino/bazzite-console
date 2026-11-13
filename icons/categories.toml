@@ -1,4 +1,6 @@
-# The suite's category icons are copied to their apps and portal by tools/sync_icons.py.
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Each app's icons are copies of its category's icon in icons/<category>/: tools/sync_icons.py writes them, and
+# tools/sync_icons.py --check (CI) says when one differs. The category is the app's in portal/apps.toml.
 
 [bazzite]
 category = "sustainable"
@@ -24,11 +26,6 @@ tile = "portal/images/apps/clb.webp"
 category = "gaming"
 icons = ["apps/shadps4/images/ps5-shadps4-manager"]
 tile = "portal/images/apps/shadps4.webp"
-
-[decky]
-category = "gaming"
-icons = ["apps/decky/images/ps5-decky-manager"]
-tile = "portal/images/apps/decky.webp"
 
 [datstation]
 category = "gaming"
@@ -60,15 +57,15 @@ category = "utilities"
 icons = ["apps/sftp/images/ps5-sftp-tools"]
 tile = "portal/images/apps/sftp.webp"
 
-[hdcam]
+[webcam]
 category = "utilities"
-icons = ["apps/hdcam/images/ps5-usb-hdcam"]
-tile = "portal/images/apps/hdcam.webp"
+icons = ["apps/webcam/images/ps5-webcam"]
+tile = "portal/images/apps/webcam.webp"
 
-[hdcontrol]
+[controller]
 category = "utilities"
-icons = ["apps/hdcontrol/images/ps5-usb-hdcontrol"]
-tile = "portal/images/apps/hdcontrol.webp"
+icons = ["apps/controller/images/ps5-controller"]
+tile = "portal/images/apps/controller.webp"
 
 [ssd]
 category = "utilities"
