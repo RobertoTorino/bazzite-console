@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 00:08:05
+
+Release 0.2.2.
+
 Changelog: 14-11-2026 00:04:08
 
 Fixed. Choosing a theme shows it. The Theme pill only saved the next theme, which the portal reads when it starts, so
