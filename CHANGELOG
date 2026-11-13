@@ -1,3 +1,9 @@
+Changelog: 13-11-2026 23:40:46
+
+Fixed. A test of Xbox Remote Play compared the app's version with the fixed number 0.1.0, so CI failed on the
+commit that released 0.1.1 and the release run stopped before it built anything. The test compares the version in
+the code with the VERSION file.
+
 Changelog: 13-11-2026 23:28:59
 
 Added. A release workflow of this repository's own, .github/workflows/release.yml, which Nexus Release Tool's Start

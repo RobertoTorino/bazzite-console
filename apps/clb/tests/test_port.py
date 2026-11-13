@@ -14,7 +14,7 @@ from console_linkb import APP_ID, INFO, ROOT, __version__, auth, exit_keys
 
 def test_target_identity_and_account_path(tmp_path):
     assert APP_ID == "ps5-xbox-remoteplay"
-    assert __version__ == (ROOT / "VERSION").read_text().strip() == "0.1.0"
+    assert __version__ == (ROOT / "VERSION").read_text().strip()         # the number is the release's, not the test's
     assert INFO.tag_prefix == "ps5-clb-v"
     assert auth.account_file() == tmp_path / "config" / APP_ID / "account.json"
 
