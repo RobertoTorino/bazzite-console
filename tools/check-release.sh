@@ -5,8 +5,8 @@ set -euo pipefail
 export PATH="$PATH:${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}/bin"
 cd "$(dirname "$0")/.."
 REPO=$PWD
-URL=${PS5_RELEASE_URL:-https://github.com/RobertoTorino/nexus-console/releases/download}
-GH_REPO_NAME=RobertoTorino/nexus-console
+URL=${PS5_RELEASE_URL:-https://github.com/RobertoTorino/bazzite-console/releases/download}
+GH_REPO_NAME=RobertoTorino/bazzite-console
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/bazzite-console-release-check"
 PORTAL="$HOME/.local/bin/bazzite-console-suite"
 

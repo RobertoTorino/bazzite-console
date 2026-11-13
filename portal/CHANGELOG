@@ -1,0 +1,5 @@
+Changelog: 13-11-2026 20:18:54
+
+Fixed. Desktop icons knows Fan Control, System Overlay and HDMI CEC Manager: their icons were not added to or removed
+from the Desktop with the others. Installing an app from a checkout works in the Nexus checkout the suite is cloned
+into (the Nexus tools at its root, the suite in bazzite-console/); the suite no longer carries a copy of the tools.

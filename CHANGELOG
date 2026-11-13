@@ -1,0 +1,24 @@
+Changelog: 13-11-2026 20:18:54
+
+Breaking. The suite uses the Nexus tools from Nexus and keeps no copy of them (owner, 13-11-2026: one repository per
+suite, the tooling in Nexus). It is worked on inside a Nexus checkout, cloned there as bazzite-console/, and every
+job of its workflows starts with Nexus's action, which checks out Nexus at the commit NEXUS_REF names and this
+repository inside it. Removed: the copies of the Nexus tools in tools/ (apply_design.py, app_tour.py,
+build_release.py, check_versions.py, ci-local.sh, ci-qt-libs.sh, git-setup.sh, stage_app.py, suites.py,
+tag-release.sh, tour_frames.py, the design panel and the disclaimer hook) with their tests, the CHANGELOG merge
+driver and check (merge_changelog.py, check_changelogs.py: Nexus has none), the copies of the Nexus apps in dev/ with
+their own core, and eight stray files at the root. The suite's own tools stay, and its core stays its own
+(core/bazzite_console_core): the Nexus tools bundle it. ci.yml is written again for the Nexus checkout, with a job for
+the Nexus tools' tests, and release.yml is new (a release commit started by hand, or a tag); a release is built by
+GitHub, no longer by tag-release.sh on this machine. The wiki takes the Nexus tools' hooks and is published by
+Nexus's docs.yml at robertotorino.github.io/nexus/bazzite-console-suite/. New at the root: CLAUDE.md and NEXUS_REF;
+.gitattributes is Nexus's.
+
+Fixed. Every address named github.com/RobertoTorino/nexus-console and robertotorino.github.io/nexus-console, which
+do not exist: the repository is RobertoTorino/bazzite-console (the core's SUITE_REPO_URL, where the apps and the
+portal look for releases; the READMEs' badges; the wiki). Fan Control, System Overlay and HDMI CEC Manager, listed in
+portal/apps.toml, now have their wiki chapter, their installer test and their line in the README, the wiki's app list
+and its categories. The wiki and the README no longer describe Media cards: the portal has none. The installer
+tests stage with the Nexus tools; Bazzite Test's and the release test expect the app in /opt, where its installer
+puts it. tools/check_manifest.py compares a "Changes the board" box with the manifest's text whatever its line
+breaks. portal/apps.toml names Bazzite Test's next release, ps5-bazzite-v0.2.0, its VERSION (owner, 13-11-2026).

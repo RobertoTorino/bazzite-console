@@ -35,4 +35,4 @@ available update is not installed by this app. Back up before using another tool
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/nexus-console/blob/main/apps/ssd/LICENSE).
+GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/bazzite-console/blob/main/apps/ssd/LICENSE).

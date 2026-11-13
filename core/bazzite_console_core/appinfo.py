@@ -9,8 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-SUITE_REPO_URL = "https://github.com/RobertoTorino/nexus-console"
-SUITE_MANUAL_URL = "https://robertotorino.github.io/nexus-console/"     # one chapter per app: apps/<key>/
+SUITE_REPO_URL = "https://github.com/RobertoTorino/bazzite-console"
+SUITE_MANUAL_URL = "https://robertotorino.github.io/nexus/bazzite-console-suite/"     # one chapter per app: apps/<key>/
 
 
 

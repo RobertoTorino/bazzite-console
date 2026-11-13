@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
 ![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
-[![CI](https://github.com/RobertoTorino/nexus-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus-console/actions/workflows/ci.yml)
+[![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
 # PPSSPP Manager
@@ -10,7 +10,7 @@ PPSSPP Manager installs [PPSSPP](https://www.ppsspp.org) on **Bazzite** running 
 folders for PSP games, and creates Steam entries for Game Mode. Game compatibility and performance vary by title
 and are not guaranteed on this hardware.
 
-How to install and use it: [PPSSPP Manager in the manual](https://robertotorino.github.io/nexus-console/apps/ppsspp/).
+How to install and use it: [PPSSPP Manager in the manual](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/ppsspp/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

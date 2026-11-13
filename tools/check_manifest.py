@@ -139,7 +139,7 @@ def check_board_changes(entries) -> list[str]:
         box = wiki_board_box(chapter.read_text(encoding="utf-8")) if chapter.is_file() else None
         if box is None:
             errors.append(f"docs/apps/{entry.key}.md must open with a {BOARD_BOX} box right after its title")
-        elif box != entry.board_change:
+        elif box != " ".join(entry.board_change.split()):      # the manifest's text may span lines
             errors.append(f"docs/apps/{entry.key}.md: the \"Changes the board\" box differs from "
                           f"[apps.{entry.key}] board_change")
     return errors

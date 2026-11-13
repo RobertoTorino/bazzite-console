@@ -42,4 +42,4 @@ An incorrect configuration or firewall change can lock you out; keep another way
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/nexus-console/blob/main/apps/sftp/LICENSE).
+GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/bazzite-console/blob/main/apps/sftp/LICENSE).

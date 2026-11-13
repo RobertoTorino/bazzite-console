@@ -30,6 +30,9 @@ APP_LAUNCHERS = frozenset(f"{app_id}.desktop" for app_id in (
     "ps5-vita3k-manager",
     "ps5-xenia-manager",
     "ps5-xbox-remoteplay",
+    "ps5-system-overlay",
+    "ps5-fan-control",
+    "ps5-hdmi-cec",
 ))
 
 

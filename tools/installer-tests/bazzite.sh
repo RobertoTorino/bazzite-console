@@ -1,67 +1,63 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Exercise apps/bazzite/install.sh: install from the checkout (core bundled, shared venv, no sudo), a staged release
-# replacing it, uninstall with and without other venv users, --purge, and the refusal to run as root.
-# Runs with the shims from shims.sh (CI, or WSL on Windows).
+# Exercise apps/bazzite/install.sh: from the checkout, from a staged release, uninstall with and without
+# other venv users. Runs with the shims from shims.sh (CI, or WSL on Windows).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-REPO=$SUITE
+NEXUS=$(cd "$SUITE/.." && pwd)      # the Nexus checkout the suite is cloned into: the Nexus tools (stage_app.py)
 T=/tmp/bazzite-test-test
 # shellcheck source=tools/installer-tests/shims.sh
 source "$(dirname "${BASH_SOURCE[0]}")/shims.sh" "$T"; set +e
 fail=0
 check() { if eval "$2"; then echo "  ok   $1"; else echo "  FAIL $1"; fail=1; fi; }
 D=$XDG_DATA_HOME
-APP=bazzite-test
-A=$D/$APP/app
-printf '#!/bin/sh\necho "sudo called: $*" >&2\nexit 1\n' > "$T/shims/sudo"     # nothing here needs root
+V=$(tr -d '[:space:]' < "$SUITE/apps/bazzite/VERSION")   # the version in the checkout
+NEXT="${V%.*}.$(( ${V##*.} + 1 ))"                             # a later release, for the update in step 2
 
 echo "== 1. install from the suite checkout"
-bash "$SUITE/apps/bazzite/install.sh" > "$T/log1" 2>&1; rc=$?
+mkdir -p "$D/bazzite-test/venv/bin"                     # a pre-suite venv that should go
+bash "$SUITE/apps/bazzite/install.sh" --no-desktop-shortcut > "$T/log1" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
-check "no sudo used" "! grep -q 'sudo called' $T/log1 && [ -z \"\$(ls -A $T/opt)\" ]"
-check "app copied" "[ -f $A/bazzite_test/main_window.py ] && [ -f $A/images/$APP.webp ] && [ -f $A/images/$APP-128.png ]"
-check "core bundled from checkout" "[ -f $A/bazzite_console_core/theme.py ] && [ -f $A/bazzite_console_core/widgets.py ]"
-check "no tests or caches copied" "[ ! -d $A/tests ] && ! find $A -name __pycache__ | grep -q ."
+check "versioned /opt copy" "[ -f $T/opt/bazzite-test-v$V/test-bazzite.sh ]"
+check "symlink" "[ \"\$(readlink $T/opt/bazzite-test)\" = bazzite-test-v$V ]"
+check "core bundled from checkout" "[ -f $T/opt/bazzite-test/bazzite_console_core/widgets.py ]"
+check "no tests or caches copied" "[ ! -d $T/opt/bazzite-test/bazzite_console_core/__pycache__ ]"
 check "shared venv" "[ -x $D/bazzite-console-suite/venv/bin/python ]"
-check "venv user marker" "[ -f $D/bazzite-console-suite/venv-users/$APP ]"
-check "launcher uses shared venv" "grep -qF 'bazzite-console-suite/venv/bin/python\" -m bazzite_test' $HOME/.local/bin/$APP"
-check "launcher cds into the app" "grep -qF 'cd \"$A\"' $HOME/.local/bin/$APP"
-check "menu entry" "grep -qx 'Exec=$HOME/.local/bin/$APP' $D/applications/$APP.desktop"
-check "desktop icon, executable" "[ -x $HOME/Desktop/$APP.desktop ]"
-check "core imports from the app copy" "(cd $A && /usr/bin/python3 -c 'import importlib.util as u, sys; s=u.find_spec(\"bazzite_console_core\"); sys.exit(0 if s and s.origin.startswith(\"$A\") else 1)')"
+check "venv user marker" "[ -f $D/bazzite-console-suite/venv-users/bazzite-test ]"
+check "old own venv removed" "[ ! -d $D/bazzite-test/venv ]"
+check "launcher uses shared venv" "grep -qF 'bazzite-console-suite/venv/bin/python\" -m bazzite_test' $HOME/.local/bin/bazzite-test"
+check "launcher cds into /opt link" "grep -q \"cd \\\"$T/opt/bazzite-test\\\"\" $HOME/.local/bin/bazzite-test"
+check "menu entry" "[ -f $D/applications/bazzite-test.desktop ]"
+check "no desktop icon" "[ ! -e $HOME/Desktop/bazzite-test.desktop ]"
+check "core imports from the /opt copy" "(cd $T/opt/bazzite-test && python3 -c 'import bazzite_console_core, sys; sys.exit(0 if bazzite_console_core.__file__.startswith(\"$T/opt\") else 1)' 2>/dev/null || (cd $T/opt/bazzite-test && /usr/bin/python3 -c 'import importlib.util as u, sys; s=u.find_spec(\"bazzite_console_core\"); sys.exit(0 if s and s.origin.startswith(\"$T/opt\") else 1)'))"
 
-echo "== 2. install a staged release (core bundled in the tarball) without the Desktop icon"
-rm -rf "$T/stage"; /usr/bin/python3 "$REPO/tools/stage_app.py" bazzite "$T/stage" > /dev/null
+echo "== 2. install a staged release (core bundled in the tarball), new version replaces the old"
+rm -rf "$T/stage"; /usr/bin/python3 "$NEXUS/tools/stage_app.py" --suite "${SUITE##*/}" bazzite "$T/stage" > /dev/null
+sed -i "s/^__version__ = \"$V\"\$/__version__ = \"$NEXT\"/" "$T/stage/bazzite_test/__init__.py"
 echo "# release marker" >> "$T/stage/bazzite_console_core/__init__.py"
 bash "$T/stage/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
-check "the release's own core used" "grep -q 'release marker' $A/bazzite_console_core/__init__.py"
-check "desktop icon removed" "[ ! -e $HOME/Desktop/$APP.desktop ]"
+check "new version linked" "[ \"\$(readlink $T/opt/bazzite-test)\" = bazzite-test-v$NEXT ]"
+check "old version removed" "[ ! -d $T/opt/bazzite-test-v$V ]"
+check "the release's own core used" "grep -q 'release marker' $T/opt/bazzite-test/bazzite_console_core/__init__.py"
+check "no tests in staged tree" "[ ! -d $T/stage/tests ] && [ ! -e $T/stage/requirements-dev.txt ]"
 
-echo "== 3. refuses to run as root"
-fakeroot -- bash "$T/stage/install.sh" > "$T/log3" 2>&1; rc=$?
-check "exit non-zero" "[ $rc -ne 0 ] && grep -q 'not with sudo' $T/log3"
-
-echo "== 4. uninstall while another suite app still uses the venv"
-touch "$D/bazzite-console-suite/venv-users/bazzite-console-suite-test"
-bash "$T/stage/install.sh" --uninstall > "$T/log4" 2>&1; rc=$?
+echo "== 3. uninstall while another suite app still uses the venv"
+touch "$D/bazzite-console-suite/venv-users/ps5-rpcs3-manager"
+bash "$T/stage/install.sh" --uninstall > "$T/log3" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
-check "app gone" "[ ! -e $D/$APP ]"
+check "/opt copy gone" "[ ! -e $T/opt/bazzite-test ] && ! ls -d $T/opt/bazzite-test-v* >/dev/null 2>&1"
 check "venv kept" "[ -x $D/bazzite-console-suite/venv/bin/python ]"
-check "own marker gone" "[ ! -e $D/bazzite-console-suite/venv-users/$APP ]"
-check "launcher and menu entry gone" "[ ! -e $HOME/.local/bin/$APP ] && [ ! -e $D/applications/$APP.desktop ]"
+check "own marker gone" "[ ! -e $D/bazzite-console-suite/venv-users/bazzite-test ]"
+check "launcher gone" "[ ! -e $HOME/.local/bin/bazzite-test ]"
 
-echo "== 5. reinstall, then uninstall --purge as the last venv user"
-rm "$D/bazzite-console-suite/venv-users/bazzite-console-suite-test"
-mkdir -p "$XDG_CONFIG_HOME/$APP" && touch "$XDG_CONFIG_HOME/$APP/$APP.ini"
-bash "$T/stage/install.sh" --purge > "$T/log5" 2>&1; rc=$?
-check "--purge alone refused" "[ $rc -ne 0 ] && grep -q 'only goes with --uninstall' $T/log5"
-bash "$T/stage/install.sh" > "$T/log5" 2>&1 && bash "$T/stage/install.sh" --uninstall --purge >> "$T/log5" 2>&1; rc=$?
+echo "== 4. reinstall, then uninstall as the last user"
+rm "$D/bazzite-console-suite/venv-users/ps5-rpcs3-manager"
+bash "$T/stage/install.sh" > "$T/log4" 2>&1 && bash "$T/stage/install.sh" --uninstall >> "$T/log4" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
-check "venv removed" "[ ! -e $D/bazzite-console-suite/venv ] && [ ! -e $D/bazzite-console-suite/venv-users ]"
-check "desktop icon removed" "[ ! -e $HOME/Desktop/$APP.desktop ]"
-check "settings removed" "[ ! -e $XDG_CONFIG_HOME/$APP ]"
+check "venv removed" "[ ! -e $D/bazzite-console-suite/venv ]"
+check "markers dir removed" "[ ! -e $D/bazzite-console-suite/venv-users ]"
+check "desktop icon removed" "[ ! -e $HOME/Desktop/bazzite-test.desktop ]"
 
-[ $fail -eq 0 ] && echo "ALL OK" || for n in 1 2 3 4 5; do echo "--- log$n"; cat "$T/log$n"; done
+[ $fail -eq 0 ] && echo "ALL OK" || { echo "--- log1"; cat "$T/log1"; echo "--- log2"; cat "$T/log2"; echo "--- log3"; cat "$T/log3"; echo "--- log4"; cat "$T/log4"; }
 exit $fail

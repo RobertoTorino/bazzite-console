@@ -17,7 +17,7 @@ ROOT = PACKAGE_DIR.parent
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 DATA_DIR = PACKAGE_DIR / "data"                 # the questions and the system software versions, as JSON
 SOUNDS_DIR = PACKAGE_DIR / "sounds"             # the quiz music
-REPO_URL = "https://github.com/RobertoTorino/nexus-console"
+REPO_URL = "https://github.com/RobertoTorino/bazzite-console"
 
 # Settings in ~/.config/ps5-datstation/ps5-datstation.ini; scores in ~/.local/share/ps5-datstation/.
 INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH,

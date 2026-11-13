@@ -40,5 +40,5 @@ exec /usr/bin/python3 "$@"
 X
 chmod +x "$ROOT/shims/"*
 export PATH="$ROOT/shims:$PATH" HOME="$ROOT/home" XDG_DATA_HOME="$ROOT/home/.local/share" \
-       XDG_CONFIG_HOME="$ROOT/home/.config" NEXUS_CONSOLE_OPT_DIR="$ROOT/opt" \
+       XDG_CONFIG_HOME="$ROOT/home/.config" NEXUS_CONSOLE_OPT_DIR="$ROOT/opt" BAZZITE_TEST_OPT_DIR="$ROOT/opt" \
        NEXUS_CONSOLE_LOG_DIR="$ROOT/log"

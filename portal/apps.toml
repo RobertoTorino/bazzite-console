@@ -4,7 +4,7 @@
 [apps.bazzite]
 name = "Bazzite Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-bazzite-v0.1.0"
+tag = "ps5-bazzite-v0.2.0"
 sha256 = ""
 required = true
 changes_board = false

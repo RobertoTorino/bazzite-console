@@ -2,9 +2,9 @@
 
 site_name: Bazzite Console Suite
 site_description: Tools for PlayStation 5 hardware running Bazzite
-site_url: https://robertotorino.github.io/nexus-console/
-repo_url: https://github.com/RobertoTorino/nexus-console
-repo_name: RobertoTorino/nexus-console
+site_url: https://robertotorino.github.io/nexus/bazzite-console-suite/
+repo_url: https://github.com/RobertoTorino/bazzite-console
+repo_name: RobertoTorino/bazzite-console
 edit_uri: edit/main/docs/
 docs_dir: docs
 strict: true
@@ -13,8 +13,8 @@ plugins:
   - privacy
 hooks:
   - tools/mkdocs/hooks.py
-  - tools/mkdocs/design_panel.py
-  - tools/mkdocs/disclaimer.py
+  - ../tools/mkdocs/design_panel.py   # a design panel while `mkdocs serve` runs (the Nexus tools)
+  - ../tools/mkdocs/disclaimer.py     # the disclaimer every wiki shows (the Nexus tools)
 theme:
   name: material
   custom_dir: tools/mkdocs/overrides
@@ -75,6 +75,9 @@ nav:
       - Webcam: apps/webcam.md
       - Controller: apps/controller.md
       - SSD Check: apps/ssd.md
+      - HDMI CEC Manager: apps/cec.md
+      - System Overlay: apps/overlay.md
+      - Fan Control: apps/fan.md
   - Development:
       - development/index.md
   - Security:

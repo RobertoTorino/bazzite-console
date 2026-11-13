@@ -19,7 +19,7 @@ from pathlib import Path
 
 SUITE = Path(__file__).resolve().parent.parent
 MANIFEST = SUITE / "portal" / "apps.toml"
-REPO_URL = "https://github.com/RobertoTorino/nexus-console"
+REPO_URL = "https://github.com/RobertoTorino/bazzite-console"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v\d+\.\d+\.\d+$")
 TAG_PREFIX = (SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip()
 

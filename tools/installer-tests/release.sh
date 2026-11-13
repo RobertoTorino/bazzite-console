@@ -4,6 +4,7 @@
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 REPO=$SUITE
+NEXUS=$(cd "$SUITE/.." && pwd)      # the Nexus checkout the suite is cloned into: the Nexus tools
 GIT_ROOT=$(git -C "$SUITE" rev-parse --show-toplevel)
 SUITE_REL=$(realpath --relative-to="$GIT_ROOT" "$SUITE")
 T=$(mktemp -d "${TMPDIR:-/tmp}/bazzite-console-release-test.XXXXXX")
@@ -29,17 +30,21 @@ if [[ "$MODE" == local ]]; then
     APP="ps5-bazzite-v$(tr -d '[:space:]' < "$SUITE/apps/bazzite/VERSION")"
     PORTAL="ps5-portal-v$(tr -d '[:space:]' < "$SUITE/portal/VERSION")"
     export SOURCE_DATE_EPOCH=1790000000
-    mkdir -p "$T/suite" "$T/build-app"
+    # A copy of the Nexus checkout as the tools know it: the Nexus tools at its root, and this suite as git sees it
+    # (tracked and new files, nothing ignored) in its folder.
+    N=$T/nexus
+    S=$N/${SUITE##*/}
+    mkdir -p "$S" "$T/build-app" "$N/tools"
+    cp "$NEXUS"/tools/*.py "$N/tools/"
     git -C "$GIT_ROOT" ls-files -z --cached --others --exclude-standard -- "$SUITE_REL/" |
         while IFS= read -r -d '' f; do
             f=${f#"$SUITE_REL"/}
             [ -e "$REPO/$f" ] && printf '%s\0' "$f"
         done | tar -C "$REPO" --null -T - -cf - |
-        tar -xf - -C "$T/suite"
-    S=$T/suite
+        tar -xf - -C "$S"
 
     echo "== 1. build the app and portal releases"
-    /usr/bin/python3 "$S/tools/build_release.py" "$APP" "$T/build-app" > "$T/build-app.log" 2>&1 || {
+    /usr/bin/python3 "$N/tools/build_release.py" --suite "${SUITE##*/}" "$APP" "$T/build-app" > "$T/build-app.log" 2>&1 || {
         cat "$T/build-app.log"; exit 1;
     }
     /usr/bin/python3 "$S/tools/pin_app.py" "$APP" \
@@ -51,7 +56,7 @@ if [[ "$MODE" == local ]]; then
     }
     mkdir -p "$T/bundle"
     cp "$T/build-app/$APP.tar.gz" "$T/build-app/SHA256SUMS" "$T/bundle/"
-    /usr/bin/python3 "$S/tools/build_release.py" "$PORTAL" "$T/build-portal" --bundle "$T/bundle" \
+    /usr/bin/python3 "$N/tools/build_release.py" --suite "${SUITE##*/}" "$PORTAL" "$T/build-portal" --bundle "$T/bundle" \
         > "$T/build-portal.log" 2>&1 || { cat "$T/build-portal.log"; exit 1; }
     check "app and portal tarballs built with valid checksums" \
         "[ -f $T/build-app/$APP.tar.gz ] && [ -f $T/build-portal/$PORTAL.tar.gz ] && \
@@ -76,7 +81,7 @@ check "portal and bundled app installers are executable" \
     "[ -x $PORTAL_DIR/install.sh ] && [ -x $PORTAL_DIR/bundled/$APP/install.sh ]"
 (cd /tmp && "$PORTAL_DIR/install.sh" > "$T/install.log" 2>&1); rc=$?
 check "portal install succeeds" "[ $rc -eq 0 ]"
-check "required app was installed" "[ -f $D/bazzite-test/app/bazzite_test/main_window.py ]"
+check "required app was installed" "[ -f $T/opt/bazzite-test/bazzite_test/main_window.py ]"
 check "portal launcher was installed" "[ -x $HOME/.local/bin/bazzite-console-suite ]"
 
 [ $fail -eq 0 ] && echo "ALL OK" || { cat "$T/install.log"; exit 1; }

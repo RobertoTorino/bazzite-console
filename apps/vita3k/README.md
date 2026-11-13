@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
 ![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
-[![CI](https://github.com/RobertoTorino/nexus-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus-console/actions/workflows/ci.yml)
+[![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
 # Vita3K Manager
@@ -10,7 +10,7 @@ Vita3K Manager installs [Vita3K](https://vita3k.org) on **Bazzite** running on P
 access to its firmware and game installers, and creates Steam entries for installed titles. Game compatibility and
 performance vary and are not guaranteed on this hardware.
 
-How to install and use it: [Vita3K Manager in the manual](https://robertotorino.github.io/nexus-console/apps/vita3k/).
+How to install and use it: [Vita3K Manager in the manual](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/vita3k/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

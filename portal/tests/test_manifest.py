@@ -11,7 +11,7 @@ from bazzite_console_portal.manifest import ManifestError, load, load_cards, par
 
 def test_required_app_is_first_and_only_required():
     entries = load(ROOT / "apps.toml")
-    assert len(entries) == 14
+    assert len(entries) == 17
     assert entries[0].key == "bazzite"
     assert entries[0].name == "Bazzite Test"
     assert entries[0].required

@@ -2,11 +2,13 @@
 
 # Apps
 
-**Sustainable**: read-only system and device information.
+**Sustainable**: system and device information, and what keeps the console cool.
 
 | App | What it does |
 |---|---|
 | ![](../assets/apps/bazzite.webp){ .app-icon } [Bazzite Test](bazzite.md) | Read-only system details for PlayStation 5 hardware running Bazzite. |
+| ![](../assets/apps/overlay.webp){ .app-icon } [System Overlay](overlay.md) | A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values. |
+| ![](../assets/apps/fan.webp){ .app-icon } [Fan Control](fan.md) | The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature. |
 
 **Gaming**: Emulators and console tools for games.
 
@@ -30,15 +32,5 @@
 | ![](../assets/apps/webcam.webp){ .app-icon } [Webcam](webcam.md) | Use a compatible PlayStation camera as a webcam. |
 | ![](../assets/apps/controller.webp){ .app-icon } [Controller](controller.md) | Manage DualSense and DualSense Edge controllers. |
 | ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | Inspect storage health and drive information when supported. |
-
-**Media**: Video and other media.
-
-| Card | What it does |
-|---|---|
-| [YouTube](media.md) | Opens regular YouTube fullscreen in Brave Browser. |
-| [Twitch](media.md) | Opens Twitch fullscreen in Brave Browser. |
-| [Stremio](media.md) | Opens the Stremio app. |
-
-Brave Browser or Stremio must be installed as a Flatpak to use the corresponding card.
-
+| ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC. |
 Apps that change the system must explain their changes and ask before applying them.
