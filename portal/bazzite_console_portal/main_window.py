@@ -10,7 +10,7 @@ date and time (status.py: the loads every 2 s, the clock every second), the cloc
 narrow. With a place chosen, the weather follows the symbols (weather.py, from Open-Meteo every 30 minutes): its
 symbol and the place's name. ☰ opens the Settings page (owner, 04-11-2026, as the earlier implementation's portal;
 the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the theme (a
-click goes to the next one), the wallpaper, the clock (12 or 24 hours, the seconds, the system's time zone, CET or
+menu of them; the portal starts again to show the one chosen), the wallpaper, the clock (12 or 24 hours, the seconds, the system's time zone, CET or
 UTC), the weather's place and the touchpad's speed, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
 the open category; check is the first tile on Sustainable (owner, 20-10-2026). The portal always opens on the
 first category (owner, 20-10-2026). Everything is reached with the keyboard, the mouse or a controller
@@ -139,7 +139,7 @@ TOUCH_SPEEDS = (50, 75, 100, 125, 150)    # % of gamepad.TOUCH_SPEED: the Touchp
 # weather)
 SETTING_LINES = ("An icon on the Desktop for every installed app, or only the portal's.",
                  "The intro's sound, and a short one for each action.",
-                 "The look of every app in the suite, from its next start.",
+                 "The look of every app in the suite. The portal starts again to show it.",
                  "A picture behind the portal, and how much of it shows through.",
                  "12 or 24 hours, the seconds, and the time zone of the clock.",
                  "The weather where you are, beside the symbols, from Open-Meteo.",
@@ -584,9 +584,9 @@ class MainWindow(QMainWindow):
         self.sound_box = TogglePill("Sound", self.sound_tip, self.sounds.enabled)
         self.sound_box.toggled.connect(self._set_sound)
         self.theme_pill = HeaderPill(THEMES[theme_name()].label, "Theme switcher",
-                                     "The look of every app in the suite. Click for the next theme; each app takes "
-                                     "it the next time it starts, the portal too.")
-        self.theme_pill.clicked.connect(self._next_theme)
+                                     "The look of every app in the suite. Click to choose one: the portal starts "
+                                     "again to show it, and each app takes it the next time it starts.")
+        self.theme_pill.clicked.connect(self._theme_menu)
         self.wallpaper_pill = HeaderPill("None", "Wallpaper")
         self.wallpaper_pill.clicked.connect(self._wallpaper_menu)
         self.clock_pill = HeaderPill("12 h", "Clock")
@@ -1101,12 +1101,43 @@ class MainWindow(QMainWindow):
         if not self.icons_box.isChecked():
             desktop_icons.remove(self.desktop, self.menu)
 
-    def _next_theme(self) -> None:
-        """The theme pill: the next theme, for every app; each takes it the next time it starts."""
-        names = list(THEMES)
-        name = names[(names.index(theme_name()) + 1) % len(names)]
+    def theme_menu(self) -> QMenu:
+        """The Theme pill's menu: every theme by name, the chosen one ticked."""
+        menu = QMenu(self)
+        group = QActionGroup(menu)
+        for name, theme in THEMES.items():
+            action = menu.addAction(theme.label)
+            action.setCheckable(True)
+            action.setChecked(name == theme_name())
+            action.setData(name)
+            group.addAction(action)
+        menu.triggered.connect(lambda action: self.choose_theme(action.data()))
+        return menu
+
+    def _theme_menu(self) -> None:
+        self._show_menu(self.theme_menu(), self.theme_pill)
+
+    def choose_theme(self, name: str, restart: bool = True) -> None:
+        """The theme for every app. An app takes it when it starts, and so does the portal: it starts again at once
+        to show it (*restart*), unless an install runs or it has no launcher to start from (a portal run from a
+        checkout); then it says that the theme shows at the next start."""
+        if name == theme_name():
+            return
         save_theme_name(name)
         self.theme_pill.set_value(THEMES[name].label, self.theme_pill.toolTip())
+        if not restart:
+            return
+        if self.busy() or not (bin_home() / APP_ID).is_file():
+            QMessageBox.information(self, APP_NAME, f"{THEMES[name].label} is chosen. The portal shows it the next "
+                                    "time it starts" + (", after the installation that runs now." if self.busy()
+                                                        else "."))
+            return
+        self.restart_portal()
+
+    def _next_theme(self) -> None:
+        """The next theme, chosen without the restart (the portal tour's click)."""
+        names = list(THEMES)
+        self.choose_theme(names[(names.index(theme_name()) + 1) % len(names)], restart=False)
 
     def _show_wallpaper(self) -> None:
         shown = wallpaper.shown()

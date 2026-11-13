@@ -34,15 +34,18 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: Inspect storage health and drive information when supported.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC.
 
-How to install and use the suite: [the wiki](https://robertotorino.github.io/bazzite-console/).
+## Install
+
+You install one thing, the portal; it installs the apps. The
+[Install page of the wiki](https://robertotorino.github.io/bazzite-console/install/) has the few lines to paste into a
+terminal. The download itself is the [latest release](https://github.com/RobertoTorino/bazzite-console/releases/latest),
+which is always the portal's; the other releases are the apps', which the portal downloads for you.
+
+How to use the suite: [the wiki](https://robertotorino.github.io/bazzite-console/).
 
 ## License
 
 GPL-3.0-or-later, see [LICENSE](LICENSE).
-
-## Media trademarks
-
-The X (formerly Twitter), Instagram, Discord, TikTok, WhatsApp, Netflix and Spotify names and marks belong to their respective owners. The Simple Icons artwork used for the portal's Media launcher cards is dedicated under [CC0 1.0](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md); that dedication does not grant trademark rights. The names and marks identify third-party services only and do not imply affiliation with or endorsement by their owners.
 
 ## Disclaimer
 

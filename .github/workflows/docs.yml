@@ -4,9 +4,13 @@ name: Wiki
 # Builds the wiki (MkDocs Material) from main and publishes it on GitHub Pages, at
 # https://robertotorino.github.io/bazzite-console/ (Settings -> Pages -> Source: GitHub Actions).
 
+# A published portal release builds it again, so the Install page names that release.
+
 on:
   push:
     branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -23,6 +27,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0                # the tags: the Install page names the newest published portal
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

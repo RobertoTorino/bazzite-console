@@ -138,3 +138,31 @@ def test_first_start_detects_console_shortcuts_and_toggle_restores_them(window, 
     assert (desktop / name).is_file()
     window.icons_box.setChecked(False)
     assert not (desktop / name).exists()
+
+
+def test_the_theme_pill_lists_the_themes_and_the_portal_starts_again(window, home, monkeypatch):
+    """A theme is read when a program starts, so a click that only saved it looked like nothing happened."""
+    from bazzite_console_core import theme
+
+    assert [(a.text(), a.isChecked()) for a in window.theme_menu().actions()] == [
+        ("Gunmetal", True), ("Silver", False), ("Warm", False)]
+    started = []
+    monkeypatch.setattr(window, "launch", lambda argv: started.append(argv) or True)
+    shown = []
+    monkeypatch.setattr(QMessageBox, "information", lambda *args: shown.append(args[2]))
+
+    window.choose_theme("silver")                       # run from a checkout: no launcher to start again from
+    assert theme.theme_name() == "silver" and window.theme_pill.value.text() == "Silver"
+    assert not started and "next time it starts" in shown[0]
+
+    launcher = home / ".local" / "bin" / "bazzite-console-suite"
+    launcher.write_text("#!/bin/sh\n", encoding="utf-8")
+    window.choose_theme("silver")                       # the one chosen already: nothing happens
+    assert not started
+    monkeypatch.setattr("bazzite_console_portal.main_window.QCoreApplication.quit", lambda: None)
+    window.choose_theme("warm")
+    assert theme.theme_name() == "warm" and started and started[0][-1] == str(launcher)
+
+    window._next_theme()                                # the tour's click: the next one, without a restart
+    assert theme.theme_name() == "gunmetal" and len(started) == 1
+

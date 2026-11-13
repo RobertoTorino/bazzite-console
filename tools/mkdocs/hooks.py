@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import io
 import re
+import subprocess
 from functools import lru_cache
 from pathlib import Path
 
@@ -80,9 +81,20 @@ def on_files(files, config):
 
 
 def portal_tag() -> str:
-    """The tag of the portal's release, from its VERSION: ps5-portal-v0.2.1."""
-    prefix = (SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip()
-    return f"{prefix}portal-v{(SUITE / 'portal' / 'VERSION').read_text(encoding='utf-8').strip()}"
+    """The tag of the newest published portal release, ps5-portal-v0.2.1: the newest portal tag in the checkout (a
+    portal's tag is made when its release is published, so a draft is never linked to). Without tags (a checkout
+    without them), the tag portal/VERSION names."""
+    prefix = (SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip() + "portal-v"
+    try:
+        tags = subprocess.run(["git", "tag", "--list", f"{prefix}*"], cwd=SUITE, capture_output=True, text=True,
+                              timeout=20).stdout.split()
+    except (OSError, subprocess.SubprocessError):
+        tags = []
+    versions = sorted(tuple(int(part) for part in tag[len(prefix):].split("."))
+                      for tag in tags if re.fullmatch(r"\d+\.\d+\.\d+", tag[len(prefix):]))
+    if versions:
+        return prefix + ".".join(str(part) for part in versions[-1])
+    return prefix + (SUITE / "portal" / "VERSION").read_text(encoding="utf-8").strip()
 
 
 def on_page_markdown(markdown, page, config, files):

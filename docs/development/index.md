@@ -6,6 +6,20 @@ The suite follows the shared app layout and release rules. The Bazzite-specific 
 `tools/`; the docs design panel is part of `mkdocs serve`. The Nexus developer applications have been adapted under
 `dev/` for this suite only.
 
+## Install from a checkout
+
+To try the portal and the apps as they are in the repository, not as they were released, run this from the repository
+root on a PlayStation 5 running Bazzite, as your own user:
+
+```bash
+bash ./install.sh
+```
+
+A portal installed this way installs the apps from the same checkout. `tools/check-release.sh local` does the same
+and starts the portal; `release` and `draft` install a published portal release or the draft of one.
+
+## The development apps
+
 Open `dev/dash/run.sh` for the developer dashboard. It launches the release planner (`dev/nrt/run.sh`), dependency
 checker (`dev/deps/run.sh`), installer-test runner, OBS demo recorder, and sound lab. The release planner's
 `--list` mode is safe for a terminal overview; its release actions are user-driven. The video-tour scripts are

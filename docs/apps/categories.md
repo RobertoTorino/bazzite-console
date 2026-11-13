@@ -2,7 +2,7 @@
 
 # App categories
 
-| App or card | Category |
+| App | Category |
 |---|---|
 | ![](../assets/apps/bazzite.webp){ .app-icon } [Bazzite Test](bazzite.md) | Sustainable |
 | ![](../assets/apps/overlay.webp){ .app-icon } [System Overlay](overlay.md) | Sustainable |

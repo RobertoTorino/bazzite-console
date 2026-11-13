@@ -1,3 +1,18 @@
+Changelog: 13-11-2026 23:59:57
+
+Fixed. The wiki describes the suite as it is. The Install page is written for someone installing for the first time:
+one block to paste into a terminal that downloads the newest published portal, checks it and installs it, then how
+to install the apps, update and uninstall. Installing from a checkout moved to the Development chapter. The home page
+presents the portal and all the apps by category instead of Bazzite Test alone. The Portal chapter no longer
+describes the Media category and its launcher cards, which the portal does not have, and lists the header's symbols,
+the settings and the controls in tables. The README has an Install section and no longer the Media trademarks. Two
+dead links in the home page's footer are fixed.
+
+Fixed. The Install page names the newest published portal release (the newest portal tag), not the version in
+portal/VERSION, which is a draft until it is published: the link was dead in between. Publishing a portal release
+builds the wiki again (docs.yml). tools/tests/test_wiki_apps.py keeps the wiki's and the README's app lists equal to
+portal/apps.toml.
+
 Changelog: 13-11-2026 23:40:46
 
 Fixed. A test of Xbox Remote Play compared the app's version with the fixed number 0.1.0, so CI failed on the

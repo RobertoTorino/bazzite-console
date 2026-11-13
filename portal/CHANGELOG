@@ -1,3 +1,9 @@
+Changelog: 14-11-2026 00:04:08
+
+Fixed. Choosing a theme shows it. The Theme pill only saved the next theme, which the portal reads when it starts, so
+a click looked like it did nothing. The pill now opens a menu of the three themes, the chosen one ticked, and the
+portal starts again at once in the theme chosen. While an installation runs it says the theme shows at the next start.
+
 Changelog: 13-11-2026 23:35:43
 
 Release 0.2.2. Pins ps5-bazzite-v0.2.1, ps5-rpcs3-v0.2.1, ps5-remoteplay-v0.2.1, ps5-clb-v0.1.1, ps5-shadps4-v0.2.1, ps5-datstation-v0.2.1, ps5-ppsspp-v0.2.1, ps5-pcsx2-v0.2.1, ps5-vita3k-v0.2.1, ps5-xenia-v0.2.1, ps5-sftp-v0.1.1, ps5-webcam-v0.1.1, ps5-controller-v0.1.1, ps5-ssd-v0.1.1, ps5-overlay-v0.1.1, ps5-fan-v0.1.1, ps5-cec-v0.1.1.
