@@ -34,7 +34,7 @@ apps/controller/install.sh --uninstall --purge
 
 The launcher is `~/.local/bin/ps5-controller`; the app uses the Console Suite's shared Python environment.
 
-How to use it: [Controller in the wiki](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/controller/).
+How to use it: [Controller in the wiki](https://robertotorino.github.io/bazzite-console/apps/controller/).
 
 ## License and firmware
 

@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Everything needed to run every test folder and build the wiki, in one venv:
+#   python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirements-dev.txt
+-r portal/requirements-dev.txt
+-r tools/requirements-dev.txt
+-r apps/bazzite/requirements-dev.txt
+-r apps/cec/requirements-dev.txt
+-r apps/clb/requirements-dev.txt
+-r apps/controller/requirements-dev.txt
+-r apps/datstation/requirements-dev.txt
+-r apps/fan/requirements-dev.txt
+-r apps/overlay/requirements-dev.txt
+-r apps/pcsx2/requirements-dev.txt
+-r apps/ppsspp/requirements-dev.txt
+-r apps/remoteplay/requirements-dev.txt
+-r apps/rpcs3/requirements-dev.txt
+-r apps/sftp/requirements-dev.txt
+-r apps/shadps4/requirements-dev.txt
+-r apps/ssd/requirements-dev.txt
+-r apps/vita3k/requirements-dev.txt
+-r apps/webcam/requirements-dev.txt
+-r apps/xenia/requirements-dev.txt
+mkdocs-material
+mkdocs>=1.6,<2
+pillow>=12,<13

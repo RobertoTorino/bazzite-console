@@ -9,7 +9,7 @@
 An optional SFTP client and SSH server manager for PlayStation 5 hardware running Bazzite. It can transfer files
 and manage the SSH server on the Bazzite host or a reachable remote Bazzite host. Server changes require consent.
 
-See [SFTP Tools in the wiki](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/sftp/).
+See [SFTP Tools in the wiki](https://robertotorino.github.io/bazzite-console/apps/sftp/).
 
 ## License
 

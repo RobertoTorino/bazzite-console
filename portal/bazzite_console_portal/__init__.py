@@ -4,7 +4,6 @@
 APP_NAME = "Bazzite Console Suite"
 APP_ID = "bazzite-console-suite"
 CHECKOUT_FILE = "suite-checkout"
-SUITE_DIR = "bazzite-console"            # the suite's folder in the Nexus checkout it is cloned into
 __version__ = "0.2.0"
 STAGE = ""
 STAGE_NOTE = ""
@@ -22,7 +21,7 @@ APP_ICONS = ROOT / "images" / "apps"
 CATEGORY_ICONS = ROOT / "images" / "categories"
 CARD_ICONS = ROOT / "images" / "cards"
 CARDS = ROOT / "cards.toml"
-SUITE_MANUAL_URL = "https://robertotorino.github.io/nexus/bazzite-console-suite/"
+SUITE_MANUAL_URL = "https://robertotorino.github.io/bazzite-console/"
 INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH, tag_prefix="ps5-portal-v",
                settings_app=f"{APP_ID}-portal", settings_ini=True)
 
@@ -38,21 +37,19 @@ def state_dir() -> Path:
 
 
 def is_suite(folder: Path) -> bool:
-    """Whether *folder* is a Nexus checkout with the Bazzite Console Suite cloned into it: the suite's apps and its
-    core in bazzite-console/, the Nexus tools (stage_app.py) at the root."""
-    return ((folder / SUITE_DIR / "apps").is_dir() and (folder / "tools" / "stage_app.py").is_file()
-            and (folder / SUITE_DIR / "core").is_dir())
+    """Whether *folder* is a checkout of the standalone Bazzite Console repository."""
+    return ((folder / "apps").is_dir() and (folder / "tools" / "stage_app.py").is_file()
+            and (folder / "core").is_dir())
 
 
 def suite_folder(checkout: Path) -> Path:
-    """The suite's folder in *checkout*: where its apps, portal, docs, core and tools are."""
-    return checkout / SUITE_DIR
+    """The standalone suite is the repository root."""
+    return checkout
 
 
 def suite_checkout() -> Path | None:
-    """The Nexus checkout when this portal runs from one (ROOT is <checkout>/bazzite-console/portal) or was
-    installed from one: apps then install from the local source instead of a GitHub release."""
-    candidates = [ROOT.parent.parent]
+    """The repository when this portal runs from a checkout or was installed from one."""
+    candidates = [ROOT.parent]
     try:
         recorded = (ROOT / CHECKOUT_FILE).read_text(encoding="utf-8").strip()
     except OSError:

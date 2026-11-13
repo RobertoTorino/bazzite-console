@@ -10,7 +10,7 @@ Remote Play is a Linux Remote Play client for PlayStation 5 hardware running **B
 consoles on your network, can wake them from rest mode, registers the client, and starts a session and stream.
 Console, firmware, and network compatibility vary.
 
-How to install and use it: [Remote Play in the manual](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/remoteplay/).
+How to install and use it: [Remote Play in the manual](https://robertotorino.github.io/bazzite-console/apps/remoteplay/).
 
 Escape closes the main window when it is not otherwise handled; dialogs keep their normal Escape behavior. In a
 stream, Escape only leaves full screen and never ends the session. Controller buttons remain available to the game.

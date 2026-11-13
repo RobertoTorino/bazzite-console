@@ -10,7 +10,7 @@ RPCS3 Manager installs and configures [RPCS3](https://rpcs3.net) on **Bazzite** 
 offers PS3 firmware setup, game-library scanning, Steam entries, and an activity log. Game compatibility and
 performance vary by title and are not guaranteed on this hardware.
 
-How to install and use it: [RPCS3 Manager in the manual](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/rpcs3/).
+How to install and use it: [RPCS3 Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/rpcs3/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog. Firmware installation results are read from the RPCS3 log.
 

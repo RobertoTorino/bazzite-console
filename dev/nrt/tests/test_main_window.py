@@ -1,0 +1,396 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""The window on this checkout, offscreen, with no GitHub and no terminal."""
+
+from __future__ import annotations
+
+import pytest
+from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtWidgets import QApplication, QLabel, QWidget
+
+
+@pytest.fixture
+def window():
+    app = QApplication.instance() or QApplication([])
+    from nexus_release_tool.main_window import ReleaseWindow
+    w = ReleaseWindow(runs_source=lambda etag, head="", tags=(): ([], ""), launch=lambda line: None, notify=lambda s, b: True,
+                      status_source=None)
+    w.build.checker.stop(2000)
+    yield w, app
+    w.build.stop()
+    w.close()
+
+
+def test_every_widget_keeps_qts_window_method(window):
+    """An attribute named window on a widget hides QWidget.window(), which the suite's tooltip calls on the widget
+    it is shown for: hovering the build indicator stopped the app that way."""
+    w, _app = window
+    for widget in [w, *w.findChildren(QWidget)]:
+        assert callable(widget.window), type(widget).__name__
+
+
+def test_without_notify_send_the_tray_icon_notifies(window, monkeypatch):
+    """Windows has no notify-send: the notification comes from the tray icon instead (owner, 28-10-2026)."""
+    from nexus_release_tool import main_window
+    w, _app = window
+    shown = []
+    monkeypatch.setattr(main_window.shutil, "which", lambda name: None)
+    monkeypatch.setattr(main_window.QSystemTrayIcon, "isSystemTrayAvailable", staticmethod(lambda: True))
+    monkeypatch.setattr(main_window.QSystemTrayIcon, "showMessage",
+                        lambda self, title, text, icon, ms: shown.append((title, text, ms)))
+    monkeypatch.setattr(main_window, "_tray", None)
+    assert main_window.desktop_notify("alpha-v0.1.0 is ready to pin", "GitHub published it.")
+    assert shown == [("alpha-v0.1.0 is ready to pin", "GitHub published it.", main_window.NOTIFY_MS)]
+    tray = main_window._tray
+    assert tray is not None and tray.toolTip() == main_window.APP_NAME
+    assert main_window.desktop_notify("GitHub build passed", "CI on main: passed")
+    assert main_window._tray is tray and len(shown) == 2                     # one icon, kept
+    monkeypatch.setattr(main_window.QSystemTrayIcon, "isSystemTrayAvailable", staticmethod(lambda: False))
+    monkeypatch.setattr(main_window, "_tray", None)
+    assert not main_window.desktop_notify("x", "y")                          # no notification area: nothing
+    tray.hide()
+
+
+def test_tooltip_over_the_build_indicator(window):
+    from nexus_core.widgets import RoundedToolTip
+    w, app = window
+    w.show()
+    tip = RoundedToolTip(app)
+    tip.show_text(QPoint(5, 5), w.build.toolTip(), w.build)
+    assert tip.popup.isVisible() and tip.popup.parentWidget() is w
+    tip.hide()
+
+
+def test_the_header_is_a_row_of_pills(window):
+    """Refresh, GitHub's build, its API requests left and GitHub status: pills as in the apps' headers, all as wide
+    as the widest (owner, 20-10-2026). No Working tree pill: step 2 of the Nexus release says it (owner,
+    01-11-2026)."""
+    from nexus_core.widgets import MetricBox, Pill
+    w, _app = window
+    pills = [w.refresh_pill, w.build, w.build.rate, w.github_status]
+    assert all(isinstance(p, MetricBox) for p in pills) and not hasattr(w, "status")
+    assert all(isinstance(p, Pill) for p in (w.refresh_pill, w.build, w.github_status))
+    assert [p.caption.text() for p in pills] == \
+        ["Click to refresh", "GitHub build", "GitHub API left", "GitHub status"]
+    w.show()
+    assert len({p.width() for p in pills if p.isVisible()}) == 1
+    refreshed = []
+    w.reload = lambda: refreshed.append(1)
+    w.refresh_pill.click()
+    assert refreshed == [1]
+    # It says it is at it until GitHub's runs are in (owner, 05-11-2026: it seemed to do nothing)
+    caption = w.refresh_pill.caption.text()
+    assert caption == "Refreshing…" or caption.startswith("Refreshed ")
+    w.refreshed()
+    assert w.refresh_pill.caption.text().startswith("Refreshed ")
+    w.build.rate.set_value("A much longer value")                   # every pill grows with the widest
+    assert len({p.minimumWidth() for p in pills}) == 1
+    assert w.refresh_pill.minimumWidth() >= w.build.rate.sizeHint().width()
+
+
+def test_selection_is_a_teal_outline(window):
+    """A selected cell and the focused input field: a rounded outline in Nexus's teal on a transparent background,
+    not the desktop's solid highlight (rendered: the cell's middle keeps the table's own background)."""
+    from PyQt6.QtGui import QColor
+    from nexus_release_tool.style import NEXUS
+    ACCENT = NEXUS.accent
+    w, app = window
+    w.show()
+    table = w.apps_page.table
+    table.setFocus()
+    table.setCurrentCell(1, 1)
+    app.processEvents()
+    rect = table.visualRect(table.model().index(1, 1))
+    image = table.viewport().grab().toImage()
+    blank = rect.right() - 8                                        # right of "ace": background only
+    inside = QColor(image.pixel(blank, rect.center().y()))
+    other = QColor(image.pixel(blank, table.visualRect(table.model().index(0, 1)).center().y()))   # "core"
+    edge = QColor(image.pixel(rect.center().x(), rect.top() + 1))
+    assert inside.name() == other.name()                            # no solid highlight behind the text
+    assert edge.name() == QColor(ACCENT).name()
+    assert f"gridline-color:{NEXUS.edge};" in w.styleSheet()            # the tables' lines: the theme's thin edge
+    assert f"QLineEdit:focus {{ background:transparent; border:2px solid {ACCENT}; border-radius:6px; }}" \
+        in w.styleSheet()
+
+
+def test_a_second_launch_opens_no_window(monkeypatch):
+    """A double-click on the Desktop icon starts the app twice: the second launch hands over to the first."""
+    from nexus_core import instance
+    import nexus_release_tool.__main__ as entry
+    import nexus_release_tool.main_window as main_window
+    app = QApplication.instance() or QApplication([])
+    asked = []
+    created = []
+    monkeypatch.setattr(entry, "create_app", lambda *a, **k: created.append(k) or app)
+    monkeypatch.setattr(instance, "already_running", lambda app_id: asked.append(app_id) or True)
+    monkeypatch.setattr(main_window, "ReleaseWindow", lambda *a, **k: pytest.fail("a second window was opened"))
+    monkeypatch.setattr("sys.argv", ["nexus_release_tool"])
+    assert entry.main() == 0 and asked == [entry.INFO.app_id]
+    from nexus_release_tool.style import NEXUS
+    assert created[0]["theme"] is NEXUS                        # the window gets Nexus's design from the start
+
+
+def test_the_settings_of_the_earlier_name_are_taken_over(tmp_path):
+    """Nexus Releases' settings (nexus-releases, until 30-10-2026) become the Nexus Release Tool's, once."""
+    import nexus_release_tool.__main__ as entry
+    SETTINGS = "[General]\nsuite=wp\n"
+    new = entry.settings_file()
+    assert new.parent.name == new.stem == "nexus-release-tool" and str(new).startswith(str(tmp_path))
+    old = new.parent.parent / "nexus-releases" / "nexus-releases.ini"
+    old.parent.mkdir(parents=True)
+    old.write_text(SETTINGS, encoding="utf-8")
+    assert entry.take_earlier_settings(new)
+    assert new.read_text(encoding="utf-8") == SETTINGS and not old.parent.exists()
+    assert not entry.take_earlier_settings(new)                  # once: nothing left to take over
+
+
+def test_own_settings_are_never_replaced(tmp_path):
+    import nexus_release_tool.__main__ as entry
+    new = entry.settings_file()
+    old = new.parent.parent / "nexus-releases" / "nexus-releases.ini"
+    for path, text in ((new, "own"), (old, "earlier")):
+        path.parent.mkdir(parents=True)
+        path.write_text(text, encoding="utf-8")
+    assert not entry.take_earlier_settings(new)
+    assert new.read_text(encoding="utf-8") == "own" and old.is_file()
+
+
+def test_one_output_tab(window, monkeypatch):
+    """Commands, the command line with its output, is the one output tab after the steps (owner, 01-11-2026: the Logs
+    tab was mostly empty): what a step writes shows there under a line that names the step, and Commands opens when
+    the step that wrote is the tab open (not for Test on this board, whose lines come while you click). A finished
+    command reads the checkout again only when it changed something (a commit, a push)."""
+    w, _app = window
+    pages = (w.release_page, w.apps_page, w.portal_page, w.withdraw_page, w.run_page)
+    assert [w.tabs.tabText(i) for i in range(w.tabs.count())] == \
+        ["Nexus release", "Contents", "1. Release apps", "2. Pin and release Portal", "3. Retract app",
+         "Test on this board", "Commands"]
+    assert w.tabs.widget(w.commands_tab) is w.commands and w.tabs.widget(1) is w.release_page.contents
+    assert not any(p.isAncestorOf(p.output) for p in pages)             # a step's log is no widget of its page
+    w.tabs.setCurrentWidget(w.portal_page)
+    w.portal_page.output.set_text("Tags fetched.")                      # the open step wrote: Commands opens
+    assert w.tabs.currentIndex() == w.commands_tab
+    assert w.commands.output.toPlainText().endswith("── Pin and release Portal\nTags fetched.\n")
+    w.tabs.setCurrentWidget(w.apps_page)
+    w.portal_page.output.set_text("later")                              # another step's log: shown, no switch
+    assert w.tabs.currentWidget() is w.apps_page
+    assert "── Pin and release Portal\nlater\n" in w.commands.output.toPlainText()
+    w.tabs.setCurrentWidget(w.run_page)
+    w.run_page.output.appendPlainText("alpha started")                  # Test on this board never switches
+    assert w.tabs.currentWidget() is w.run_page
+    assert "── Test on this board\nalpha started\n" in w.commands.output.toPlainText()
+    assert w.portal_page.output.toPlainText() == "later"                # the page keeps its own log
+    w.tabs.setCurrentIndex(0)
+    assert w.commands.root == w.root
+    refreshed = []
+    monkeypatch.setattr(w, "refresh", lambda: refreshed.append(1))
+    w.commands.finished_callback = w.command_finished
+    w.seen = w.fingerprint()
+    w.commands._done(0, w.commands.process.exitStatus())
+    assert refreshed == []                                              # nothing changed: no reload
+    monkeypatch.setattr(w, "fingerprint", lambda: "HEAD moved")
+    w.commands._done(0, w.commands.process.exitStatus())
+    assert refreshed == [1]                                             # the checkout changed: read again
+
+
+def test_a_step_offers_its_commands(window):
+    from nexus_release_tool import plan as rp
+    w, _app = window
+    w.commands.offer(rp.app_commands(["alpha-v0.1.1"]))
+    assert w.commands.offered[-1] == f"{rp.TAG_SCRIPT} alpha-v0.1.1" and w.commands.commands_button.isEnabled()
+
+
+SUMMARY_DOWN = {   # githubstatus.com's summary.json during the incident of 19-10-2026, shortened
+    "status": {"indicator": "minor", "description": "Partially Degraded Service"},
+    "components": [{"name": "Git Operations", "status": "operational"},
+                   {"name": "Actions", "status": "degraded_performance"},
+                   {"name": "Pages", "status": "major_outage"}],
+    "incidents": [{"name": "Degraded availability for GitHub Actions, GitHub Pages and Webhooks"}],
+}
+SUMMARY_UP = {"status": {"indicator": "none", "description": "All Systems Operational"},
+              "components": [{"name": "Actions", "status": "operational"}], "incidents": []}
+
+
+def test_github_status_is_read_from_the_status_page(monkeypatch):
+    import io
+    import json
+    from nexus_release_tool import plan as rp
+    down = rp.parse_github_status(SUMMARY_DOWN)
+    assert not down.up and down.description == "Partially Degraded Service"
+    assert down.affected == ("Actions: degraded performance", "Pages: major outage")
+    assert down.incidents == ("Degraded availability for GitHub Actions, GitHub Pages and Webhooks",)
+    assert rp.parse_github_status(SUMMARY_UP).up
+    assert not rp.parse_github_status("not json").up                 # an odd answer is never "up"
+    asked = []
+
+    class Response(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    def urlopen(request, timeout):
+        asked.append(request.full_url)
+        return Response(json.dumps(SUMMARY_UP).encode())
+
+    monkeypatch.setattr(rp.urllib.request, "urlopen", urlopen)
+    assert rp.fetch_github_status().up and asked == ["https://www.githubstatus.com/api/v2/summary.json"]
+
+
+def test_github_status_is_a_pill_that_opens_the_status_page(window, monkeypatch):
+    """Green while GitHub is up, red while githubstatus.com reports a problem, gray while not known; a click opens
+    https://www.githubstatus.com/ (owner, 19-10-2026). A pill, as the apps' status boxes (owner, 20-10-2026)."""
+    from PyQt6.QtGui import QColor, QDesktopServices
+    from nexus_core.theme import GREEN, GREY, RED
+    from nexus_release_tool import main_window
+    from nexus_release_tool import plan as rp
+    w, _app = window
+    status = main_window.GitHubStatusIndicator(lambda: rp.parse_github_status(SUMMARY_DOWN))
+    assert not status.isHidden() and status.caption.text() == "GitHub status" and status.state == ""
+
+    def color() -> str:
+        return next((c for c in (RED, GREEN) if c in status.styleSheet()), GREY)
+
+    assert color() == GREY and status.value.text() == "Unknown"
+    status.checked(status._fetch())
+    assert status.state == "down" and color() == RED and status.value.text() == "Problem"
+    assert "Actions: degraded performance" in status.toolTip() and "Partially Degraded Service" in status.toolTip()
+    assert status.timer.interval() == main_window.BUILD_IDLE_MS
+    status.checked(rp.parse_github_status(SUMMARY_UP))
+    assert status.state == "up" and color() == GREEN and status.value.text() == "Up"
+    status.checked(OSError("offline"))
+    assert status.state == "" and color() == GREY and "offline" in status.toolTip()
+    opened = []
+    monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
+    status.click()
+    assert opened == ["https://www.githubstatus.com/"]
+    status.stop()
+    assert w.github_status.isHidden() and main_window.GitHubStatusIndicator(None).isHidden()
+
+
+def _answer(at: str, msg: str, req: str, model: str = "claude-opus-5-5", **usage) -> str:
+    import json
+    return json.dumps({"type": "assistant", "timestamp": at, "requestId": req,
+                       "message": {"id": msg, "model": model, "usage": usage}})
+
+
+def test_claude_usage_counts_each_answer_once(tmp_path):
+    """Today's tokens and the last 5 hours' from Claude Code's transcripts, subagents' included; an answer of
+    several parts counts once, Claude Code's own notes (<synthetic>) and other lines not at all."""
+    import datetime
+    import os
+    from nexus_release_tool import plan as rp
+    now = datetime.datetime(2026, 10, 21, 12, 0).timestamp()
+
+    def at(hours_ago: float) -> str:
+        moment = datetime.datetime.fromtimestamp(now - hours_ago * 3600, datetime.timezone.utc)
+        return moment.isoformat().replace("+00:00", "Z")
+
+    assert rp.fetch_claude_usage(now, tmp_path) is None                       # no Claude Code here
+    session = tmp_path / "projects" / "-home-x-repo"
+    (session / "s1" / "subagents").mkdir(parents=True)
+    (session / "s1.jsonl").write_text("\n".join([
+        _answer(at(1), "m1", "r1", input_tokens=10, output_tokens=100, cache_read_input_tokens=1000),
+        _answer(at(1), "m1", "r1", input_tokens=10, output_tokens=100, cache_read_input_tokens=1000),   # part 2
+        _answer(at(8), "m2", "r2", input_tokens=1, output_tokens=2, cache_creation_input_tokens=3),     # today
+        _answer(at(1), "m3", "r3", model="<synthetic>", output_tokens=50),
+        '{"type": "user", "message": {"content": "usage"}}', "not json"]))
+    (session / "s1" / "subagents" / "a.jsonl").write_text(
+        _answer(at(2), "m4", "r4", model="claude-haiku-5-5", input_tokens=5, output_tokens=5))
+    (session / "old.jsonl").write_text(_answer(at(30), "m5", "r5", output_tokens=999))
+    for path in session.rglob("*.jsonl"):                                    # written as of *now*; old.jsonl before
+        os.utime(path, (now - 30 * 3600,) * 2 if path.name == "old.jsonl" else (now,) * 2)
+    today, recent = rp.fetch_claude_usage(now, tmp_path)
+    assert (today.messages, today.input, today.output, today.cache_write, today.cache_read) == (3, 16, 107, 3, 1000)
+    assert today.total == 1126 and today.models == (("claude-opus-5-5", 1116), ("claude-haiku-5-5", 10))
+    assert recent.messages == 2 and recent.total == 1120
+    assert [rp.short_count(n) for n in (999, 1126, 4_567_890)] == ["999", "1.1k", "4.6M"]
+
+
+def test_claude_usage_is_a_pill_that_opens_the_usage_page(window, monkeypatch):
+    """Claude tokens today (the blue edge every neutral pill has, owner 26-10-2026), hidden without Claude Code; a
+    click opens Claude's usage page."""
+    from PyQt6.QtGui import QDesktopServices
+    from nexus_core.theme import BLUE
+    from nexus_release_tool import main_window
+    from nexus_release_tool import plan as rp
+    w, _app = window
+    w.claude.checked(w.claude._fetch())
+    assert w.claude.isHidden()                                                # conftest: no Claude Code
+    today = rp.ClaudeUsage(0, 3, 16, 107, 3, 1_234_567, (("claude-opus-5-5", 1_234_693),))
+    pill = main_window.ClaudeUsageIndicator(lambda: (today, rp.ClaudeUsage(0, 1, output=5)))
+    assert not pill.isHidden() and pill.caption.text() == "Claude tokens today" and pill.value.text() == "—"
+    pill.checked(pill._fetch())
+    assert pill.value.text() == "1.2M" and BLUE in pill.styleSheet() and pill.timer.interval() == main_window.BUILD_IDLE_MS
+    assert "Today: 1,234,693 tokens in 3 answers" in pill.toolTip() and "Last 5 hours: 5 tokens" in pill.toolTip()
+    assert "claude-opus-5-5: 1,234,693" in pill.toolTip()
+    pill.checked(OSError("denied"))
+    assert BLUE in pill.styleSheet() and "denied" in pill.toolTip()
+    opened = []
+    monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
+    pill.click()
+    assert opened == ["https://claude.ai/settings/usage"]
+    pill.checked(None)
+    assert pill.isHidden()
+    pill.stop()
+    assert main_window.ClaudeUsageIndicator(None).isHidden()
+
+
+def test_the_window_has_nexus_design(window):
+    """A Nexus app, not a suite's (owner, 26-10-2026): create_app() puts Nexus's theme on the application (ink,
+    silver, teal: nexus/docs/stylesheets/nexus.css), the widgets draw with it, and the icon is the Nexus drawing."""
+    from PyQt6.QtGui import QPalette
+    from nexus_core import theme, widgets
+    from nexus_release_tool import LOGO_PATH
+    from nexus_release_tool.style import EDGE, INK, MAIN, NEXUS, SILVER, TEAL
+    w, app = window
+    # As create_app(theme=NEXUS) does it (__main__.py; core's test_widgets covers create_app itself): the widgets'
+    # theme (set by conftest.py for every test here) and the application's palette and style sheet. Not
+    # create_app() again on the tests' application: a second tooltip filter on it crashed Python at exit.
+    widgets.set_theme(NEXUS)
+    theme.apply_theme(app, "", NEXUS)
+    palette = app.palette()
+    assert palette.color(QPalette.ColorRole.Window).name() == INK
+    assert palette.color(QPalette.ColorRole.Base).name() == MAIN
+    assert palette.color(QPalette.ColorRole.WindowText).name() == SILVER
+    assert palette.color(QPalette.ColorRole.Highlight).name() == TEAL
+    assert palette.color(QPalette.ColorRole.HighlightedText).name() == INK
+    assert widgets.current_theme() is NEXUS and widgets.accent() == TEAL
+    assert f"stop:0 {MAIN}, stop:1 {INK}" in w.build.rate.styleSheet() and f"color:{SILVER}" in w.build.rate.styleSheet()
+    assert f"border:1px solid {EDGE}" in w.refresh_pill.styleSheet()
+    assert f"border-color:{TEAL}" in w.refresh_pill.styleSheet()
+    assert f"border-color:{TEAL}" in w.apps_page.apply_button.styleSheet()          # a pill: the accent on focus
+    assert LOGO_PATH.name == "nexus-release-tool.webp" and LOGO_PATH.is_file()
+    assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
+    # The checkboxes: a teal box with its teal checkmark (owner, 28-10-2026), and Portals drawn as a selected tab.
+    from pathlib import Path
+    from nexus_release_tool.style import CHECK_IMAGE
+    assert f"border:1px solid {TEAL}" in w.styleSheet() and f"image:url({CHECK_IMAGE})" in w.styleSheet()
+    assert Path(CHECK_IMAGE).is_file() and TEAL in Path(CHECK_IMAGE).read_text(encoding="utf-8")
+    title = w.suite_column.findChild(QLabel)
+    assert title.text() == "Portals" and f"border-top:2px solid {TEAL}" in title.styleSheet()
+    assert title.alignment() == Qt.AlignmentFlag.AlignCenter                        # as wide as the column
+    central = w.centralWidget().layout()
+    row = next(central.itemAt(i).layout() for i in range(central.count())
+               if central.itemAt(i).layout() is not None and central.itemAt(i).layout().indexOf(w.suite_column) >= 0)
+    assert row.contentsMargins().top() == central.spacing() > 0                 # twice the spacing off the pills
+
+
+def test_the_release_tool_icons_have_the_expected_sizes():
+    """The checkout app and its menu icon are supplied locally, without another suite's image tree."""
+    Image = pytest.importorskip("PIL.Image")
+    from nexus_release_tool import LOGO_PATH, ROOT
+    for path, size in ((LOGO_PATH, 512), (ROOT / "images" / "nexus-release-tool-128.png", 128)):
+        with Image.open(path) as icon:
+            assert icon.size == (size, size), path.name
+
+
+def test_the_portal_version_field_shows_a_whole_version(window):
+    """The field on step 2 is wide enough for a version like 10.1.0 (owner, 26-10-2026: it cut the text off)."""
+    from nexus_release_tool.main_window import VERSION_FIELD_PX
+    w, _app = window
+    w.show()
+    field = w.portal_page.portal_version
+    assert field.minimumWidth() == VERSION_FIELD_PX >= 120
+    assert field.width() >= VERSION_FIELD_PX
+    assert field.fontMetrics().horizontalAdvance("10.1.0") + 40 < field.width()     # the text and the arrow fit

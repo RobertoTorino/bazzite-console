@@ -27,3 +27,6 @@ The version check covers core, the portal, developer tools, and apps in this sui
 pull-request base and also works when this suite is nested in a larger checkout. To apply a design-panel mock to the
 wiki stylesheet, run `python3 tools/apply_design.py mkdocs.yml`; the Bazzite Console palette samples are in
 `design/colors/`. `git-setup.sh` registers the local CHANGELOG merge driver; it does not install Git hooks.
+
+After `git add`, `tools/fix-modes.sh` marks every `.sh` executable in the git index, so a script added from Windows
+still runs from a Linux checkout or a release. Nexus Release Tool's Commit step runs it.

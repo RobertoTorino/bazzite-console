@@ -41,7 +41,7 @@ from typing import Callable
 SYSTEM_PYTHON = "/usr/bin/python3"
 FOLDER = "ps5-fan-control"                      # in /etc and /run
 UNIT = "ps5-fan-control-guard.service"
-MANUAL_URL = "https://robertotorino.github.io/nexus/bazzite-console-suite/apps/fan/"
+MANUAL_URL = "https://robertotorino.github.io/bazzite-console/apps/fan/"
 APP_NAME = "Fan Control"
 STEP_S = 2.0
 REARM_C = 5

@@ -34,7 +34,7 @@ apps/webcam/install.sh --uninstall --purge
 
 The launcher is `~/.local/bin/ps5-webcam`; the app uses the Console Suite's shared Python environment.
 
-How to use it: [Webcam in the wiki](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/webcam/).
+How to use it: [Webcam in the wiki](https://robertotorino.github.io/bazzite-console/apps/webcam/).
 
 ## License and firmware
 

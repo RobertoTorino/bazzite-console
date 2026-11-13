@@ -1,3 +1,27 @@
+Changelog: 13-11-2026 21:18:02
+
+Fixed. Nexus Release Tool's Commit step works again: it runs tools/fix-modes.sh after git add, and the script did not
+come back with the other tools when the suite got its own tooling again ("tools/fix-modes.sh: No such file or
+directory"). It is back, and marks every .sh executable in the git index. Six scripts were not executable, in the
+working tree or in git: tools/git-setup.sh (the tool's pull runs it first, and would have stopped there),
+tools/ci-qt-libs.sh, tools/installer-tests/clb.sh and the install.sh of Fan Control, System Overlay and HDMI CEC
+Manager, which a release's ./install.sh needs. They are now.
+
+Changelog: 13-11-2026 21:05:30
+
+Breaking. The suite stands on its own again, with its own tooling (owner, 13-11-2026: the repository is and stays
+standalone; the entry below, the tools taken from a Nexus checkout, is undone). Back in the repository: the tools in
+tools/ (apply_design.py, app_tour.py, build_release.py, check_versions.py, ci-local.sh, ci-qt-libs.sh, git-setup.sh,
+stage_app.py, suites.py, tag-release.sh, tour_frames.py, the design panel and the disclaimer hook) with their tests,
+the CHANGELOG merge driver and check, and the development apps in dev/. ci.yml checks out this repository alone
+again, and tests Fan Control, System Overlay and HDMI CEC Manager with the other apps; release.yml and NEXUS_REF are
+gone: a release is built and published with tools/tag-release.sh, as before. The wiki builds with the repository's
+own hooks, and every address names this repository: github.com/RobertoTorino/bazzite-console for the releases, and
+robertotorino.github.io/bazzite-console/ for the wiki. The installer tests stage with the repository's own
+tools/stage_app.py. CLAUDE.md describes the standalone repository. What the entry below fixed stays: the addresses
+that did not exist, the three apps' wiki chapters, installer tests and lines in the lists, the Media cards out of
+the wiki and the README, Bazzite Test's installer test, the "Changes the board" comparison and Bazzite Test's pin.
+
 Changelog: 13-11-2026 20:18:54
 
 Breaking. The suite uses the Nexus tools from Nexus and keeps no copy of them (owner, 13-11-2026: one repository per

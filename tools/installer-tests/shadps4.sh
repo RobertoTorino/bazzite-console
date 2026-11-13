@@ -5,7 +5,7 @@
 # Runs with the shims from shims.sh (CI, or WSL on Windows).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-NEXUS=$(cd "$SUITE/.." && pwd)      # the Nexus checkout the suite is cloned into: the Nexus tools (stage_app.py)
+REPO=$SUITE
 T=/tmp/ps5-shadps4-manager-test
 # shellcheck source=tools/installer-tests/shims.sh
 source "$(dirname "${BASH_SOURCE[0]}")/shims.sh" "$T"; set +e
@@ -38,7 +38,7 @@ check "standalone extractor data and launchers preserved" "[ -f $D/$OLD_APP/keep
 check "core imports from the app copy" "(cd $A && /usr/bin/python3 -c 'import importlib.util as u, sys; s=u.find_spec(\"bazzite_console_core\"); sys.exit(0 if s and s.origin.startswith(\"$A\") else 1)')"
 
 echo "== 2. install a staged release (core bundled in the tarball) without the Desktop icon"
-rm -rf "$T/stage"; /usr/bin/python3 "$NEXUS/tools/stage_app.py" --suite "${SUITE##*/}" shadps4 "$T/stage" > /dev/null
+rm -rf "$T/stage"; /usr/bin/python3 "$REPO/tools/stage_app.py" shadps4 "$T/stage" > /dev/null
 echo "# release marker" >> "$T/stage/bazzite_console_core/__init__.py"
 bash "$T/stage/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"

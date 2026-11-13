@@ -4,7 +4,7 @@
 # other venv users. Runs with the shims from shims.sh (CI, or WSL on Windows).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-NEXUS=$(cd "$SUITE/.." && pwd)      # the Nexus checkout the suite is cloned into: the Nexus tools (stage_app.py)
+REPO=$SUITE
 T=/tmp/bazzite-test-test
 # shellcheck source=tools/installer-tests/shims.sh
 source "$(dirname "${BASH_SOURCE[0]}")/shims.sh" "$T"; set +e
@@ -32,7 +32,7 @@ check "no desktop icon" "[ ! -e $HOME/Desktop/bazzite-test.desktop ]"
 check "core imports from the /opt copy" "(cd $T/opt/bazzite-test && python3 -c 'import bazzite_console_core, sys; sys.exit(0 if bazzite_console_core.__file__.startswith(\"$T/opt\") else 1)' 2>/dev/null || (cd $T/opt/bazzite-test && /usr/bin/python3 -c 'import importlib.util as u, sys; s=u.find_spec(\"bazzite_console_core\"); sys.exit(0 if s and s.origin.startswith(\"$T/opt\") else 1)'))"
 
 echo "== 2. install a staged release (core bundled in the tarball), new version replaces the old"
-rm -rf "$T/stage"; /usr/bin/python3 "$NEXUS/tools/stage_app.py" --suite "${SUITE##*/}" bazzite "$T/stage" > /dev/null
+rm -rf "$T/stage"; /usr/bin/python3 "$REPO/tools/stage_app.py" bazzite "$T/stage" > /dev/null
 sed -i "s/^__version__ = \"$V\"\$/__version__ = \"$NEXT\"/" "$T/stage/bazzite_test/__init__.py"
 echo "# release marker" >> "$T/stage/bazzite_console_core/__init__.py"
 bash "$T/stage/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?

@@ -1,0 +1,150 @@
+{
+  "about": "The programs and firmware the suites' apps use, and where Nexus Deps learns of their updates (nexus_deps/upstreams.py). Hand-written: id, name, what, compare, url, targets, how, and per app its suite, app, module and constants. Synced from the apps' code and their portal's apps.toml by `dev/deps/run.sh --sync-upstreams` (tests/test_upstreams.py fails while it is stale): repo, pin, version, home, version_file, name and launcher.",
+  "github": [
+    {
+      "id": "rpcs3",
+      "name": "RPCS3",
+      "what": "the PlayStation 3 emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bazzite-console",
+          "app": "rpcs3",
+          "module": "rpcs3_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "LANDMARK",
+            "version": "VERSION"
+          },
+          "repo": "RPCS3/rpcs3",
+          "pin": "0.0.43",
+          "version": "0.0.43-20395",
+          "home": "~/.local/share/ps5-rpcs3-manager/emulator",
+          "name": "RPCS3 Manager",
+          "launcher": "~/.local/bin/ps5-rpcs3-manager"
+        }
+      ]
+    },
+    {
+      "id": "pcsx2",
+      "name": "PCSX2",
+      "what": "the PlayStation 2 emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bazzite-console",
+          "app": "pcsx2",
+          "module": "pcsx2_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "PCSX2/pcsx2",
+          "pin": "2.8.2",
+          "version": "2.8.2",
+          "home": "~/.local/share/ps5-pcsx2-manager/emulator",
+          "name": "PCSX2 Manager",
+          "launcher": "~/.local/bin/ps5-pcsx2-manager"
+        }
+      ]
+    },
+    {
+      "id": "ppsspp",
+      "name": "PPSSPP",
+      "what": "the PSP emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bazzite-console",
+          "app": "ppsspp",
+          "module": "ppsspp_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "hrydgard/ppsspp",
+          "pin": "1.20.4",
+          "version": "1.20.4",
+          "home": "~/.local/share/ps5-ppsspp-manager/emulator",
+          "name": "PPSSPP Manager",
+          "launcher": "~/.local/bin/ps5-ppsspp-manager"
+        }
+      ]
+    },
+    {
+      "id": "vita3k",
+      "name": "Vita3K",
+      "what": "the PlayStation Vita emulator; its builds are numbered",
+      "compare": "build",
+      "apps": [
+        {
+          "suite": "bazzite-console",
+          "app": "vita3k",
+          "module": "vita3k_manager/emulator.py",
+          "constants": {
+            "repo": "BUILDS",
+            "pin": "BUILD",
+            "version": "VERSION"
+          },
+          "repo": "Vita3K/Vita3K-builds",
+          "pin": "4269",
+          "version": "4269",
+          "home": "~/.local/share/ps5-vita3k-manager/emulator",
+          "name": "Vita3K Manager",
+          "launcher": "~/.local/bin/ps5-vita3k-manager"
+        }
+      ]
+    },
+    {
+      "id": "xenia",
+      "name": "Xenia Canary",
+      "what": "the Xbox 360 emulator; its builds are named after a commit, a later one is newer",
+      "compare": "published",
+      "apps": [
+        {
+          "suite": "bazzite-console",
+          "app": "xenia",
+          "module": "xenia_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "PUBLISHED",
+            "version": "VERSION"
+          },
+          "repo": "xenia-canary/xenia-canary",
+          "pin": "2026-11-04T16:38:00Z",
+          "version": "838850f",
+          "home": "~/.local/share/ps5-xenia-manager/emulator",
+          "name": "Xenia Manager",
+          "launcher": "~/.local/bin/ps5-xenia-manager"
+        }
+      ]
+    },
+    {
+      "id": "shadps4",
+      "name": "shadPS4",
+      "what": "the PlayStation 4 emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bazzite-console",
+          "app": "shadps4",
+          "module": "shadps4_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "shadps4-emu/shadPS4",
+          "pin": "0.21.0",
+          "version": "0.21.0",
+          "home": "~/.local/share/ps5-shadps4-manager/emulator",
+          "name": "shadPS4 Manager",
+          "launcher": "~/.local/bin/ps5-shadps4-manager"
+        }
+      ]
+    }
+  ],
+  "sony": []
+}

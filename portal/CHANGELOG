@@ -1,3 +1,9 @@
+Changelog: 13-11-2026 21:05:30
+
+Fixed. Installing an app from a checkout looks for this repository again (its apps, tools/stage_app.py and core at
+the root), not for a Nexus checkout around it: the repository is standalone (owner, 13-11-2026). The wiki's address
+is robertotorino.github.io/bazzite-console/.
+
 Changelog: 13-11-2026 20:18:54
 
 Fixed. Desktop icons knows Fan Control, System Overlay and HDMI CEC Manager: their icons were not added to or removed

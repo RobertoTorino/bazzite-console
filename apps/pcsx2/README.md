@@ -10,7 +10,7 @@ PCSX2 Manager installs and configures [PCSX2](https://pcsx2.net) on **Bazzite** 
 It manages PS2 BIOS files, game folders, Steam entries, emulator settings, per-game display options, and memory
 cards. Game compatibility and performance vary by title and are not guaranteed on this hardware.
 
-How to install and use it: [PCSX2 Manager in the manual](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/pcsx2/).
+How to install and use it: [PCSX2 Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/pcsx2/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

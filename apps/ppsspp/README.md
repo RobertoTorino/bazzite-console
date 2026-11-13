@@ -10,7 +10,7 @@ PPSSPP Manager installs [PPSSPP](https://www.ppsspp.org) on **Bazzite** running 
 folders for PSP games, and creates Steam entries for Game Mode. Game compatibility and performance vary by title
 and are not guaranteed on this hardware.
 
-How to install and use it: [PPSSPP Manager in the manual](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/ppsspp/).
+How to install and use it: [PPSSPP Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/ppsspp/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

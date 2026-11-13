@@ -10,7 +10,7 @@ Xenia Manager installs [Xenia Canary](https://xenia.jp) on **Bazzite** running o
 folders for Xbox 360 games, and creates Steam entries for Game Mode. Game compatibility and performance vary by
 title and are not guaranteed on this hardware.
 
-How to install and use it: [Xenia Manager in the manual](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/xenia/).
+How to install and use it: [Xenia Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/xenia/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

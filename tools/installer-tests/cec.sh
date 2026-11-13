@@ -6,7 +6,7 @@
 # Runs with the shims from shims.sh (CI).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-NEXUS=$(cd "$SUITE/.." && pwd)      # the Nexus checkout the suite is cloned into: the Nexus tools (stage_app.py)
+REPO=$SUITE
 T=/tmp/ps5-hdmi-cec-test
 # shellcheck source=tools/installer-tests/shims.sh
 source "$(dirname "${BASH_SOURCE[0]}")/shims.sh" "$T"; set +e
@@ -44,7 +44,7 @@ check "core imports from the app copy" "(cd $A && /usr/bin/python3 -c 'import im
 check "no watcher service: systemctl not asked" "[ ! -s $T/systemctl.log ]"
 
 echo "== 2. install a staged release (core bundled in the tarball) without the Desktop icon; the watcher restarts"
-rm -rf "$T/stage"; /usr/bin/python3 "$NEXUS/tools/stage_app.py" --suite "${SUITE##*/}" cec "$T/stage" > /dev/null
+rm -rf "$T/stage"; /usr/bin/python3 "$REPO/tools/stage_app.py" cec "$T/stage" > /dev/null
 echo "# release marker" >> "$T/stage/bazzite_console_core/__init__.py"
 mkdir -p "$(dirname "$WATCH")" && printf '[Service]\nExecStart=/venv/bin/python -m hdmi_cec.watcher --pause-media\n' > "$WATCH"
 bash "$T/stage/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?

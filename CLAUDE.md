@@ -2,33 +2,28 @@
 
 # CLAUDE.md (Bazzite Console Suite)
 
-The rules of the **Bazzite Console Suite**: control your PlayStation 5 running Bazzite. It has a repository of its
-own, `github.com/RobertoTorino/bazzite-console` (branch `main`; owner, 13-11-2026: one repository per suite, the
-tooling in Nexus). Nexus's CLAUDE.md (`../CLAUDE.md` in the checkout described below) holds the shared rules for git,
-releases, changelogs, checks and line endings, and applies here too. Paths below are written from this repository's
-root unless they start with `../`, which is the Nexus checkout.
+The rules of the **Bazzite Console Suite**: control your PlayStation 5 running Bazzite. The repository is
+`github.com/RobertoTorino/bazzite-console` (branch `main`).
 
-## Inside a Nexus checkout
+**It is standalone** (owner, 13-11-2026: "it is and stays a standalone repo ... it should run on its own using its
+own tooling"). Everything it needs is in this repository: its tools, its core and its development apps. Nothing here
+depends on a checkout of Nexus or of another suite, and nothing is to be taken from one at run, test or release
+time. The tooling began as a copy of Nexus's and is this repository's own now: a change to it is made here.
 
-The suite keeps no copy of the Nexus tools or of the Nexus apps. It is worked on **inside a checkout of Nexus**
-(`github.com/RobertoTorino/nexus`), cloned there as the folder `bazzite-console/`, which Nexus's `.gitignore` lists:
+## Rules from the owner
 
-```bash
-git clone https://github.com/RobertoTorino/nexus.git Nexus
-git clone https://github.com/RobertoTorino/bazzite-console.git Nexus/bazzite-console
-```
-
-So `../tools/` and `../dev/` are Nexus's, every Nexus tool finds the suite (`--suite bazzite-console`), and
-`../test.sh` runs its tests with the Nexus checkout's venv. The two are separate git checkouts: git in this folder is
-the suite's (its commits, its tags, its CI), git in `..` is Nexus's, and a change to both is two commits. Cloned on
-its own, outside a Nexus checkout, the suite's tools, installer tests and wiki build do not run. `NEXUS_REF` names
-the Nexus commit the suite's workflows use (a branch such as `main`, or a commit to hold the suite on a tested Nexus):
-every job starts with Nexus's action `RobertoTorino/nexus/.github/actions/suite`, which checks out that Nexus and
-this repository inside it.
-
-**The suite's core is its own**: `core/bazzite_console_core/` with `core/VERSION`, not Nexus's `bc250_core`. The
-Nexus tools bundle it per app in a release (`../tools/stage_app.py`, `../tools/suites.py`: `core_dir()`), and it
-names the suite's own folders (`~/.config/bazzite-console/`, `~/.local/share/bazzite-console-suite/`) and addresses.
+- **Never commit, tag or push.** The owner does every git commit, tag and push. Finish work in the working tree and
+  say what is ready.
+- **Releases are the owner's**: the version bumps, the tags (`ps5-` first), the release assets, the pins in
+  `portal/apps.toml` and the release entries in the CHANGELOGs. When finished work needs a release, say which app
+  and why.
+- **CHANGELOG for every change**: the root CHANGELOG for suite-wide changes, the app's, core's or the portal's for
+  its own. A `Changelog: DD-MM-YYYY HH:MM:SS` line (Europe/Amsterdam), a blank line, then plain sentences; newest
+  first. Every entry starts with its kind: `Breaking.`, `Added.` or `Fixed.`.
+- **VERSION is the single source** of each app's version; copies in code must match (`tools/check_versions.py`).
+- **American English**, plain short sentences, written for the person using the tool. READMEs and the wiki hold no
+  status or plans.
+- **Open by default; no personal data** (names, host and user names, serial numbers, MAC and IP addresses, keys).
 
 ## What this is
 
@@ -38,21 +33,26 @@ installed and the only required app. App keys, release tags, installer tests and
 folder name.
 
 The portal and its apps are for PlayStation 5 hardware running Bazzite. They read system and device information;
-they do not assume that hardware features or paths from another Bazzite device apply here. This suite is maintained
-independently from the BC250 Bazzite Suite.
+they do not assume that hardware features or paths from another Bazzite device apply here. An app that changes the
+console is marked `changes_board` in `apps.toml` with a `board_change` text, and its wiki chapter opens with the
+same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` compares them).
 
 ## Layout
 
 - `portal/`: the portal (`bazzite_console_portal`), its pinned app manifest, tests, requirements and installer.
 - `apps/<name>/`: one app per folder, with its Python package, `images/`, `tests/`, `install.sh`, requirements and
   `VERSION`, `CHANGELOG`, `LICENSE` and `.gitignore`.
-- `core/`: the suite's core.
-- `tools/`: the suite's own manifest and release helpers (`check_manifest.py`, `pin_app.py`, `suite_release.py`,
-  `publish_release.sh`, `check-release.sh`), its tours, `mkdocs/` (the wiki's hook and overrides) and
-  `installer-tests/`.
-- `docs/` and `mkdocs.yml`: the suite's wiki, built by Nexus's `docs.yml` and published under the Nexus page, at
-  robertotorino.github.io/nexus/bazzite-console-suite/; `icons/`: category icons and their app copies.
-- `.github/workflows/`: `ci.yml` and `release.yml`.
+- `core/bazzite_console_core/` with `core/VERSION`: the shared code, bundled per app in a release
+  (`tools/stage_app.py`). It names the suite's folders (`~/.config/bazzite-console/`,
+  `~/.local/share/bazzite-console-suite/`) and addresses.
+- `tools/`: the release and check tools (`build_release.py`, `stage_app.py`, `check_versions.py`,
+  `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `check-release.sh`,
+  `suites.py`, `fix-modes.sh`), the CHANGELOG merge driver and check, the tours, `mkdocs/` (the wiki's hooks and overrides),
+  `tools/tests/` and `tools/installer-tests/` (one per app, the portal and a release).
+- `dev/`: the development apps, run from the checkout and never released.
+- `docs/` and `mkdocs.yml`: the wiki, robertotorino.github.io/bazzite-console/; `icons/`: the category icons and
+  `categories.toml`, which assigns them to the apps.
+- `.github/workflows/ci.yml`: the checks on every push.
 
 ## Design and naming
 
@@ -62,20 +62,16 @@ The portal, wiki and category icons use artwork made for this suite. The Bazzite
 
 ## Checks
 
-From the root of the Nexus checkout:
+From the repository root, as `.github/workflows/ci.yml` runs them (a venv with the folders' `requirements-dev.txt`):
 
 ```bash
-./test.sh                                                   # every test suite of this system, this suite's among them
-python3 tools/check_versions.py --suite bazzite-console
-python3 bazzite-console/tools/check_manifest.py
-for t in bazzite-console/tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done
-mkdocs build --strict -f bazzite-console/mkdocs.yml         # from the venv; then remove bazzite-console/site
+(cd <folder> && python -m pytest tests)                     # portal, tools and each apps/<name>
+python3 tools/check_manifest.py
+find apps portal tools -name '*.sh' -print0 | xargs -0 -n1 bash -n
+for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done   # needs fakeroot
+mkdocs build --strict
 ```
 
-## Releases
-
-Everything about releases is the owner's (Nexus's CLAUDE.md): the version bumps, the tags (`ps5-` first), the
-release assets and the pins in `portal/apps.toml`. When finished work needs a release, the handover says which app
-and why.
+A release is built and published with `tools/tag-release.sh ps5-<app>-v<x.y.z>`, by the owner.
 
 The manual (`docs/`, built with MkDocs) is called **the wiki** in user-facing text.

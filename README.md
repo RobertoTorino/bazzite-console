@@ -34,7 +34,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: Inspect storage health and drive information when supported.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC.
 
-How to install and use the suite: [the wiki](https://robertotorino.github.io/nexus/bazzite-console-suite/).
+How to install and use the suite: [the wiki](https://robertotorino.github.io/bazzite-console/).
 
 ## License
 
