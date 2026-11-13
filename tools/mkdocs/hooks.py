@@ -28,6 +28,7 @@ PICTURES = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
 CONVERTED = {".png", ".jpg", ".jpeg"}
 WEBP_QUALITY = 85
 _ASSET = re.compile(r"assets/[a-z0-9-]+/[A-Za-z0-9_.-]+\.(?:png|jpe?g)\b")
+PORTAL_TAG = "{{ portal_tag }}"       # in a page: the tag of the portal release that portal/VERSION names
 _webp: set[str] = set()                 # the asset paths that have a WebP copy in this build
 def pictures() -> dict[str, Path]:
     """Site path -> source file."""
@@ -78,6 +79,13 @@ def on_files(files, config):
     return files
 
 
+def portal_tag() -> str:
+    """The tag of the portal's release, from its VERSION: ps5-portal-v0.2.1."""
+    prefix = (SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip()
+    return f"{prefix}portal-v{(SUITE / 'portal' / 'VERSION').read_text(encoding='utf-8').strip()}"
+
+
 def on_page_markdown(markdown, page, config, files):
-    """Point the page at the WebP copies."""
+    """Point the page at the WebP copies, and write the portal's release tag where a page says {{ portal_tag }}."""
+    markdown = markdown.replace(PORTAL_TAG, portal_tag())
     return _ASSET.sub(lambda m: webp_uri(m.group(0)) if m.group(0) in _webp else m.group(0), markdown)

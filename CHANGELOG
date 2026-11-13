@@ -1,3 +1,22 @@
+Changelog: 13-11-2026 23:28:59
+
+Added. A release workflow of this repository's own, .github/workflows/release.yml, which Nexus Release Tool's Start
+new release starts on the release commit. One run waits for CI on the commit, builds and publishes every app whose
+pinned tag has no release yet, writes their checksums into portal/apps.toml in a commit "Pin ...", and builds the
+portal from it as a draft, which the tool's Device test installs and its Publish makes the portal's release. A run
+started again skips what is out already. Remote Play's native wheel is built in the run. tools/ci_state.py (whether
+CI passed on a commit) and tools/release_commit.py (whether a commit only writes a release, so its parent's CI
+counts) are this repository's own tools now, with their tests. The wiki's Development chapter has a Releases section.
+
+Fixed. A portal release published by hand (tools/tag-release.sh) becomes GitHub's Latest release, where the app
+releases' notes send people; every release was published as not the latest, so GitHub showed an app's on top.
+
+Changelog: 13-11-2026 23:12:13
+
+Fixed. The wiki's Install page links to the portal's own release and names its archive, from portal/VERSION when the
+wiki is built ({{ portal_tag }} in a page, tools/mkdocs/hooks.py). It linked to the list of all releases, where an
+app's release is on top.
+
 Changelog: 13-11-2026 22:59:26
 
 Fixed. tools/requirements-dev.txt names Pillow, which the test of tools/sync_icons.py needs: CI's tools job installs

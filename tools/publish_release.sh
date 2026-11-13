@@ -18,7 +18,11 @@ state() {
 }
 
 create() {
-    local args=(--title "$title" --notes-file "$dir/notes.md" --target "$commit" --latest=false)
+    # GitHub's Latest is the newest portal: the app releases' notes send people there, and the releases page opens
+    # on it. A draft cannot be it; Nexus Release Tool's Publish makes it so.
+    local latest=false
+    [[ "$tag" == *portal-v* ]] && ! $draft && latest=true
+    local args=(--title "$title" --notes-file "$dir/notes.md" --target "$commit" "--latest=$latest")
     $draft && args+=(--draft)
     gh release create "$tag" "${assets[@]}" "${args[@]}"
 }

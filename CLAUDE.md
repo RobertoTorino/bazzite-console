@@ -47,13 +47,15 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
   `~/.local/share/bazzite-console-suite/`) and addresses.
 - `tools/`: the release and check tools (`build_release.py`, `stage_app.py`, `check_versions.py`,
   `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `check-release.sh`,
-  `suites.py`, `fix-modes.sh`, `sync_icons.py`), the CHANGELOG merge driver and check, the tours, `mkdocs/` (the wiki's hooks and overrides),
+  `suites.py`, `fix-modes.sh`, `sync_icons.py`, `ci_state.py` and
+  `release_commit.py` for the release workflow), the CHANGELOG merge driver and check, the tours, `mkdocs/` (the wiki's hooks and overrides),
   `tools/tests/` and `tools/installer-tests/` (one per app, the portal and a release).
 - `dev/`: the development apps, run from the checkout and never released.
 - `docs/` and `mkdocs.yml`: the wiki, robertotorino.github.io/bazzite-console/; `icons/`: the category icons and
   `categories.toml`, which assigns them to the apps.
 - `.github/workflows/ci.yml`: the checks on every push; `docs.yml`: the wiki, built from `main` and published on
-  GitHub Pages.
+  GitHub Pages; `release.yml`: a release of the suite, started by Nexus Release Tool on the release commit (the apps,
+  the pin commit, the portal as a draft).
 
 ## Design and naming
 
@@ -74,6 +76,7 @@ for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; 
 mkdocs build --strict
 ```
 
-A release is built and published with `tools/tag-release.sh ps5-<app>-v<x.y.z>`, by the owner.
+A release is the owner's: Nexus Release Tool's Start new release, which runs `release.yml` on GitHub, or one release
+by hand with `tools/tag-release.sh ps5-<app>-v<x.y.z>`.
 
 The manual (`docs/`, built with MkDocs) is called **the wiki** in user-facing text.

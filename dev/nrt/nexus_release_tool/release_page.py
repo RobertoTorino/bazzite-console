@@ -149,17 +149,17 @@ class ReleasePage(QWidget):
         contents = QVBoxLayout(self.contents)
         contents.addLayout(info_row(
             "What the release holds: the versions offered follow the CHANGELOG entries; type another to override.",
-            "One release for every suite on it: each app of such a suite that ships something new since its last "
-            "release, its portal, core when it changed since its last version, and Nexus. The version offered first "
+            "One release of the suite: each app that ships something new since its last release, the portal, and "
+            "core when it changed since its last version. The version offered first "
             "follows the CHANGELOG entries since the last tag (<b>Breaking.</b> major, <b>Added.</b> minor, "
-            "<b>Fixed.</b> patch); type another to override it. A portal's and Nexus's version say <b>auto</b>: they "
-            "are worked out when the release is written, at least what the app releases need, and can be typed "
+            "<b>Fixed.</b> patch); type another to override it. The portal's version says <b>auto</b>: it "
+            "is worked out when the release is written, at least what the app releases need, and can be typed "
             "too. Notes become the release notes on GitHub."))
         contents.addWidget(self.table, 1)
         lay = QVBoxLayout(self)
         lay.addLayout(info_row(
             "The release's steps in their order: the one to do now has its pill lit and an orange ▶.",
-            "The Nexus release, step by step: Get up to date, Commit your changes, Push them, CI passes, Start new "
+            "The release, step by step: Get up to date, Commit your changes, Push them, CI passes, Start new "
             "release (what it holds is on the Contents tab), the release on GitHub (Stop or Resume), Device "
             "test, Publish (or Not OK) and Bring in the pin commit. Only the step to do now has its pill lit and an "
             "orange ▶; a step done has a green ✓, one that failed a red !, and the line beside each says what there "
@@ -240,7 +240,8 @@ class ReleasePage(QWidget):
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
             drafts=[t for t in flow.waiting_portals(root, suite, run.sha) if not flow.published(root, runs, t)]
             if run else [],
-            restart=run is not None and run.sha != head, rejected=self.rejected(run))
+            restart=run is not None and run.sha != head, rejected=self.rejected(run),
+            manual=not flow.release_suites(root))
 
     def rejected(self, run: rp.BuildRun | None) -> list[str]:
         """The drafts of *run* the owner said Not OK to, kept in NRT's settings by the run (a run made again makes its
@@ -273,8 +274,13 @@ class ReleasePage(QWidget):
                                            "font-weight:600;" if states[key] == "done" else f"color:{GREY};")
             self.details[key].setText(self.detail(key, states[key], facts) or what)
         reasons = flow.ready(window.root, window.base()) if self.picks and not facts.unpushed else []
-        self.why_not.setText("Nothing to release: no app of a suite on the Nexus release changed since its last "
-                             "release." if not self.picks and not now else "")
+        waiting = [u.key for u in getattr(window, "units", []) if u.kind in ("app", "portal") and u.needs_release]
+        self.why_not.setText(
+            ("This repository has no release workflow on GitHub, so steps 5 to 9 do not run here. Releases are made "
+             "on the tabs 1. Release apps and 2. Pin and release Portal. "
+             + (f"Changed since its last release: {', '.join(waiting)}." if waiting else
+                "Nothing changed since the last releases.")) if facts.manual and not now else
+            "Nothing to release: no app changed since its last release." if not self.picks and not now else "")
         self.why_not.setVisible(bool(self.why_not.text()))
         self.pull_button.setEnabled(idle and now == "pull")
         self.commit_button.setEnabled(idle and now == "commit" and bool(self.commit_message.text().strip()))
@@ -514,7 +520,7 @@ class ReleasePage(QWidget):
         tag = self.portal_choice.currentText()
         if tag and self.release_window.confirm_git(
                 "Publish", f"The device test of {tag} passed: publish it. Its tag is made, the portals offer it from "
-                           "now on and the Nexus index follows.", flow.publish_command(tag)):
+                           "now on, and it becomes GitHub's Latest release.", flow.publish_command(tag)):
             self.release_window.run_git(flow.publish_command(tag))
 
     def reject(self) -> None:

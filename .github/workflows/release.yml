@@ -1,0 +1,222 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Release
+
+# A release of the Bazzite Console Suite, started by Nexus Release Tool's Start new release with the release commit
+# it pushed (the apps' versions, their CHANGELOG entries, the new tags in portal/apps.toml and portal/VERSION). One
+# run releases the suite: it builds every app tag apps.toml pins that has no release yet, side by side, and publishes
+# each (the tag made on the release commit); writes their sha256 into apps.toml in one commit "Pin ..." on top of
+# it; and builds the portal from that commit as a draft release (no tag yet, so no portal sees it). Nexus Release
+# Tool installs that draft on the device (tools/check-release.sh draft) and publishes it after the owner's yes,
+# which makes the portal's tag. Started again, the run skips what is out already and makes the draft anew. The pin
+# commit is pushed only while main is still the release commit, so no other commit gets into a portal tag.
+#
+# It starts only on main's newest commit, after CI (ci.yml) passed on it. A release commit that only writes the
+# release (tools/release_commit.py) takes the CI that passed on its work commit, the parent; anything more waits
+# for CI on the commit itself, up to 75 minutes.
+#
+# The assets are <tag>.tar.gz and SHA256SUMS, built by tools/build_release.py, as tools/tag-release.sh builds them
+# on the development machine (one release by hand; this workflow does not run on a tag). The portal release bundles
+# the release of the required app (Bazzite Test) that apps.toml pins. Remote Play ships the wheel of its native core
+# in its tarball: built here, with FFmpeg from its pinned sources (apps/remoteplay/native/ffmpeg/build.sh).
+#
+# By hand: gh workflow run release.yml --ref main -f commit="$(git rev-parse origin/main)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: The release commit (main's newest)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    env:
+      COMMIT: ${{ inputs.commit }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 2                # the parent: the release commit's work commit
+      - name: The release commit is main's newest
+        run: |
+          git fetch -q origin main
+          head=$(git rev-parse origin/main)
+          [ "$head" = "$(git rev-parse HEAD)" ] ||
+            { echo "main is $head, not the release commit $COMMIT: start the release again on the new main." >&2; exit 1; }
+      - name: CI passed on this commit
+        run: python3 tools/ci_state.py --release-commit --wait 75 "$COMMIT"
+
+  plan:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      apps: ${{ steps.plan.outputs.apps }}
+      portal: ${{ steps.plan.outputs.portal }}
+      draft: ${{ steps.plan.outputs.draft }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0                # tags, for check_manifest
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Checks
+        run: |
+          python tools/check_versions.py
+          python tools/check_manifest.py
+      - name: What this run releases
+        id: plan
+        run: python tools/suite_release.py plan | tee -a "$GITHUB_OUTPUT"
+
+  apps:
+    needs: plan
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false                  # one app's failure leaves the others' releases: a run started again skips them
+      matrix:
+        tag: ${{ fromJSON(needs.plan.outputs.apps) }}
+    env:
+      TAG: ${{ matrix.tag }}
+      COMMIT: ${{ inputs.commit }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0                # tags, for the reproducible mtime
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Native wheel (Remote Play releases)
+        if: startsWith(matrix.tag, 'ps5-remoteplay-v')
+        working-directory: apps/remoteplay/native
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q nasm libva-dev
+          ffmpeg/build.sh "$RUNNER_TEMP/ffmpeg"
+          python -m pip install -q "maturin>=1.5,<2"
+          PS5_FFMPEG_DIR="$RUNNER_TEMP/ffmpeg" maturin build --release --locked --compatibility linux \
+            --features python,pyo3/extension-module,decoder --out "$RUNNER_TEMP/wheel"
+          echo "PS5_NATIVE_WHEEL_DIR=$RUNNER_TEMP/wheel" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          python tools/build_release.py "$TAG" dist
+          cat dist/SHA256SUMS
+
+      - name: Publish
+        run: bash tools/publish_release.sh "$TAG" "$COMMIT" dist
+
+  pin:
+    needs: [plan, apps]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      commit: ${{ steps.pin.outputs.commit }}
+    env:
+      COMMIT: ${{ inputs.commit }}
+      APPS: ${{ needs.plan.outputs.apps }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Pin the new app releases
+        id: pin
+        run: |
+          mapfile -t tags < <(python -c 'import json, os; print("\n".join(json.loads(os.environ["APPS"])))')
+          if [ ${#tags[@]} -eq 0 ] || [ -z "${tags[0]}" ]; then
+            echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"          # nothing to pin
+            exit 0
+          fi
+          git fetch -q origin main
+          head=$(git rev-parse origin/main)
+          if [ "$head" != "$COMMIT" ]; then
+            # Started again after the pins were pushed: main is that pin commit, right on top of the release commit.
+            if [ "$(git rev-parse "$head^")" = "$COMMIT" ] && git log -1 --format=%s "$head" | grep -q '^Pin '; then
+              echo "Pinned already in $head"
+              echo "commit=$head" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "main moved on from the release commit $COMMIT to $head: nothing is pinned or tagged." >&2
+            echo "Start the release again from Nexus Release Tool on the new main." >&2
+            exit 1
+          fi
+          for tag in "${tags[@]}"; do
+            gh release download "$tag" --pattern SHA256SUMS --dir "sums/$tag"
+          done
+          python tools/suite_release.py pin sums "${tags[@]}"
+          rm -rf sums
+          git fetch -q --tags origin                     # the tags the apps' releases just made
+          python tools/check_manifest.py --require-tags
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add portal/apps.toml
+          git commit -q -m "Pin ${tags[*]}"
+          git push origin "HEAD:refs/heads/main"         # refused when main moved meanwhile: nothing is tagged
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  portal:
+    needs: [plan, pin]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.plan.outputs.portal }}
+      COMMIT: ${{ needs.pin.outputs.commit }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.pin.outputs.commit }}
+          fetch-depth: 0                # tags, for check_manifest and the reproducible mtime
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Checks
+        run: |
+          python tools/check_versions.py
+          python tools/check_manifest.py --require-tags
+
+      - name: The bundled required app
+        run: |
+          required=$(python -c 'import tomllib; apps = tomllib.load(open("portal/apps.toml", "rb"))["apps"]; print(next(a["tag"] for a in apps.values() if a.get("required")))')
+          mkdir -p bundle
+          gh release download "$required" --pattern "$required.tar.gz" --pattern SHA256SUMS --dir bundle
+
+      - name: Build
+        run: |
+          python tools/build_release.py "$TAG" dist --bundle bundle
+          cat dist/SHA256SUMS
+
+      - name: Publish as a draft
+        run: bash tools/publish_release.sh "$TAG" "$COMMIT" dist --draft

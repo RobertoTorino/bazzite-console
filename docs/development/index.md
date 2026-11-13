@@ -11,6 +11,30 @@ checker (`dev/deps/run.sh`), installer-test runner, OBS demo recorder, and sound
 `--list` mode is safe for a terminal overview; its release actions are user-driven. The video-tour scripts are
 `tools/record-tour.sh` and `tools/record-app-tour.sh`; the dashboard provides their UI.
 
+## Releases
+
+A release is made from the release planner's first tab, step by step: get up to date, commit, push, wait for CI, then
+**Start new release**. Start writes the versions, the `Release x.y.z.` CHANGELOG entries and the new tags in
+`portal/apps.toml`, commits and pushes that, and starts `.github/workflows/release.yml` on the commit. The run:
+
+1. waits until CI passed on the commit;
+2. builds and publishes every app whose pinned tag has no release yet, side by side;
+3. writes their checksums into `apps.toml` in a commit `Pin ...` on `main`;
+4. builds the portal from that commit as a **draft** release, which no installed portal sees.
+
+**Device test** then installs the draft on this machine (`tools/check-release.sh draft`). **Publish** makes it the
+portal's release, its tag and GitHub's Latest release; **Not OK** leaves it a draft, and after the fix the steps start
+again from Commit (apps already out are skipped, the portal is built anew). The last step pulls the pin commit.
+
+A run started again skips what is already published. By hand, without the planner:
+`gh workflow run release.yml --ref main -f commit="$(git rev-parse origin/main)"`.
+
+One release by hand, built on this machine instead, is `tools/tag-release.sh ps5-<app>-v<x.y.z>`, which the tabs
+**1. Release apps** and **2. Pin and release Portal** drive. The workflow does not run on a pushed tag.
+
+The Install page's link to the portal's release and the archive's name are filled in from `portal/VERSION` when the
+wiki is built (`tools/mkdocs/hooks.py`), so they follow each portal release.
+
 The dependency checker uses `dev/deps/nexus_deps/catalogs/bazzite-console.toml`, which tracks the suite's
 `requirements.txt` files and relevant system tools. Keep it synchronized when app dependencies change.
 

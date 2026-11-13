@@ -136,15 +136,15 @@ def test_start_needs_a_clean_tree_at_the_last_push(nexus):
 def test_the_one_command_commits_pushes_and_starts_the_workflow():
     command = flow.start_command(flow.commit_message(["wp-test-v0.2.0", "wp-portal-v1.1.0", "nexus-v0.6.0"]))
     assert command.startswith("git commit -a -q -m 'Release wp-test-v0.2.0, wp-portal-v1.1.0, nexus-v0.6.0' && ")
-    assert "git push origin HEAD:main && gh workflow run release-nexus.yml --ref main" in command
+    assert "git push origin HEAD:main && gh workflow run release.yml --ref main" in command
     assert '-f commit="$(git rev-parse HEAD)"' in command
 
 
 def test_the_run_is_followed_stopped_and_resumed():
     other = rp.BuildRun("CI Nexus", "main", "completed", "success", "https://github.com/o/r/actions/runs/1", "abc", "t",
                         file="ci-nexus.yml")
-    run = rp.BuildRun("Release Nexus", "main", "in_progress", "", "https://github.com/o/r/actions/runs/42", "abc", "t",
-                      file="release-nexus.yml")
+    run = rp.BuildRun("Release", "main", "in_progress", "", "https://github.com/o/r/actions/runs/42", "abc", "t",
+                      file="release.yml")
     assert flow.release_run([other, run]) is run and flow.release_run([other, run], "def") is None
     assert flow.stop_command(run) == "gh run cancel 42"
     assert flow.resume_command(run) == "gh run rerun 42 --failed"
@@ -152,7 +152,7 @@ def test_the_run_is_followed_stopped_and_resumed():
 
 def test_the_device_test_and_publish_work_on_the_portals_draft(nexus):
     assert flow.waiting_portals(nexus) == ["wp-portal-v1.0.0"]
-    assert flow.publish_command("wp-portal-v1.1.0") == ("gh release edit wp-portal-v1.1.0 --draft=false --latest=false"
+    assert flow.publish_command("wp-portal-v1.1.0") == ("gh release edit wp-portal-v1.1.0 --draft=false --latest"
                                                         " && git fetch origin tag wp-portal-v1.1.0")   # seen at once
     line = flow.device_test_line(nexus, "wp", "wp-portal-v1.1.0", windows=True)
     assert line.startswith("& '") and line.endswith("check-release.ps1' draft wp-portal-v1.1.0")
@@ -165,7 +165,7 @@ def test_a_release_commit_whose_push_stopped_is_pushed_and_started(nexus):
     assert flow.unpushed_release(nexus, base="HEAD~1") == "Release wp-test-v0.2.0, wp-portal-v1.1.0"
     sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "other")
     assert flow.unpushed_release(nexus, base="HEAD~2") == ""             # not right on top of the last push
-    assert flow.push_and_start_command().startswith("git push origin HEAD:main && gh workflow run release-nexus.yml")
+    assert flow.push_and_start_command().startswith("git push origin HEAD:main && gh workflow run release.yml")
 
 
 @pytest.fixture
@@ -209,7 +209,7 @@ def test_start_writes_the_release_and_runs_the_one_command(release_window, monke
     page.rows[0][2].setText("A greeting")
     page.start()
     assert ran == [flow.start_command("Release wp-test-v0.2.0, wp-portal-v1.1.0, nexus-v0.6.0", ["wp"])]
-    assert " -f suites=wp && " in ran[0]         # only the suite released (owner, 05-11-2026)
+    assert "suites" not in ran[0]                # release.yml releases the repository's one suite: no such input
     assert "Release 0.2.0. A greeting" in (w.root / "wp/apps/test/CHANGELOG").read_text()
     assert "wp · test: 0.2.0" in page.output.toPlainText()
 
@@ -359,7 +359,7 @@ def test_changes_not_committed_make_commit_the_step_to_do(release_window, monkey
     assert warned and "working tree has changes" in warned[0]
 
 
-def _run(sha="abc1234", file="release-nexus.yml", workflow="Release Nexus", status="completed",
+def _run(sha="abc1234", file="release.yml", workflow="Release", status="completed",
          conclusion="success", ref="main", title="title"):
     return rp.BuildRun(workflow, ref, status, conclusion, f"https://github.com/o/r/actions/runs/{abs(hash(sha+file))}",
                        sha, title, file=file)
@@ -377,6 +377,11 @@ def test_the_step_to_do_follows_the_release():
     assert flow.current_step(flow.Facts(ci="unknown", something=True)) == "start"      # no GitHub here: not held
     assert flow.current_step(flow.Facts(ci="passed")) == ""                             # nothing to release
     assert set(flow.step_states(flow.Facts(ci="passed")).values()) == {"done"}
+    # No release workflow on GitHub (a standalone suite): the steps of a release it would run get no ✓
+    manual = flow.step_states(flow.Facts(ci="passed", manual=True))
+    assert [key for key, state in manual.items() if state == "done"] == ["pull", "commit", "push", "ci"]
+    assert {manual[key] for key in ("start", "run", "test", "publish", "finish")} == {"later"}
+    assert flow.step_states(flow.Facts(dirty=True, manual=True))["commit"] == "now"
     assert flow.current_step(flow.Facts(ahead=1, unpushed="Release x")) == "start"     # Push and start
     running = _run(status="in_progress", conclusion="")
     assert flow.current_step(flow.Facts(run=running)) == "run"
@@ -400,7 +405,7 @@ def test_a_failed_release_gets_its_fix_then_starts_again_on_it():
     assert flow.current_step(flow.Facts(run=failed, restart=True, ci="building")) == "ci"
     assert flow.current_step(flow.Facts(run=failed, restart=True, ci="passed", something=True)) == "run"
     assert flow.current_step(flow.Facts(run=failed, ci="passed")) == "run"             # no fix: Resume run
-    assert flow.restart_command().startswith('gh workflow run release-nexus.yml --ref main -f commit="$(git rev-parse '
+    assert flow.restart_command().startswith('gh workflow run release.yml --ref main -f commit="$(git rev-parse '
                                              'HEAD)"')
 
 
@@ -453,7 +458,7 @@ def test_a_suite_is_on_the_nexus_release_through_its_own_workflow(tmp_path):
 
 def test_ci_state_reads_the_ci_runs_of_the_commit():
     runs = [_run("aaa", "ci.yml", "CI"), _run("aaa", "ci-nexus.yml", "CI Nexus", "in_progress", ""),
-            _run("aaa", "release-nexus.yml"), _run("bbb", "ci.yml", "CI", conclusion="failure")]
+            _run("aaa", "release.yml"), _run("bbb", "ci.yml", "CI", conclusion="failure")]
     assert flow.ci_state(runs, "aaa") == "building" and flow.ci_state(runs, "bbb") == "failed"
     assert flow.ci_state(runs[:1], "aaa") == "passed" and flow.ci_state(runs, "ccc") == "none"
     # Another suite's CI, which every push starts too, never holds the step or Run CI again (owner, 27-10-2026).
@@ -595,14 +600,14 @@ def test_each_suite_stands_apart(nexus):
     assert flow.cycle_run(nexus, [old], suite="wp") is old
     assert flow.cycle_run(nexus, [old], suite="bc") is None          # Start new release for the board
     # A run started for the board says so in its title, and is not the wp release's
-    board = _run("f" * 40, title="Release Nexus: bc")
+    board = _run("f" * 40, title="Release: bc")
     assert flow.run_suites(board) == ["bc"]
     assert flow.release_run([board, old], suite="bc") is board
     assert flow.release_run([board, old], suite="wp") is old
     assert flow.tag_suites(nexus, ["test-v1.0.0", "portal-v2.1.0", "nexus-v0.6.0"]) == ["bc"]
     assert flow.tag_suites(nexus, ["wp-portal-v1.1.0"]) == ["wp"] and flow.tag_suites(nexus, ["nexus-v0.6.0"]) == []
-    assert ' -f suites=bc && ' in flow.start_command("Release portal-v2.1.0", ["bc"])
-    assert ' -f suites=bc && ' in flow.restart_command(["bc"]) and "suites" not in flow.restart_command()
+    assert "suites" not in flow.start_command("Release portal-v2.1.0", ["bc"])       # release.yml takes none
+    assert "suites" not in flow.restart_command(["bc"]) and "suites" not in flow.restart_command()
 
 
 def test_not_ok_is_the_runs_and_a_fix_goes_on_from_commit():

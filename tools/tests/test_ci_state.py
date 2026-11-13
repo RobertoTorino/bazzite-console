@@ -1,0 +1,145 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""tools/ci_state.py: the state of every CI run on a commit, waiting while one runs, and its exit status."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import ci_state  # noqa: E402
+
+
+def run(branch="main", status="completed", conclusion="success"):
+    return {"head_branch": branch, "status": status, "conclusion": conclusion, "html_url": f"https://x/{branch}"}
+
+
+def test_state_of_the_runs():
+    assert ci_state.state([]) == "none"
+    assert ci_state.state([run(), run("portal-v1.0.0", status="in_progress", conclusion=None)]) == "running"
+    assert ci_state.state([run(), run("portal-v1.0.0", conclusion="failure")]) == "failed"
+    assert ci_state.state([run(), run("portal-v1.0.0", conclusion="skipped")]) == "passed"
+
+
+def test_waits_while_ci_runs_then_answers(monkeypatch, capsys):
+    monkeypatch.delenv("PS5_CI_STATE", raising=False)
+    answers = iter([[], [run(status="in_progress", conclusion=None)], [run()]])
+    clock, slept = [0.0], []
+
+    def sleep(seconds):
+        slept.append(seconds)
+        clock[0] += seconds
+    assert ci_state.check("abc1234", 60, fetch=lambda sha: next(answers), sleep=sleep, now=lambda: clock[0]) == 0
+    assert slept == [ci_state.POLL_S, ci_state.POLL_S] and capsys.readouterr().out.startswith("passed\n")
+
+
+def test_gives_up_after_the_wait_and_reports_failure_at_once(monkeypatch, capsys):
+    monkeypatch.delenv("PS5_CI_STATE", raising=False)
+    clock = [0.0]
+
+    def sleep(seconds):
+        clock[0] += seconds
+    running = [run(status="queued", conclusion=None)]
+    assert ci_state.check("abc1234", 1, fetch=lambda sha: running, sleep=sleep, now=lambda: clock[0]) == 2
+    failed = [run(conclusion="failure")]
+    assert ci_state.check("abc1234", 60, fetch=lambda sha: failed, sleep=lambda s: None, now=lambda: 0.0) == 1
+    assert "failure  https://x/main" in capsys.readouterr().out
+
+
+def test_a_commit_without_a_run_is_answered_within_minutes(monkeypatch, capsys):
+    """A suite's CI runs only when a push changes its paths (29-10-2026): a commit that has no run after the grace
+    gets "none" then, with the reason, not after the whole wait; a run that appears in time is waited for."""
+    monkeypatch.delenv("PS5_CI_STATE", raising=False)
+    clock = [0.0]
+
+    def sleep(seconds):
+        clock[0] += seconds
+    assert ci_state.check("abc1234", 60, fetch=lambda sha, workflow: [], sleep=sleep, now=lambda: clock[0],
+                          workflow="ci-windows-portable.yml") == 2
+    assert ci_state.NONE_GRACE_S <= clock[0] < ci_state.NONE_GRACE_S + 2 * ci_state.POLL_S
+    out, err = capsys.readouterr()
+    assert out.startswith("none\n") and "no run of ci-windows-portable.yml on abc1234" in err
+    clock[0] = 0.0
+    late = [[]] * 4 + [[run(status="in_progress", conclusion=None)], [run()]]
+    assert ci_state.check("abc1234", 60, fetch=lambda sha: late.pop(0), sleep=sleep, now=lambda: clock[0]) == 0
+
+
+def test_unreachable_and_the_stub(monkeypatch):
+    monkeypatch.delenv("PS5_CI_STATE", raising=False)
+
+    def offline(sha):
+        raise OSError("no network")
+    assert ci_state.check("abc1234", 60, fetch=offline, sleep=lambda s: None) == 3
+    monkeypatch.setenv("PS5_CI_STATE", "running")
+    assert ci_state.check("abc1234", 60, fetch=offline, sleep=lambda s: None) == 2   # answers at once
+
+
+def test_a_suite_of_its_own_asks_for_its_own_workflow(monkeypatch):
+    """ci.yml by default (Nexus and the BC250 Bazzite Suite); --workflow another suite's CI (owner, 27-10-2026: one
+    suite's CI never holds another suite's releases)."""
+    monkeypatch.delenv("PS5_CI_STATE", raising=False)
+    asked = []
+
+    def fetch(sha, workflow=ci_state.WORKFLOW):
+        asked.append(workflow)
+        return [run()]
+    assert ci_state.check("abc1234", fetch=fetch) == 0
+    assert ci_state.check("abc1234", fetch=fetch, workflow="ci-windows-portable.yml") == 0
+    assert asked == ["ci.yml", "ci-windows-portable.yml"]
+    calls = []
+    monkeypatch.setattr(ci_state, "check", lambda sha, wait, workflow: calls.append((sha, wait, workflow)) or 0)
+    assert ci_state.main(["abc1234"]) == 0
+    assert ci_state.main(["--wait", "1", "--workflow", "ci-windows-portable.yml", "abc1234"]) == 0
+    assert calls == [("abc1234", 0.0, "ci.yml"), ("abc1234", 1.0, "ci-windows-portable.yml")]
+    assert "workflows/ci-windows-portable.yml/runs" in ci_state.RUNS_URL.format(
+        repo="r", workflow="ci-windows-portable.yml", sha="s")
+
+
+def test_a_release_commit_is_answered_by_its_work_commit(monkeypatch, capsys):
+    """--release-commit (owner, 30-10-2026): a commit that only writes a release takes the CI of its parent, the
+    work commit; one that changes more, or whose work commit has no run of the workflow, takes its own."""
+    monkeypatch.delenv("PS5_CI_STATE", raising=False)
+    runs = {"work123": [run()], "rel4567": [run(status="in_progress", conclusion=None)], "nocirun": []}
+    asked = []
+
+    def fetch(sha, workflow=ci_state.WORKFLOW):
+        asked.append(sha)
+        return runs[sha]
+    parents = {"rel4567": "work123"}
+    assert ci_state.check_release_commit("rel4567", fetch=fetch, work_commit=parents.get) == 0
+    assert asked[-1] == "work123" and "answers for it" in capsys.readouterr().err
+    assert ci_state.check_release_commit("work123", fetch=fetch, work_commit=parents.get) == 0   # not a release
+    assert asked[-1] == "work123"
+    parents["rel4567"] = "nocirun"
+    assert ci_state.check_release_commit("rel4567", fetch=fetch, work_commit=parents.get) == 2   # its own: running
+    assert asked[-1] == "rel4567" and "has no run of ci.yml" in capsys.readouterr().err
+    # CI failed on the work commit: the release commit's own CI answers, as the release may fix what failed (owner,
+    # 31-10-2026: the portal's version bump, which check_manifest.py wanted, came with the release commit)
+    failed = {"work123": [run(conclusion="failure")], "rel4567": [run()]}
+    assert ci_state.check_release_commit("rel4567", fetch=lambda sha: failed[sha],
+                                         work_commit={"rel4567": "work123"}.get) == 0
+    assert "CI failed on its work commit work123: the commit's own CI answers" in capsys.readouterr().err
+    failed["rel4567"] = [run(conclusion="failure")]
+    assert ci_state.check_release_commit("rel4567", fetch=lambda sha: failed[sha],
+                                         work_commit={"rel4567": "work123"}.get) == 1
+    calls = []
+    monkeypatch.setattr(ci_state, "check_release_commit",
+                        lambda sha, wait, workflow: calls.append((sha, wait, workflow)) or 0)
+    assert ci_state.main(["--workflow", "ci-nexus.yml", "--release-commit", "--wait", "75", "rel4567"]) == 0
+    assert calls == [("rel4567", 75.0, "ci-nexus.yml")]
+
+
+def test_repo_names_the_checkout_the_commit_is_of(tmp_path, monkeypatch):
+    """--repo: a suite in a repository of its own, cloned into the Nexus checkout (owner, 13-11-2026), is asked
+    about at its own origin, also in a workflow, where GITHUB_REPOSITORY names the repository that runs it."""
+    import subprocess
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "remote", "add", "origin", "https://github.com/someone/a-suite.git"], cwd=tmp_path, check=True)
+    monkeypatch.setenv("GITHUB_REPOSITORY", "someone/nexus")
+    monkeypatch.setattr(ci_state, "CHECKOUT", None)
+    assert ci_state.repo_slug() == "someone/nexus"
+    calls = []
+    monkeypatch.setattr(ci_state, "check", lambda sha, wait, workflow: calls.append(ci_state.repo_slug()) or 0)
+    assert ci_state.main(["--repo", str(tmp_path), "--workflow", "ci.yml", "abc1234"]) == 0
+    assert calls == ["someone/a-suite"]

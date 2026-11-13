@@ -27,21 +27,32 @@ from pathlib import Path
 from . import plan as rp
 
 AUTO = "auto"                           # a portal's or Nexus's version, worked out when Start writes the release
-NEXUS_WORKFLOW = "release-nexus.yml"
-WORKFLOW_NAME = "Release Nexus"         # its name on GitHub, as the runs list it
+NEXUS_WORKFLOW = "release.yml"          # the release workflow, started on the release commit (workflow_dispatch)
+WORKFLOW_NAME = "Release"               # its name on GitHub, as the runs list it
 _RUN_ID = re.compile(r"/actions/runs/(\d+)")
 
 
 def on_nexus_release(root: Path, suite: str) -> bool:
-    """Whether release-nexus.yml carries the suite: its release workflow can be called (workflow_call):
-    release-<suite>.yml, or release.yml for the suite whose tags have no prefix."""
+    """Whether the suite's release runs on GitHub: its release workflow (release.yml) can be started on a release
+    commit (workflow_dispatch)."""
     name = next(f for f in rp.suite_workflows(root, suite) if f.startswith("release"))
     workflow = root / ".github" / "workflows" / name
-    return workflow.is_file() and "workflow_call:" in workflow.read_text(encoding="utf-8")
+    text = workflow.read_text(encoding="utf-8") if workflow.is_file() else ""
+    return "workflow_dispatch:" in text or "workflow_call:" in text
+
+
+HERE = "."                              # the suite a repository is itself (its own portal/ at the root)
+
+
+def label(suite: str, key: str) -> str:
+    """A part of a release by name: "wp · test"; only its key for core and Nexus and in a repository of one suite."""
+    return key if suite in ("", HERE) else f"{suite} · {key}"
 
 
 def release_suites(root: Path) -> list[str]:
-    return [suite for suite in rp.suites(root) if on_nexus_release(root, suite)]
+    """The suites whose release runs on GitHub; a repository that is one suite itself is HERE."""
+    names = rp.suites(root) or ([HERE] if rp.manifest_path(root).is_file() else [])
+    return [suite for suite in names if on_nexus_release(root, suite)]
 
 
 @dataclass
@@ -57,7 +68,7 @@ class Pick:
 
     @property
     def label(self) -> str:
-        return self.unit.key if not self.suite else f"{self.suite} · {self.unit.key}"
+        return label(self.suite, self.unit.key)
 
 
 def chosen_suites(root: Path, suite: str | None) -> list[str]:
@@ -131,7 +142,7 @@ def write(root: Path, chosen: list[Pick], base: str = "origin/main") -> tuple[li
             rp.add_changelog_entry(root, unit, text, base=base)
             rp.pin(root, unit, "", suite)               # the new tag; its sha256 is the workflow's
             tags.append(unit.tag)
-            log.append(f"{suite} · {unit.key}: {new}, \"{text}\", apps.toml pins {unit.tag}")
+            log.append(f"{label(suite, unit.key)}: {new}, \"{text}\", apps.toml pins {unit.tag}")
         portal_pick = next((p for p in chosen if p.suite == suite and p.unit.kind == "portal"), None)
         if portal_pick is None:
             continue
@@ -141,7 +152,7 @@ def write(root: Path, chosen: list[Pick], base: str = "origin/main") -> tuple[li
         minimum, need = rp.portal_minimum(root, base, portal.version, suite)
         new = typed if typed and typed != AUTO else suggested
         if minimum and rp.version_tuple(minimum) > rp.version_tuple(new):
-            log.append(f"{suite} · portal: {new} is less than CI asks ({need}): {minimum}")
+            log.append(f"{label(suite, 'portal')}: {new} is less than CI asks ({need}): {minimum}")
             new = minimum
         if new != portal.version:
             rp.set_version(root, portal, new)
@@ -149,7 +160,7 @@ def write(root: Path, chosen: list[Pick], base: str = "origin/main") -> tuple[li
                               rp.changed_withdrawals(root, base, suite))
         rp.add_changelog_entry(root, portal, text, base=base)
         tags.append(portal.tag)
-        log.append(f"{suite} · portal: {new} ({why}), \"{text}\"")
+        log.append(f"{label(suite, 'portal')}: {new} ({why}), \"{text}\"")
     for pick in (p for p in chosen if p.unit.kind == "core"):
         new = pick.version.strip() or pick.choices[0]
         if new != pick.unit.version:
@@ -266,10 +277,8 @@ def tag_suites(root: Path, tags: Iterable[str]) -> list[str]:
 
 
 def suites_input(suites: Iterable[str]) -> str:
-    """release-nexus.yml's suites input: the suites it carries, and only those; none given, every suite whose portal
-    is not out (a run started by hand, as before 05-11-2026)."""
-    names = " ".join(suites)
-    return f" -f suites={shlex.quote(names)}" if names else ""
+    """Nothing: release.yml releases this repository's one suite and takes no suites (*suites* is the callers')."""
+    return ""
 
 
 def run_suites(run: rp.BuildRun) -> list[str] | None:
@@ -330,7 +339,7 @@ STEPS = (
                           "(git pull --rebase), then the pre-push hook checks them."),
     ("ci", "CI passes", "GitHub's CI on that commit. Nothing to press: wait until it passed."),
     ("start", "Start new release", "Check the versions on the Contents tab, then start: it writes the release, commits and pushes "
-                                   "it and starts Release Nexus."),
+                                   "it and starts the release on GitHub."),
     ("run", "The release on GitHub", "Builds and publishes the apps, pins them and makes each portal a draft."),
     ("test", "Device test", "Installs the draft portal on this device and starts it: test it as a user would."),
     ("publish", "Publish", "The test passed: publish the portal. Not OK leaves it a draft."),
@@ -352,6 +361,7 @@ class Facts:
     drafts: list[str] = field(default_factory=list)     # its portals not published yet
     restart: bool = False               # HEAD is not the run's commit: a failed run starts again on HEAD, the fix
     rejected: list[str] = field(default_factory=list)   # its drafts the device test failed (Not OK), still drafts
+    manual: bool = False                # no release workflow on GitHub: steps 5 to 9 are not this repository's
 
 
 def ci_runs(runs: list[rp.BuildRun], sha: str, hidden: set[str] = frozenset()) -> list[rp.BuildRun]:
@@ -462,6 +472,8 @@ def current_step(facts: Facts) -> str:
 def step_states(facts: Facts) -> dict[str, str]:
     """Each step's state: done, now, failed (the step to do now, which went wrong) or later."""
     now = current_step(facts)
+    if not now and facts.manual:            # no release workflow: the release is made on the tabs 1 and 2, so the
+        return {key: "done" if key in ("pull", "commit", "push", "ci") else "later" for key in KEYS}   # rest is no ✓
     if not now:                             # nothing to do: every step of a release done, or none to make
         return {key: "done" for key in KEYS}
     at = KEYS.index(now)
@@ -521,11 +533,11 @@ def portal_suite(root: Path, tag: str) -> str | None:
 
 
 def publish_command(tag: str) -> str:
-    """The owner's yes after the device test: the draft becomes a release, which makes its tag (on the pin commit)
-    and starts the Nexus index. Never GitHub's Latest: that is the index. The new tag is fetched at once, so the step
-    sees the release published when the command ends (owner, 06-11-2026: Publish stayed lit until GitHub's runs were
-    read again, and was pressed twice)."""
-    return f"gh release edit {tag} --draft=false --latest=false && git fetch origin tag {tag}"
+    """The owner's yes after the device test: the draft becomes a release, which makes its tag (on the pin commit),
+    and GitHub's Latest, so the releases page opens on the portal and not on an app. The new tag is fetched at once,
+    so the step sees the release published when the command ends (owner, 06-11-2026: Publish stayed lit until
+    GitHub's runs were read again, and was pressed twice)."""
+    return f"gh release edit {tag} --draft=false --latest && git fetch origin tag {tag}"
 
 
 def device_test_line(root: Path, suite: str, tag: str, windows: bool) -> str:

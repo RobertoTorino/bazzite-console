@@ -1338,7 +1338,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path, monkeypatch
     monkeypatch.setattr(rp, "portal_suggestion", lambda _root, portal, _suite=None: (portal.version, "test"))
     tools = fixture_manifest_tools()
     monkeypatch.setattr(rp, "manifest_tools", lambda *_args, **_kwargs: tools)
-    write(repo / ".github/workflows/release.yml", "name: Release\n")
+    write(repo / ".github/workflows/release.yml", "name: Release\non:\n  push:\n    tags: [\"*-v*\"]\n")
     notes, asked = [], []
 
     def sha256(tag):
@@ -1921,3 +1921,19 @@ def test_push_brings_in_what_github_has_first():
     pull = "tools/git-setup.sh && git pull --rebase --autostash"
     assert rp.push_command(linux=False) == f"{pull} && git push"
     assert rp.push_command(linux=True) == f"{pull} && {rp.CI_LOCAL} && git push"
+
+
+def test_a_workflow_that_is_only_started_builds_no_pushed_tag(tmp_path):
+    """release.yml on workflow_dispatch (the release tab's run): a tag's release stays Publish's on the steps 1 and
+    2, so the window does not wait for a run on the tag."""
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (tmp_path / "portal").mkdir()
+    (tmp_path / "portal" / "apps.toml").write_text("", encoding="utf-8")
+    (tmp_path / "TAG_PREFIX").write_text("ps5-\n", encoding="utf-8")
+    assert rp.suite_workflows(tmp_path) == {"ci.yml", "release.yml"}       # the repository is the suite
+    assert not rp.has_release_workflow(tmp_path)
+    (workflows / "release.yml").write_text("on:\n  workflow_dispatch:\n", encoding="utf-8")
+    assert not rp.has_release_workflow(tmp_path)
+    (workflows / "release.yml").write_text('on:\n  push:\n    tags: ["*-v*"]\n', encoding="utf-8")
+    assert rp.has_release_workflow(tmp_path)

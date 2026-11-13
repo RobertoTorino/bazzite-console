@@ -1462,17 +1462,20 @@ def suite_workflows(root: Path, suite: str | None = None) -> set[str]:
     """The workflow files that are the suite's own: ci.yml and release.yml for the suite without a tag prefix,
     ci-<suite>.yml and release-<suite>.yml for one with (each suite's CI and releases stand apart, owner
     27-10-2026)."""
-    if not tag_prefix(root, suite):
+    if not tag_prefix(root, suite) or suite_dir(root, suite) == root:     # the repository is the suite: its own
         return {"ci.yml", "release.yml"}
     name = suite_dir(root, suite).name
     return {f"ci-{name}.yml", f"release-{name}.yml"}
 
 
 def has_release_workflow(root: Path, suite: str | None = None) -> bool:
-    """Whether this checkout has an Actions release workflow for the selected suite."""
+    """Whether a pushed tag is built and published on GitHub: the selected suite's release workflow starts on
+    tags. One that is only started (workflow_dispatch: the release tab's run) leaves a tag's release to Publish
+    on the steps 1 and 2 (tools/tag-release.sh)."""
     workflows = root / ".github" / "workflows"
-    return any((workflows / name).is_file()
-               for name in suite_workflows(root, suite) if name.startswith("release"))
+    return any((workflows / name).is_file() and re.search(
+        r"^\s+tags:", (workflows / name).read_text(encoding="utf-8"), re.M) is not None
+        for name in suite_workflows(root, suite) if name.startswith("release"))
 
 
 def other_suites_workflows(root: Path, suite: str | None = None) -> set[str]:

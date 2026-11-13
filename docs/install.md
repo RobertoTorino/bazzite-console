@@ -17,8 +17,9 @@ The installer is for the logged-in user; do not run it with `sudo`.
 
 ## Install a release
 
-Download the Bazzite Console Suite portal release and its `SHA256SUMS` from the
-[Releases page](https://github.com/RobertoTorino/bazzite-console/releases).
+Download the portal's archive (`{{ portal_tag }}.tar.gz`) and its `SHA256SUMS` from the
+[portal's release](https://github.com/RobertoTorino/bazzite-console/releases/tag/{{ portal_tag }}). The other
+releases on GitHub are the apps': the portal installs those for you.
 Check the archive against the checksum file, extract it, and run `./install.sh` from the extracted folder.
 
 ## After a Bazzite update to a new Python

@@ -1,3 +1,19 @@
+Changelog: 13-11-2026 23:28:59
+
+Added. The release tab's nine steps work in this repository: Start new release starts release.yml here, on the
+release commit, and the run, the Device test of the portal's draft, Publish and the pin commit follow as steps 6 to
+9. A repository that is one suite itself counts as that suite, so the Contents tab lists its apps and portal with the
+versions offered. Publish makes the portal GitHub's Latest release. The tabs 1. Release apps and 2. Pin and release
+Portal still publish one release by hand: a workflow that is only started, not run on a tag, leaves them as they were.
+
+Changelog: 13-11-2026 23:12:13
+
+Fixed. The release tab no longer shows every step with a green ✓ after a push in a repository without a release
+workflow on GitHub. Steps 5 to 9 need that workflow; without it the tab found nothing to release and marked them
+done, while apps had changed since their releases. Steps 1 to 4 get their ✓ as before, 5 to 9 stay gray, and the line
+under the steps says the releases are made on the tabs 1. Release apps and 2. Pin and release Portal, and which apps
+and portal changed since their last release.
+
 Changelog: 13-11-2026 21:54:15
 
 Fixed. The app's tests pass again (58 of 155 failed or stopped in their fixtures since the suite got its own tooling
