@@ -1,3 +1,10 @@
+Changelog: 14-11-2026 03:15:53
+
+Fixed. A published portal release no longer leaves a canceled Wiki run in the Actions list ("Canceling since a higher
+priority waiting request for pages exists"). The release's run starts the workflow on main, and both were in the
+concurrency group "pages", so the run on main canceled the one that started it. The wiki was published all the same;
+only the red mark was wrong. The release's run now has a group of its own (.github/workflows/docs.yml).
+
 Changelog: 14-11-2026 02:59:10
 
 Fixed. The Sustainable category has a new icon, a steel board in place of the green one (icons/sustainable/, its four
