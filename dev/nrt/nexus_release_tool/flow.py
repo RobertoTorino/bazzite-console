@@ -45,7 +45,7 @@ HERE = "."                              # the suite a repository is itself (its 
 
 
 def label(suite: str, key: str) -> str:
-    """A part of a release by name: "wp · test"; only its key for core and Nexus and in a repository of one suite."""
+    """A part of a release by name: "ws · test"; only its key for core and Nexus and in a repository of one suite."""
     return key if suite in ("", HERE) else f"{suite} · {key}"
 
 
@@ -228,7 +228,7 @@ class FetchFailed:
 def fetch_tags(root: Path) -> list[str] | FetchFailed:
     """git fetch --tags from origin: the tags it brought ([] none, or no origin), FetchFailed when it failed (offline,
     or a tag here that git will not move). The release reads each part's last release from this checkout's tags,
-    and a portal is tagged on GitHub when it is published (owner, 31-10-2026: wp-portal-v6.2.0 not fetched, so the
+    and a portal is tagged on GitHub when it is published (owner, 31-10-2026: ws-portal-v6.2.0 not fetched, so the
     next release kept 6.2.0 and CI refused it)."""
     if "origin" not in (rp.git(root, "remote") or "").split():
         return []

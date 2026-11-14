@@ -510,8 +510,8 @@ class NoticeButton(QToolButton):
 
 
 class UpdateBanner(QToolButton):
-    """The orange banner beside the category strip while a newer portal is out (owner, 04-11-2026, as the Windows
-    Portable Suite's portal): white capitals on the suite's orange; a click, Enter or A does what Y does. While the
+    """The orange banner beside the category strip while a newer portal is out (owner,
+    04-11-2026): white capitals on the suite's orange; a click, Enter or A does what Y does. While the
     update downloads and installs it says how far it is. Hidden while there is nothing to say."""
 
     def __init__(self):

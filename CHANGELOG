@@ -1,3 +1,30 @@
+Changelog: 14-11-2026 01:05:10
+
+Fixed. The suite no longer names the suite for Windows devices (owner, 14-11-2026). The notes that said a feature
+came from that suite's apps are gone from the six emulator managers, the portal, core and the tools; the examples in the
+tools use this suite's own ps5- tags. Only comments and examples changed: no app works differently.
+
+Changelog: 14-11-2026 00:49:37
+
+Fixed. The suite no longer names the board it was ported from (owner, 14-11-2026: only CROSS-REFERENCE.md does). The
+notes on where code came from are gone from core, HDMI CEC Manager, Fan Control, the tools and the tests; the
+development stand-in's variable is PS5_REPLAY, and tools/ci_state.py asks GitHub as bazzite-console-ci-state. No app
+works differently, except Bazzite Test (its CHANGELOG). Core loses wifi.py, the adapter reader only Bazzite Test
+used. The older CHANGELOG entries of Bazzite Test, HDMI CEC Manager, Fan Control and System Overlay are reworded.
+
+Changelog: 14-11-2026 00:36:00
+
+Added. A release test cleans up after itself, and says what is installed. tools/check-release.sh on a machine without
+the suite marks what it installs as a test's and removes it again when the portal closes: the apps installed during
+the test, the portal and Bazzite Test, each with its own uninstaller. A machine that had the suite installed keeps
+it, and --keep keeps a test's install. `check-release.sh status` lists what of the suite is installed and whether a
+test put it there; `check-release.sh remove` removes the suite, with --purge its settings and logs too. Test:
+tools/installer-tests/release-check.sh.
+
+Fixed. Testing a portal release that is still a draft works. `check-release.sh release` stopped with "has no
+ps5-portal-v0.2.2.tar.gz yet" (GitHub answers 404 for a draft's files): it now sees the draft and tests that, and
+says to publish it after the test.
+
 Changelog: 13-11-2026 23:59:57
 
 Fixed. The wiki describes the suite as it is. The Install page is written for someone installing for the first time:

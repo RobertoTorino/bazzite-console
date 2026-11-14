@@ -1,0 +1,4 @@
+Changelog: 14-11-2026 01:05:10
+
+Fixed. The tests, their fixture and the examples no longer name the suite for Windows devices (owner, 14-11-2026):
+the second suite in the tests is "ws", with ws- tags and a windows_portal package. Nothing works differently.

@@ -1,10 +1,10 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Development stand-in for test-bazzite.sh: same options and output format, no system access.
-# Lets the GUI be developed on machines that are not a BC-250 (e.g. macOS).
+# Lets the GUI be developed on machines that are not a PS5 (e.g. macOS).
 #   python -m bazzite_test --script development/tools/fake-test-bazzite.sh --no-sudo
 # Replay a real report (/var/log/bazzite-test/ps5-test-results-*.log) instead of simulated output:
-#   BC250_REPLAY=path/to/report.log python -m bazzite_test --script development/tools/fake-test-bazzite.sh --no-sudo
+#   PS5_REPLAY=path/to/report.log python -m bazzite_test --script development/tools/fake-test-bazzite.sh --no-sudo
 
 ONLY=""
 STRESS_MODE=false
@@ -41,12 +41,12 @@ replay_block() {
         /^[0-9-]+ [0-9:]+ - \[TEST [0-9]+\]/ { on = ($0 ~ "\\[TEST " id "\\]") }
         /^[0-9-]+ [0-9:]+ - (All tests completed|\[SUMMARY\])/ { on = 0 }
         on
-    ' "$BC250_REPLAY"
+    ' "$PS5_REPLAY"
 }
 
 for t in $TESTS; do
     want "$t" || continue
-    if [ -n "${BC250_REPLAY:-}" ]; then
+    if [ -n "${PS5_REPLAY:-}" ]; then
         BLOCK=$(replay_block "$t")
         [ -z "$BLOCK" ] && continue
         echo "$BLOCK"
@@ -65,7 +65,7 @@ for t in $TESTS; do
             log "INFO: Skipped. Re-run with --bench to measure CPU and GPU performance."
         else
             # Simulated 32-CU / 6C12T board, against a 24-CU stock baseline of 612 / 4410 / 5520.
-            log "INFO: Configuration: AMD BC-250, 6C/12T, 32 CUs, governor max 1850 MHz, mitigations off"
+            log "INFO: Configuration: a simulated board, 6C/12T, 32 CUs, governor max 1850 MHz, mitigations off"
             sleep 1
             log "INFO: CPU single-thread: 615.3 ops/s | multi-thread: 4432.8 ops/s (7.2x)"
             log "INFO: GPU FP32: 7310.4 GFLOPS | VRAM copy: 198.2 GB/s | clock under load: ~1850 MHz"
@@ -138,7 +138,7 @@ for t in $TESTS; do
         log "INFO: Link: PCIe Gen3 x4 (8.0 GT/s, ceiling ~3940 MB/s); drive supports Gen4 x4, slot supports Gen3 x4. The slot, not the drive, sets the speed limit."
         log "INFO: DRAM cache: none. /dev/nvme0 is DRAM-less and uses a Host Memory Buffer (wants 64 MiB of system RAM, minimum 32 MiB)."
         log "SUCCESS: The kernel gave it a 64 MiB host memory buffer."
-        log "HINT: Fine for game loading. Expect slower sustained and random writes than a drive with DRAM; the buffer comes out of the RAM the BC-250 shares with the GPU."
+        log "HINT: Fine for game loading. Expect slower sustained and random writes than a drive with DRAM; the buffer comes out of the RAM the PS5 shares with the GPU."
         log "INFO: Wear: 3% of the rated endurance used, 12800 GB written, 1200 power-on hours."
         log "INFO: 37 unsafe shutdowns recorded (every hard lockup or power cut counts, see test 34)."
         log "SUCCESS: SMART health of /dev/nvme0 is good (source: nvme)."

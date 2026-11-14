@@ -189,8 +189,8 @@ def targets(root: Path, suite: str | None, network: bool = False) -> list[Launch
 
 
 def run_script(target: Launch, windows: bool = WINDOWS) -> Path | None:
-    """The script that starts *target* from the checkout by hand: run.ps1 in its folder, on Windows (the Windows
-    Portable Suite's portal and apps have one); None elsewhere and for a wiki."""
+    """The script that starts *target* from the checkout by hand: run.ps1 in its folder, on Windows (where a portal
+    and its apps have one); None elsewhere and for a wiki."""
     script = target.folder / "run.ps1"
     return script if windows and target.module != "mkdocs" and script.is_file() else None
 

@@ -37,7 +37,7 @@ The launcher is `~/.local/bin/bazzite-test`; the app runs on the suite's shared 
 
 The tests run as root (they read the kernel log, SMART data and the like), so the app asks for your password when you
 start them. They only read: nothing on the PS5 changes. The stress test, the performance benchmark, the system score
-and the game page of the BC250 suite's version come in a later version, with baselines measured on a PS5.
+and the game page come in a later version, with baselines measured on a PS5.
 
 ## The window
 

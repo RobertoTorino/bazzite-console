@@ -8,11 +8,11 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-TAG_PREFIX = "wp-"                              # the suite's tags (windows-portable/TAG_PREFIX)
-_TAG = re.compile(r"^wp-(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
+TAG_PREFIX = "ws-"                              # the suite's tags (windows-suite/TAG_PREFIX)
+_TAG = re.compile(r"^ws-(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
 _SHA256 = re.compile(r"^([0-9a-f]{64})?$")
 # category = "<key>": the portal's tab for the app, in this order. No development tab (owner, 27-10-2026), so no
-# [checkout.*] apps either: the Nexus apps in dev/ are the BC250 portal's.
+# [checkout.*] apps either.
 CATEGORIES = {"sustainable": "Sustainable", "graphics": "Graphics", "gaming": "Gaming", "utilities": "Utilities"}
 FIELDS = {"name", "summary", "short", "tag", "sha256", "required", "category", "withdrawn", "install", "uninstall",
           "detect", "launch"}
@@ -24,7 +24,7 @@ class ManifestError(ValueError):
 
 @dataclass(frozen=True)
 class AppEntry:
-    key: str                                    # "test": folder under apps/; the tag is wp-<key>-v<x.y.z>
+    key: str                                    # "test": folder under apps/; the tag is ws-<key>-v<x.y.z>
     name: str
     summary: str
     tag: str
@@ -35,7 +35,7 @@ class AppEntry:
     uninstall: tuple[str, ...] = ()
     detect: tuple[str, ...] = ()
     launch: tuple[tuple[str, str], ...] = ()
-    short: str = ""                             # the name on its tile; "": the name without "Windows Portable "
+    short: str = ""                             # the name on its tile; "": the name without "Windows "
     # withdrawn = "<reason>": the pinned release was withdrawn; the portal removes the app. Not for the required app.
     withdrawn: str = ""
 

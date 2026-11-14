@@ -29,7 +29,7 @@ def card(key: str, changes_board: bool = False) -> str:
 @pytest.fixture
 def nexus(tmp_path) -> Path:
     """A checkout laid out as Nexus: the suite bc with alpha (a window), beta (a window, changes the board), a
-    standalone app whose package is a level deeper, a checkout-only app and a release-only one; the suite wp
+    standalone app whose package is a level deeper, a checkout-only app and a release-only one; the suite ws
     (Windows); the wikis of both and the Nexus page."""
     root = tmp_path / "nexus"
     write(root / "tools/suites.py", (CHECKOUT / "tools/suites.py").read_text(encoding="utf-8"))
@@ -50,12 +50,12 @@ def nexus(tmp_path) -> Path:
     write(bc / "apps/releases/VERSION", "0.1.0\n")
     write(bc / "apps/releases/.checkout-only", "No releases.\n")
     write(bc / "apps/releases/rel/__main__.py", "")
-    wp = root / "wp"
-    write(wp / "SYSTEM", "windows\n")
-    write(wp / "TAG_PREFIX", "wp-\n")
-    write(wp / "portal/VERSION", "0.1.0\n")
-    write(wp / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "wp-test-v0.1.0"\n')
-    for folder, name in (("bc", "BC"), ("nexus", "Nexus"), ("wp", "WP")):
+    ws = root / "ws"
+    write(ws / "SYSTEM", "windows\n")
+    write(ws / "TAG_PREFIX", "ws-\n")
+    write(ws / "portal/VERSION", "0.1.0\n")
+    write(ws / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "ws-test-v0.1.0"\n')
+    for folder, name in (("bc", "BC"), ("nexus", "Nexus"), ("ws", "WS")):
         write(root / folder / "mkdocs.yml", f"site_name: {name}\n")
     write(root / "bc/mkdocs.yml", "site_name: BC\nsite_url: https://example.invalid/bc/\n")
     return root
@@ -77,7 +77,7 @@ def test_launch_targets(nexus):
     assert alpha.icon == nexus / "bc/apps/alpha/images/alpha-logo.png"        # the one its __init__ names
     assert beta.changes_board and not alpha.changes_board and beta.name == "beta" and beta.icon is None
     assert tool.key == "standalone" and tool.folder == nexus / "bc/apps/standalone/tool-dir"
-    assert local.launch_targets(nexus, "wp") == []                            # no apps/ yet
+    assert local.launch_targets(nexus, "ws") == []                            # no apps/ yet
     command, env = local.launch_command(nexus, alpha, python="/venv/python")
     assert command == ["/venv/python", "-m", "alpha"]
     assert env["PYTHONPATH"].split(os.pathsep)[0] == str(nexus / "core")
@@ -85,7 +85,7 @@ def test_launch_targets(nexus):
 
 def test_changes_board_follows_the_manifest(nexus):
     assert local.changes_board(nexus, "bc") == {"alpha": False, "beta": True}
-    assert local.changes_board(nexus, "wp") == {"test": False}                # no changes_board: False
+    assert local.changes_board(nexus, "ws") == {"test": False}                # no changes_board: False
     write(nexus / "bc/portal/apps.toml", "not [toml")
     assert local.changes_board(nexus, "bc") == {}
 
@@ -101,24 +101,24 @@ def test_portal_target(nexus):
     assert portal.icon == nexus / "bc/portal/images/bc-suite.webp" and not portal.changes_board
     command, env = local.launch_command(nexus, portal, python="/venv/python")
     assert command == ["/venv/python", "-m", "nexus_portal"]                  # --source auto: from the checkout
-    assert local.portal_target(nexus, "wp") is None
+    assert local.portal_target(nexus, "ws") is None
 
 
 def test_an_app_with_run_ps1_starts_with_it_on_windows(nexus):
     """A real run from the checkout (owner, 06-11-2026): on Windows a suite's portal and apps start
     with their own run.ps1, as by hand; elsewhere, and without the script, python -m as before."""
-    write(nexus / "wp/portal/portable_portal/__main__.py", "print('portal')\n")
-    write(nexus / "wp/portal/portable_portal/__init__.py", 'APP_NAME = "Portable Portal"\n')
-    portal = local.portal_target(nexus, "wp")
+    write(nexus / "ws/portal/windows_portal/__main__.py", "print('portal')\n")
+    write(nexus / "ws/portal/windows_portal/__init__.py", 'APP_NAME = "Windows Portal"\n')
+    portal = local.portal_target(nexus, "ws")
     assert local.run_script(portal, windows=True) is None                     # no run.ps1 yet
-    write(nexus / "wp/portal/run.ps1", "exit 0\n")
-    script = nexus / "wp/portal/run.ps1"
+    write(nexus / "ws/portal/run.ps1", "exit 0\n")
+    script = nexus / "ws/portal/run.ps1"
     assert local.run_script(portal, windows=True) == script and local.run_script(portal, windows=False) is None
     command, _env = local.launch_command(nexus, portal, python="/venv/python", windows=True)
     assert command == ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)]
     command, env = local.launch_command(nexus, portal, python="/venv/python", windows=False)
-    assert command == ["/venv/python", "-m", "portable_portal"] and str(nexus / "core") in env["PYTHONPATH"]
-    wiki = local.docs_targets(nexus, suite="wp")[0]
+    assert command == ["/venv/python", "-m", "windows_portal"] and str(nexus / "core") in env["PYTHONPATH"]
+    wiki = local.docs_targets(nexus, suite="ws")[0]
     assert local.run_script(wiki, windows=True) is None                       # a wiki is mkdocs serve
 
 
@@ -144,9 +144,9 @@ def test_docs_targets(nexus):
     assert page.url == f"http://127.0.0.1:{local.DOCS_PORT + 1}/?design" and bc.log_name != page.log_name
     assert not bc.note
     everything = {t.label: t.args[-1] for t in local.docs_targets(nexus)}
-    assert list(everything) == ["BC wiki (local)", "Nexus wiki (local)", "WP wiki (local)"]
-    shown = local.docs_targets(nexus, suite="wp")
-    assert [t.label for t in shown] == ["Nexus wiki (local)", "WP wiki (local)"]
+    assert list(everything) == ["BC wiki (local)", "Nexus wiki (local)", "WS wiki (local)"]
+    shown = local.docs_targets(nexus, suite="ws")
+    assert [t.label for t in shown] == ["Nexus wiki (local)", "WS wiki (local)"]
     assert all(everything[t.label] == t.args[-1] for t in shown)              # a wiki keeps its port
 
 
@@ -181,7 +181,7 @@ def test_the_portal_is_the_first_icon_then_the_apps_then_the_wikis(qapp, nexus):
                       "Nexus wiki (local)"]
     window.suite_box.setCurrentIndex(1)                                       # another suite: its own icons
     assert [window.local_apps.item(i).text() for i in range(window.local_apps.count())] == [
-        "Nexus wiki (local)", "WP wiki (local)"]
+        "Nexus wiki (local)", "WS wiki (local)"]
     window.close()
 
 

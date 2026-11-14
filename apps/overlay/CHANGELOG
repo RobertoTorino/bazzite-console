@@ -8,7 +8,7 @@ Fixed. The app's icon is its category's current picture.
 
 Changelog: 11-11-2026
 
-Release 0.1.0. First PS5 version, ported from the BC250 Bazzite Suite's System Overlay 2.0.1: the PS5's sources
+Release 0.1.0. First PS5 version: the PS5's sources
 (bazzite_console_core.sensors: k10temp, ps5_fan, ps5_gpufreq, amdgpu ps5_sensors on kernel 7.3.1 and later), rows
 for the SoC and board temperatures and the GPU temperature limit, the fan as duty and mode (the PS5's fan reports no
 RPM); no GPU volt, VRM or governor-range rows (the PS5 has none).

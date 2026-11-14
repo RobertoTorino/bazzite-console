@@ -2,7 +2,7 @@
 """Shared fixtures: an offscreen QApplication, settings in a temp folder, and a fake PS5 with the kernel's ps5-cec
 adapter and a Xiaomi Mi TV behind it. The cec-ctl output is what the owner's PS5 (CFI-1000A, kernel 7.3.1) printed on
 11-11-2026, with the OSD name cec-ctl --playback gives (Playback) instead of the one already set; the other answers
-(power status, poll, topology) are the TV's, as the BC250 suite recorded them with the same TV."""
+(power status, poll, topology) are the TV's, as recorded earlier with the same TV."""
 
 from __future__ import annotations
 

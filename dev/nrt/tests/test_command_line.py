@@ -94,7 +94,7 @@ def test_the_board_checks_go_to_a_terminal(app, tmp_path):
     from nexus_release_tool.command_line import needs_terminal
     assert needs_terminal("nexus-suite/tools/check-release.sh release portal-v13.1.1") == "check-release.sh"
     assert needs_terminal("./tools/check-release.sh local") == "check-release.sh"
-    assert needs_terminal("wp\\tools\\check-release.ps1 local") == "check-release.ps1"
+    assert needs_terminal("ws\\tools\\check-release.ps1 local") == "check-release.ps1"
     assert needs_terminal("git push") == "" and needs_terminal("") == ""
     launched: list[str] = []
     pane = CommandLine(tmp_path, bash="/bin/bash", terminal=launched.append)

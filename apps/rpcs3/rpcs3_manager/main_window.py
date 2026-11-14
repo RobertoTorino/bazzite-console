@@ -390,8 +390,8 @@ class MainWindow(QMainWindow):
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_cover = {}, set()
-        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026, from the Windows
-        # Portable Suite's managers, 01-11-2026; core's renamed): known by its code, else its file's size.
+        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026;
+        # core's renamed): known by its code, else its file's size.
         found = {str(g.eboot): renamed.identity(g.title_id, g.eboot) for g in self.games}
         known = renamed.load(self.settings.qsettings)
         self.moved = renamed.follow(known, found, self.in_steam)
@@ -719,8 +719,8 @@ class MainWindow(QMainWindow):
             self.say("RPCS3 was removed.")
 
     def sync_firmware(self) -> None:
-        """The PS3's firmware put in Games/PS3/Firmware given to RPCS3 by itself (owner, 03-11-2026, from the
-        Windows Portable Suite's RPCS3 Manager: firmware taken in automatically), once RPCS3 is installed and while
+        """The PS3's firmware put in Games/PS3/Firmware given to RPCS3 by itself (owner, 03-11-2026:
+        firmware taken in automatically), once RPCS3 is installed and while
         it does not run: a file whose version (read from the PUP) is installed already is left alone, and so is the
         file given last as it is (its name, size and time in the settings), so a file RPCS3 refused is not given
         again until it changes. The file stays."""
@@ -844,7 +844,7 @@ class MainWindow(QMainWindow):
             self.say(f"RPCS3 could not be started: {command[0]} did not run.", ok=False)
 
     def on_remove_game(self) -> None:
-        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        """Remove game… (owner, 03-11-2026: before deleting anything, let
         the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
         every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
         the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves and the licenses
@@ -936,8 +936,8 @@ class MainWindow(QMainWindow):
             extra: list[str] = []
 
             def change() -> None:
-                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
-                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026:
+                # "it still says 0 games in Steam"): whether the shortcuts were written
                 # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
                 nonlocal found
                 steam.write_shortcuts(folder, changes)

@@ -78,7 +78,7 @@ def validate_release(folder: Path) -> tuple[Path, tuple[DemoApp, ...]]:
     if WINDOWS:     # the Windows suite's portal installs from a release only: its program is built at release time
         raise WorkflowError(
             f"{selected} is not a portal release. Choose an extracted suite portal release folder "
-            "(e.g., wp-portal-v<x.y.z>.zip, extracted)."
+            "(e.g., ws-portal-v<x.y.z>.zip, extracted)."
         )
 
     for checkout in (selected, *selected.parents):

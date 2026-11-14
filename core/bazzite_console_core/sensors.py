@@ -6,9 +6,7 @@ On the PS5 (ps5-linux kernel): the CPU temperature from k10temp (Tctl); the SoC 
 fan's duty and its mode from ps5_fan (the fan reports no speed in RPM); the GPU governor's temperature limit from
 ps5_gpufreq; VRAM from amdgpu. amdgpu runs without its SMU on the PS5, so the GPU's load, clock and temperature
 exist only on kernels with the ps5_sensors export (ps5-linux-patches #78, kernel 7.3.1 on): an "amdgpu" hwmon with
-temp1/freq1 and the device's gpu_busy_percent. Older kernels: those are None.
-
-Adapted from the BC250 Bazzite Suite's bc250_core.sensors (same Reading idea, PS5 sources)."""
+temp1/freq1 and the device's gpu_busy_percent. Older kernels: those are None."""
 
 from __future__ import annotations
 

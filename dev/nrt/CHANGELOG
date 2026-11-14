@@ -1,3 +1,15 @@
+Changelog: 14-11-2026 01:05:10
+
+Fixed. The tests, their fixture and the examples no longer name the suite for Windows devices (owner, 14-11-2026):
+the second suite in the tests is "ws", with ws- tags and a windows_portal package. Nothing works differently.
+
+Changelog: 14-11-2026 00:36:00
+
+Added. Remove suite on the Test on this board tab: a terminal lists what of the suite is installed on this machine
+and whether a test put it there, then removes every app, the portal and Bazzite Test (check-release.sh remove). Test
+Portal release tests the portal's draft while the release is not published, and a test on a machine without the
+suite removes what it installed when the portal closes.
+
 Changelog: 13-11-2026 23:28:59
 
 Added. The release tab's nine steps work in this repository: Start new release starts release.yml here, on the

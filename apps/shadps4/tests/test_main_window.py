@@ -824,7 +824,7 @@ def test_remove_game_on_a_package_row_offers_the_package(qapp, folders, built_pk
 
 def test_packages_in_a_game_folder_wait_as_rows_and_unpack_all_takes_the_game_first(qapp, folders, built_pkg,
                                                                                     monkeypatch, tmp_path):
-    """A .pkg put in a game folder (owner, 05-11-2026, as the Windows Portable Suite's): a row of its own, PKG or PKG
+    """A .pkg put in a game folder (owner, 05-11-2026): a row of its own, PKG or PKG
     update, after the games; an update whose game still waits says so; Unpack all unpacks the game first and its
     update beside it, then the keep window offers the packages: kept ones are no longer rows, deleted ones are gone."""
     import shutil

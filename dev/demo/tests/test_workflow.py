@@ -298,7 +298,7 @@ def test_on_windows_a_release_has_install_ps1_and_its_detect_paths_expand(on_win
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
     monkeypatch.setattr(workflow.os.path, "expandvars",
                         lambda path: path.replace("%LOCALAPPDATA%", str(tmp_path / "local")))
-    release = _windows_release(tmp_path / "wp-portal-v1.0.0", "%LOCALAPPDATA%/pcsx2/PCSX2-Manager.exe")
+    release = _windows_release(tmp_path / "ws-portal-v1.0.0", "%LOCALAPPDATA%/pcsx2/PCSX2-Manager.exe")
 
     installer, apps = workflow.validate_release(release)
 

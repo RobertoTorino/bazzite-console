@@ -6,8 +6,8 @@ Every POLL_S seconds it asks the TV for its power status (Give Device Power Stat
  * --pause-media: when the TV goes to standby, it pauses the media players that play (media.py), and continues
    them when the TV is on again.
 One missed answer is not "off": only SILENT_POLLS of them in a row are (the TV unplugged), so a glitch on the bus
-pauses nothing. It writes one line to the journal for each thing it does. (The BC250 suite's --restart-picture, a
-DP-to-HDMI converter workaround, is left out: the PS5 has its own HDMI port.)"""
+pauses nothing. It writes one line to the journal for each thing it does. (There is no --restart-picture, a
+DP-to-HDMI converter workaround: the PS5 has its own HDMI port.)"""
 
 from __future__ import annotations
 

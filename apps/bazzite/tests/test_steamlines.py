@@ -12,7 +12,7 @@ from bazzite_test import steamlines
 PREFIX = "PYTHONPATH=/opt/bazzite-test /venv/bin/python -m bazzite_test.gamemon"
 # From the owner's board (19-10-2026), the user folder masked: lines copied from the checkout before the move.
 OLD = ("PYTHONPATH=/home/user/bazzite-test /home/user/bazzite-test/_python/bin/python "
-       "-m bc250_gui.gamemon")
+       "-m old_gui.gamemon")
 
 
 def localconfig(apps: dict[str, str]) -> str:
@@ -78,8 +78,8 @@ def test_each_missing_part_has_its_reason(tmp_path):
     exe, root = python(tmp_path / "venv"), app_folder(tmp_path / "app")
     assert "app folder is gone" in steamlines.gamemon_problem(
         f"PYTHONPATH={tmp_path / 'moved'} {exe} -m bazzite_test.gamemon %command%")
-    assert "names the package bc250_gui" in steamlines.gamemon_problem(
-        f"PYTHONPATH={root} {exe} -m bc250_gui.gamemon %command%")
+    assert "names the package old_gui" in steamlines.gamemon_problem(
+        f"PYTHONPATH={root} {exe} -m old_gui.gamemon %command%")
     assert "has no bazzite_test" in steamlines.gamemon_problem(
         f"PYTHONPATH={tmp_path} {exe} -m bazzite_test.gamemon %command%")
     assert steamlines.gamemon_problem(f"{exe} -m bazzite_test.gamemon %command%") is None   # no PYTHONPATH

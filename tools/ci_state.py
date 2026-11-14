@@ -73,7 +73,7 @@ def token() -> str:
 
 def fetch_runs(sha: str, workflow: str = WORKFLOW) -> list[dict]:
     """The runs of *workflow* on *sha*; raises OSError when GitHub cannot be reached or refuses (its hourly limit)."""
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "bc250-ci-state"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "bazzite-console-ci-state"}
     signed = token()
     if signed:
         headers["Authorization"] = f"Bearer {signed}"

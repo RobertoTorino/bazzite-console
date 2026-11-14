@@ -1,3 +1,11 @@
+Changelog: 14-11-2026 00:49:37
+
+Fixed. The GPU Governor test no longer names another board: it warns that a GPU governor "made for another board" is
+installed, and the IOMMU test and the benchmark's help say the same without it. The benchmark's comparison list
+loses that board's row. The Wi-Fi Adapter test (53) is the PS5's built-in Wi-Fi alone, its driver and firmware: the
+reader of every other adapter went, as its hints named an app this suite does not have. The two system score tiles,
+which were never shown on a PS5, are removed from the code. The older entries here no longer name that board.
+
 Changelog: 13-11-2026 23:35:42
 
 Release 0.2.1.
@@ -8,13 +16,13 @@ Fixed. The app's icon is its category's current picture.
 
 Changelog: 11-11-2026
 
-Release 0.2.0. The diagnostics: ported from the BC250 Bazzite Suite's BC-250 Bazzite Test 2.0.1 (the window, the test
+Release 0.2.0. The diagnostics (the window, the test
 runner, the results and the history, and test-bazzite.sh). PS5 versions of the hardware tests: platform (DMI
 PlayStation 5, the ps5-linux kernel's PS5 drivers, the loader's bzImage), GPU governor and clock scaling (the kernel's
-ps5-gpufreq devfreq instead of the BC-250's SMU governor), CU count (36), sensors (ps5_fan), IOMMU (information only),
+ps5-gpufreq devfreq instead of an SMU governor), CU count (36), sensors (ps5_fan), IOMMU (information only),
 mitigations (advice), CPU cores (8C/16T), CPU power (no cpufreq; ps5-linux-tools' boost), suspend (s2idle), display
 (the PS5 HDMI state), VRAM (/boot/efi/vram.txt), throttling, HDMI-CEC (ps5-cec), Wi-Fi (the IW620 on moal), updates
-on a flattened image (dnf). Dropped: CPU voltage (the BC-250's SuperIO). Later, with PS5 baselines: the stress test,
+on a flattened image (dnf). Dropped: CPU voltage (no SuperIO). Later, with PS5 baselines: the stress test,
 the benchmark, the system score and the game page (ported, hidden). The core gets the Wi-Fi reader (wifi.py); a
 switched-off Wi-Fi while a cable network is up is a note, not a warning.
 

@@ -49,7 +49,7 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
   `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `check-release.sh`,
   `suites.py`, `fix-modes.sh`, `sync_icons.py`, `ci_state.py` and
   `release_commit.py` for the release workflow), the CHANGELOG merge driver and check, the tours, `mkdocs/` (the wiki's hooks and overrides),
-  `tools/tests/` and `tools/installer-tests/` (one per app, the portal and a release).
+  `tools/tests/` and `tools/installer-tests/` (one per app, the portal, a release and the release test).
 - `dev/`: the development apps, run from the checkout and never released.
 - `docs/` and `mkdocs.yml`: the wiki, robertotorino.github.io/bazzite-console/; `icons/`: the category icons and
   `categories.toml`, which assigns them to the apps.

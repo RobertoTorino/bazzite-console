@@ -538,8 +538,8 @@ class MainWindow(QMainWindow):
         self._start("Vita3K is installing it…", job)
 
     def sync_firmware(self) -> None:
-        """The PS Vita's firmware files put in Games/Vita/Firmware given to Vita3K by itself (owner, 03-11-2026,
-        from the Windows Portable Suite's Vita3K Manager: firmware taken in automatically), the largest first, one
+        """The PS Vita's firmware files put in Games/Vita/Firmware given to Vita3K by itself (owner, 03-11-2026:
+        firmware taken in automatically), the largest first, one
         after the other (the next one when the window reads the state again, after the install), once Vita3K is
         installed and while it does not run; each file once while it stays the same (its place, size and time in
         the settings), one Vita3K could not use too; a file replaced is given again. The files stay."""
@@ -647,7 +647,7 @@ class MainWindow(QMainWindow):
             self.say("Steam could not be opened: xdg-open is missing.", ok=False)
 
     def on_remove_game(self) -> None:
-        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        """Remove game… (owner, 03-11-2026: before deleting anything, let
         the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
         every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
         the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves
@@ -739,8 +739,8 @@ class MainWindow(QMainWindow):
             extra: list[str] = []
 
             def change() -> None:
-                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
-                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026:
+                # "it still says 0 games in Steam"): whether the shortcuts were written
                 # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
                 nonlocal found
                 steam.write_shortcuts(folder, changes)

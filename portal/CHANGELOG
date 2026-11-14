@@ -1,3 +1,9 @@
+Changelog: 14-11-2026 00:36:00
+
+Fixed. A theme switch no longer closes the portal (owner, 14-11-2026). The Theme pill takes the next theme with a
+click again, as before 14-11-2026 00:04: the portal stays open, the pill shows the theme's name, and each app takes
+it the next time it starts, the portal too. The menu of themes and the restart are gone.
+
 Changelog: 14-11-2026 00:08:05
 
 Release 0.2.2.

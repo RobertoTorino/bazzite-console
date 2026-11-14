@@ -20,9 +20,6 @@ from .runner import ERROR, INFO, SUCCESS, WARNING
 # Performance scores are relative to the saved baseline, not good/bad: CPU keeps the logo's purple,
 # the GPU box gets the suite's info blue so the two are easy to tell apart at a glance.
 GPU_BLUE = "#1565c0"
-# System scores: bright, but calm enough to look at, and unlike any other box.
-BASE_SYSTEM = EXTENDED_SYSTEM = "#f8fafc"
-SYSTEM_TEXT = "#222222"
 
 # Share of a full pass each result earns towards the health score.
 SCORE_WEIGHT = {SUCCESS: 1.0, INFO: 1.0, WARNING: 0.5, ERROR: 0.0}
@@ -112,7 +109,6 @@ class StatBox(QFrame):
 
 class StatsBar(QWidget):
     details_requested = pyqtSignal(str)      # "warnings", "failures" or "info"
-    system_score_requested = pyqtSignal(bool)    # True for the Extended System score
 
     def __init__(self, total: int, parent: QWidget | None = None):
         super().__init__(parent)
@@ -135,16 +131,6 @@ class StatsBar(QWidget):
         self.score.setMinimumWidth(100)
         self.cpu_score = StatBox("CPU score", GREY, "")
         self.gpu_score = StatBox("GPU score", GREY, "")
-        self.base_system = StatBox("Base System", GREY,
-                                   "Base System score: your board against a stock BC-250 on BIOS 5.00, "
-                                   "which scores 100. Never more than 100.", clickable=True,
-                                   text_color=SYSTEM_TEXT)
-        self.ext_system = StatBox("Extended System", GREY,
-                                  "Extended System score: the Base score plus what upgrades add "
-                                  "(more CUs or cores, a bigger or faster drive, a faster link).", clickable=True,
-                                  text_color=SYSTEM_TEXT)
-        self.base_system.clicked.connect(lambda: self.system_score_requested.emit(False))
-        self.ext_system.clicked.connect(lambda: self.system_score_requested.emit(True))
         for box in (self.tests, self.ran, self.passed, self.warnings, self.failures, self.info):
             row.addWidget(box, 1)
         row.addSpacing(12)
@@ -152,10 +138,6 @@ class StatsBar(QWidget):
         row.addSpacing(12)
         row.addWidget(self.cpu_score, 1)
         row.addWidget(self.gpu_score, 1)
-        row.addSpacing(12)
-        row.addWidget(self.base_system, 1)
-        row.addWidget(self.ext_system, 1)
-        self.set_system_scores(None, None)
         self.set_bench(None, None, None, "")
 
         self.update_stats(Stats(total))
@@ -170,11 +152,6 @@ class StatsBar(QWidget):
         score = s.score
         self.score.set_value("—" if score is None else f"{score}%")
         self.score.set_color(score_color(score))
-
-    def set_system_scores(self, base: int | None, extended: int | None) -> None:
-        for box, value, colour in ((self.base_system, base, BASE_SYSTEM), (self.ext_system, extended, EXTENDED_SYSTEM)):
-            box.set_value("—" if value is None else str(value))
-            box.set_color(GREY if value is None else colour)
 
     def set_bench(self, cpu: int | None, cpu1: int | None, gpu: int | None, detail: str) -> None:
         """Performance scores from the benchmark (test 42), 100 = the baseline saved on this PS5."""
@@ -251,8 +228,7 @@ class ResultsPreview(QFrame):
 
 def results_card(bar: StatsBar) -> "QPixmap":
     """A compact, shareable "PS5 Bazzite Test Results" card (Settings > General > Print results):
-    the logo and title on top, the nine stat boxes as a readable 3x3 grid below, rendered offscreen (the
-    BC-250's system score tiles are left out on the PS5)."""
+    the logo and title on top, the nine stat boxes as a readable 3x3 grid below, rendered offscreen."""
     from datetime import datetime
 
     from PyQt6.QtWidgets import QGridLayout

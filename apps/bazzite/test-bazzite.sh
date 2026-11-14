@@ -1,7 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Base script for testing Bazzite on a PlayStation 5 (ps5-linux kernel; Oberon APU, Cyan Skillfish family, gfx1013).
-# Ported from the BC250 Bazzite Suite's test-bazzite.sh (BC-250 Bazzite Test 2.0.1).
 # Change permissions: sudo chmod +x test-bazzite.sh
 # Run with: sudo ./test-bazzite.sh
 # Stress mode: sudo ./test-bazzite.sh --stress=180
@@ -43,8 +42,8 @@ Usage: sudo ./test-bazzite.sh [options]
   --interval=SECONDS   Sampling interval during the stress run (default 2).
   --bench[=SECONDS]    Run the performance benchmark (test 42): CPU single- and
                        multi-thread (stress-ng, SECONDS per phase, default 20)
-                       and GPU FP32 compute (vkpeak), scored against a stock
-                       BC-250 baseline (/var/log/bazzite-test/bench-baseline.json).
+                       and GPU FP32 compute (vkpeak), scored against the saved
+                       baseline (/var/log/bazzite-test/bench-baseline.json).
   --save-baseline      With --bench: save this run as the baseline. Run it once
                        on a stock board (6C/12T, 24 CUs, governor max 1850 MHz).
   --disk-bench         Run the disk speed test (test 43) on the system disk:
@@ -138,14 +137,14 @@ BENCH_BASELINE_OLD="$SCRIPT_DIR/bench-baseline.json"
 echo "Starting PS5 / Bazzite Tests - $(date '+%Y-%m-%d %H:%M:%S')" > "$LOG_FILE"
 
 # Pre-checked false positives to exclude from the log results.
-# Bazzite is noisy at boot; these are harmless on this hardware (BC-250 list, PS5 lines added at the end).
+# Bazzite is noisy at boot; these are harmless on this hardware (the PS5's own lines are at the end).
 EXCLUSIONS=(
   # --- Firmware / ACPI ---
   "GRUB failed boot detection"
   "ACPI BIOS Error"
   "ACPI BIOS Warning"
   "ACPI Error"
-  # The BC-250 BIOS disables pcid while a dependent feature stays set; harmless.
+  # A BIOS that disables pcid while a dependent feature stays set; harmless.
   "x86 CPU feature dependency check failure.*pcid"
   # --- amdgpu on Cyan Skillfish: display block reports these on every boot ---
   "dal_irq_service_dummy_(set|ack)"
@@ -192,7 +191,7 @@ EXCLUSIONS=(
   "Error in ioctl\(\) read.*EREMOTEIO"
   # NetworkManager dispatcher is not shipped activatable on Bazzite.
   "Activation request for 'org.freedesktop.nm_dispatcher' failed"
-  # --- Bluetooth (BC-250 list: no radio there; the PS5 has one, so its real errors stay visible) ---
+  # --- Bluetooth (the PS5 has a radio, so its real errors stay visible) ---
   "Bluetooth: hci0: No support for"
   # input-remapper probes every input device at udev time; exit 1 just means "no preset for this device".
   "input-remapper-control --command autoload"
@@ -213,7 +212,7 @@ EXCLUSIONS=(
   "IOCTL failed: .* \\[FW_CMDRESP\\]"
 )
 
-# BC-250 governor packages; on a PS5 test 18 warns when one is installed.
+# GPU governor packages made for another board's SMU; on a PS5 test 18 warns when one is installed.
 GOVERNORS=(
   "cyan-skillfish-governor-smu"
   "cyan-skillfish-governor-tt"
@@ -372,7 +371,7 @@ check_masked() {
 # Shared discovery. Several tests read these, so they are resolved up front and
 # stay valid when only a subset of tests is selected with --only.
 # ----------------------------------------------------------------------------
-# A BC-250 GPU governor that should not be on a PS5 (test 18 warns about it).
+# A GPU governor made for another board, which should not be on a PS5 (test 18 warns about it).
 GOV_FOUND=""
 for gov in "${GOVERNORS[@]}"; do
     if [ -n "$(systemctl list-unit-files --no-legend "${gov}.service" 2>/dev/null)" ]; then
@@ -1099,11 +1098,11 @@ else
 fi
 if [ -n "$GOV_FOUND" ]; then
     if systemctl is-active --quiet "${GOV_FOUND}.service" || systemctl is-enabled --quiet "${GOV_FOUND}.service" 2>/dev/null; then
-        log_result "WARNING: The BC-250 GPU governor $GOV_FOUND is $(systemctl is-active "${GOV_FOUND}.service") / $(systemctl is-enabled "${GOV_FOUND}.service" 2>/dev/null). It is made for the BC-250's SMU, not the PS5."
+        log_result "WARNING: The GPU governor $GOV_FOUND is $(systemctl is-active "${GOV_FOUND}.service") / $(systemctl is-enabled "${GOV_FOUND}.service" 2>/dev/null). It is made for another board's SMU, not the PS5."
         log_result "HINT: sudo systemctl disable --now ${GOV_FOUND}.service"
         WARN_FOUND=true
     else
-        log_result "INFO: Bazzite ships the BC-250 GPU governor ($GOV_FOUND); it is off, as it should be on a PS5."
+        log_result "INFO: Bazzite ships the GPU governor $GOV_FOUND, made for another board; it is off, as it should be on a PS5."
     fi
 fi
 echo
@@ -1298,7 +1297,7 @@ echo
 fi  # TEST 22
 if want 23; then
 log_result "[TEST 23] IOMMU Test"
-log_result "Report whether the IOMMU is active; on the PS5 it may stay on (unlike the BC-250, nothing breaks)"
+log_result "Report whether the IOMMU is active; on the PS5 it may stay on (nothing breaks)"
 IOMMU_GROUPS=$(find /sys/kernel/iommu_groups -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
 if [ "${IOMMU_GROUPS:-0}" -gt 0 ]; then
     log_result "INFO: IOMMU is active ($IOMMU_GROUPS IOMMU groups)."
@@ -2144,17 +2143,17 @@ start_gpu_worker() {
     # even if this script is killed, so it can never keep running on its own.
     local bin
     if [ "$1" != bash ] && find_tool "$1"; then bin="$TOOL"; set -- "$bin" "${@:2}"; fi
-    setsid sudo -u "$GAME_USER" env "${SESSION_ENV[@]}" BC250_WORKER_CWD="${GPU_WORKER_CWD:-}" \
+    setsid sudo -u "$GAME_USER" env "${SESSION_ENV[@]}" PS5_WORKER_CWD="${GPU_WORKER_CWD:-}" \
         timeout -k 10 "$((CPU_TIMEOUT + 30))" \
         bash -c 'echo 1000 > /proc/self/oom_score_adj 2>/dev/null
-                 [ -n "$BC250_WORKER_CWD" ] && cd "$BC250_WORKER_CWD" 2>/dev/null
+                 [ -n "$PS5_WORKER_CWD" ] && cd "$PS5_WORKER_CWD" 2>/dev/null
                  exec "$@"' _ "$@" >"$GPU_WORKER_LOG" 2>&1 &
     GPU_WORKER_PID=$!
     STRESS_PIDS+=("$GPU_WORKER_PID")
 }
 
 # Preference: headless compute tools first. They queue GPU work back to back, while the benchmark
-# tools render one light frame at a time: vkmark ran ~2000 FPS in every scene on the BC-250 and
+# tools render one light frame at a time: vkmark ran ~2000 FPS in every scene on a test board and
 # left the GPU ~20% busy at 1000 MHz. memtest_vulkan also checks the VRAM for errors.
 # vkmark/glmark2 fall back to a 2560x1440 window with only the heaviest work: effect2d blur (the one
 # scene that reached ~60% busy at 1080p) and the desktop scene with 16 large overlapping windows.
@@ -2163,7 +2162,7 @@ GPU_LOAD_SIZE="2560x1440"
 if find_tool memtest_vulkan; then
     GPU_WORKER="memtest_vulkan"
     # By default memtest_vulkan takes all free RAM minus 400 MB on an APU (it allocated 9.6 GB of GTT
-    # on a BC-250 and the OOM killer took the desktop). Limit it to 3/4 of the VRAM carve-out (at least 2 GiB) and at most
+    # on a test board and the OOM killer took the desktop). Limit it to 3/4 of the VRAM carve-out (at least 2 GiB) and at most
     # half of the RAM that is available now. Arguments: <device> <max bytes>; device 0 = autoselect.
     # Passing them also skips the interactive prompt; the endless test loop runs the same way.
     MEM_AVAIL_MIB=$(( $(awk '/^MemAvailable:/ {print $2}' /proc/meminfo) / 1024 ))
@@ -2216,7 +2215,7 @@ if [ -n "$GPU_WORKER_PID" ]; then
 fi
 
 # ---- sampling loop ---------------------------------------------------------
-# The BC250 suite's columns stay (its graphs read them); the PS5 has no memory clock, GPU power, voltage or fan RPM,
+# The columns the graphs read stay; the PS5 has no memory clock, GPU power, voltage or fan RPM,
 # so those stay empty, and two columns of its own follow: the fan's duty and the SoC temperature.
 echo "elapsed_s,sclk_mhz,mclk_mhz,gpu_busy_pct,vram_used_mib,gtt_used_mib,gpu_temp_c,gpu_power_w,vddgfx_mv,cpu_tctl_c,cpu_mhz_avg,fan_rpm,load1,fan_duty_pct,soc_temp_c" > "$STRESS_CSV"
 MAX_SCLK=0; MAX_GTEMP=0; MAX_POWER=0; MAX_CTEMP=0; MAX_FAN=0; MAX_BUSY=0
@@ -2697,7 +2696,6 @@ if [ -n "$B_GPU_FP32" ]; then
     done <<'LADDER'
 Steam Deck (RDNA2, 8 CU)|1600
 XBOX Series S (RDNA2, 20 CU)|4000
-BC-250 (the PS5 SoC cut down to 24 CU, at 1850 MHz)|5680
 Steam Machine (announced, RDNA3 semi-custom, 28 CU)|8600
 PS5 (RDNA2, 36 CU at 2230 MHz, Sony's figure)|10300
 GeForce RTX 4060 (desktop)|15100
@@ -3458,23 +3456,7 @@ echo
 fi  # TEST 52
 if want 53; then
 log_result "[TEST 53] Wi-Fi Adapter Test"
-log_result "Every Wi-Fi adapter, whether the running kernel has a driver and firmware for it, and its connection"
-# bazzite_console_core's wifi reader (bundled next to the script in a release, core/ in the suite checkout), with the system
-# python in isolated mode and without bytecode, so nothing is written as root into the app's folders. It only reads.
-if [ -d "$SCRIPT_DIR/bazzite_console_core" ]; then WIFI_CORE="$SCRIPT_DIR"; else WIFI_CORE="$SCRIPT_DIR/../../core"; fi
-if ! command -v python3 >/dev/null 2>&1; then
-    log_result "INFO: python3 is not installed, so the Wi-Fi adapters cannot be read."
-elif [ ! -f "$WIFI_CORE/bazzite_console_core/wifi.py" ]; then
-    log_result "INFO: The Wi-Fi reader (bazzite_console_core) is not next to this script, so the Wi-Fi adapters cannot be read."
-else
-    while IFS= read -r WIFI_LINE; do
-        [ -n "$WIFI_LINE" ] || continue
-        log_result "$WIFI_LINE"
-        [[ "$WIFI_LINE" == WARNING:* ]] && WARN_FOUND=true
-    done < <(python3 -I -B -c 'import sys; sys.path.insert(0, sys.argv[1]); from bazzite_console_core import wifi; sys.exit(wifi.main())' \
-        "$WIFI_CORE" 2>&1)
-fi
-
+log_result "The PS5's built-in Wi-Fi: its driver and its firmware"
 # The PS5's own Wi-Fi: an NXP IW620 (PCI 1b4b:2b56) on the out-of-tree moal/mlan driver of ps5-linux-mwifiex, or on
 # other consoles a MediaTek combo (MT7921 family, the kernel's own mt7921e and btmtk; ps5-linux-patches #71). The IW620's
 # combo firmware (Wi-Fi + Bluetooth) is staged from the loader's boot partition by ps5-stage-firmware.service.

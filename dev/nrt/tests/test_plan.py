@@ -100,7 +100,7 @@ def unit(root: Path, key: str) -> rp.Unit:
 
 @pytest.fixture
 def two_suites(tmp_path) -> Path:
-    """Nexus with a suite of plain tags (bc) and a Windows suite (wp: wp- tags, its own manifest
+    """Nexus with a suite of plain tags (bc) and a Windows suite (ws: ws- tags, its own manifest
     and check_manifest.py, copied from the checkout)."""
     root = tmp_path / "nexus"
     write(root / "core/VERSION", "0.1.0\n")
@@ -108,53 +108,53 @@ def two_suites(tmp_path) -> Path:
     write(root / "bc/portal/VERSION", "3.0.0\n")
     write(root / "bc/portal/apps.toml", card("check", required=True))
     write(root / "bc/apps/check/VERSION", "0.1.0\n")
-    wp = root / "wp"
-    write(wp / "SYSTEM", "windows\n")
-    write(wp / "TAG_PREFIX", "wp-\n")
-    write(wp / "portal/VERSION", "0.1.0\n")
-    write(wp / "apps/test/VERSION", "0.2.0\n")
-    write(wp / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nAdded. More.\n")
+    ws = root / "ws"
+    write(ws / "SYSTEM", "windows\n")
+    write(ws / "TAG_PREFIX", "ws-\n")
+    write(ws / "portal/VERSION", "0.1.0\n")
+    write(ws / "apps/test/VERSION", "0.2.0\n")
+    write(ws / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nAdded. More.\n")
     real = Path(__file__).resolve().parent / "fixtures" / "windows-suite"     # a suite's own manifest tools
-    for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
-        write(wp / path, (real / path).read_text(encoding="utf-8"))
-    write(wp / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "wp-test-v0.1.0"\nsha256 = ""\n'
+    for path in ("tools/check_manifest.py", "portal/windows_portal/manifest.py"):
+        write(ws / path, (real / path).read_text(encoding="utf-8"))
+    write(ws / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "ws-test-v0.1.0"\nsha256 = ""\n'
                                    'required = true\ncategory = "sustainable"\ninstall = ["i"]\nuninstall = ["u"]\n'
                                    'detect = ["d"]\n')
     sh(root, "init", "-q", "-b", "main")
     sh(root, "add", "-A")
     sh(root, "commit", "-q", "-m", "start")
-    for tag in ("wp-test-v0.1.0", "test-v9.9.9", "portal-v3.0.0", "check-v0.1.0"):
+    for tag in ("ws-test-v0.1.0", "test-v9.9.9", "portal-v3.0.0", "check-v0.1.0"):
         sh(root, "tag", tag)
     return root
 
 
 def test_a_suites_tags_carry_its_prefix(two_suites):
-    assert rp.suites(two_suites) == ["bc", "wp"]
-    assert (rp.tag_prefix(two_suites, "bc"), rp.tag_prefix(two_suites, "wp")) == ("", "wp-")
-    units = {u.key: u for u in rp.load_units(two_suites, "wp")}
+    assert rp.suites(two_suites) == ["bc", "ws"]
+    assert (rp.tag_prefix(two_suites, "bc"), rp.tag_prefix(two_suites, "ws")) == ("", "ws-")
+    units = {u.key: u for u in rp.load_units(two_suites, "ws")}
     test, portal = units["test"], units["portal"]
-    assert test.last_tag == "wp-test-v0.1.0"                    # not test-v9.9.9, whatever suite that would be
-    assert (test.tag, test.pinned_tag) == ("wp-test-v0.2.0", "wp-test-v0.1.0")   # read with the suite's own parser
+    assert test.last_tag == "ws-test-v0.1.0"                    # not test-v9.9.9, whatever suite that would be
+    assert (test.tag, test.pinned_tag) == ("ws-test-v0.2.0", "ws-test-v0.1.0")   # read with the suite's own parser
     assert rp.version_choices(two_suites, test)[0][0] == "0.2.0"
-    assert portal.last_tag is None and portal.tag == "wp-portal-v0.1.0"     # the portal's tag is not its own
+    assert portal.last_tag is None and portal.tag == "ws-portal-v0.1.0"     # the portal's tag is not its own
     assert units["core"].prefix == ""
     bc = {u.key: u for u in rp.load_units(two_suites, "bc")}
     assert (bc["portal"].last_tag, bc["check"].tag) == ("portal-v3.0.0", "check-v0.1.0")
     assert rp.manifest_tools(two_suites, "bc") is rp.check_manifest
-    assert rp.manifest_tools(two_suites, "wp").PORTAL_TAG == "wp-portal-v"
+    assert rp.manifest_tools(two_suites, "ws").PORTAL_TAG == "ws-portal-v"
 
 
 def test_a_windows_suites_pin_and_portal_bump(two_suites):
-    test = next(u for u in rp.load_units(two_suites, "wp") if u.key == "test")
-    assert rp.follow_unreleased_pin(two_suites, test, suite="wp") is False     # wp-test-v0.1.0 is tagged
-    rp.pin(two_suites, test, "AB" * 32, suite="wp")
-    assert 'tag = "wp-test-v0.2.0"\nsha256 = "' + "ab" * 32 + '"' in (two_suites / "wp/portal/apps.toml").read_text()
-    assert rp.changed_pins(two_suites, "HEAD", suite="wp") == ["wp-test-v0.2.0"]
-    assert rp.portal_minimum(two_suites, "HEAD", "0.1.0", suite="wp")[0] == "0.2.0"     # an app minor: a portal minor
+    test = next(u for u in rp.load_units(two_suites, "ws") if u.key == "test")
+    assert rp.follow_unreleased_pin(two_suites, test, suite="ws") is False     # ws-test-v0.1.0 is tagged
+    rp.pin(two_suites, test, "AB" * 32, suite="ws")
+    assert 'tag = "ws-test-v0.2.0"\nsha256 = "' + "ab" * 32 + '"' in (two_suites / "ws/portal/apps.toml").read_text()
+    assert rp.changed_pins(two_suites, "HEAD", suite="ws") == ["ws-test-v0.2.0"]
+    assert rp.portal_minimum(two_suites, "HEAD", "0.1.0", suite="ws")[0] == "0.2.0"     # an app minor: a portal minor
 
 
 def test_a_windows_suites_release_is_a_zip(two_suites):
-    assert rp.release_asset("wp-test-v0.2.0", two_suites) == "wp-test-v0.2.0.zip"
+    assert rp.release_asset("ws-test-v0.2.0", two_suites) == "ws-test-v0.2.0.zip"
     assert rp.release_asset("check-v0.1.0", two_suites) == "check-v0.1.0.tar.gz"
 
 
@@ -304,8 +304,8 @@ def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
     """Every push starts every suite's CI: the ticker shows the ticked suite's runs and Nexus's, not another
     suite's."""
     assert rp.suite_workflows(two_suites, "bc") == {"ci.yml", "release.yml"}
-    assert rp.other_suites_workflows(two_suites, "bc") == {"ci-wp.yml", "release-wp.yml"}
-    assert rp.other_suites_workflows(two_suites, "wp") == {"ci.yml", "release.yml"}
+    assert rp.other_suites_workflows(two_suites, "bc") == {"ci-ws.yml", "release-ws.yml"}
+    assert rp.other_suites_workflows(two_suites, "ws") == {"ci.yml", "release.yml"}
     pytest.importorskip("PyQt6.QtWidgets")
     from PyQt6.QtCore import QSettings
     from PyQt6.QtWidgets import QApplication
@@ -314,15 +314,15 @@ def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
     from nexus_release_tool import main_window
     w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="", tags=(): (None, etag),
                                   notify=lambda *a: None, claude_source=None, jobs_source=None, suite="bc")
-    runs = [run("CI WP", status="in_progress", n=4), run("CI Nexus", n=3), run(n=2),
+    runs = [run("CI WS", status="in_progress", n=4), run("CI Nexus", n=3), run(n=2),
             run("Release", "portal-v3.0.1", status="in_progress", n=1)]
-    for data, path in zip(runs, ("ci-wp.yml", "ci-nexus.yml", "ci.yml", "release.yml")):
+    for data, path in zip(runs, ("ci-ws.yml", "ci-nexus.yml", "ci.yml", "release.yml")):
         data["path"] = f".github/workflows/{path}"
     w.build.checked((rp.parse_runs({"workflow_runs": runs}), "e1"))
     assert w.ticker.line == "Release on portal-v3.0.1: in progress   |   CI Nexus on main: passed   |   CI on main: passed"
-    w.choose_suite("wp")
+    w.choose_suite("ws")
     w.ticker.checker.stop(2000)
-    assert w.ticker.line.startswith("CI WP on main: in progress   |   CI Nexus on main: passed")
+    assert w.ticker.line.startswith("CI WS on main: in progress   |   CI Nexus on main: passed")
     assert "Release on" not in w.ticker.line and "|   CI on main" not in w.ticker.line
     w.close()
 
@@ -367,30 +367,30 @@ def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
 
     def runs(status, conclusion="success"):
         found = [run(name, status=status, conclusion=conclusion, n=n) for n, name in
-                 ((3, "CI WP"), (2, "Nexus index"), (1, "CI"))]
-        for data, path in zip(found, ("ci-wp.yml", "nexus-index.yml", "ci.yml")):
+                 ((3, "CI WS"), (2, "Nexus index"), (1, "CI"))]
+        for data, path in zip(found, ("ci-ws.yml", "nexus-index.yml", "ci.yml")):
             data["path"] = f".github/workflows/{path}"
         return rp.parse_runs({"workflow_runs": found})
     w.build.checked((runs("in_progress"), "e1"))
     w.build.checked((runs("completed", "failure"), "e2"))
     assert notes[-1][0] == "GitHub build failed"
     assert "Nexus index on main" in notes[-1][1] and "CI on main" in notes[-1][1]
-    assert "WP" not in notes[-1][1]
+    assert "WS" not in notes[-1][1]
     w.close()
 
 
 def test_a_windows_suite_tests_its_portal_on_the_handheld(two_suites):
     """A Windows suite has no check-release.sh: its portal and a withdrawal are tried from
     the checkout with its portal/run.ps1, and the published release is downloaded to install on the handheld."""
-    text = rp.portal_run_script(two_suites, "bc") == "" and rp.portal_run_script(two_suites, "wp") == "wp/portal/run.ps1"
-    text = rp.portal_commands("wp-portal-v1.0.1", linux=False, check="wp/tools/check-release.sh",
-                              run_script="wp/portal/run.ps1")
-    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File wp/portal/run.ps1 --windowed\n" in text
-    assert text.endswith('\ngh release download wp-portal-v1.0.1 --dir "$TEMP/wp-portal-v1.0.1" --clobber')
+    text = rp.portal_run_script(two_suites, "bc") == "" and rp.portal_run_script(two_suites, "ws") == "ws/portal/run.ps1"
+    text = rp.portal_commands("ws-portal-v1.0.1", linux=False, check="ws/tools/check-release.sh",
+                              run_script="ws/portal/run.ps1")
+    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File ws/portal/run.ps1 --windowed\n" in text
+    assert text.endswith('\ngh release download ws-portal-v1.0.1 --dir "$TEMP/ws-portal-v1.0.1" --clobber')
     order = [text.index(s) for s in ("git commit", "run.ps1", "git push\n", "tag-release.sh", "gh release download")]
     assert order == sorted(order)
-    withdraw = rp.withdraw_commands("wp-test-v0.1.0", "Broken.", run_script="wp/portal/run.ps1")
-    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File wp/portal/run.ps1 --windowed\n" in withdraw
+    withdraw = rp.withdraw_commands("ws-test-v0.1.0", "Broken.", run_script="ws/portal/run.ps1")
+    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File ws/portal/run.ps1 --windowed\n" in withdraw
 
 
 def test_app_commands_put_the_portal_bump_first_when_the_push_needs_it():
@@ -915,8 +915,9 @@ def test_window_check_buttons(window, repo):
     page.local_button.click()
     page.release_button.click()
     page.withdraw_button.click()
+    page.remove_button.click()
     script = str(repo / rp.CHECK_SCRIPT)
-    assert launched == [f"{script} local", f"{script} release", f"{script} local"]
+    assert launched == [f"{script} local", f"{script} release", f"{script} local", f"{script} remove"]
     log = page.output.toPlainText()
     assert "published portal-v0.1.0 release" in log and "App not available" in log
     assert "portal-v0.1.0" in page.release_button.toolTip()
@@ -1096,15 +1097,15 @@ def test_release_runs_of_the_tags_waited_for():
 
 def test_a_suites_own_release_workflow_counts_too():
     # A suite's release-<suite>.yml, "Release <suite>" (owner, 28-10-2026: its
-    # GitHub column said no run seen while it had built wp-test-v1.1.1).
-    named = {**run("Release WP", "wp-test-v1.1.1", n=2),
-             "path": ".github/workflows/release-wp.yml"}
-    unnamed = run("Release WP", "wp-portal-v1.0.2", "in_progress", n=1)
-    ci = {**run("CI WP", "wp-test-v1.1.1", n=3), "path": ".github/workflows/ci-wp.yml"}
+    # GitHub column said no run seen while it had built ws-test-v1.1.1).
+    named = {**run("Release WS", "ws-test-v1.1.1", n=2),
+             "path": ".github/workflows/release-ws.yml"}
+    unnamed = run("Release WS", "ws-portal-v1.0.2", "in_progress", n=1)
+    ci = {**run("CI WS", "ws-test-v1.1.1", n=3), "path": ".github/workflows/ci-ws.yml"}
     runs = rp.parse_runs({"workflow_runs": [ci, named, unnamed]})
-    assert rp.release_run(runs, "wp-test-v1.1.1").url.endswith("/2")        # not the CI run on the tag
-    assert rp.release_state(runs, "wp-test-v1.1.1") == "passed"
-    assert rp.release_state(runs, "wp-portal-v1.0.2") == "running"
+    assert rp.release_run(runs, "ws-test-v1.1.1").url.endswith("/2")        # not the CI run on the tag
+    assert rp.release_state(runs, "ws-test-v1.1.1") == "passed"
+    assert rp.release_state(runs, "ws-portal-v1.0.2") == "running"
 
 
 def test_fetch_runs_sends_the_etag(monkeypatch):
@@ -1676,12 +1677,12 @@ def test_the_suites_names_and_icons(tmp_path):
     suite itself), or its own drawing while a portal has no images."""
     assert rp.suite_name(rp.CHECKOUT) == "Bazzite Console Suite"
     assert rp.suite_icon(rp.CHECKOUT).name == "bazzite-console-suite.webp"
-    bare = tmp_path / "wp"
+    bare = tmp_path / "ws"
     (bare / "portal").mkdir(parents=True)
     (bare / "portal" / "apps.toml").write_text("")
     (bare / "icons").mkdir()
-    (bare / "icons" / "wp-256.png").write_bytes(b"png")
-    assert rp.suite_icon(tmp_path, "wp").name == "wp-256.png"
+    (bare / "icons" / "ws-256.png").write_bytes(b"png")
+    assert rp.suite_icon(tmp_path, "ws").name == "ws-256.png"
 
 
 def test_the_git_questions_are_asked_once_or_side_by_side(repo, monkeypatch):
@@ -1758,24 +1759,24 @@ def test_a_suites_release_moves_nexus(two_suites):
     sh(root, "add", "-A")
     sh(root, "commit", "-q", "-m", "Nexus 0.1.0")
     assert rp.suite_releases(root) == []
-    nexus = next(u for u in rp.load_units(root, "wp") if u.kind == rp.NEXUS)
+    nexus = next(u for u in rp.load_units(root, "ws") if u.kind == rp.NEXUS)
     assert not nexus.needs_release and nexus.release_reason == "no"
 
-    write(root / "wp/apps/test/VERSION", "0.3.0\n")              # bumped, not committed or tagged yet: it counts
+    write(root / "ws/apps/test/VERSION", "0.3.0\n")              # bumped, not committed or tagged yet: it counts
     write(root / "bc/apps/check/VERSION", "0.1.1\n")             # another suite's too
     write(root / "bc/apps/dev/VERSION", "0.2.0\n")
     write(root / "bc/apps/dev/.checkout-only", "Never released.\n")
     sh(root, "add", "-A")
     sh(root, "commit", "-q", "-m", "releases")
-    assert rp.suite_releases(root) == ["check-v0.1.1", "wp-test-v0.3.0"]      # never a checkout-only app
-    nexus = next(u for u in rp.load_units(root, "wp") if u.kind == rp.NEXUS)
-    assert nexus.needs_release and nexus.release_reason == "yes: check-v0.1.1, wp-test-v0.3.0"
+    assert rp.suite_releases(root) == ["check-v0.1.1", "ws-test-v0.3.0"]      # never a checkout-only app
+    nexus = next(u for u in rp.load_units(root, "ws") if u.kind == rp.NEXUS)
+    assert nexus.needs_release and nexus.release_reason == "yes: check-v0.1.1, ws-test-v0.3.0"
     choices, why = rp.version_choices(root, nexus)
-    assert choices[0] == "0.2.0" and why == "minor: the suites' releases check-v0.1.1, wp-test-v0.3.0 since Release 0.1.0"
-    assert rp.nexus_notes("", nexus.suite_releases) == "Brings check-v0.1.1, wp-test-v0.3.0."
+    assert choices[0] == "0.2.0" and why == "minor: the suites' releases check-v0.1.1, ws-test-v0.3.0 since Release 0.1.0"
+    assert rp.nexus_notes("", nexus.suite_releases) == "Brings check-v0.1.1, ws-test-v0.3.0."
     assert rp.nexus_notes("Mine.", nexus.suite_releases) == "Mine."
 
-    assert rp.bump_nexus(root, "0.2.0") == "Release 0.2.0. Brings check-v0.1.1, wp-test-v0.3.0."
+    assert rp.bump_nexus(root, "0.2.0") == "Release 0.2.0. Brings check-v0.1.1, ws-test-v0.3.0."
     assert (root / "VERSION").read_text() == "0.2.0\n" and rp.suite_releases(root) == []   # the bump takes them in
     sh(root, "add", "-A")
     sh(root, "commit", "-q", "-m", "Nexus 0.2.0")
@@ -1786,7 +1787,7 @@ def test_a_suites_release_moves_nexus(two_suites):
     sh(root, "add", "-A")
     sh(root, "commit", "-q", "-m", "a new suite")
     assert rp.suite_releases(root) == ["new suite new", "portal-v0.1.0"]
-    nexus = next(u for u in rp.load_units(root, "wp") if u.kind == rp.NEXUS)
+    nexus = next(u for u in rp.load_units(root, "ws") if u.kind == rp.NEXUS)
     choices, why = rp.version_choices(root, nexus)
     assert choices[0] == "1.0.0" and why.startswith("major: new suite new, the suites' releases portal-v0.1.0")
     assert rp.nexus_notes("", nexus.suite_releases) == "Brings the new suite new, portal-v0.1.0."
@@ -1854,9 +1855,9 @@ def test_window_a_second_bump_changes_nothing_and_says_so(window, repo, monkeypa
 def test_a_windows_suites_release_checks(two_suites):
     """A Windows suite's board tests are its check-release.ps1, run on Windows (owner, 28-10-2026: on Windows every
     test button was off); a Bazzite suite's stay check-release.sh, on Linux."""
-    assert rp.check_script(two_suites, "wp") == "wp/tools/check-release.ps1"
+    assert rp.check_script(two_suites, "ws") == "ws/tools/check-release.ps1"
     assert rp.check_script(two_suites, "bc") == "bc/tools/check-release.sh"
-    assert rp.tests_here(two_suites, "wp", "win32") and not rp.tests_here(two_suites, "wp", "linux")
+    assert rp.tests_here(two_suites, "ws", "win32") and not rp.tests_here(two_suites, "ws", "linux")
     assert rp.tests_here(two_suites, "bc", "linux") and not rp.tests_here(two_suites, "bc", "win32")
 
 
@@ -1871,9 +1872,9 @@ def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, mo
     tests_here = rp.tests_here                                  # this computer as Windows, for these tests alone:
     monkeypatch.setattr(rp, "tests_here", lambda root, suite=None, platform=None: tests_here(root, suite, "win32"))
     # (sys.platform itself stays: patched, shutil.which takes Windows' path on Linux and fails, as in CI 28-10-2026)
-    write(two_suites / "wp/tools/check-release.ps1", "Write-Host hi\n")
+    write(two_suites / "ws/tools/check-release.ps1", "Write-Host hi\n")
     w = main_window.ReleaseWindow(two_suites, sha256_source=lambda tag: SHA, launch=launched.append,
-                                  runs_source=None, status_source=None, suite="wp")
+                                  runs_source=None, status_source=None, suite="ws")
     w.reload()
     page = w.run_page
     assert page.local_button.isEnabled() and page.withdraw_button.isEnabled()
@@ -1881,7 +1882,7 @@ def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, mo
     launched.clear()
     page.local_button.click()
     page.release_button.click()
-    script = str(two_suites / "wp/tools/check-release.ps1")
+    script = str(two_suites / "ws/tools/check-release.ps1")
     assert launched == [f"& '{script}' local", f"& '{script}' release"]
     w.choose_suite("bc")                                        # the board's suite: its tests run on Linux
     assert not page.local_button.isEnabled() and "Linux (the board)" in page.local_button.toolTip()

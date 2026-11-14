@@ -44,9 +44,6 @@ _LONG_TESTS = {STRESS_TEST_ID: "Stress test", BENCH_TEST_ID: "Benchmark",
                DISK_TEST_ID: "Disk speed test", SPEEDTEST_TEST_ID: "Internet speed test"}
 
 
-# The BC-250's system score measures how far a board is from its unlocked potential; a PS5 has no disabled CUs or
-# cores, so there is nothing to compare against: its two boxes stay hidden.
-
 class MainWindow(QMainWindow):
     def __init__(self, runner: TestRunner):
         super().__init__()
@@ -107,8 +104,6 @@ class MainWindow(QMainWindow):
         header_right.addWidget(title)
         self.stats = StatsBar(len(TESTS))
         self.stats.details_requested.connect(self.show_findings)
-        for box in (self.stats.base_system, self.stats.ext_system):
-            box.setVisible(False)
         header_right.addWidget(self.stats)
         header.addLayout(header_right, 1)
         root.addLayout(header)

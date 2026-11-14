@@ -2,7 +2,7 @@
 """Steam launch options that start the game monitor (gamemon) from a place that is no longer there.
 
 The In-Game page hands out a launch line that names a python, the app's folder (PYTHONPATH) and the package. When
-any of them goes (a checkout moved, the package renamed from bc250_gui to bazzite_test), Steam's start of the game
+any of them goes (a checkout moved, the package renamed), Steam's start of the game
 fails at once and the game never starts, with nothing pointing to the cause. Steam keeps the launch options per
 user in userdata/<user>/config/localconfig.vdf, under apps/<appid>/LaunchOptions, in the text key-value format;
 this module only reads it. The game's name comes from the appmanifest_<appid>.acf in one of Steam's libraries."""

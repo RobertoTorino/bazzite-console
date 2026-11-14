@@ -22,8 +22,9 @@ githubstatus.com reports GitHub up, red while it reports a problem; a click open
 what Claude Code on this machine used, from its transcripts; a click opens Claude's usage page. Under the pills, the
 ticker says where the newest push's workflow runs stand: the job that runs and its step (owner, 28-10-2026).
 Test on this board: Test app updates and Test withdrawal install the portal from the checkout and start it with the
-apps from their releases, Test Portal release installs the published portal release (check-release.sh, in a
-terminal). The launchers that are no release steps (the local apps and the wikis, the installer tests, the portal
+apps from their releases, Test Portal release installs the published portal release, or its draft while it is not
+published (check-release.sh, in a terminal); a test on a machine without the suite removes what it installed when
+the portal closes, and Remove suite removes the suite (check-release.sh remove). The launchers that are no release steps (the local apps and the wikis, the installer tests, the portal
 tour, Close issues) are Nexus Dashboard's since 04-11-2026 (owner: the release tool is the release, the dashboard
 the place for working on a suite).
 The Commands tab is a command line in the checkout (command_line.py), where the steps' pills run their commands and
@@ -751,11 +752,16 @@ class RunPage(QWidget):
                                         "and start it (check-release.sh local); it must show the app as not available "
                                         "and remove it")
         self.withdraw_button.clicked.connect(lambda: self.check("withdrawal"))
+        self.remove_button = QPushButton("Remove suite")
+        self.remove_button.setToolTip("Show what of the suite is installed on this machine and whether a test put it "
+                                      "there, then remove it all: every app, the portal and Bazzite Test, each with "
+                                      "its own uninstaller (check-release.sh remove). Settings stay")
+        self.remove_button.clicked.connect(lambda: self.check("remove"))
         self.tooltips = {button: button.toolTip() for button in (self.local_button, self.release_button,
-                                                                 self.withdraw_button)}
+                                                                 self.withdraw_button, self.remove_button)}
         self.output = StepLog(self, "Test on this board", window.step_wrote, opens=False)   # lines while you click
         checks = QHBoxLayout()
-        for button in (self.local_button, self.release_button, self.withdraw_button):
+        for button in (self.local_button, self.release_button, self.withdraw_button, self.remove_button):
             checks.addWidget(button)
         checks.addStretch(1)
         lay = QVBoxLayout(self)
@@ -765,7 +771,9 @@ class RunPage(QWidget):
             "portal from this checkout, with the apps from their GitHub releases. <b>Test Portal release</b> (after "
             "GitHub built the portal): the published portal release. <b>Test withdrawal</b> (step 3): the portal from "
             "this checkout on a board with the withdrawn app installed. Each runs in a terminal; close the portal "
-            "there to finish. The apps and the wikis from this checkout, the installer tests, the portal tour and "
+            "there to finish. A test on a machine without the suite removes what it installed when the portal "
+            "closes; a machine that had the suite keeps it. <b>Remove suite</b> shows what is installed and "
+            "removes it all. The apps and the wikis from this checkout, the installer tests, the portal tour and "
             "Close issues are in Nexus Dashboard."))
         lay.addLayout(checks)
         lay.addStretch(1)
@@ -774,8 +782,9 @@ class RunPage(QWidget):
         self.enable_tests()
         if self.release_button.isEnabled():
             self.release_button.setToolTip(
-                f"After GitHub built {self.release_window.portal_tag()}: download it, check it against "
-                f"its SHA256SUMS, install it and start it ({Path(self._check_path()).name} release)")
+                f"After GitHub built {self.release_window.portal_tag()}: download it (its draft while it is not "
+                f"published), check it against its SHA256SUMS, install it and start it "
+                f"({Path(self._check_path()).name} release)")
 
     def _check_path(self) -> str:
         return rp.check_script(self.release_window.root, self.release_window.suite)
@@ -789,7 +798,7 @@ class RunPage(QWidget):
         here = rp.tests_here(self.release_window.root, self.release_window.suite)
         windows = self.windows_suite()
         for button, tip in self.tooltips.items():
-            button.setEnabled(here)
+            button.setEnabled(here and not (windows and button is self.remove_button))
             if here:
                 button.setToolTip(WINDOWS_TIPS.get(button.text(), tip) if windows else tip)
             else:
@@ -810,7 +819,7 @@ class RunPage(QWidget):
         if not (self.release_window.root / path).is_file():
             self.output.appendPlainText(f"This suite has no {path}.")
             return
-        mode = "release" if test == "release" else "local"
+        mode = test if test in ("release", "remove") else "local"
         try:
             self.release_window.launch(self._script_line(mode))
         except RuntimeError as exc:
@@ -833,7 +842,9 @@ class RunPage(QWidget):
                        "then starts it. Close the portal there to finish.",
             "withdrawal": "A terminal installs the portal from this checkout and starts it. With the app installed, "
                           "the portal says it is not available any more and removes it; its tile then shows \"App not "
-                          "available\". Close the portal there to finish."}[test])
+                          "available\". Close the portal there to finish.",
+            "remove": "A terminal lists what of the suite is installed here, then removes it: every app, the portal "
+                      "and Bazzite Test. Bazzite Test asks for the sudo password."}[test])
 
 
 
@@ -1569,7 +1580,7 @@ class ReleaseWindow(QMainWindow):
         return (rp.suite_dir(self.root, self.suite) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
 
     def portal_tag(self, version: str = "") -> str:
-        """The suite's portal tag of *version* (default: portal/VERSION): portal-v10.1.0, wp-portal-v0.1.0."""
+        """The suite's portal tag of *version* (default: portal/VERSION): portal-v10.1.0, ws-portal-v0.1.0."""
         return f"{rp.tag_prefix(self.root, self.suite)}portal-v{version or self.portal_version()}"
 
     def refresh(self) -> None:

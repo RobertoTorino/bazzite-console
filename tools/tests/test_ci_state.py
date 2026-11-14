@@ -56,10 +56,10 @@ def test_a_commit_without_a_run_is_answered_within_minutes(monkeypatch, capsys):
     def sleep(seconds):
         clock[0] += seconds
     assert ci_state.check("abc1234", 60, fetch=lambda sha, workflow: [], sleep=sleep, now=lambda: clock[0],
-                          workflow="ci-windows-portable.yml") == 2
+                          workflow="ci-windows-suite.yml") == 2
     assert ci_state.NONE_GRACE_S <= clock[0] < ci_state.NONE_GRACE_S + 2 * ci_state.POLL_S
     out, err = capsys.readouterr()
-    assert out.startswith("none\n") and "no run of ci-windows-portable.yml on abc1234" in err
+    assert out.startswith("none\n") and "no run of ci-windows-suite.yml on abc1234" in err
     clock[0] = 0.0
     late = [[]] * 4 + [[run(status="in_progress", conclusion=None)], [run()]]
     assert ci_state.check("abc1234", 60, fetch=lambda sha: late.pop(0), sleep=sleep, now=lambda: clock[0]) == 0
@@ -76,7 +76,7 @@ def test_unreachable_and_the_stub(monkeypatch):
 
 
 def test_a_suite_of_its_own_asks_for_its_own_workflow(monkeypatch):
-    """ci.yml by default (Nexus and the BC250 Bazzite Suite); --workflow another suite's CI (owner, 27-10-2026: one
+    """ci.yml by default; --workflow another suite's CI (owner, 27-10-2026: one
     suite's CI never holds another suite's releases)."""
     monkeypatch.delenv("PS5_CI_STATE", raising=False)
     asked = []
@@ -85,15 +85,15 @@ def test_a_suite_of_its_own_asks_for_its_own_workflow(monkeypatch):
         asked.append(workflow)
         return [run()]
     assert ci_state.check("abc1234", fetch=fetch) == 0
-    assert ci_state.check("abc1234", fetch=fetch, workflow="ci-windows-portable.yml") == 0
-    assert asked == ["ci.yml", "ci-windows-portable.yml"]
+    assert ci_state.check("abc1234", fetch=fetch, workflow="ci-windows-suite.yml") == 0
+    assert asked == ["ci.yml", "ci-windows-suite.yml"]
     calls = []
     monkeypatch.setattr(ci_state, "check", lambda sha, wait, workflow: calls.append((sha, wait, workflow)) or 0)
     assert ci_state.main(["abc1234"]) == 0
-    assert ci_state.main(["--wait", "1", "--workflow", "ci-windows-portable.yml", "abc1234"]) == 0
-    assert calls == [("abc1234", 0.0, "ci.yml"), ("abc1234", 1.0, "ci-windows-portable.yml")]
-    assert "workflows/ci-windows-portable.yml/runs" in ci_state.RUNS_URL.format(
-        repo="r", workflow="ci-windows-portable.yml", sha="s")
+    assert ci_state.main(["--wait", "1", "--workflow", "ci-windows-suite.yml", "abc1234"]) == 0
+    assert calls == [("abc1234", 0.0, "ci.yml"), ("abc1234", 1.0, "ci-windows-suite.yml")]
+    assert "workflows/ci-windows-suite.yml/runs" in ci_state.RUNS_URL.format(
+        repo="r", workflow="ci-windows-suite.yml", sha="s")
 
 
 def test_a_release_commit_is_answered_by_its_work_commit(monkeypatch, capsys):

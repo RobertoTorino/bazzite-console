@@ -382,7 +382,7 @@ class MainWindow(QMainWindow):
         if release is None and WINDOWS:
             self.release_status.setText(
                 f"No extracted portal release found in {downloads_dir()}. Download a portal "
-                "release (e.g., wp-portal-v<x.y.z>.zip), extract it there, then choose Find in Downloads."
+                "release (e.g., ws-portal-v<x.y.z>.zip), extract it there, then choose Find in Downloads."
             )
             return
         if release is None:

@@ -16,7 +16,7 @@ under the games) stays for what the Settings tab does not set. The window also r
 shadPS4 and says when it is muted (seen on the board). What the window says it also writes to the app's log (core's
 applog), shown in the Log tab.
 
-Packages (owner, 05-11-2026, as the Windows Portable Suite's shadPS4 Manager since 30-10-2026): a .pkg put in a game
+Packages (owner, 05-11-2026): a .pkg put in a game
 folder is a row of its own in Your games, "PKG" or "PKG update", until it is unpacked (extract.py). Unpack takes the
 chosen one, Unpack all every one, the games first; each update goes beside its game and replaces an older one there.
 The packages unpacked whole are remembered (path, size and time), so they are no longer rows, and offered for
@@ -396,8 +396,8 @@ class MainWindow(QMainWindow):
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_logo, self.old_tags, self.no_cover = {}, set(), set(), set()
-        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026, from the Windows
-        # Portable Suite's managers, 01-11-2026; core's renamed): known by its code, else its file's size.
+        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026;
+        # core's renamed): known by its code, else its file's size.
         found = {str(g.eboot): renamed.identity(g.title_id, g.eboot) for g in self.games}
         known = renamed.load(self.settings.qsettings)
         self.moved = renamed.follow(known, found, self.in_steam)
@@ -837,7 +837,7 @@ class MainWindow(QMainWindow):
             self.say(f"shadPS4 could not be started: {command[0]} did not run.", ok=False)
 
     def on_remove_game(self) -> None:
-        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        """Remove game… (owner, 03-11-2026: before deleting anything, let
         the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
         every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
         the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves, the play time and the package
@@ -1068,8 +1068,8 @@ class MainWindow(QMainWindow):
             extra: list[str] = []
 
             def change() -> None:
-                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
-                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026:
+                # "it still says 0 games in Steam"): whether the shortcuts were written
                 # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
                 nonlocal found
                 steam.write_shortcuts(folder, changes)

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What a newer portal release brings: its apps.toml, read from GitHub at its tag, compared with the running
 portal's pins. App updates reach users through a portal update, so the portal's update button can name them. The
-release's SHA256SUMS tells a new build of the running portal's own version (owner, 03-11-2026, as the Windows
-Portable Suite's portal since 31-10-2026): a release built again under the same version, which the version alone
+release's SHA256SUMS tells a new build of the running portal's own version (owner,
+03-11-2026): a release built again under the same version, which the version alone
 never offers; install.sh writes the sha256 of the tarball a portal came from beside its program (build.sha256)."""
 
 from __future__ import annotations

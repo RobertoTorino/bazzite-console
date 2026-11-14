@@ -97,9 +97,9 @@ def test_a_size_other_than_1080p_is_passed_on_and_names_the_video(tmp_path):
         "--seconds", "40", "--size", "1440p"]
     assert tours.portal_video(root).name == "nexus-portal-tour-v6.4.0.mp4"
     assert tours.portal_video(root, "2160p").name == "nexus-portal-tour-v6.4.0-2160p.mp4"
-    (root / "TAG_PREFIX").write_text("wp-\n", encoding="utf-8")         # a suite with a prefix: its videos too
-    assert tours.portal_video(root).name == "wp-portal-tour-v6.4.0.mp4"
-    assert tours.tour_apps(root)[0].file_name == "wp-fan-tour-v0.5.1.mp4"
+    (root / "TAG_PREFIX").write_text("ws-\n", encoding="utf-8")         # a suite with a prefix: its videos too
+    assert tours.portal_video(root).name == "ws-portal-tour-v6.4.0.mp4"
+    assert tours.tour_apps(root)[0].file_name == "ws-fan-tour-v0.5.1.mp4"
     (root / "TAG_PREFIX").unlink()
     app = TourApp("fan", "Fan", None, "0.5.1")
     assert app.video() == app.file_name == "nexus-fan-tour-v0.5.1.mp4"

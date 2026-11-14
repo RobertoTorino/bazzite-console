@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Test catalog, grouped the same way as the categories in the manual. PS5 version (from BC-250 Bazzite Test 2.0.1):
-tests 54-57 are the PS5's own; the BC-250's system score is left out (a PS5 has no disabled CUs or cores to
-compare against)."""
+"""Test catalog, grouped the same way as the categories in the manual. Tests 54-57 are
+the PS5's own."""
 
 from __future__ import annotations
 
@@ -51,7 +50,7 @@ CATEGORIES: list[Category] = [
         TestDef("08", "NTP Synchronization", "Confirms the clock is synchronized."),
         TestDef("30", "SSH Service", "Reports sshd.service / sshd.socket state (off by default on Bazzite)."),
         TestDef("53", "Wi-Fi Adapter",
-                "Every Wi-Fi adapter, its driver, firmware and connection; the PS5's IW620 on moal and its firmware staging."),
+                "The PS5's built-in Wi-Fi: the IW620 on moal (or a MediaTek card), its driver and its firmware staging."),
         TestDef(SPEEDTEST_TEST_ID, "Internet Speed",
                 "Opt-in. Ookla speedtest (or speedtest-cli): download, upload, idle and loaded latency "
                 "(bufferbloat), packet loss, and whether the network port is the limit. Uses ~1 GB of data "
@@ -82,7 +81,7 @@ CATEGORIES: list[Category] = [
         TestDef("17", "amdgpu Driver",
                 "Confirms amdgpu is bound to the PS5 APU (Oberon, Cyan Skillfish family)."),
         TestDef("18", "GPU Governor",
-                "The kernel's ps5-gpufreq (devfreq) sets the GPU clock: its governor and the temperature limit. Warns when a BC-250 governor is installed."),
+                "The kernel's ps5-gpufreq (devfreq) sets the GPU clock: its governor and the temperature limit. Warns when a GPU governor made for another board is installed."),
         TestDef("19", "GPU Frequency Scaling",
                 "The ps5-gpufreq clock steps (500-2230 MHz), the allowed range and the clock changes since boot."),
         TestDef("20", "Vulkan / Mesa", "Confirms RADV reports GFX1013 and not the llvmpipe software fallback."),

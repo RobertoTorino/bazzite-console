@@ -132,7 +132,7 @@ def test_a_second_launch_opens_no_window(monkeypatch):
 def test_the_settings_of_the_earlier_name_are_taken_over(tmp_path):
     """Nexus Releases' settings (nexus-releases, until 30-10-2026) become the Nexus Release Tool's, once."""
     import nexus_release_tool.__main__ as entry
-    SETTINGS = "[General]\nsuite=wp\n"
+    SETTINGS = "[General]\nsuite=ws\n"
     new = entry.settings_file()
     assert new.parent.name == new.stem == "nexus-release-tool" and str(new).startswith(str(tmp_path))
     old = new.parent.parent / "nexus-releases" / "nexus-releases.ini"

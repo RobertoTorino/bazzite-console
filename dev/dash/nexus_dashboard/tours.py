@@ -47,7 +47,7 @@ def size_suffix(size: str) -> str:
 
 
 def video_prefix(suite: Path) -> str:
-    """What the suite's tour videos start with: its tag prefix (wp-), or nexus- for the suite without one."""
+    """What the suite's tour videos start with: its tag prefix (ps5-), or nexus- for the suite without one."""
     try:
         return (suite / "TAG_PREFIX").read_text(encoding="utf-8").strip() or "nexus-"
     except OSError:

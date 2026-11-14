@@ -90,14 +90,14 @@ _manifest_tools: dict[Path, object] = {}
 
 
 def tag_prefix(root: Path, suite: str | None = None) -> str:
-    """What the suite's release tags start with (its TAG_PREFIX, tools/suites.py): "wp-" for a suite with a prefix,
+    """What the suite's release tags start with (its TAG_PREFIX, tools/suites.py): "ws-" for a suite with a prefix,
     or empty string for the default suite."""
     return nexus_suites.tag_prefix(suite_dir(root, suite))
 
 
 def manifest_tools(root: Path, suite: str | None = None):
     """The check_manifest module that reads the suite's apps.toml and counts its portal bumps: a suite with a tag
-    prefix has a manifest of its own (wp-<app>-v<x.y.z> tags, its own categories), read by its own
+    prefix has a manifest of its own (ws-<app>-v<x.y.z> tags, its own categories), read by its own
     tools/check_manifest.py; the first suite's serves the suites without one."""
     folder = suite_dir(root, suite) / "tools"
     if not tag_prefix(root, suite) or not (folder / "check_manifest.py").is_file():
@@ -388,7 +388,7 @@ class Unit:
     in_apps: list[str] = field(default_factory=list)  # core only: the apps whose release would carry its changes
     current: bool = False               # core only: nothing it ships changed since its VERSION was last bumped
     standalone: bool = False            # apps only: released separately, never pinned in the portal
-    prefix: str = ""                    # the suite's tag prefix: "wp-" makes wp-test-v0.1.0
+    prefix: str = ""                    # the suite's tag prefix: "ws-" makes ws-test-v0.1.0
     released_as: str = ""               # nexus only: the version of the root CHANGELOG's newest "Release x.y.z."
     suite_releases: list[str] = field(default_factory=list)   # nexus only: the suites' releases since that version
 
@@ -433,7 +433,7 @@ class Unit:
 
     @property
     def tag_head(self) -> str:
-        """What its tags start with, before the version: "gpu-v", "wp-test-v"."""
+        """What its tags start with, before the version: "gpu-v", "ws-test-v"."""
         return f"{self.prefix}{self.key}-v"
 
     @property
@@ -579,7 +579,7 @@ NEW_SUITE = "new suite "
 
 
 def suite_releases(root: Path) -> list[str]:
-    """The suites' releases since Nexus's last version, as their tags ("wp-test-v1.3.0"): every app and portal, of
+    """The suites' releases since Nexus's last version, as their tags ("ws-test-v1.3.0"): every app and portal, of
     every suite, whose VERSION differs from what it was in the last commit that changed the root VERSION, tagged
     already or still to be (the working tree counts). Latest, the Nexus index, lists every suite's newest portal and
     is made anew after each release, so its number has to move with them (owner, 28-10-2026: a Latest that still said
@@ -698,7 +698,7 @@ def release_text(version: str, notes: str) -> str:
 
 def nexus_notes(notes: str, releases: list[str]) -> str:
     """The notes of Nexus's release entry: what was entered, else what the suites brought since its last version
-    ("Brings wp-portal-v1.3.0."), so the entry says why the index moved."""
+    ("Brings ws-portal-v1.3.0."), so the entry says why the index moved."""
     if notes.strip() or not releases:
         return notes
     new = [r.removeprefix(NEW_SUITE) for r in releases if r.startswith(NEW_SUITE)]

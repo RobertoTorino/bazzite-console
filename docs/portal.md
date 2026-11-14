@@ -48,7 +48,7 @@ Press **☰**, or **Start** on the controller.
 |---|---|
 | **Icons on Desktop** | An icon on the Desktop for every installed app, or only the portal's. The apps' menu entries always stay. |
 | **Sound** | The intro's sound and a short one for each action, on or off. |
-| **Theme** | The look of every app in the suite: Gunmetal, Silver or Warm. The portal starts again to show the one you choose; an app that is open takes it the next time it starts. |
+| **Theme** | The look of every app in the suite: Gunmetal, Silver or Warm. A click takes the next one and the portal stays open; each app takes it the next time it starts, the portal too. |
 | **Wallpaper** | A picture behind the portal: your own, one used before, the portal's example, or none, and how much of it shows through. Your own must be a PNG, JPEG or WebP of at least 1920 x 1080 pixels in 16:9. |
 | **Clock** | 12 or 24 hours, the seconds and the time zone. |
 | **Weather** | The place whose weather the header shows, from Open-Meteo. |

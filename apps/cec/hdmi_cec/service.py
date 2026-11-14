@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The user service that runs the watcher with the desktop session: ps5-hdmi-cec-watch.service in
-~/.config/systemd/user. Its options are the watcher's jobs (PAUSE; the BC250 suite's RESTART is a DP-to-HDMI
-converter workaround the PS5 does not need); the app writes the unit with the jobs that are on, enables and (re)starts it, and stops and removes it when none is. install.sh --uninstall removes it too,
+~/.config/systemd/user. Its options are the watcher's jobs (PAUSE; a RESTART job, a DP-to-HDMI
+converter workaround, is not needed on the PS5); the app writes the unit with the jobs that are on, enables and (re)starts it, and stops and removes it when none is. install.sh --uninstall removes it too,
 since it starts the app's own files. The unit is the only record of the jobs: jobs() reads them back from it."""
 
 from __future__ import annotations

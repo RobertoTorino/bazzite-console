@@ -1,3 +1,8 @@
+Changelog: 14-11-2026 01:05:10
+
+Fixed. The tests, their fixture and the examples no longer name the suite for Windows devices (owner, 14-11-2026):
+the second suite in the tests is "ws", with ws- tags and a windows_portal package. Nothing works differently.
+
 Changelog: 13-11-2026 21:38:35
 
 Fixed. The test of the window on the suite in the checkout expects System Overlay as the app chosen first: the window

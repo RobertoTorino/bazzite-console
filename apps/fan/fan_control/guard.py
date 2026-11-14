@@ -19,9 +19,7 @@ in isolated mode (-I) to install or remove the guard, and the installed copy run
  * /etc/systemd/system/ps5-fan-control-guard.service starts it at boot and restarts it when it stops;
  * /run/ps5-fan-control/state.json is what the guard saw last and its recent events, for the app to show.
 
-The window imports this file for reading the sensors, so the two read the same thing.
-
-Ported from the BC250 Bazzite Suite's fan guard (BC-250 Fan Control 2.0.1)."""
+The window imports this file for reading the sensors, so the two read the same thing."""
 
 from __future__ import annotations
 

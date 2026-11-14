@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""CI check for portal/apps.toml, the apps a portal release of the Windows Portable Suite pins (from the Nexus root):
+"""CI check for portal/apps.toml, the apps a portal release of a Windows suite pins (from the Nexus root):
 
-    python3 windows-portable/tools/check_manifest.py [--base REF] [--require-tags]
+    python3 windows-suite/tools/check_manifest.py [--base REF] [--require-tags]
 
-The same rules as the BC250 suite's (bc250-bazzite/tools/check_manifest.py), with the suite's tags (wp-):
+The manifest's rules, with the suite's tags (ws-):
 
 * The manifest parses and lists exactly the apps under apps/ (an app folder with a ``.standalone`` marker is not a
   portal app and must not be listed). There are no [checkout.*] apps: the suite has no development tab.
 * Every pinned tag exists. Without --require-tags a tag that does not exist yet is accepted when its version equals
   the app's VERSION: the release that is about to be tagged. The portal release workflow passes --require-tags.
-* With --base REF: when apps.toml differs from the last portal release (the newest wp-portal-v<x.y.z> tag; REF while
+* With --base REF: when apps.toml differs from the last portal release (the newest ws-portal-v<x.y.z> tag; REF while
   there is none), portal/VERSION must have been bumped from that release at least as much as the largest app bump it
   pins. An added, removed or withdrawn app needs at least a minor bump; any other change at least a patch bump.
   While portal/VERSION is still that release's, the change waits for the next portal release (owner, 31-10-2026: a
@@ -27,17 +27,17 @@ import subprocess
 import sys
 from pathlib import Path
 
-SUITE = Path(__file__).resolve().parent.parent      # the suite: windows-portable/, a repository of its own
+SUITE = Path(__file__).resolve().parent.parent      # the suite: windows-suite/, a repository of its own
 MANIFEST = "portal/apps.toml"
 STANDALONE_MARKER = ".standalone"
 LEVELS = {0: "none", 1: "patch", 2: "minor", 3: "major"}
-PORTAL_TAG = "wp-portal-v"
-_PORTAL_TAG = re.compile(r"^wp-portal-v(\d+\.\d+\.\d+)$")
+PORTAL_TAG = "ws-portal-v"
+_PORTAL_TAG = re.compile(r"^ws-portal-v(\d+\.\d+\.\d+)$")
 
 
 def _manifest_module():
     spec = importlib.util.spec_from_file_location("portable_manifest",
-                                                  SUITE / "portal" / "portable_portal" / "manifest.py")
+                                                  SUITE / "portal" / "windows_portal" / "manifest.py")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module             # dataclasses look their module up while the class is built
     spec.loader.exec_module(module)
@@ -92,7 +92,7 @@ def check_entries(entries, require_tags: bool) -> list[str]:
 
 
 def latest_portal_tag(tags) -> str:
-    """The newest wp-portal-v<x.y.z> among *tags* by version; "" when there is none."""
+    """The newest ws-portal-v<x.y.z> among *tags* by version; "" when there is none."""
     found = [(manifest.version_tuple(m.group(1)), tag) for tag in tags if (m := _PORTAL_TAG.match(tag))]
     return max(found)[1] if found else ""
 

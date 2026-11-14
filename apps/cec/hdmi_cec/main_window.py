@@ -7,8 +7,7 @@ tester for the remote's keys.
 The buttons send their messages with cec-ctl, so they work whichever CEC mode Bazzite is in. The automatic part
 (wake and standby with the PS5, the remote as key presses) is cecd's: the app only writes its settings.
 
-Ported from the BC250 Bazzite Suite's HDMI CEC Manager 2.0.1, without its DP-to-HDMI picture workarounds
-(display.py) and its boot service (boot.py): the PS5 has its own HDMI port, and its kernel already turns the TV on
+There are no DP-to-HDMI picture workarounds and no boot service: the PS5 has its own HDMI port, and its kernel already turns the TV on
 and switches it at boot (hdmi.one_touch_play)."""
 
 from __future__ import annotations

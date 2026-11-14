@@ -288,8 +288,8 @@ class MainWindow(QMainWindow):
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_cover = {}, set()
-        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026, from the Windows
-        # Portable Suite's managers, 01-11-2026; core's renamed): known by its code, else its file's size.
+        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026;
+        # core's renamed): known by its code, else its file's size.
         found = {str(g.file): renamed.identity(g.title_id, g.file) for g in self.games}
         known = renamed.load(self.settings.qsettings)
         self.moved = renamed.follow(known, found, self.in_steam)
@@ -478,7 +478,7 @@ class MainWindow(QMainWindow):
             self.say("Steam could not be opened: xdg-open is missing.", ok=False)
 
     def on_remove_game(self) -> None:
-        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        """Remove game… (owner, 03-11-2026: before deleting anything, let
         the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
         every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
         the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. Xenia's content folder, with the saves,
@@ -568,8 +568,8 @@ class MainWindow(QMainWindow):
             extra: list[str] = []
 
             def change() -> None:
-                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
-                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026:
+                # "it still says 0 games in Steam"): whether the shortcuts were written
                 # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
                 nonlocal found
                 steam.write_shortcuts(folder, changes)

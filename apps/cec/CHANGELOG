@@ -8,10 +8,10 @@ Fixed. The app's icon is its category's current picture.
 
 Changelog: 11-11-2026
 
-Release 0.1.0. First PS5 version, ported from the BC250 Bazzite Suite's HDMI CEC Manager 2.0.1, for the PS5 kernel's
+Release 0.1.0. First PS5 version, for the PS5 kernel's
 own CEC adapter (ps5-cec, /dev/cec0): the TV buttons (on, switch to the PS5, standby, check, volume), TV info, the
 devices on the bus, the name on the TV (default "PS5"), pausing media while the TV is off, Valve's CEC daemon (cecd)
-settings and the remote's buttons, and the key tester. Left out: the BC-250's DP-to-HDMI picture workarounds
+settings and the remote's buttons, and the key tester. Left out: DP-to-HDMI picture workarounds
 (8 bits per color, restarting the picture; the PS5 has its own HDMI port) and the boot service (the PS5 kernel turns
 the TV on and switches it at boot, hdmi.one_touch_play). The TV's name comes from the connected connector's EDID,
 since ps5-cec is not named after a connector.

@@ -16,7 +16,20 @@ bash ./install.sh
 ```
 
 A portal installed this way installs the apps from the same checkout. `tools/check-release.sh local` does the same
-and starts the portal; `release` and `draft` install a published portal release or the draft of one.
+and starts the portal; `release` and `draft` install a published portal release or the draft of one (`release`
+takes the draft while the release is not published).
+
+A test cleans up after itself. On a machine without the suite, what the test installs is marked as a test's and
+removed again when the portal closes: the apps installed during the test, the portal and Bazzite Test. A machine
+that had the suite installed keeps it, and `--keep` keeps what a test installed.
+
+```bash
+tools/check-release.sh status            # what of the suite is installed, and whether a test put it there
+tools/check-release.sh remove            # remove every app, the portal and Bazzite Test; settings stay
+tools/check-release.sh remove --purge    # their settings and logs too
+```
+
+The release planner's **Remove suite** button runs `remove` in a terminal.
 
 ## The development apps
 
@@ -50,7 +63,9 @@ The Install page's link to the portal's release and the archive's name are fille
 wiki is built (`tools/mkdocs/hooks.py`), so they follow each portal release.
 
 The dependency checker uses `dev/deps/nexus_deps/catalogs/bazzite-console.toml`, which tracks the suite's
-`requirements.txt` files and relevant system tools. Keep it synchronized when app dependencies change.
+`requirements.txt` files and relevant system tools. Keep it synchronized when app dependencies change. Its emulator
+cards ask GitHub for each newest release, signed in with the GitHub CLI's login (`gh auth login`): without one
+GitHub allows 60 requests an hour, and the cards say "hourly limit is used up" until the hour is over.
 
 Run the local checks from the suite root:
 

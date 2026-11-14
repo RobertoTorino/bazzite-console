@@ -349,7 +349,7 @@ def test_on_windows_no_release_in_downloads_says_where_to_get_one(qapp, on_windo
     window = main_window.MainWindow()
 
     assert window.release_dir is None
-    assert "wp-portal-v<x.y.z>.zip" in window.release_status.text()
+    assert "ws-portal-v<x.y.z>.zip" in window.release_status.text()
     assert "PowerShell window" in window.instructions.text()
     window.close()
 
