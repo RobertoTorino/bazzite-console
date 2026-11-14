@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A video tour of the Bazzite Console portal, for the wiki and YouTube: the real portal view from this checkout, driven by a
 script and rendered frame by frame into an MP4 (H.264, 1920 x 1080, 30 fps), with music under it that fades out over
-the last two seconds (the Nexus tools' sounds/the_quiet_engine_remix_3min.mp3, every suite's, made with generative AI
-tools).
+the last two seconds (tools/sounds/the_quiet_engine_remix.ogg, the remix of the app tours' track, three minutes long
+so it does not loop within the tour; made with generative AI tools).
 
     python3 tools/portal_tour.py [OUT.mp4] [--music FILE | --no-music] [--wiki] [--fps 30] [--size 1080p|1440p|2160p]
 
@@ -38,7 +38,7 @@ from tour_frames import SCALE, Recorder  # noqa: E402
 
 INSTALLED = ("bazzite", "rpcs3", "remoteplay", "shadps4", "datstation")
 BEHIND = "shadps4"
-MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine.mp3"
+MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine_remix.ogg"    # the portal tour's own: longer than the tour
 FADE = 2.0                                          # the music fades out over the video's last seconds
 WIKI_VIDEO = SUITE / "docs" / "videos" / "portal-tour.mp4"
 WIKI_POSTER = SUITE / "docs" / "images" / "portal" / "portal-tour-poster.webp"
@@ -78,6 +78,7 @@ class Tour(Recorder):
                     records[entry.key] = f"{entry.key}-v{major}.{max(int(minor) - 1, 0)}.0"
         state_dir().mkdir(parents=True, exist_ok=True)
         (state_dir() / "installed.json").write_text(json.dumps(records), encoding="utf-8")
+        (state_dir() / "wallpaper-none").touch()        # the tour starts without a wallpaper and chooses the example
         from bazzite_console_portal.main_window import MainWindow
 
         class Silent(audio.Sounds):                 # the Sound pill as on a console with an output, but nothing plays

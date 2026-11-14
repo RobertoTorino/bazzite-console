@@ -1,3 +1,10 @@
+Changelog: 14-11-2026 14:52:51
+
+Added. The Portal Tour has a track of its own (owner, 14-11-2026): tools/sounds/the_quiet_engine_remix.ogg, the remix
+of the app tours' track, three minutes long, so the music no longer starts again halfway through the two-minute tour.
+tools/portal_tour.py takes it by default (--music FILE for another); the app tours keep the_quiet_engine.mp3. The
+tour on the wiki's Portal Tour page is recorded again with it.
+
 Changelog: 14-11-2026 13:51:12
 
 Fixed. The release test (tools/check-release.sh) removes what a test's portal remembered (its state folder: the
