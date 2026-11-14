@@ -4,8 +4,8 @@
 [apps.bazzite]
 name = "Bazzite Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-bazzite-v0.3.0"
-sha256 = "c339e28ba969cd0cb2e90ae31d06e30ee8be0ed871cff5af5b75f7b09ec9c7af"
+tag = "ps5-bazzite-v0.3.1"
+sha256 = ""
 required = true
 changes_board = false
 category = "sustainable"
@@ -188,8 +188,8 @@ launch = [["Open", "~/.local/bin/ps5-ssd-check"]]
 [apps.overlay]
 name = "System Overlay"
 summary = "A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values."
-tag = "ps5-overlay-v0.2.0"
-sha256 = "f71b4ebe86f5d225357d592d74f456c70f7c2657683b3555bd03ff73da123c1f"
+tag = "ps5-overlay-v0.2.1"
+sha256 = ""
 required = false
 changes_board = false
 category = "sustainable"
@@ -201,8 +201,8 @@ launch = [["Open", "~/.local/bin/ps5-system-overlay"]]
 [apps.fan]
 name = "Fan Control"
 summary = "The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature."
-tag = "ps5-fan-v0.2.0"
-sha256 = "edcc4f3d8386e2f6b076c2f256998dcfff17cc81ee3e86dd544cb65b0f7c35aa"
+tag = "ps5-fan-v0.2.1"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
