@@ -3,12 +3,12 @@
 """The suites of the repository: each a folder directly under the root with its portal's manifest,
 <suite>/portal/apps.toml. The Nexus tools work on one suite at a time, named with --suite. Without a name it is the one suite in the checkout
 or, with several, the one whose tags have no prefix. Each suite names the system it is made for
-in <suite>/SYSTEM (bazzite or windows): ./test.sh runs the suites of the system it runs on. A suite's release tags
+in <suite>/SYSTEM (bazzite): ./test.sh runs the suites of the system it runs on. A suite's release tags
 are <prefix><app>-v<x.y.z>, the prefix in <suite>/TAG_PREFIX (e.g., ps5-, so ps5-portal-v0.1.0; none for the default suite), so the suites' tags never mix.
 
     python3 tools/suites.py                       # the suite folders, one per line (relative to the root)
     python3 tools/suites.py --default             # the default suite, or an error when there is none
-    python3 tools/suites.py --system windows      # only the suites made for that system
+    python3 tools/suites.py --system bazzite      # only the suites made for that system
     python3 tools/suites.py --tag ps5-portal-v0.1.0 # the tag's suite, app and version: portal v0.1.0"""
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = Path("portal") / "apps.toml"
-SYSTEMS = ("bazzite", "windows")          # what <suite>/SYSTEM may say
+SYSTEMS = ("bazzite",)                    # what <suite>/SYSTEM may say
 TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")      # a tag without the suite's prefix
 
 

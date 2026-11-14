@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""OBS connection, portal release validation, and terminal integration: on Linux a portal release (install.sh)
-in a terminal emulator, on Windows a suite's portal release (install.ps1) in a PowerShell window."""
+"""OBS connection, portal release validation, and terminal integration: a portal release (install.sh) in a
+terminal emulator."""
 
 from __future__ import annotations
 
@@ -8,20 +8,13 @@ import os
 import shlex
 import shutil
 import subprocess
-import sys
 import tempfile
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-WINDOWS = sys.platform == "win32"
-if WINDOWS:     # a suite's portal, installed (its install.ps1)
-    PORTAL_LAUNCHER = (Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local") /
-                       "suite-portal" / "portal" / "app" / "Portal.exe")
-else:
-    PORTAL_LAUNCHER = Path.home() / ".local" / "bin" / "bazzite-console-suite"
-INSTALLER = "install.ps1" if WINDOWS else "install.sh"      # a portal release's installer, beside its apps.toml
-OBS_WINDOWS = Path("obs-studio") / "bin" / "64bit" / "obs64.exe"    # under Program Files
+PORTAL_LAUNCHER = Path.home() / ".local" / "bin" / "bazzite-console-suite"
+INSTALLER = "install.sh"            # a portal release's installer, beside its apps.toml
 OBS_FLATPAK_ID = "com.obsproject.Studio"
 RECORDINGS_DIRECTORY = Path.home() / "Videos" / "demos"     # where OBS saves the demos (the tours go to ~/Videos too)
 RECORDING_EXTENSIONS = frozenset({".avi", ".flv", ".mkv", ".mov", ".mp4", ".m3u8", ".ts", ".webm"})
@@ -66,8 +59,8 @@ def load_optional_apps(manifest: Path) -> tuple[DemoApp, ...]:
 
 
 def _detect_path(path: str) -> Path:
-    """A detect path of the manifest: the Windows suite's name from %LOCALAPPDATA%, the Linux suite's from ~."""
-    return Path(os.path.expandvars(path)).expanduser() if WINDOWS else Path(path).expanduser()
+    """A detect path of the manifest, from ~."""
+    return Path(path).expanduser()
 
 
 def validate_release(folder: Path) -> tuple[Path, tuple[DemoApp, ...]]:
@@ -75,11 +68,6 @@ def validate_release(folder: Path) -> tuple[Path, tuple[DemoApp, ...]]:
     installer, manifest = selected / INSTALLER, selected / "apps.toml"
     if installer.is_file() and manifest.is_file():
         return installer, load_optional_apps(manifest)
-    if WINDOWS:     # the Windows suite's portal installs from a release only: its program is built at release time
-        raise WorkflowError(
-            f"{selected} is not a portal release. Choose an extracted suite portal release folder "
-            "(e.g., ws-portal-v<x.y.z>.zip, extracted)."
-        )
 
     for checkout in (selected, *selected.parents):
         checkout_installer = checkout / "install.sh"
@@ -133,15 +121,6 @@ def is_installed(app: DemoApp) -> bool:
 
 
 def obs_install_command() -> list[str] | None:
-    if WINDOWS:
-        found = shutil.which("obs64")
-        if found:
-            return [found]
-        for variable in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"):
-            base = os.environ.get(variable)
-            if base and (Path(base) / OBS_WINDOWS).is_file():
-                return [str(Path(base) / OBS_WINDOWS)]
-        return None
     for executable in ("obs", "obs-studio"):
         path = shutil.which(executable)
         if path:
@@ -262,34 +241,7 @@ def find_terminal() -> tuple[str, str] | None:
     return None
 
 
-def _ps_quote(text: str) -> str:
-    return "'" + text.replace("'", "''") + "'"
-
-
-def launch_installer_windows(installer: Path) -> Path:
-    """The release's install.ps1 in a PowerShell window of its own, for its output; the exit file gets its status."""
-    descriptor, name = tempfile.mkstemp(prefix="nexus-demo-installer-")
-    os.close(descriptor)
-    exit_file = Path(name)
-    exit_file.unlink()
-    script = (
-        f"& powershell -NoProfile -ExecutionPolicy Bypass -File {_ps_quote(str(installer))}; $result = $LASTEXITCODE; "
-        f"Set-Content -LiteralPath {_ps_quote(str(exit_file))} -Value $result -NoNewline -Encoding ascii; "
-        "Write-Host; Read-Host 'Installer finished. Press Enter to close this window'"
-    )
-    argv = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script]
-    try:
-        subprocess.Popen(argv, cwd=installer.parent, stdin=subprocess.DEVNULL,
-                         creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0))
-    except OSError as exc:
-        exit_file.unlink(missing_ok=True)
-        raise WorkflowError(f"Could not open the installer window: {exc}") from exc
-    return exit_file
-
-
 def launch_installer(installer: Path) -> Path:
-    if WINDOWS:
-        return launch_installer_windows(installer)
     terminal = find_terminal()
     if terminal is None:
         raise WorkflowError("No supported terminal emulator was found to run the portal installer.")

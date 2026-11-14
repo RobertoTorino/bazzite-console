@@ -193,7 +193,7 @@ def test_the_portal_dialog_records_into_videos_with_the_wiki_copy_when_asked(qap
 
 
 def test_a_suite_without_the_tour_scripts_gets_the_dialog_greyed_out(qapp, tmp_path):
-    """A Windows suite has no record-tour.sh: the dialog says so and records nothing."""
+    """A suite without record-tour.sh: the dialog says so and records nothing."""
     root = checkout(tmp_path)
     (root / "tools" / "record-tour.sh").unlink()
 

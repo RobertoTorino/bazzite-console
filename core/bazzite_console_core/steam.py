@@ -12,12 +12,7 @@ under that number: <id>p.png (the library's portrait, 2:3, 600 × 900), <id>.png
 Steam holds its settings in memory and rewrites its files when it exits, so a change while it runs would be lost:
 with_steam_closed() closes Steam first (steam -shutdown) and starts it again in the background as the desktop starts
 it at login (Bazzite's bazzite-steam -silent, elsewhere steam -silent). The other shortcuts in the file stay as they
-are.
-
-On Windows Steam's folder is the one its registry key names
-(HKCU\\Software\\Valve\\Steam, SteamPath; only read), whether it runs is steam.exe in Windows' process list, and it is
-closed and started again with its own steam.exe (-shutdown, then steam.exe as the user starts it). The files are the
-same."""
+are."""
 
 from __future__ import annotations
 
@@ -25,7 +20,6 @@ import os
 import shutil
 import struct
 import subprocess
-import sys
 import threading
 import time
 import zlib
@@ -33,15 +27,11 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .platform import outside_bundle
-
 STEAM_DIRS = (                          # the native Steam (Bazzite's), its older link, the Flatpak's
     "~/.local/share/Steam",
     "~/.steam/steam",
     "~/.var/app/com.valvesoftware.Steam/.local/share/Steam",
 )
-WINDOWS = sys.platform == "win32"
-WINDOWS_STEAM = r"C:\Program Files (x86)\Steam"     # where Steam installs itself when the registry does not say
 SHUTDOWN_TIMEOUT = 30.0
 MAP, STRING, INT32, END = 0, 1, 2, 8
 ART = {"p": (600, 900), "": (920, 430), "_hero": (3840, 1240), "_logo": (1280, 720)}
@@ -59,37 +49,14 @@ class ShortcutError(Exception):
 
 # --- Steam itself ----------------------------------------------------------------------------------------------
 
-def windows_steam() -> Path | None:
-    """Steam's folder on Windows, as its registry key names it, else where it installs itself; None off Windows. Its
-    name as it is on the disk: the key has it in lower case (c:/program files (x86)/steam), and a steam.exe started
-    by that name never signed in (the owner's Ally, 30-10-2026: every start as c:\\program files (x86)\\steam\\steam.exe
-    stayed Logged Off with its login window off the screen, every one as C:\\Program Files (x86)\\Steam\\steam.exe
-    signed in within seconds)."""
-    if not WINDOWS:
-        return None
-    try:
-        import winreg
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam") as key:
-            folder = str(winreg.QueryValueEx(key, "SteamPath")[0])
-    except OSError:
-        folder = WINDOWS_STEAM
-    return Path(os.path.realpath(folder))
-
-
 def installed() -> bool:
-    """Whether Steam's program is here, signed in once or not: steam.exe in Steam's folder on Windows, steam on PATH
-    elsewhere (owner, 30-10-2026: the portal's RT Steam only where there is a Steam to open)."""
-    if WINDOWS:
-        folder = windows_steam()
-        return folder is not None and (folder / "steam.exe").is_file()
+    """Whether Steam's program is here, signed in once or not: steam on PATH (owner, 30-10-2026: the
+    portal's RT Steam only where there is a Steam to open)."""
     return shutil.which("steam") is not None
 
 
 def find_steam(home: Path | None = None) -> Path | None:
     """The Steam folder with users in it, or None when Steam was never used here."""
-    if WINDOWS and home is None:
-        folder = windows_steam()
-        return folder.resolve() if folder is not None and (folder / "userdata").is_dir() else None
     for folder in STEAM_DIRS:
         path = Path(folder.replace("~", str(home), 1) if home else os.path.expanduser(folder))
         if (path / "userdata").is_dir():
@@ -102,39 +69,10 @@ def user_folders(steam: Path) -> list[Path]:
     return sorted(p for p in (steam / "userdata").glob("*/config") if p.is_dir())
 
 
-def _windows_running(name: str) -> bool:
-    """Whether a process named *name* (steam.exe) is in Windows' process list."""
-    import ctypes
-
-    class Entry(ctypes.Structure):               # PROCESSENTRY32W
-        _fields_ = [("size", ctypes.c_ulong), ("usage", ctypes.c_ulong), ("pid", ctypes.c_ulong),
-                    ("heap", ctypes.c_size_t), ("module", ctypes.c_ulong), ("threads", ctypes.c_ulong),
-                    ("parent", ctypes.c_ulong), ("priority", ctypes.c_long), ("flags", ctypes.c_ulong),
-                    ("exe", ctypes.c_wchar * 260)]
-    k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
-    k32.CreateToolhelp32Snapshot.restype = ctypes.c_void_p
-    snapshot = k32.CreateToolhelp32Snapshot(0x2, 0)    # TH32CS_SNAPPROCESS
-    if not snapshot or snapshot == ctypes.c_void_p(-1).value:
-        return False
-    try:
-        entry = Entry()
-        entry.size = ctypes.sizeof(Entry)
-        more = k32.Process32FirstW(ctypes.c_void_p(snapshot), ctypes.byref(entry))
-        while more:
-            if entry.exe.lower() == name:
-                return True
-            more = k32.Process32NextW(ctypes.c_void_p(snapshot), ctypes.byref(entry))
-    finally:
-        k32.CloseHandle(ctypes.c_void_p(snapshot))
-    return False
-
-
 def steam_running(proc: Path = Path("/proc")) -> bool:
     """Whether a Steam client process runs (its process name is steam). A finished one that its parent has not
     collected yet (a zombie, state Z) does not count: on the owner's board (13-10-2026) the app's own finished
-    steam -shutdown was one, and Steam seemed not to close. On Windows: steam.exe in the process list."""
-    if WINDOWS:
-        return _windows_running("steam.exe")
+    steam -shutdown was one, and Steam seemed not to close."""
     for folder in proc.glob("[0-9]*"):
         try:
             if (folder / "comm").read_text().strip() != "steam":
@@ -152,26 +90,13 @@ def game_mode() -> bool:
     return "gamescope" in os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
 
 
-def _steam_program() -> str:
-    """The Steam client to run: steam (on PATH) on Linux, the steam.exe in Steam's folder on Windows."""
-    if WINDOWS:
-        folder = windows_steam()
-        return str(folder / "steam.exe") if folder is not None else "steam.exe"
-    return "steam"
-
-
 def start_command() -> list[str]:
-    """Steam started again after with_steam_closed(). On Windows without -silent: a steam.exe -silent never signed in
-    (the owner's Ally, 29-10-2026: three starts by the game managers stayed Logged Off for up to six hours, with no
-    window to sign in from, so steam:// addresses went nowhere), where every plain start signed in. Those starts also
-    had Steam's name in lower case, which alone kept it from signing in (windows_steam(), 30-10-2026)."""
-    if WINDOWS:
-        return [_steam_program()]
+    """Steam started again after with_steam_closed(), in the background as the desktop starts it at login."""
     return ["bazzite-steam" if shutil.which("bazzite-steam") else "steam", "-silent"]
 
 
 def shutdown_command() -> list[str]:
-    return [_steam_program(), "-shutdown"]
+    return ["steam", "-shutdown"]
 
 
 # Steam's library, in Big Picture on a handheld's screen; Steam starts when it does not run (owner, 29-10-2026: an
@@ -186,66 +111,20 @@ def play_url(number: int) -> str:
     return f"steam://rungameid/{((number & 0xFFFFFFFF) << 32) | 0x02000000}"
 
 
-SIGN_IN_TIMEOUT = 120.0                 # how long a steam:// address waits for a Steam just started to sign in
-
-
 def signed_in() -> bool:
-    """Whether Steam runs signed in. On Windows Steam keeps its account's number in the registry while it is signed in
-    (HKCU\\Software\\Valve\\Steam\\ActiveProcess, ActiveUser; 0 when none); elsewhere: whether Steam runs."""
-    if not WINDOWS:
-        return steam_running()
-    import winreg
-    try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam\ActiveProcess") as key:
-            return bool(winreg.QueryValueEx(key, "ActiveUser")[0]) and steam_running()
-    except OSError:
-        return False
+    """Whether Steam runs signed in: whether Steam runs."""
+    return steam_running()
 
 
-def _startfile(url: str) -> None:
-    with outside_bundle():
-        os.startfile(url)  # type: ignore[attr-defined]  # noqa: S606 (a steam:// address, never a file)
-
-
-def hand_over(url: str, signed: Callable[[], bool] = signed_in, give: Callable[[str], None] = _startfile,
-              timeout: float = SIGN_IN_TIMEOUT, sleep: Callable[[float], None] = time.sleep) -> bool:
-    """*url* given to Steam once it is signed in (a Steam just started); False when it was not within *timeout*."""
-    waited = 0.0
-    while not signed():
-        if waited >= timeout:
-            return False
-        sleep(0.5)
-        waited += 0.5
-    give(url)
-    return True
-
-
-def open_url(url: str, run: Run | None = None, running: Callable[[], bool] = steam_running,
-             later: Callable[[str], object] | None = None) -> None:
-    """A steam:// address handed to Steam: Windows' handler for it (os.startfile), xdg-open elsewhere. On Windows a
-    Steam that does not run is started first as a plain steam.exe, and the address follows once it is signed in, off
-    the caller's thread (*later*: hand_over on a thread of its own): a Steam started by the address itself never
-    signed in (the owner's Ally, 30-10-2026: steam.exe -- steam://open/bigpicture showed "Updating Steam" and stopped,
-    its login window never made, where a plain steam.exe signed in within seconds)."""
-    run = run or _run
-    if not WINDOWS:
-        run(["xdg-open", url])
-        return
-    if running():
-        _startfile(url)
-        return
-    run(start_command())
-    if later is None:
-        threading.Thread(target=hand_over, args=(url,), name="steam-url", daemon=True).start()
-    else:
-        later(url)
+def open_url(url: str, run: Run | None = None) -> None:
+    """A steam:// address handed to Steam with xdg-open."""
+    (run or _run)(["xdg-open", url])
 
 
 def _run(command: list[str]) -> None:
     """Starts a Steam command in the background; a thread collects it when it ends, so it leaves no zombie."""
-    with outside_bundle():
-        process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                   stderr=subprocess.DEVNULL, start_new_session=True)
+    process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, start_new_session=True)
     threading.Thread(target=process.wait, name="steam-command", daemon=True).start()
 
 

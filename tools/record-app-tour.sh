@@ -26,11 +26,7 @@ if [[ $# -lt 1 || "$1" == -* ]]; then
 fi
 PY=${PYTHON:-}
 if [[ -z "$PY" ]]; then
-    case "$(uname -s)" in
-        MINGW*|MSYS*|CYGWIN*) candidates=(.venv-windows/Scripts/python.exe .venv/Scripts/python.exe) ;;
-        *)                    candidates=(.venv-linux/bin/python .venv/bin/python) ;;
-    esac
-    for candidate in "${candidates[@]}"; do
+    for candidate in .venv-linux/bin/python .venv/bin/python; do
         [[ -x "$candidate" ]] && PY="$PWD/$candidate" && break
     done
 fi

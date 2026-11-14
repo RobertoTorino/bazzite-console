@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts Nexus Release Tool with the dev venv of this OS, as ./test.sh picks it, on the checkout it lives in.
+# Starts Nexus Release Tool with the checkout's dev venv, on the checkout it lives in.
 # It only edits files; committing, tagging and pushing stay with you.
 #
 #   dev/nrt/run.sh            # open the window
@@ -19,14 +19,11 @@ esac
 
 PY=${PYTHON:-}
 if [[ -z "$PY" ]]; then
-    case "$(uname -s)" in
-        MINGW*|MSYS*|CYGWIN*) candidates=(.venv-windows/Scripts/python.exe .venv/Scripts/python.exe) ;;
-        *)                    candidates=(.venv-linux/bin/python .venv/bin/python) ;;
-    esac
+    candidates=(.venv-linux/bin/python .venv/bin/python)
     for candidate in "${candidates[@]}"; do
         [[ -x "$REPO/$candidate" ]] && PY="$REPO/$candidate" && break
     done
 fi
-[[ -n "$PY" ]] || die "No venv for this OS in $REPO: see CLAUDE.md or ./test.sh for how to create one."
+[[ -n "$PY" ]] || die "No venv in $REPO: see CLAUDE.md or ./test.sh for how to create one."
 cd "$APP"
 PYTHONPATH="$REPO/dev/core_compat:$REPO/core${PYTHONPATH:+:$PYTHONPATH}" exec "$PY" -m nexus_release_tool "$@"

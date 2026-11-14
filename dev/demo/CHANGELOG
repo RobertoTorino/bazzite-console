@@ -1,3 +1,9 @@
+Changelog: 14-11-2026 03:27:00
+
+Breaking. Windows support is removed: the suite is for Bazzite. run.ps1 is gone, with the hot key of Windows' own
+(the stop shortcut is the desktop portal's), the install of a portal release from install.ps1 in a PowerShell window,
+OBS looked up under Program Files and the Windows texts of the window. Nothing changes on Linux.
+
 Changelog: 14-11-2026 01:05:10
 
 Fixed. The tests, their fixture and the examples no longer name the suite for Windows devices (owner, 14-11-2026):

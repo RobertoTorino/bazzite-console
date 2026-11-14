@@ -11,14 +11,12 @@ recording, sound design, and the suite's video-tour tools. The dashboard and its
 
 ## Start it
 
-From the repository's root, with the checkout's venv for the system (see the root CLAUDE.md):
+From the repository's root, with the checkout's venv (see the root CLAUDE.md):
 
-| | Linux | Windows (PowerShell) |
-|---|---|---|
-| Open it | `dev/dash/run.sh` | `dev\dash\run.ps1` |
-| Menu entry and Desktop icon | `dev/dash/install.sh` | `powershell -ExecutionPolicy Bypass -File dev\dash\install.ps1` |
+- Open it: `dev/dash/run.sh`
+- Menu entry and Desktop icon: `dev/dash/install.sh`
 
-Both installers take `--no-desktop-shortcut`, `--uninstall` and `--uninstall --purge` (the settings too). Nothing is
+The installer takes `--no-desktop-shortcut`, `--uninstall` and `--uninstall --purge` (the settings too). Nothing is
 copied: the entry starts the app of the checkout you installed it from.
 
 Documentation: [Bazzite Console](https://robertotorino.github.io/bazzite-console/).

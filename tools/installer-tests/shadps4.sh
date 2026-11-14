@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Exercise apps/shadps4/install.sh: install from the checkout (core bundled, app venv, no sudo), a staged release
 # replacing it, uninstall with legacy shared-venv cleanup, --purge, and the refusal to run as root.
-# Runs with the shims from shims.sh (CI, or WSL on Windows).
+# Runs with the shims from shims.sh (as CI does).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 REPO=$SUITE

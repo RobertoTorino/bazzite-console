@@ -1,3 +1,13 @@
+Changelog: 14-11-2026 03:28:53
+
+Breaking. The Windows support is removed from the development tools and from core: a PlayStation 5 running
+Bazzite never used it. The development apps lose their PowerShell scripts (run.ps1, install.ps1) and their Windows
+code, and Nexus Release Tool its handling of a suite for Windows devices; core loses its Windows modules and
+branches. Their CHANGELOGs say what went. In tools/: suites.py knows one system (SYSTEM says bazzite),
+record-tour.sh and record-app-tour.sh take the Linux venv, tour_frames.py no longer rewrites a drive letter in the
+offscreen screen's path, and the installer tests' headers no longer name WSL. Nothing changes in what the portal and
+the apps do. tools/fix-modes.sh stays: it guards the scripts' modes whatever system a commit comes from.
+
 Changelog: 14-11-2026 03:15:53
 
 Fixed. A published portal release no longer leaves a canceled Wiki run in the Actions list ("Canceling since a higher

@@ -1,3 +1,10 @@
+Changelog: 14-11-2026 03:27:00
+
+Breaking. Windows support is removed: the suite is for Bazzite. run.ps1 and install.ps1 are gone, an app of dev/
+starts with its run.sh alone, and Test local apps starts every window as python -m with this venv (no run.ps1 of a
+suite's portal or app). The tours are recorded with setsid and stopped by their process group, as they always were
+on Linux. Nothing changes on Linux.
+
 Changelog: 14-11-2026 01:05:10
 
 Fixed. The tests, their fixture and the examples no longer name the suite for Windows devices (owner, 14-11-2026):

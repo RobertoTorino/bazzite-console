@@ -1,0 +1,4 @@
+Changelog: 14-11-2026 03:27:00
+
+Breaking. Windows support is removed: the suite is for Bazzite. run.ps1 is gone and run.sh takes the Linux venv
+alone. Nothing changes on Linux.

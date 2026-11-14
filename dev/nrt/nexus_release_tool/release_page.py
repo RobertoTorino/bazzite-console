@@ -293,12 +293,9 @@ class ReleasePage(QWidget):
         self.stop_button.setEnabled(idle and now == "run" and run is not None and not run.done)
         self.resume_button.setEnabled(idle and now == "run" and run is not None and run.done and not run.passed)
         self.resume_button.setText("Start again on this commit" if facts.restart else "Resume run")
-        here = bool(facts.drafts) and rp.tests_here(window.root, self.waiting_suite())
         self.portal_choice.setVisible(self.portal_choice.count() > 1)
-        self.test_button.setEnabled(idle and now == "test" and here)
-        self.test_button.setToolTip("Install the draft portal on this device and start it" if here or not facts.drafts
-                                    else "The device test runs on the suite's own system: " +
-                                    ("Linux (the board)" if sys.platform == "win32" else "Windows (the handheld)"))
+        self.test_button.setEnabled(idle and now == "test" and bool(facts.drafts))
+        self.test_button.setToolTip("Install the draft portal on this device and start it")
         self.publish_button.setEnabled(idle and now == "test")
         self.reject_button.setEnabled(now == "test")
         self.finish_button.setEnabled(idle and now == "finish")
@@ -351,12 +348,7 @@ class ReleasePage(QWidget):
                     "anew, the apps already out are skipped. Device test tests this draft again; Publish still "
                     "publishes it.")
         if key == "test" and facts.drafts:
-            # Where the draft is tested when not here (owner, 05-11-2026: the Windows draft showed on the board with
-            # Device test gray and no word why)
-            here = rp.tests_here(window.root, self.waiting_suite())
-            where = "" if here else " on " + ("the board (Linux)" if sys.platform == "win32" else
-                                              "the handheld (Windows)")
-            return f"{', '.join(facts.drafts)} is a draft: Device test{where}, then Publish when it works or Not OK."
+            return f"{', '.join(facts.drafts)} is a draft: Device test, then Publish when it works or Not OK."
         if key == "publish" and facts.drafts:
             return "After the device test: Publish, or Not OK."
         if key == "finish":
@@ -365,7 +357,7 @@ class ReleasePage(QWidget):
 
     def choose_drafts(self, drafts: list[str]) -> None:
         """Only the portals still drafts in the choice, the chosen one kept while it is one (owner, 05-11-2026: after
-        the board's Publish it stayed on portal-v15.2.0, so Publish published it again and the Windows draft stayed)."""
+        the board's Publish it stayed on portal-v15.2.0, so Publish published it again and the other suite's draft stayed)."""
         if not drafts:
             return
         items = [self.portal_choice.itemText(i) for i in range(self.portal_choice.count())]
@@ -507,9 +499,8 @@ class ReleasePage(QWidget):
         tag, suite = self.portal_choice.currentText(), self.waiting_suite()
         if not tag or suite is None:
             return
-        windows = rp.suite_system(self.release_window.root, suite) == "windows"
         try:
-            self.release_window.launch(flow.device_test_line(self.release_window.root, suite, tag, windows))
+            self.release_window.launch(flow.device_test_line(self.release_window.root, suite, tag))
         except RuntimeError as exc:
             self.output.set_text(str(exc))
             return

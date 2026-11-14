@@ -25,13 +25,13 @@ built into the user cache when it is not already available.
 
 From this suite's root, with its development venv:
 
-| | Linux | Windows (PowerShell) |
-|---|---|---|
-| Open it | `dev/nrt/run.sh` | `dev\nrt\run.ps1` |
-| The overview in the terminal | `dev/nrt/run.sh --list` | `dev\nrt\run.ps1 --list` |
-| Menu entry and Desktop icon | `dev/nrt/install.sh` | `powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1` |
+| | |
+|---|---|
+| Open it | `dev/nrt/run.sh` |
+| The overview in the terminal | `dev/nrt/run.sh --list` |
+| Menu entry and Desktop icon | `dev/nrt/install.sh` |
 
-Both installers take `--no-desktop-shortcut`, `--uninstall` and `--uninstall --purge` (the settings too). Nothing is
+The installer takes `--no-desktop-shortcut`, `--uninstall` and `--uninstall --purge` (the settings too). Nothing is
 copied: the entry starts the app of the checkout you installed it from.
 
 Releases: [GitHub Releases](https://github.com/RobertoTorino/bazzite-console/releases).

@@ -16,10 +16,7 @@ esac
 
 PY=${PYTHON:-}
 if [[ -z "$PY" ]]; then
-    case "$(uname -s)" in
-        MINGW*|MSYS*|CYGWIN*) candidates=(.venv-windows/Scripts/python.exe .venv/Scripts/python.exe) ;;
-        *)                    candidates=(.venv-linux/bin/python .venv/bin/python) ;;
-    esac
+    candidates=(.venv-linux/bin/python .venv/bin/python)
     for candidate in "${candidates[@]}"; do
         [[ -x "$REPO/$candidate" ]] && PY="$REPO/$candidate" && break
     done

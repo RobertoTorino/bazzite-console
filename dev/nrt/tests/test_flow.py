@@ -5,7 +5,6 @@ Nexus's versions worked out), when Start can go, its one command, and the comman
 from __future__ import annotations
 
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -28,7 +27,7 @@ def sh(root: Path, *args: str) -> str:
 
 @pytest.fixture
 def nexus(tmp_path) -> Path:
-    """Nexus with a Windows suite on the Nexus release (ws), released once, then a change in its
+    """Nexus with a suite of its own tags on the Nexus release (ws), released once, then a change in its
     test app."""
     root = tmp_path / "nexus"
     write(root / ".gitignore", "__pycache__/\n")                    # as the repository's: the manifest tools' caches
@@ -38,16 +37,16 @@ def nexus(tmp_path) -> Path:
     write(root / "core/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nVersion 0.1.0.\n")
     write(root / "core/bazzite_console_core/__init__.py", '__version__ = "0.1.0"\n')
     ws = root / "ws"
-    write(ws / "SYSTEM", "windows\n")
+    write(ws / "SYSTEM", "bazzite\n")
     write(ws / "TAG_PREFIX", "ws-\n")
     write(ws / "portal/VERSION", "1.0.0\n")
     write(ws / "portal/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 1.0.0.\n")
     write(ws / "apps/test/VERSION", "0.1.0\n")
     write(ws / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
     write(ws / "apps/test/app.py", "print('hi')\n")
-    real = Path(__file__).resolve().parent / "fixtures" / "windows-suite"     # a suite's own manifest tools
-    for path in ("tools/check_manifest.py", "portal/windows_portal/manifest.py"):
-        write(ws / path, (real / path).read_text(encoding="utf-8"))
+    real = Path(__file__).resolve().parents[3]                  # a suite's own manifest tools: this checkout's
+    for path in ("tools/check_manifest.py", "portal/bazzite_console_portal/manifest.py"):
+        write(ws / path, (real / path).read_text(encoding="utf-8").replace("ps5-", "ws-"))
     write(ws / "portal/apps.toml", APPS_TOML)
     write(root / ".github/workflows/release-ws.yml", "on:\n  workflow_call:\n")
     sh(root, "init", "-q", "-b", "main")
@@ -154,8 +153,8 @@ def test_the_device_test_and_publish_work_on_the_portals_draft(nexus):
     assert flow.waiting_portals(nexus) == ["ws-portal-v1.0.0"]
     assert flow.publish_command("ws-portal-v1.1.0") == ("gh release edit ws-portal-v1.1.0 --draft=false --latest"
                                                         " && git fetch origin tag ws-portal-v1.1.0")   # seen at once
-    line = flow.device_test_line(nexus, "ws", "ws-portal-v1.1.0", windows=True)
-    assert line.startswith("& '") and line.endswith("check-release.ps1' draft ws-portal-v1.1.0")
+    line = flow.device_test_line(nexus, "ws", "ws-portal-v1.1.0")
+    assert line.endswith("ws/tools/check-release.sh draft ws-portal-v1.1.0")
 
 
 def test_a_release_commit_whose_push_stopped_is_pushed_and_started(nexus):
@@ -483,7 +482,7 @@ def test_the_release_run_lasts_until_other_work_is_committed(nexus):
 
 
 def test_a_release_with_a_draft_to_test_lasts_with_other_work_on_top(nexus):
-    """Other work pushed before a portal draft's device test (owner, 04-11-2026: the Windows portal's, after a fix
+    """Other work pushed before a portal draft's device test (owner, 04-11-2026: a suite's portal, after a fix
     to the board's): the release lasts until the draft is published or Not OK, so Start never replaces it."""
     write(nexus / "ws/portal/VERSION", "1.1.0\n")                  # what the release wrote: ws-portal-v1.1.0, a draft
     sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Release ws-portal-v1.1.0")
@@ -531,7 +530,6 @@ def test_a_push_git_has_not_fetched_lights_the_pull(release_window, monkeypatch)
 def test_the_device_test_and_publish(release_window, monkeypatch):
     w = release_window
     page = w.release_page
-    monkeypatch.setattr("nexus_release_tool.release_page.rp.tests_here", lambda *a: True)
     w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]   # the release run passed on HEAD: its draft
     monkeypatch.setattr(flow, "published", lambda *a: False)          # ws-portal-v1.0.0 a draft still
     page.show_state()
@@ -554,21 +552,19 @@ def test_the_device_test_and_publish(release_window, monkeypatch):
 
 def test_the_portal_choice_holds_only_the_drafts(release_window, monkeypatch):
     """A tag published since the choice was filled leaves it (owner, 05-11-2026: the choice stayed on
-    portal-v15.2.0, so Publish published it again): only the draft is left, and the line says where it is tested."""
+    portal-v15.2.0, so Publish published it again): only the draft is left."""
     w = release_window
     page = w.release_page
     monkeypatch.setattr(flow, "waiting_portals", lambda root, only=None, at="": ["ws-portal-v1.0.0"])
     monkeypatch.setattr(flow, "published", lambda root, runs, tag: False)
-    monkeypatch.setattr("nexus_release_tool.release_page.rp.tests_here", lambda *a: False)    # not its device
     w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]
     page.portal_choice.clear()
     page.portal_choice.addItems(["portal-v2.0.0", "ws-portal-v1.0.0"])
     page.show_state()
     assert page.facts.drafts == ["ws-portal-v1.0.0"]
     assert [page.portal_choice.itemText(i) for i in range(page.portal_choice.count())] == ["ws-portal-v1.0.0"]
-    where = "the board (Linux)" if sys.platform == "win32" else "the handheld (Windows)"
-    assert page.details["test"].text() == (f"ws-portal-v1.0.0 is a draft: Device test on {where}, then Publish when "
-                                           "it works or Not OK.")
+    assert page.details["test"].text() == ("ws-portal-v1.0.0 is a draft: Device test, then Publish when it works "
+                                           "or Not OK.")
     ran = []
     monkeypatch.setattr(w, "confirm_git", lambda *a: True)
     monkeypatch.setattr(w, "run_git", ran.append)
@@ -577,7 +573,7 @@ def test_the_portal_choice_holds_only_the_drafts(release_window, monkeypatch):
 
 
 def test_each_suite_stands_apart(nexus):
-    """Two suites on the Nexus release (owner, 05-11-2026: the Windows draft, waiting for the handheld, held up the
+    """Two suites on the Nexus release (owner, 05-11-2026: one suite's draft, waiting for its device, held up the
     board's next release): each release is of one suite, its run says which, and only its own draft keeps it."""
     bc = nexus / "bc"
     write(bc / "SYSTEM", "bazzite\n")

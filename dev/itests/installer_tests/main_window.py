@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the suite's installer tests on the left, each with a tick box and its result, the live output on
-the right. The suite is chosen in the header (remembered in the settings) among the suites of the checkout whose
-installer tests run on this system: a Bazzite suite's .sh tests on Linux, a Windows suite's .ps1 tests on Windows."""
+the right. The suite is chosen in the header (remembered in the settings) among the suites of the checkout with
+installer tests."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ from nexus_core.theme import GREEN, RED
 from nexus_core.widgets import AppHeader, InfoButton, hint_label
 
 from . import APP_NAME, CHECKOUT, LOGO_PATH, __version__
-from .runner import InstallerTestRunner, discover_tests, suffix_here, tests_dir
+from .runner import SUFFIX, InstallerTestRunner, discover_tests, tests_dir
 
 SUITE_KEY = "suite"                     # the chosen suite, in the settings
 ABOUT = ("Each installer test installs an app of the suite from the checkout, as its installer does on a device, "
@@ -38,16 +38,15 @@ ABOUT = ("Each installer test installs an app of the suite from the checkout, as
          "twice at once. CI runs every one of them on each push; here they run one at a time with their output.")
 
 
-def suites_here(root: Path = CHECKOUT, suffix: str | None = None) -> list[str]:
-    """The suites of the checkout with installer tests this system runs (their folder names, sorted)."""
-    suffix = suffix or suffix_here()
+def suites_here(root: Path = CHECKOUT) -> list[str]:
+    """The suites of the checkout with installer tests (their folder names, sorted)."""
     found = sorted(p.name for p in root.iterdir()
                    if p.is_dir() and (p / "portal" / "apps.toml").is_file() and
-                   discover_tests(tests_dir(p), suffix))
+                   discover_tests(tests_dir(p)))
     if found:
         return found
     return [root.name] if (root / "portal" / "apps.toml").is_file() and \
-        discover_tests(tests_dir(root), suffix) else []
+        discover_tests(tests_dir(root)) else []
 
 
 def default_suite(root: Path, suites: list[str]) -> str | None:
@@ -156,7 +155,7 @@ class MainWindow(QMainWindow):
         self._items.clear()
         if self.suite is None:
             self.statusBar().showMessage(f"No suite in {self.root} has installer tests that run on this system "
-                                         f"({suffix_here()} scripts in <suite>/tools/installer-tests).")
+                                         f"({SUFFIX} scripts in <suite>/tools/installer-tests).")
             for button in (self.run_selected_button, self.run_all_button):
                 button.setEnabled(False)
             return

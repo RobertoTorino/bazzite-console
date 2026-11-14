@@ -4,7 +4,7 @@
 # release replacing it (and saying when the thermal guard in /etc is from another version), uninstall with and
 # without other venv users (the guard stopped and removed with sudo), --purge (settings removed), and the refusal to
 # run as root.
-# Runs with the shims from shims.sh (CI, or WSL on Windows).
+# Runs with the shims from shims.sh (as CI does).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 REPO=$SUITE

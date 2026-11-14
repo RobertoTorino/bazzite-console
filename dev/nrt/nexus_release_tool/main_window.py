@@ -613,8 +613,7 @@ class PortalPage(QWidget):
             log += [f"Then (step 1's releases are not tagged yet: {', '.join(pending)}; the bump goes into their "
                     "push, and the portal release follows once they are pinned):", commands]
         else:
-            commands = rp.portal_commands(self.release_window.portal_tag(new), check=rp.check_script(root, suite),
-                                          run_script=rp.portal_run_script(root, suite))
+            commands = rp.portal_commands(self.release_window.portal_tag(new), check=rp.check_script(root, suite))
             log += ["Then:", commands]
         if nexus:
             note = rp.NEXUS_INDEX_NOTE.format(version=nexus)
@@ -701,8 +700,7 @@ class WithdrawPage(QWidget):
             return
         root = self.release_window.root
         changed = rp.withdraw(root, unit, reason, suite=self.release_window.suite)
-        commands = rp.withdraw_commands(unit.pinned_tag, reason,
-                                        run_script=rp.portal_run_script(root, self.release_window.suite))
+        commands = rp.withdraw_commands(unit.pinned_tag, reason)
         self.output.set_text("\n".join([f"{unit.pinned_tag}: withdrawn in " +
                                         ", ".join(p.relative_to(root).as_posix() for p in changed), "", commands]))
         self.release_window.offer(commands)
@@ -722,15 +720,6 @@ class WithdrawPage(QWidget):
 
 def open_url(url: str) -> None:
     QDesktopServices.openUrl(QUrl(url))
-
-
-# What the test buttons do for a Windows suite (its check-release.ps1, on the handheld)
-WINDOWS_TIPS = {
-    "Test app updates": "Start the portal from this checkout (check-release.ps1 local): it installs the apps "
-                        "apps.toml pins from their GitHub releases",
-    "Test withdrawal": "Start the portal from this checkout on a handheld with the withdrawn app installed "
-                       "(check-release.ps1 local); it must show the app as not available and remove it",
-}
 
 
 class RunPage(QWidget):
@@ -757,8 +746,6 @@ class RunPage(QWidget):
                                       "there, then remove it all: every app, the portal and Bazzite Test, each with "
                                       "its own uninstaller (check-release.sh remove). Settings stay")
         self.remove_button.clicked.connect(lambda: self.check("remove"))
-        self.tooltips = {button: button.toolTip() for button in (self.local_button, self.release_button,
-                                                                 self.withdraw_button, self.remove_button)}
         self.output = StepLog(self, "Test on this board", window.step_wrote, opens=False)   # lines while you click
         checks = QHBoxLayout()
         for button in (self.local_button, self.release_button, self.withdraw_button, self.remove_button):
@@ -779,37 +766,17 @@ class RunPage(QWidget):
         lay.addStretch(1)
 
     def fill(self) -> None:
-        self.enable_tests()
-        if self.release_button.isEnabled():
-            self.release_button.setToolTip(
-                f"After GitHub built {self.release_window.portal_tag()}: download it (its draft while it is not "
-                f"published), check it against its SHA256SUMS, install it and start it "
-                f"({Path(self._check_path()).name} release)")
+        self.release_button.setToolTip(
+            f"After GitHub built {self.release_window.portal_tag()}: download it (its draft while it is not "
+            f"published), check it against its SHA256SUMS, install it and start it "
+            f"({Path(self._check_path()).name} release)")
 
     def _check_path(self) -> str:
         return rp.check_script(self.release_window.root, self.release_window.suite)
 
-    def windows_suite(self) -> bool:
-        return rp.suite_system(self.release_window.root, self.release_window.suite) == "windows"
-
-    def enable_tests(self) -> None:
-        """The board tests of the ticked suite, on its own system (owner, 28-10-2026: on Windows they were all off):
-        a Bazzite suite's on Linux, a Windows suite's on Windows (its check-release.ps1)."""
-        here = rp.tests_here(self.release_window.root, self.release_window.suite)
-        windows = self.windows_suite()
-        for button, tip in self.tooltips.items():
-            button.setEnabled(here and not (windows and button is self.remove_button))
-            if here:
-                button.setToolTip(WINDOWS_TIPS.get(button.text(), tip) if windows else tip)
-            else:
-                button.setToolTip("This suite's tests run on " + ("Windows (the handheld)" if windows else
-                                                                  "Linux (the board)"))
-
     def _script_line(self, mode: str) -> str:
-        """The check script's command line: bash's on Linux, PowerShell's call operator on Windows."""
+        """The check script's command line, for a terminal."""
         script = str(self.release_window.root / self._check_path())
-        if self.windows_suite():
-            return "& '" + script.replace("'", "''") + f"' {mode}"
         return f"{shlex.quote(script)} {mode}"
 
     def check(self, test: str) -> None:
@@ -824,16 +791,6 @@ class RunPage(QWidget):
             self.release_window.launch(self._script_line(mode))
         except RuntimeError as exc:
             self.output.appendPlainText(str(exc))
-            return
-        if self.windows_suite():
-            self.output.appendPlainText({
-                "local": "A PowerShell window starts the portal from this checkout; it installs the apps from their "
-                         "GitHub releases. Close the portal to finish.",
-                "release": f"A PowerShell window downloads the published {self.release_window.portal_tag()} release, "
-                           "checks it, installs it and starts it.",
-                "withdrawal": "A PowerShell window starts the portal from this checkout. With the app installed, the "
-                              "portal removes it and its tile shows it is not available. Close the portal to finish."
-            }[test])
             return
         self.output.appendPlainText({
             "local": "A terminal installs the portal from this checkout, then starts it with --source release. "

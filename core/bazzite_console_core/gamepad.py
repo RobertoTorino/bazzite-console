@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""A game controller for the portable window (the earlier implementation, owner 26-10-2026: a handheld is used with
-its controller, often without a keyboard), read with pygame-ce: SDL's game controller layer gives every pad the same
-button names, the Ally's built-in pad as an XBOX controller.
+"""A game controller for a window used from the couch, often without a keyboard, read with pygame-ce: SDL's game
+controller layer gives every pad the same button names.
 
 Gamepad turns what the pads do into actions for the window: the d-pad and left stick move (a held direction repeats),
 A accepts, B goes back, X and Y are the page's own (Details, Update), LB and RB change the tab, Start and View are the
@@ -37,7 +36,7 @@ ACTIONS = {                     # the buttons the window acts on
     "dpad_up": "up", "dpad_down": "down", "dpad_left": "left", "dpad_right": "right",
     "a": "accept", "b": "back", "x": "x", "y": "y",
     "leftshoulder": "previous", "rightshoulder": "next", "start": "menu", "back": "view",
-    "rightstick": "keyboard",   # R3, the right stick pressed: Windows' touch keyboard (owner, 31-10-2026)
+    "rightstick": "keyboard",   # R3, the right stick pressed: the on-screen keyboard (owner, 31-10-2026)
 }
 TRIGGER_ACTIONS = {"lefttrigger": "lt", "righttrigger": "rt"}   # the triggers the window acts on (owner,
                                                                   # 30-10-2026: RT Steam; 31-10-2026: LT Screen)
@@ -61,9 +60,6 @@ class PygameSource:
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
         os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
         os.environ.setdefault("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1")
-        # The pad over XInput, not Windows' raw input: over raw input the Ally's pad gave SDL its triggers alone, not
-        # one button, while XInput had them all (the owner's Ally, 05-11-2026). Windows only; SDL elsewhere ignores it.
-        os.environ.setdefault("SDL_JOYSTICK_RAWINPUT", "0")
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         import pygame
         from pygame._sdl2 import controller
@@ -109,8 +105,8 @@ class PygameSource:
         return found
 
     def rumble(self, low: float, high: float, ms: int) -> None:
-        """Every open controller's motors, the low and the high one from 0 to 1, for *ms* milliseconds (the play
-        mode's heat warning); a controller without them is left alone."""
+        """Every open controller's motors, the low and the high one from 0 to 1, for *ms* milliseconds; a
+        controller without them is left alone."""
         for pad in self.pads.values():
             try:
                 pad.rumble(low, high, ms)

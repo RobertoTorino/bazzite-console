@@ -1,3 +1,11 @@
+Changelog: 14-11-2026 03:28:21
+
+Breaking. Windows support is removed: this suite is made for and tested on Bazzite. Gone are run.ps1 and install.ps1,
+the handling of a suite for Windows devices (its check-release.ps1 on the test buttons and the device test, its
+portal's run.ps1 in the commands of a portal release and a withdrawal, its .zip release) and the app ID the tool
+registered on Windows for its notifications. Every suite's tests run on this machine, so Device test and the buttons
+of Test on this board no longer look at the suite's system. run.sh takes the checkout's .venv-linux (or .venv).
+
 Changelog: 14-11-2026 01:05:10
 
 Fixed. The tests, their fixture and the examples no longer name the suite for Windows devices (owner, 14-11-2026):

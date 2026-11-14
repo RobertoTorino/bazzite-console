@@ -1,3 +1,17 @@
+Changelog: 14-11-2026 03:28:53
+
+Breaking. Core's Windows code is removed: a PlayStation 5 running Bazzite never used it. Gone are the modules
+portable.py (the handheld window and its widgets), play.py, heat.py, chip.py, power.py, sound_output.py, browse.py
+and xbox.py, with images/wallpaper.webp, which only the handheld window used; no app of the suite imported them. In
+platform.py: the %LOCALAPPDATA% and %APPDATA% folders (local_data, roaming_config, start_menu), open_path, the touch
+keyboard, a window's place on its monitor, the built-in screens, outside_bundle, start_program, the PowerShell
+helpers and make_shortcut; launch_in_terminal, show_in_folder and private keep what they did on Linux, and
+suite_data and suite_config are ~/.local/share/<suite> and ~/.config/<suite>. In steam.py: the registry, steam.exe
+and the wait for a sign-in (hand_over); open_url(url, run) hands the address to xdg-open, as it did here. gone.py
+keeps the message box the game managers show (show_dialog) and loses the handheld screen. app.py no longer sets the
+.ini format for Windows, and gamepad.py no longer sets SDL_JOYSTICK_RAWINPUT, which SDL reads on Windows alone.
+Nothing changes in what the apps do on Bazzite.
+
 Changelog: 14-11-2026 01:28:53
 
 Version 3.2.0.

@@ -100,7 +100,7 @@ def unit(root: Path, key: str) -> rp.Unit:
 
 @pytest.fixture
 def two_suites(tmp_path) -> Path:
-    """Nexus with a suite of plain tags (bc) and a Windows suite (ws: ws- tags, its own manifest
+    """Nexus with a suite of plain tags (bc) and a suite with a tag prefix (ws: ws- tags, its own manifest
     and check_manifest.py, copied from the checkout)."""
     root = tmp_path / "nexus"
     write(root / "core/VERSION", "0.1.0\n")
@@ -109,14 +109,14 @@ def two_suites(tmp_path) -> Path:
     write(root / "bc/portal/apps.toml", card("check", required=True))
     write(root / "bc/apps/check/VERSION", "0.1.0\n")
     ws = root / "ws"
-    write(ws / "SYSTEM", "windows\n")
+    write(ws / "SYSTEM", "bazzite\n")
     write(ws / "TAG_PREFIX", "ws-\n")
     write(ws / "portal/VERSION", "0.1.0\n")
     write(ws / "apps/test/VERSION", "0.2.0\n")
     write(ws / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nAdded. More.\n")
-    real = Path(__file__).resolve().parent / "fixtures" / "windows-suite"     # a suite's own manifest tools
-    for path in ("tools/check_manifest.py", "portal/windows_portal/manifest.py"):
-        write(ws / path, (real / path).read_text(encoding="utf-8"))
+    real = Path(__file__).resolve().parents[3]                  # a suite's own manifest tools: this checkout's
+    for path in ("tools/check_manifest.py", "portal/bazzite_console_portal/manifest.py"):
+        write(ws / path, (real / path).read_text(encoding="utf-8").replace("ps5-", "ws-"))
     write(ws / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "ws-test-v0.1.0"\nsha256 = ""\n'
                                    'required = true\ncategory = "sustainable"\ninstall = ["i"]\nuninstall = ["u"]\n'
                                    'detect = ["d"]\n')
@@ -141,21 +141,16 @@ def test_a_suites_tags_carry_its_prefix(two_suites):
     bc = {u.key: u for u in rp.load_units(two_suites, "bc")}
     assert (bc["portal"].last_tag, bc["check"].tag) == ("portal-v3.0.0", "check-v0.1.0")
     assert rp.manifest_tools(two_suites, "bc") is rp.check_manifest
-    assert rp.manifest_tools(two_suites, "ws").PORTAL_TAG == "ws-portal-v"
+    assert rp.manifest_tools(two_suites, "ws") is not rp.check_manifest
 
 
-def test_a_windows_suites_pin_and_portal_bump(two_suites):
+def test_a_second_suites_pin_and_portal_bump(two_suites):
     test = next(u for u in rp.load_units(two_suites, "ws") if u.key == "test")
     assert rp.follow_unreleased_pin(two_suites, test, suite="ws") is False     # ws-test-v0.1.0 is tagged
     rp.pin(two_suites, test, "AB" * 32, suite="ws")
     assert 'tag = "ws-test-v0.2.0"\nsha256 = "' + "ab" * 32 + '"' in (two_suites / "ws/portal/apps.toml").read_text()
     assert rp.changed_pins(two_suites, "HEAD", suite="ws") == ["ws-test-v0.2.0"]
     assert rp.portal_minimum(two_suites, "HEAD", "0.1.0", suite="ws")[0] == "0.2.0"     # an app minor: a portal minor
-
-
-def test_a_windows_suites_release_is_a_zip(two_suites):
-    assert rp.release_asset("ws-test-v0.2.0", two_suites) == "ws-test-v0.2.0.zip"
-    assert rp.release_asset("check-v0.1.0", two_suites) == "check-v0.1.0.tar.gz"
 
 
 def test_units(repo):
@@ -377,20 +372,6 @@ def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
     assert "Nexus index on main" in notes[-1][1] and "CI on main" in notes[-1][1]
     assert "WS" not in notes[-1][1]
     w.close()
-
-
-def test_a_windows_suite_tests_its_portal_on_the_handheld(two_suites):
-    """A Windows suite has no check-release.sh: its portal and a withdrawal are tried from
-    the checkout with its portal/run.ps1, and the published release is downloaded to install on the handheld."""
-    text = rp.portal_run_script(two_suites, "bc") == "" and rp.portal_run_script(two_suites, "ws") == "ws/portal/run.ps1"
-    text = rp.portal_commands("ws-portal-v1.0.1", linux=False, check="ws/tools/check-release.sh",
-                              run_script="ws/portal/run.ps1")
-    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File ws/portal/run.ps1 --windowed\n" in text
-    assert text.endswith('\ngh release download ws-portal-v1.0.1 --dir "$TEMP/ws-portal-v1.0.1" --clobber')
-    order = [text.index(s) for s in ("git commit", "run.ps1", "git push\n", "tag-release.sh", "gh release download")]
-    assert order == sorted(order)
-    withdraw = rp.withdraw_commands("ws-test-v0.1.0", "Broken.", run_script="ws/portal/run.ps1")
-    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File ws/portal/run.ps1 --windowed\n" in withdraw
 
 
 def test_app_commands_put_the_portal_bump_first_when_the_push_needs_it():
@@ -1850,43 +1831,6 @@ def test_window_a_second_bump_changes_nothing_and_says_so(window, repo, monkeypa
     page.portal_version.setEditText("0.1.1")
     page.bump()
     assert len(popups) == 2 and (repo / "portal/CHANGELOG").read_text().count("Release 0.1.1.") == 1
-
-
-def test_a_windows_suites_release_checks(two_suites):
-    """A Windows suite's board tests are its check-release.ps1, run on Windows (owner, 28-10-2026: on Windows every
-    test button was off); a Bazzite suite's stay check-release.sh, on Linux."""
-    assert rp.check_script(two_suites, "ws") == "ws/tools/check-release.ps1"
-    assert rp.check_script(two_suites, "bc") == "bc/tools/check-release.sh"
-    assert rp.tests_here(two_suites, "ws", "win32") and not rp.tests_here(two_suites, "ws", "linux")
-    assert rp.tests_here(two_suites, "bc", "linux") and not rp.tests_here(two_suites, "bc", "win32")
-
-
-def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, monkeypatch):
-    pytest.importorskip("PyQt6.QtWidgets")
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PyQt6.QtCore import QSettings
-    from PyQt6.QtWidgets import QApplication
-    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
-    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_release_tool import main_window
-    tests_here = rp.tests_here                                  # this computer as Windows, for these tests alone:
-    monkeypatch.setattr(rp, "tests_here", lambda root, suite=None, platform=None: tests_here(root, suite, "win32"))
-    # (sys.platform itself stays: patched, shutil.which takes Windows' path on Linux and fails, as in CI 28-10-2026)
-    write(two_suites / "ws/tools/check-release.ps1", "Write-Host hi\n")
-    w = main_window.ReleaseWindow(two_suites, sha256_source=lambda tag: SHA, launch=launched.append,
-                                  runs_source=None, status_source=None, suite="ws")
-    w.reload()
-    page = w.run_page
-    assert page.local_button.isEnabled() and page.withdraw_button.isEnabled()
-    assert "check-release.ps1 local" in page.local_button.toolTip()
-    launched.clear()
-    page.local_button.click()
-    page.release_button.click()
-    script = str(two_suites / "ws/tools/check-release.ps1")
-    assert launched == [f"& '{script}' local", f"& '{script}' release"]
-    w.choose_suite("bc")                                        # the board's suite: its tests run on Linux
-    assert not page.local_button.isEnabled() and "Linux (the board)" in page.local_button.toolTip()
-    w.close()
 
 
 def test_window_apply_greys_out_once_applied_and_pin_waits_for_the_builds(window, repo):

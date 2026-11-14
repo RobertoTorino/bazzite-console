@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Entry point: python -m nexus_dashboard [--suite NAME] (run.sh and run.ps1 start it with the checkout's dev venv)."""
+"""Entry point: python -m nexus_dashboard [--suite NAME] (run.sh starts it with the checkout's dev venv)."""
 
 from __future__ import annotations
 

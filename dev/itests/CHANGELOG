@@ -1,0 +1,5 @@
+Changelog: 14-11-2026 03:27:00
+
+Breaking. Windows support is removed: the suite is for Bazzite. run.ps1 is gone, and the app no longer lists or runs
+PowerShell tests (*.ps1): an installer test is a bash script in <suite>/tools/installer-tests. discover_tests() and
+suites_here() no longer take a suffix. Nothing changes on Linux.

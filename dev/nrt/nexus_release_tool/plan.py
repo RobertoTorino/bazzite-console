@@ -46,7 +46,6 @@ VERSIONS_CHECK = "tools/check_versions.py"                        # the Nexus to
 # A suite's own tools, in its tools/ (check_script() and manifest_check() give the path in the checkout): the
 # board checks of a portal release and the manifest check.
 CHECK_SCRIPT = "tools/check-release.sh"
-WINDOWS_CHECK_SCRIPT = "tools/check-release.ps1"    # a Windows suite's, on the handheld
 MANIFEST_CHECK = "tools/check_manifest.py"
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 _VERSION = re.compile(r"^\d+\.\d+\.\d+$")
@@ -118,31 +117,9 @@ def rel(root: Path, *parts: str, suite: str | None = None) -> str:
 
 
 def check_script(root: Path, suite: str | None = None) -> str:
-    """The suite's board checks of a portal release (check-release.sh local|release|draft), relative to the checkout;
-    a Windows suite's are check-release.ps1 (local|release|draft|installer), run on the handheld."""
-    if suite_system(root, suite) == "windows":
-        return rel(root, *WINDOWS_CHECK_SCRIPT.split("/"), suite=suite)
+    """The suite's board checks of a portal release (check-release.sh local|release|draft), relative to the
+    checkout."""
     return rel(root, *CHECK_SCRIPT.split("/"), suite=suite)
-
-
-def suite_system(root: Path, suite: str | None = None) -> str:
-    """The system the suite is made for and tested on: "bazzite" or "windows" (its SYSTEM file)."""
-    return nexus_suites.system(suite_dir(root, suite))
-
-
-def tests_here(root: Path, suite: str | None = None, platform: str | None = None) -> bool:
-    """Whether the suite's release checks run on this computer (*platform*, sys.platform's): a Bazzite suite's on
-    Linux (the board), a Windows suite's on Windows (the handheld)."""
-    return ((platform or sys.platform) == "win32") == (suite_system(root, suite) == "windows")
-
-
-def portal_run_script(root: Path, suite: str | None = None) -> str:
-    """A Windows suite has no check-release.sh: its portal is tried on the handheld from the checkout, with its
-    portal/run.ps1 (it installs the pinned apps from their GitHub releases). That path, relative to the checkout; ""
-    for a suite tested on the board with check-release.sh."""
-    if nexus_suites.system(suite_dir(root, suite)) != "windows":
-        return ""
-    return rel(root, "portal", "run.ps1", suite=suite)
 
 
 def manifest_check(root: Path, suite: str | None = None) -> str:
@@ -970,27 +947,19 @@ def changed_withdrawals(root: Path, base: str, suite: str | None = None) -> list
     return [(e.tag, e.withdrawn) for e in new if e.withdrawn and not old.get(e.key)]
 
 
-def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = None, run_script: str = "") -> str:
+def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = None) -> str:
     """What stays the owner's: mark the GitHub release (it stays, as a pre-release, so no update check offers it),
-    then the portal release that removes the app from the boards. *run_script*: a Windows suite's portal/run.ps1
-    (portal_run_script()), its test on the handheld."""
+    then the portal release that removes the app from the boards."""
     date = amsterdam_now(now).strftime("%d-%m-%Y")
     notes = f"Withdrawn on {date}: {reason.strip()} Do not install this release."
-    test = [
-        "# 2. Test it on the handheld with the app installed: start the portal from this checkout. It must say the",
-        "#    app is not available any more and remove it. Take back undoes the mark after a test.",
-        f"powershell -NoProfile -ExecutionPolicy Bypass -File {run_script} --windowed",
-    ] if run_script else [
-        "# 2. Test it on the target platform with the app installed: Test withdrawal, tab Test on this board (check-release.sh",
-        "#    local). The portal must show the app as \"App not available\" and remove it. Take back undoes the",
-        "#    mark after a test.",
-    ]
     return "\n".join([
         "# 1. Mark the release withdrawn on GitHub (it stays; a pre-release is offered by no update check):",
         f"gh release edit {tag} --prerelease --title {shlex.quote('Withdrawn: ' + tag)} "
         f"--notes {shlex.quote(notes)}",
         "",
-        *test,
+        "# 2. Test it on the target platform with the app installed: Test withdrawal, tab Test on this board (check-release.sh",
+        "#    local). The portal must show the app as \"App not available\" and remove it. Take back undoes the",
+        "#    mark after a test.",
         "",
         "# 3. Then a portal release (2. Pin and release Portal: Bump portal, at least a minor version): it lists the",
         "#    withdrawal in its CHANGELOG entry; commit, push and tag it as usual.",
@@ -1039,14 +1008,9 @@ def follow_unreleased_pin(root: Path, unit: Unit, suite: str | None = None) -> b
     return True
 
 
-def release_asset(tag: str, root: Path = CHECKOUT) -> str:
-    """What a release tag's portal downloads: <tag>.zip for a Windows suite's (tools/build_release.py), <tag>.tar.gz
-    otherwise."""
-    try:
-        folder = nexus_suites.of_tag(tag, root)[0]
-    except LookupError:
-        return f"{tag}.tar.gz"
-    return f"{tag}.zip" if nexus_suites.system(folder) == "windows" else f"{tag}.tar.gz"
+def release_asset(tag: str) -> str:
+    """What a release tag's portal downloads: <tag>.tar.gz (tools/build_release.py)."""
+    return f"{tag}.tar.gz"
 
 
 def fetch_sha256(tag: str) -> str:
@@ -1778,36 +1742,16 @@ def unpushed_release_commit(root: Path, base: str) -> str:
     return subject if subject.startswith("Release ") else ""
 
 
-def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRIPT, run_script: str = "") -> str:
+def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRIPT) -> str:
     """Commit, test on a board, and only then push and tag: the tag is what reaches the users' portals. *check*:
-    the suite's check-release.sh, relative to the checkout (check_script()); *run_script*: a Windows suite's
-    portal/run.ps1 instead (portal_run_script()), tried on the handheld."""
-    if run_script:
-        before = [
-            "# 2. Test on the handheld: start the portal from this checkout; it installs the apps apps.toml pins from",
-            "#    their GitHub releases, as the installed portal does:",
-            f"powershell -NoProfile -ExecutionPolicy Bypass -File {run_script} --windowed",
-        ]
-        after = [
-            "# 4. Once the release has been published: download it, then install it on",
-            "#    the handheld as the portal's README says (check SHA256SUMS, Expand-Archive, install.ps1) and start it:",
-            f'gh release download {tag} --dir "$TEMP/{tag}" --clobber',
-        ]
-    else:
-        before = [
-            "# 2. Test on the target platform (docs/portal.md, Testing a portal release before its tag): Test updates, or",
-            f"{check} local     # ./install.sh, then start suite --source release",
-        ]
-        after = [
-            "# 4. Once tag-release.sh has published it: Test release, or",
-            f"{check} release {tag}   # verifies and installs the published portal release",
-        ]
+    the suite's check-release.sh, relative to the checkout (check_script())."""
     return "\n".join([
         "# 1. Commit (no push yet):",
         "git add -A && tools/fix-modes.sh",
         f'git commit -m "Release {tag}"',
         "",
-        *before,
+        "# 2. Test on the target platform (docs/portal.md, Testing a portal release before its tag): Test updates, or",
+        f"{check} local     # ./install.sh, then start suite --source release",
         "#    The apps whose pin changed show Update: update them, open each one, check that it works.",
         "#    Something wrong? Fix the app and release a new patch version (step 1), then pin again.",
         "",
@@ -1816,7 +1760,8 @@ def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRI
         push_command(linux),
         f"{TAG_SCRIPT} {tag}",
         "",
-        *after,
+        "# 4. Once tag-release.sh has published it: Test release, or",
+        f"{check} release {tag}   # verifies and installs the published portal release",
     ])
 
 

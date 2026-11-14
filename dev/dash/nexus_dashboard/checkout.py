@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What the dashboard finds in the checkout: the suites (tools/suites.py, as every Nexus tool reads them), and the
-Nexus apps in dev/ with their names, icons and start scripts (run.sh, on Windows run.ps1). An app starts in its own
+Nexus apps in dev/ with their names, icons and start scripts (run.sh). An app starts in its own
 session, so it keeps running when the dashboard closes; its output goes to a log in the cache folder."""
 
 from __future__ import annotations
@@ -9,7 +9,6 @@ import importlib.util
 import os
 import re
 import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,7 +16,6 @@ from . import APP_ID, CHECKOUT
 
 LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / APP_ID / "apps"
 _CONSTANT = re.compile(r'^(APP_NAME|APP_ID)\s*=\s*"([^"]+)"', re.M)
-WINDOWS = sys.platform == "win32"
 
 
 def _suites_module(root: Path = CHECKOUT):
@@ -37,7 +35,7 @@ def suites(root: Path = CHECKOUT) -> list[str]:
 
 
 def suite_system(root: Path, suite: str) -> str:
-    """The system the suite is made for (its SYSTEM file: bazzite or windows), "" without one."""
+    """The system the suite is made for (its SYSTEM file: bazzite), "" without one."""
     try:
         folder = root if suite in {root.name, "."} else root / suite
         return (folder / "SYSTEM").read_text(encoding="utf-8").strip()
@@ -56,13 +54,6 @@ def suite_name(root: Path, suite: str) -> str:
     return suite
 
 
-def here(root: Path, suite: str, platform: str = sys.platform) -> bool:
-    """Whether the suite's own scripts (its tours, its installer tests) run on this system: a Bazzite suite's on
-    Linux, a Windows suite's on Windows."""
-    system = suite_system(root, suite)
-    return (system == "windows") == (platform == "win32")
-
-
 @dataclass(frozen=True)
 class DevApp:
     """One Nexus app of dev/, started with its run script."""
@@ -79,7 +70,7 @@ class DevApp:
 
     @property
     def script(self) -> Path:
-        return self.folder / ("run.ps1" if WINDOWS else "run.sh")
+        return self.folder / "run.sh"
 
     @property
     def runs_here(self) -> bool:
@@ -110,16 +101,7 @@ def dev_apps(root: Path = CHECKOUT, me: str = APP_ID) -> list[DevApp]:
 def start(app: DevApp, args: tuple[str, ...] = ()) -> subprocess.Popen:
     """Starts *app* with its run script in its own session; its output goes to its log."""
     app.log.parent.mkdir(parents=True, exist_ok=True)
-    if WINDOWS:
-        command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(app.script), *args]
-    else:
-        command = ["bash", str(app.script), *args]
+    command = ["bash", str(app.script), *args]
     with open(app.log, "wb") as out:
-        if WINDOWS:
-            # No console window, in a group of its own. Not DETACHED_PROCESS: PowerShell without a console exits
-            # at once with code 0 and never runs the script.
-            return subprocess.Popen(command, cwd=app.folder, stdin=subprocess.DEVNULL, stdout=out,
-                                    stderr=subprocess.STDOUT,
-                                    creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
         return subprocess.Popen(command, cwd=app.folder, stdin=subprocess.DEVNULL, stdout=out,
                                 stderr=subprocess.STDOUT, start_new_session=True)

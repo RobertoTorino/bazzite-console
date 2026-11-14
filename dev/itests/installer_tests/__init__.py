@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Nexus Installer Tests: a window that runs a suite's installer tests (<suite>/tools/installer-tests/*.sh on
-Linux, *.ps1 on Windows) one at a time, with their live output. A Nexus app (dev/), run from the checkout and never
-released."""
+"""Nexus Installer Tests: a window that runs a suite's installer tests (<suite>/tools/installer-tests/*.sh)
+one at a time, with their live output. A Nexus app (dev/), run from the checkout and never released."""
 
 from pathlib import Path
 

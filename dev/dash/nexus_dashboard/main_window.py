@@ -6,7 +6,6 @@ from __future__ import annotations
 import os
 import socket
 import subprocess
-import sys
 from pathlib import Path
 
 from PyQt6.QtCore import QRectF, QSettings, QSize, Qt, QTimer, QUrl
@@ -22,7 +21,7 @@ from nexus_core.widgets import AppHeader, InfoButton, Terminal, hint_label
 
 from . import APP_ID, APP_NAME, CHECKOUT, LOGO_PATH, __version__
 from . import local
-from .checkout import WINDOWS, DevApp, dev_apps, here, start, suite_name, suites
+from .checkout import DevApp, dev_apps, start, suite_name, suites
 from .tours import RECORD_APP_TOUR, RECORD_TOUR, AppsTourDialog, PortalTourDialog
 
 SUITE_KEY = "suite"                     # the chosen suite, in the settings
@@ -44,8 +43,7 @@ ABOUT = ("One place for Bazzite Console development tools. The first tiles are t
          "Test local apps, below the tiles: the suite's portal and apps as they are in this checkout, to try them "
          "before their release, then the suite's wiki served from the checkout.")
 LOCAL_ABOUT = (
-    "Click an app to start it from this checkout, to try it before its release. On Windows an app with a "
-    "<code>run.ps1</code> starts with it, as by hand; otherwise <code>python -m</code> with this venv and the "
+    "Click an app to start it from this checkout, to try it before its release: <code>python -m</code> with this venv and the "
     "checkout's core, as <code>run.sh</code> starts a Nexus app. An app that changes how the board runs "
     "(an orange <b>!</b> on its icon) asks first; it uses the scripts in the checkout. Each app writes its output "
     f"to <code>{LOCAL_LOG_DIR}</code>; when it stops with an error, the end of that log shows below. The suite's "
@@ -111,11 +109,6 @@ def start_local(command: list[str], env: dict[str, str], cwd: Path, log: Path) -
     """Starts a local app in its own session, so it keeps running when this window closes; its output goes to *log*."""
     log.parent.mkdir(parents=True, exist_ok=True)
     with open(log, "wb") as out:
-        if WINDOWS:
-            # No console window, in a group of its own, as checkout.start() starts a Nexus app's run.ps1.
-            return subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=out,
-                                    stderr=subprocess.STDOUT,
-                                    creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
         return subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=out,
                                 stderr=subprocess.STDOUT, start_new_session=True)
 LOGO_ICON = LOGO_PATH
@@ -239,9 +232,8 @@ class MainWindow(QMainWindow):
         if suite is None:
             off_tours = "No suite in the checkout."
         else:
-            system = "Windows" if sys.platform == "win32" else "Linux"
-            off_tours = ("" if here(self.root, self.suite) and (suite / RECORD_TOUR).is_file()
-                         else f"{self.suite}'s tours are not recorded on {system}.")
+            off_tours = ("" if (suite / RECORD_TOUR).is_file()
+                         else f"{self.suite}'s tours are not recorded on Linux.")
         found += [
             Tile("portal-tour", "Portal video tour", LOGO_ICON, "Record the portal's video tour from this checkout: "
                  "about two minutes, with music, at 1080p or 4K, and the copy on the wiki's Portal Tour page if "

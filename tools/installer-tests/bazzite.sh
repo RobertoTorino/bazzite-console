@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Exercise apps/bazzite/install.sh: from the checkout, from a staged release, uninstall with and without
-# other venv users. Runs with the shims from shims.sh (CI, or WSL on Windows).
+# other venv users. Runs with the shims from shims.sh (as CI does).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 REPO=$SUITE

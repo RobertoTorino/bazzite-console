@@ -10,10 +10,8 @@ Records a Bazzite Console portal installation with OBS: a portal release extract
 installed in a terminal while OBS records the screen, then the portal opened and an optional app installed and shown.
 Start it from [the developer dashboard](../dash), or:
 
-| | Linux | Windows |
-|---|---|---|
-| Open it | `dev/demo/run.sh` | `dev\demo\run.ps1` (PowerShell), or `dev/demo/run.sh` (Git Bash) |
-| Menu entry and Desktop icon | `dev/demo/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) | |
+- Open it: `dev/demo/run.sh`
+- Menu entry and Desktop icon: `dev/demo/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`)
 
 Nothing is copied: the entry starts the app of the checkout you installed it from.
 

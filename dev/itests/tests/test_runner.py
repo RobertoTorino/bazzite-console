@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -14,33 +13,26 @@ from PyQt6.QtCore import QEventLoop, QTimer
 
 from installer_tests import APP_NAME, CHECKOUT, ROOT, runner
 from installer_tests.main_window import SUITE_KEY, MainWindow, suites_here
-from installer_tests.runner import InstallerTestRunner, command_for, discover_tests, suffix_here
+from installer_tests.runner import InstallerTestRunner, command_for, discover_tests
 from installer_tests.runner import tests_dir as suite_tests_dir     # not tests_dir: pytest would collect it
 
 INSTALLER = ROOT / "install.sh"
 BAZZITE = CHECKOUT
 
 
-def test_discovery_excludes_the_helpers_and_takes_this_systems_kind(tmp_path: Path) -> None:
-    for name in ("zeta.sh", "shims.sh", "alpha.sh", "beta.ps1", "test.ps1"):
+def test_discovery_excludes_the_helpers_and_takes_the_bash_scripts(tmp_path: Path) -> None:
+    for name in ("zeta.sh", "shims.sh", "alpha.sh", "notes.txt"):
         (tmp_path / name).write_text("#!/usr/bin/env bash\n", encoding="utf-8")
 
-    assert [path.name for path in discover_tests(tmp_path, ".sh")] == ["alpha.sh", "zeta.sh"]
-    assert [path.name for path in discover_tests(tmp_path, ".ps1")] == ["beta.ps1"]
-    assert discover_tests(tmp_path) == discover_tests(tmp_path, suffix_here())
-    assert suffix_here("win32") == ".ps1" and suffix_here("linux") == ".sh"
+    assert [path.name for path in discover_tests(tmp_path)] == ["alpha.sh", "zeta.sh"]
 
 
-def test_each_kind_of_script_has_its_runner(tmp_path: Path) -> None:
+def test_a_script_runs_with_bash(tmp_path: Path) -> None:
     assert command_for(tmp_path / "a.sh") == ["bash", str(tmp_path / "a.sh")]
-    assert command_for(tmp_path / "a.ps1") == ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-                                               str(tmp_path / "a.ps1")]
 
 
-def test_the_suites_with_tests_for_this_system_are_listed() -> None:
-    """This Bazzite Console checkout has .sh tests; no Windows suite is included."""
-    assert suites_here(CHECKOUT, ".sh") == ["bazzite-console"]
-    assert suites_here(CHECKOUT, ".ps1") == []
+def test_the_suites_with_tests_are_listed() -> None:
+    assert suites_here(CHECKOUT) == ["bazzite-console"]
     assert suite_tests_dir(BAZZITE) == BAZZITE / "tools" / "installer-tests"
 
 
@@ -57,7 +49,6 @@ def test_runner_adds_homebrew_fakeroot_directory_to_path(tmp_path: Path, monkeyp
     assert runner._path_with_fakeroot(f"{fake_homebrew_bin}{sep}/usr/bin") == f"{fake_homebrew_bin}{sep}/usr/bin"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="bash scripts")
 def test_runner_process_can_find_fakeroot_from_homebrew(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     fake_homebrew_bin = tmp_path / "linuxbrew" / "bin"
     fake_homebrew_bin.mkdir(parents=True)
@@ -80,7 +71,6 @@ def test_runner_process_can_find_fakeroot_from_homebrew(tmp_path: Path, monkeypa
     assert "".join(output).strip() == str(fakeroot)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="bash scripts")
 def test_runner_executes_selected_tests_in_order_and_continues_after_failure(tmp_path: Path) -> None:
     scripts = [tmp_path / "first.sh", tmp_path / "second.sh"]
     scripts[0].write_text("printf 'first output\\n'\nexit 0\n", encoding="utf-8")
@@ -121,18 +111,16 @@ def test_runner_rejects_helpers_and_scripts_outside_the_tests_folder(tmp_path: P
 
 @pytest.fixture
 def checkout(tmp_path: Path) -> Path:
-    """A checkout with two Bazzite suites and one Windows suite."""
+    """A checkout with two suites."""
     root = tmp_path / "nexus"
     for suite, scripts in (("bazzite-console", ("check.sh",)),
-                           ("nexus-suite", ("fan.sh", "check.sh", "shims.sh")),
-                           ("windows-suite", ("test.ps1", "bios.ps1"))):
+                           ("nexus-suite", ("fan.sh", "check.sh", "shims.sh"))):
         folder = root / suite / "tools" / "installer-tests"
         folder.mkdir(parents=True)
         (root / suite / "portal").mkdir()
         (root / suite / "portal" / "apps.toml").write_text("", encoding="utf-8")
         if suite != "nexus-suite":
-            (root / suite / "TAG_PREFIX").write_text("ps5-" if suite == "bazzite-console" else "ws-",
-                                                     encoding="utf-8")
+            (root / suite / "TAG_PREFIX").write_text("ps5-", encoding="utf-8")
         for name in scripts:
             (folder / name).write_text("exit 0\n", encoding="utf-8")
     return root
@@ -144,11 +132,8 @@ def test_window_lists_the_suites_tests_and_remembers_the_suite(checkout: Path) -
     window = MainWindow(checkout, settings)
 
     assert window.windowTitle() == APP_NAME
-    if sys.platform == "win32":
-        assert window.suites == ["windows-suite"] and list(window._items) == ["bios.ps1"]
-    else:
-        assert window.suites == ["bazzite-console", "nexus-suite"] and window.suite == "nexus-suite"
-        assert list(window._items) == ["check.sh", "fan.sh"]
+    assert window.suites == ["bazzite-console", "nexus-suite"] and window.suite == "nexus-suite"
+    assert list(window._items) == ["check.sh", "fan.sh"]
     assert settings.value(SUITE_KEY) == window.suite
     assert all(
         window.test_list.item(index).text() == ""
@@ -165,12 +150,11 @@ def test_window_lists_the_suites_tests_and_remembers_the_suite(checkout: Path) -
 
 def test_window_on_the_real_checkout_lists_the_suites_installer_tests() -> None:
     window = MainWindow()
-    if sys.platform != "win32":
-        assert window.suite == "bazzite-console" and "bazzite.sh" in window._items and "shims.sh" not in window._items
+    assert window.suite == "bazzite-console" and "bazzite.sh" in window._items and "shims.sh" not in window._items
     window.close()
 
 
-def test_a_checkout_without_tests_for_this_system_says_so(tmp_path: Path) -> None:
+def test_a_checkout_without_tests_says_so(tmp_path: Path) -> None:
     window = MainWindow(tmp_path)
     assert window.suite is None and window.runner is None
     assert "No suite in" in window.statusBar().currentMessage()
@@ -197,7 +181,6 @@ def test_window_shows_green_check_and_red_cross_at_row_end(checkout: Path) -> No
     window.close()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="bash scripts")
 def test_window_keeps_previous_results_when_another_test_starts(checkout: Path, monkeypatch) -> None:
     window = MainWindow(checkout)
     passed_name, running_name = list(window._items)[:2]
@@ -217,7 +200,6 @@ def test_window_keeps_previous_results_when_another_test_starts(checkout: Path, 
     window.close()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="bash scripts")
 def test_cancel_stops_the_current_test_and_skips_queued_tests(tmp_path: Path) -> None:
     first = tmp_path / "first.sh"
     second = tmp_path / "second.sh"

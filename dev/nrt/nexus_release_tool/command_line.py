@@ -43,7 +43,7 @@ _ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\x1b[@-Z\\-_]")
 # Scripts that must run in a terminal: the suite's board checks ask for the sudo password (the portal's installer
 # calls sudo for every copy to /opt) and keep the portal running. Run here, without a terminal, sudo asked through
 # KDE's dialog at every call instead of once (owner, 03-11-2026: "I keep getting this popup").
-ASKS = ("check-release.sh", "check-release.ps1")
+ASKS = ("check-release.sh",)
 
 
 def plain(text: str) -> str:
@@ -155,7 +155,7 @@ class CommandLine(QWidget):
         if not self.bash:
             self.line.setEnabled(False)
             self.run_button.setEnabled(False)
-            self.output.setPlainText("No bash found: the command line needs it (on Windows, Git Bash's bash on PATH).")
+            self.output.setPlainText("No bash found: the command line needs it.")
 
     # --- what the steps offer ----------------------------------------------------------------------------------
 

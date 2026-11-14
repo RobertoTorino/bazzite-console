@@ -29,8 +29,8 @@ def card(key: str, changes_board: bool = False) -> str:
 @pytest.fixture
 def nexus(tmp_path) -> Path:
     """A checkout laid out as Nexus: the suite bc with alpha (a window), beta (a window, changes the board), a
-    standalone app whose package is a level deeper, a checkout-only app and a release-only one; the suite ws
-    (Windows); the wikis of both and the Nexus page."""
+    standalone app whose package is a level deeper, a checkout-only app and a release-only one; the suite ws;
+    the wikis of both and the Nexus page."""
     root = tmp_path / "nexus"
     write(root / "tools/suites.py", (CHECKOUT / "tools/suites.py").read_text(encoding="utf-8"))
     (root / "dev").mkdir()
@@ -51,7 +51,7 @@ def nexus(tmp_path) -> Path:
     write(bc / "apps/releases/.checkout-only", "No releases.\n")
     write(bc / "apps/releases/rel/__main__.py", "")
     ws = root / "ws"
-    write(ws / "SYSTEM", "windows\n")
+    write(ws / "SYSTEM", "bazzite\n")
     write(ws / "TAG_PREFIX", "ws-\n")
     write(ws / "portal/VERSION", "0.1.0\n")
     write(ws / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "ws-test-v0.1.0"\n')
@@ -103,29 +103,6 @@ def test_portal_target(nexus):
     assert command == ["/venv/python", "-m", "nexus_portal"]                  # --source auto: from the checkout
     assert local.portal_target(nexus, "ws") is None
 
-
-def test_an_app_with_run_ps1_starts_with_it_on_windows(nexus):
-    """A real run from the checkout (owner, 06-11-2026): on Windows a suite's portal and apps start
-    with their own run.ps1, as by hand; elsewhere, and without the script, python -m as before."""
-    write(nexus / "ws/portal/windows_portal/__main__.py", "print('portal')\n")
-    write(nexus / "ws/portal/windows_portal/__init__.py", 'APP_NAME = "Windows Portal"\n')
-    portal = local.portal_target(nexus, "ws")
-    assert local.run_script(portal, windows=True) is None                     # no run.ps1 yet
-    write(nexus / "ws/portal/run.ps1", "exit 0\n")
-    script = nexus / "ws/portal/run.ps1"
-    assert local.run_script(portal, windows=True) == script and local.run_script(portal, windows=False) is None
-    command, _env = local.launch_command(nexus, portal, python="/venv/python", windows=True)
-    assert command == ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)]
-    command, env = local.launch_command(nexus, portal, python="/venv/python", windows=False)
-    assert command == ["/venv/python", "-m", "windows_portal"] and str(nexus / "core") in env["PYTHONPATH"]
-    wiki = local.docs_targets(nexus, suite="ws")[0]
-    assert local.run_script(wiki, windows=True) is None                       # a wiki is mkdocs serve
-
-
-def test_this_bazzite_checkout_has_no_powershell_launchers():
-    assert local.run_script(local.portal_target(CHECKOUT, "bazzite-console"), windows=True) is None
-    assert all(local.run_script(t, windows=True) is None
-               for t in local.launch_targets(CHECKOUT, "bazzite-console"))
 
 def test_this_checkouts_portals():
     assert local.portal_target(CHECKOUT, "bazzite-console").module == "bazzite_console_portal"

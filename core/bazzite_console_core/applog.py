@@ -35,8 +35,7 @@ def logger(app_id: str) -> logging.Logger:
 
 
 class _Private(logging.Formatter):
-    """Every line with the user's folders written as %LOCALAPPDATA%, %APPDATA%, %USERPROFILE% (~ on Linux): no user
-    name in a log (platform.private)."""
+    """Every line with the user's home folder written as ~: no user name in a log (platform.private)."""
 
     def format(self, record: logging.LogRecord) -> str:
         return private_text(super().format(record))

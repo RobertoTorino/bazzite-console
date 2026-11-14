@@ -4,7 +4,7 @@ it. No Qt here; the page is release_page.py.
 
 The release holds the suite ticked in the Portals column, when it is on the Nexus release (its release workflow can
 be called by release-nexus.yml), with its apps that need a release, and core and Nexus's own version. Each suite
-stands apart (owner, 05-11-2026: a Windows draft waiting for the handheld held up the board's next release): Start
+stands apart (owner, 05-11-2026: one suite's draft waiting for its device held up another's next release): Start
 names the suite to release-nexus.yml, which carries only it and says so in the run's title, and a draft waits for
 its own suite's device test only. The owner sees each version first and may type
 another (owner: "keep the override"); a portal's and Nexus's version are worked out when Start writes them (at least
@@ -13,8 +13,8 @@ and 2 would (the versions and their copies, the "Release x.y.z." entries, the ne
 sha256 left for the workflow, the portal's version and its entry, Nexus's), then one command commits it, pushes it
 (the pre-push hook checks it) and starts release-nexus.yml on that commit. The workflow builds, publishes and pins;
 each suite's portal ends as a draft. The device test installs that draft on the suite's device (check-release.sh
-draft on a board, check-release.ps1 draft on the handheld); Publish makes it a release, which makes the portal tag and the Nexus index. A run that failed is started again from
-where it stopped (gh run rerun --failed); one that should not go on is stopped (gh run cancel)."""
+draft); Publish makes it a release, which makes the portal tag and the Nexus index. A run that failed is started
+again from where it stopped (gh run rerun --failed); one that should not go on is stopped (gh run cancel)."""
 
 from __future__ import annotations
 
@@ -540,9 +540,7 @@ def publish_command(tag: str) -> str:
     return f"gh release edit {tag} --draft=false --latest && git fetch origin tag {tag}"
 
 
-def device_test_line(root: Path, suite: str, tag: str, windows: bool) -> str:
-    """The suite's check script with its draft mode, for a terminal: PowerShell's call operator on Windows."""
+def device_test_line(root: Path, suite: str, tag: str) -> str:
+    """The suite's check script with its draft mode, for a terminal."""
     script = str(root / rp.check_script(root, suite))
-    if windows:
-        return "& '" + script.replace("'", "''") + f"' draft {tag}"
     return f"{shlex.quote(script)} draft {tag}"
