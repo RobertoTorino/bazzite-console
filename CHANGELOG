@@ -1,3 +1,20 @@
+Changelog: 14-11-2026 15:50:35
+
+Added. The picture of the portal on the wiki's home page keeps up with the portal by itself (owner, 14-11-2026), as
+the BC250 Bazzite Suite's does: the wiki's workflow (docs.yml) takes it again from the portal on main with
+tools/portal_screenshot.py before every build, and CI's docs job does the same, so a portal the tool cannot draw
+fails there. The file in the repository (docs/images/home/portal.webp) is taken again too: it shows the portal with
+its example wallpaper. The wiki's Development chapter says so.
+
+Changelog: 14-11-2026 15:41:37
+
+Added. A check that the wiki's Portal Tour keeps up with the portal (owner, 14-11-2026). tools/record-tour.sh --wiki
+writes tools/portal-tour.stamp, a fingerprint of what the video shows (the portal's code and pictures and the tour's
+script; the portal's version is left out, so a release does not count). tools/portal_tour.py --check says whether
+the portal changed since, and tools/tests runs it, so the checks fail until the tour is recorded again with --wiki;
+--stamp marks the video as current for a change that does not show in it. The message also reminds of the wiki's
+Portal page. The wiki's Development chapter has it.
+
 Changelog: 14-11-2026 14:52:51
 
 Added. The Portal Tour has a track of its own (owner, 14-11-2026): tools/sounds/the_quiet_engine_remix.ogg, the remix

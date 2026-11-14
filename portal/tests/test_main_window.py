@@ -33,6 +33,39 @@ def test_portal_shows_required_app(window):
     assert [action.text() for action in window.tile_menu(window.entries[0]).actions()][0] == "Open"
     assert window.big.categories == ["sustainable", "gaming", "utilities"]
 
+
+class FakeTour:
+    """The tour player without Qt's multimedia: what it was asked to play, and its failed() by hand."""
+
+    made: list = []
+
+    def __init__(self, url, sound=True, parent=None):
+        self.url, self.sound, self.started, self.on_failed = url, sound, False, []
+        self.failed = type("Signal", (), {"connect": lambda _self, slot: self.on_failed.append(slot)})()
+        FakeTour.made.append(self)
+
+    def start(self):
+        self.started = True
+
+
+def test_the_icon_plays_the_portal_tour_and_the_name_opens_the_wiki(window, monkeypatch):
+    """Owner, 14-11-2026: the icon plays the Portal Tour in the portal (the wiki's video), the name opens the wiki;
+    a tour that cannot be played opens the wiki's Portal Tour page in the browser."""
+    from bazzite_console_portal import SUITE_MANUAL_URL, main_window
+    opened = []
+    FakeTour.made = []
+    monkeypatch.setattr(main_window.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
+    monkeypatch.setattr(main_window.tour, "TourPlayer", FakeTour)
+    assert "Portal Tour" in window.big.logo.toolTip() and "wiki" in window.big.title.toolTip()
+    window.big.logo.clicked.emit()
+    played = FakeTour.made[0]
+    assert played.started and played.url == SUITE_MANUAL_URL + "videos/portal-tour.mp4" and opened == []
+    played.on_failed[0]("no connection")
+    assert opened == [SUITE_MANUAL_URL + "portal-tour/"]
+    window.big.title.clicked.emit()
+    assert opened[-1] == SUITE_MANUAL_URL
+
+
 def test_settings_page_and_clock_menu(window):
     assert not window.big.in_settings()
     window.toggle_settings()

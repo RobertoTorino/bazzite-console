@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal window: one fullscreen view (bigpicture.py; owner, 01-11-2026: Suite Desktop Mode, the window of
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
-icon (a click opens the wiki), spanning the name with the version and the stage, a line that says what the open
+icon (a click plays the Portal Tour), spanning the name with the version and the stage, a line that says what the open
 category is for, ☰ at the top right, and under them a row of big symbols (owner, 05-11-2026: in place of the pills):
 Refresh, Sys info (a small window with what the system reports about the console, sysinfo.py), Install all apps and
 Install all updates (the counts in their tooltips, the updates waiting on a red badge). On the right of the symbols
@@ -91,7 +91,8 @@ from bazzite_console_core.updates import ReleaseInfo, UpdateChecker, version_tup
 from bazzite_console_core.app import switch_theme
 from bazzite_console_core.widgets import Pill, current_theme
 
-from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, shortcuts, status, sysinfo, wallpaper, weather
+from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, shortcuts, status, sysinfo, tour, wallpaper
+from . import weather
 from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
 from .gamepad import TOUCH_SPEED, Gamepad
 from .looks import VEIL
@@ -440,6 +441,9 @@ class PlaceDialog(QDialog):
         super().done(result)
 
 
+PORTAL_TOUR_URL = SUITE_MANUAL_URL + "portal-tour/"     # the wiki's Portal Tour page
+PORTAL_TOUR_VIDEO_URL = SUITE_MANUAL_URL + "videos/portal-tour.mp4"     # its video, which the portal plays itself
+
 
 class MainWindow(QMainWindow):
     def __init__(self, entries: list[AppEntry], sources: Sources, records: Records,
@@ -519,6 +523,7 @@ class MainWindow(QMainWindow):
         self.big.update_requested.connect(self._tile_update)
         self.big.update_banner.clicked.connect(self.portal_update_action)
         self.big.wiki_requested.connect(self.open_wiki)
+        self.big.tour_requested.connect(self.open_tour)
         self.big.bar.currentChanged.connect(self._category_changed)
         self.big.notice.clicked.connect(self._notice_menu)
         self.big.outside.clicked.connect(self._outside_menu)
@@ -1073,8 +1078,15 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def open_wiki() -> None:
-        """The wiki's home page, from a click on the suite's icon."""
+        """The wiki's home page, from a click on the portal's name."""
         QDesktopServices.openUrl(QUrl(SUITE_MANUAL_URL))
+
+    def open_tour(self) -> None:
+        """The Portal Tour, played over the portal (tour.py), from a click on the suite's icon; its sound follows
+        the Sound setting. When it cannot be played here, the wiki's Portal Tour page opens in the browser."""
+        self.tour = tour.TourPlayer(PORTAL_TOUR_VIDEO_URL, self.sounds.enabled and self.sounds.available(), self)
+        self.tour.failed.connect(lambda _reason: QDesktopServices.openUrl(QUrl(PORTAL_TOUR_URL)))
+        self.tour.start()
 
     # ----------------------------------------------------------------------------------------- actions
     def _confirm_board_change(self, entry: AppEntry, action: str) -> bool:

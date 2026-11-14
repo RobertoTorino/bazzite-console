@@ -4,7 +4,7 @@
 
 Two minutes through the portal: the header and its symbols, the Settings page, the notice of updates, the tiles and
 their menu, the categories, a wallpaper and its transparency, the three themes, and the focus moved as a controller
-moves it. It also shows that a click on the suite's icon opens this wiki.
+moves it. It also shows that a click on the suite's icon plays this tour in the portal and a click on the portal's name this wiki.
 
 <figure markdown>
 <video class="tour-video" controls playsinline preload="metadata" poster="../images/portal/portal-tour-poster.webp">

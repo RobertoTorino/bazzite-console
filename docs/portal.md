@@ -12,7 +12,7 @@ The portal opens with a short animated intro, about three seconds, with its own 
 name, **BAZZITE CONSOLE SUITE**, before the view appears. Press any key, click, or press any button on the controller
 to skip it.
 
-**The header**: the suite's icon, as large as a tile's (click it to open this wiki), its name with the version,
+**The header**: the suite's icon, as large as a tile's (click it to watch the [Portal Tour](portal-tour.md) over the whole screen: **A** or Space pauses it, **B** or Esc closes it, and without a connection it opens in the browser), its name (click it to open this wiki) with the version,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
 for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal. Under
 them, in a row, eleven big symbols. Four act on the apps: **Refresh** (two

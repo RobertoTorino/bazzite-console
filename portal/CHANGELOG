@@ -1,3 +1,12 @@
+Changelog: 14-11-2026 15:33:23
+
+Added. A click on the suite's icon in the header plays the Portal Tour over the whole screen, in the portal itself
+(owner, 14-11-2026): the wiki's video, played from the wiki, so the portal does not carry it. A or Space pauses it
+and plays on, B or Esc closes it, it closes by itself at its end, and its sound follows the Sound setting. Without a
+connection the wiki's Portal Tour page opens in the browser. A click on the portal's name opens the wiki. The icon
+opened the wiki, and the name did nothing. The Portal Tour is recorded again and shows both; the wiki's Portal and
+Portal Tour pages say so.
+
 Changelog: 14-11-2026 14:22:30
 
 Added. The portal starts with its example wallpaper behind it. It had none until one was chosen. A picture of your

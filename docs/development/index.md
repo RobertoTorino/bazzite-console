@@ -39,6 +39,19 @@ checker (`dev/deps/run.sh`), installer-test runner, OBS demo recorder, and sound
 `--list` mode is safe for a terminal overview; its release actions are user-driven. The video-tour scripts are
 `tools/record-tour.sh` and `tools/record-app-tour.sh`; the dashboard provides their UI.
 
+The wiki's Portal Tour keeps up with the portal. `tools/record-tour.sh --wiki` writes the copy on the
+[Portal Tour](../portal-tour.md) page and a fingerprint of the portal it was recorded from
+(`tools/portal-tour.stamp`: the portal's code and pictures, and the tour's script). The checks fail when the portal
+changed since, until the tour is recorded again:
+
+```bash
+python3 tools/portal_tour.py --check     # says whether the portal changed since the wiki's tour was recorded
+tools/record-tour.sh --wiki              # record it again, with the wiki's copy
+python3 tools/portal_tour.py --stamp     # a change that does not show in the video: mark the video as current
+```
+
+A change the wiki describes goes into its [Portal](../portal.md) page in the same change.
+
 ## Releases
 
 A release is made from the release planner's first tab, step by step: get up to date, commit, push, wait for CI, then
@@ -110,8 +123,10 @@ so the Actions list shows two Wiki runs for a release. By hand: `gh workflow run
 
 The picture of the portal on the home page (`docs/images/home/portal.webp`) is taken from the portal itself:
 `tools/portal_screenshot.py` opens its window offscreen on this checkout's `apps.toml` and icons, in a home folder
-of its own, with a fixed demo state (one update, one app not installed, the Gaming tab open), and saves it. Run it
-again when the portal's look or its apps changed:
+of its own, with a fixed demo state (one update, one app not installed, the Gaming tab open), and saves it. The
+wiki's workflow takes the picture again from the portal on `main` each time it builds the wiki, so the published home
+page keeps up with the portal by itself; the file in the repository is what a local `mkdocs serve` shows. To see it
+or refresh that file:
 
 ```bash
 python tools/portal_screenshot.py          # from the venv; --out FILE to save it elsewhere

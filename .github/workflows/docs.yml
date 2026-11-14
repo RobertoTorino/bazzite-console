@@ -51,6 +51,12 @@ jobs:
         run: python -m pip install -q mkdocs-material "mkdocs>=1.6,<2" "pillow>=12,<13"
       - name: Qt runtime libraries
         run: bash tools/ci-qt-libs.sh
+      - name: Bazzite's font, for the portal's picture
+        run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-core
+      - name: The portal's picture on the home page, from the portal on main
+        run: |
+          python -m pip install -q -r portal/requirements.txt
+          QT_QPA_PLATFORM=offscreen python tools/portal_screenshot.py
       - name: Build the wiki
         run: mkdocs build --strict --site-dir site
       - uses: actions/upload-pages-artifact@v5
