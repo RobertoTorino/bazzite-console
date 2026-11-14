@@ -40,17 +40,17 @@ choose.
 <div class="home-card" markdown>
 #### Sustainable
 
-System and device information, and what keeps the console cool: [Bazzite Test](apps/bazzite.md), [System Overlay](apps/overlay.md), [Fan Control](apps/fan.md).
+System and device information, and what keeps the console cool: [Bazzite Test](apps/bazzite.md), [Fan Control](apps/fan.md), [System Overlay](apps/overlay.md).
 </div>
 <div class="home-card" markdown>
 #### Gaming
 
-Emulators, streaming and console tools for games: [RPCS3 Manager](apps/rpcs3.md), [Remote Play](apps/remoteplay.md), [Xbox Remote Play](apps/clb.md), [shadPS4 Manager](apps/shadps4.md), [Bazzite DatStation](apps/datstation.md), [PPSSPP Manager](apps/ppsspp.md), [PCSX2 Manager](apps/pcsx2.md), [Vita3K Manager](apps/vita3k.md), [Xenia Manager](apps/xenia.md).
+Emulators, streaming and console tools for games: [Bazzite DatStation](apps/datstation.md), [PCSX2 Manager](apps/pcsx2.md), [PPSSPP Manager](apps/ppsspp.md), [Remote Play](apps/remoteplay.md), [RPCS3 Manager](apps/rpcs3.md), [shadPS4 Manager](apps/shadps4.md), [Vita3K Manager](apps/vita3k.md), [Xbox Remote Play](apps/clb.md), [Xenia Manager](apps/xenia.md).
 </div>
 <div class="home-card" markdown>
 #### Utilities
 
-Tools for files, peripherals and storage: [SFTP Tools](apps/sftp.md), [Webcam](apps/webcam.md), [Controller](apps/controller.md), [SSD Check](apps/ssd.md), [HDMI CEC Manager](apps/cec.md).
+Tools for files, peripherals and storage: [Controller](apps/controller.md), [HDMI CEC Manager](apps/cec.md), [SFTP Tools](apps/sftp.md), [SSD Check](apps/ssd.md), [Webcam](apps/webcam.md).
 </div>
 </div>
 

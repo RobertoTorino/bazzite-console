@@ -29,6 +29,7 @@ theme:
     accent: custom
   features:
     - navigation.sections
+    - navigation.expand
     - navigation.top
     - navigation.indexes
     - toc.follow
@@ -61,23 +62,28 @@ nav:
   - Apps:
       - apps/index.md
       - App categories: apps/categories.md
-      - Bazzite Test: apps/bazzite.md
-      - RPCS3 Manager: apps/rpcs3.md
-      - Remote Play: apps/remoteplay.md
-      - Xbox Remote Play: apps/clb.md
-      - shadPS4 Manager: apps/shadps4.md
-      - Bazzite DatStation: apps/datstation.md
-      - PPSSPP Manager: apps/ppsspp.md
-      - PCSX2 Manager: apps/pcsx2.md
-      - Vita3K Manager: apps/vita3k.md
-      - Xenia Manager: apps/xenia.md
-      - SFTP Tools: apps/sftp.md
-      - Webcam: apps/webcam.md
-      - Controller: apps/controller.md
-      - SSD Check: apps/ssd.md
-      - HDMI CEC Manager: apps/cec.md
-      - System Overlay: apps/overlay.md
-      - Fan Control: apps/fan.md
+      - Sustainable:
+          - Bazzite Test: apps/bazzite.md
+          - Fan Control: apps/fan.md
+          - System Overlay: apps/overlay.md
+      - Graphics:
+          - "Coming soon.": apps/graphics.md
+      - Gaming:
+          - Bazzite DatStation: apps/datstation.md
+          - PCSX2 Manager: apps/pcsx2.md
+          - PPSSPP Manager: apps/ppsspp.md
+          - Remote Play: apps/remoteplay.md
+          - RPCS3 Manager: apps/rpcs3.md
+          - shadPS4 Manager: apps/shadps4.md
+          - Vita3K Manager: apps/vita3k.md
+          - Xbox Remote Play: apps/clb.md
+          - Xenia Manager: apps/xenia.md
+      - Utilities:
+          - Controller: apps/controller.md
+          - HDMI CEC Manager: apps/cec.md
+          - SFTP Tools: apps/sftp.md
+          - SSD Check: apps/ssd.md
+          - Webcam: apps/webcam.md
   - Development:
       - development/index.md
   - Security:

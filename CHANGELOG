@@ -1,3 +1,16 @@
+Changelog: 14-11-2026 02:59:10
+
+Fixed. The Sustainable category has a new icon, a steel board in place of the green one (icons/sustainable/, its four
+sizes). tools/sync_icons.py copied it to Bazzite Test, Fan Control, System Overlay and the portal; their CHANGELOGs say
+so. The wiki shows it too.
+
+Changelog: 14-11-2026 02:42:47
+
+Added. The wiki lists the apps by category, alphabetically within each: the navigation has a header per category
+(Sustainable, Graphics, Gaming, Utilities, the portal's order), and the Apps overview, App categories and the Home
+page follow the same order. Graphics, a category every suite has, is there with one entry, "Coming soon.", until it
+has an app.
+
 Changelog: 14-11-2026 02:22:44
 
 Added. Dependabot keeps the workflows' actions up to date (.github/dependabot.yml): once a week, one pull request for
