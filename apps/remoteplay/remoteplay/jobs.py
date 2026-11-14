@@ -173,7 +173,7 @@ def _stats_header(console: RegisteredConsole, started: session.Session, connecti
            else ""),
         "Network test: " + (f"MTU {measured.mtu_in} in, {measured.mtu_out} out, round trip {measured.rtt_ms} ms"
                             if measured else "failed, safe values used"),
-        f"Board: {stream_stats.cpu_model()}, {online} processors online; {platform.system()} {platform.release()}; "
+        f"This PS5: {stream_stats.cpu_model()}, {online} processors online; {platform.system()} {platform.release()}; "
         f"desktop {os.environ.get('XDG_CURRENT_DESKTOP', '?')}"
         + ("; started from Steam" if os.environ.get("PS5_LEFT_STEAM_LIBRARIES") or os.environ.get("SteamAppId")
            else ""),
@@ -192,7 +192,7 @@ def _run_stream(console: RegisteredConsole, started: session.Session, seconds: f
                 stats_dir: Path | None = None, **connection_options):
     """The network test, then the stream for *seconds* or until *stop*; the control connection keeps answering
     heartbeats in a second thread meanwhile. When the network test fails, the stream goes on with safe values, as
-    the reference does. With *gamepads* (gamepad.Sdl, or a stand-in), the board's controllers play from STREAMINFO
+    the reference does. With *gamepads* (gamepad.Sdl, or a stand-in), this PS5's controllers play from STREAMINFO
     on. With *stats_dir*, a statistics file goes there (stream_stats.py), with the window's *figures* in it.
     Returns the connection (closed) and STREAMINFO."""
     done = threading.Event()
@@ -298,7 +298,7 @@ def watch_stream(console: RegisteredConsole, deliver: Callable[[Picture], None],
                  players: stream.PlayerExperiment = stream.PlayerExperiment(), simulated_loss: float = 0.0,
                  played: history.HistoryStore | None = None, **kwargs) -> Outcome:
     """The stream until *stop* is set (the stream window closes): each decoded picture goes to *deliver* while
-    *wanted* says the window has taken the last one, the sound to *play* (PCM, rate, channels). The board's
+    *wanted* says the window has taken the last one, the sound to *play* (PCM, rate, channels). This PS5's
     controllers play, read through *gamepads* (SDL3; None: the console sees a controller lying still). With
     *stats_dir*, the stream's statistics file goes there, with the window's *figures*. With *played*, the games
     the console runs meanwhile and their time go into that history (history.py)."""

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Bazzite's update state, read only: the image the board runs, an update that waits for a reboot, and the last run
+"""Bazzite's update state, read only: the image the console runs, an update that waits for a reboot, and the last run
 of Bazzite's updater (uupd, a nightly systemd timer that updates the image, Flatpaks, Homebrew and distroboxes).
 
 Updating is Bazzite's: the suite answers for its own apps, and shows this so a waiting update is not missed (owner's
@@ -121,7 +121,7 @@ def describe(state: BazziteState) -> tuple[str, str]:
     kind = "ok"
     if state.update_waiting:
         text += (f" Bazzite {state.next_boot.version} (built {build_date(state.next_boot)}) is installed and waits for "
-                 "a reboot: restart the board to use it.")
+                 "a reboot: restart the console to use it.")
         kind = "warn"
     elif state.rollback_waiting:
         text += (f" The next boot starts the older {state.next_boot.version} (a rollback); restart to go back to it, "
@@ -150,7 +150,7 @@ def reminder(state: BazziteState, now: datetime.datetime | None = None) -> str:
         return ""
     lines = []
     if state.update_waiting:
-        lines.append(f"Bazzite {state.next_boot.version} waits for a reboot: restart the board to use it.")
+        lines.append(f"Bazzite {state.next_boot.version} waits for a reboot: restart the console to use it.")
     if state.updater_failed:
         lines.append(f"Bazzite's updater ({UPDATER}) failed on its last run.")
     elif state.updater_stale(now):

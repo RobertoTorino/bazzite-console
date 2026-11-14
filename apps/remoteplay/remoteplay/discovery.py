@@ -3,7 +3,7 @@
 
 A search is "SRCH * HTTP/1.1" to port 987 (PS4) or 9302 (PS5), broadcast or to one address; each console answers
 with its name, id, state (200: on, 620: in rest mode) and system version. A wake-up is "WAKEUP * HTTP/1.1" to the
-same port with the registration key as credential: only a console the board is registered with reacts."""
+same port with the registration key as credential: only a console this PS5 is registered with reacts."""
 
 from __future__ import annotations
 

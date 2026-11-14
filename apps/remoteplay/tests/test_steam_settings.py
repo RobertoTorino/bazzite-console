@@ -125,7 +125,7 @@ def test_steam_running_reads_process_names(tmp_path):
         (tmp_path / str(pid) / "stat").write_text(f"{pid} ({name}) {state} 1 {pid} {pid} 0 -1\n")
     process(10, "bash")
     process(11, "steamwebhelper")
-    process(12, "steam", "Z")               # the app's own finished steam -shutdown (the owner's board, 13-10-2026)
+    process(12, "steam", "Z")               # the app's own finished steam -shutdown (the owner's machine, 13-10-2026)
     assert not steam_settings.steam_running(tmp_path)
     process(13, "steam")
     assert steam_settings.steam_running(tmp_path)

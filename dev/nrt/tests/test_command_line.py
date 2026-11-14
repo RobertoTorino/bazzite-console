@@ -18,7 +18,7 @@ from nexus_release_tool import plan as rp
 from nexus_release_tool.command_line import HISTORY_KEY, CommandLine, command_lines, plain
 
 needs_bash = pytest.mark.skipif(not shutil.which("bash") or not sys.platform.startswith("linux"),
-                                reason="runs bash as on the board")
+                                reason="runs bash as on the console")
 
 
 @pytest.fixture

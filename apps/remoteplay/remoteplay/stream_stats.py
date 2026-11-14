@@ -89,8 +89,8 @@ def cpu_model(proc: Path = Path("/proc")) -> str:
 
 def disk_figures(proc: Path = Path("/proc"), pid: int | None = None) -> dict[str, int]:
     """Waiting on the disk: the processors' ticks spent waiting for it (iowait) and in all, the pages swapped in and
-    out (/proc/vmstat), and the app's page faults that read from the disk. A board short of memory swaps, and a slow
-    drive (one without its own DRAM cache) then makes the stream stutter."""
+    out (/proc/vmstat), and the app's page faults that read from the disk. This PS5 swaps when it is short of
+    memory, and a slow drive (one without its own DRAM cache) then makes the stream stutter."""
     figures = {}
     for line in (proc / "stat").read_text().splitlines():
         if line.startswith("cpu "):

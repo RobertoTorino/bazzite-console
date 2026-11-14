@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """The main window, as the other gaming apps (owner, 20-10-2026): the suite's header with Settings… and four boxes,
-numbered steps (1 find the console, also at one address; 2 register the board with it; 3 the selected console's
+numbered steps (1 find the console, also at one address; 2 register this PS5 with it; 3 the selected console's
 login passcode and removal; 4 Game Mode), the consoles on the network and the registered consoles in two tables,
 and under them Stream with Wake, Rest mode, Test session, Test stream and the rest. Every network step
 runs off the GUI thread (jobs.py through core's UpdateChecker) and reports back in the log at the bottom; Stream
@@ -261,8 +261,8 @@ class MainWindow(QMainWindow):
         for box in (self.found_box, self.registered_box, self.session_box, self.console_box):
             header.add_second(box)
         intro = hint_label(
-            "Remote Play with your own PS4 or PS5 on the system: find the console, register the board with it once, "
-            "then stream it here or from Game Mode, with the controllers on the board. The app talks to consoles "
+            "Remote Play with your own PS4 or PS5 on this PS5: find the console, register this PS5 with it once, "
+            "then stream it here or from Game Mode, with the controllers on this PS5. The app talks to consoles "
             "and PSN only when you press a button. " + style.link(self, MANUAL_URL, "Wiki"))
 
         self.address_edit = PrivateLineEdit(self.settings.get("address"), privacy.mask_address)
@@ -292,7 +292,7 @@ class MainWindow(QMainWindow):
         self.account_button.setToolTip("Sign in to PSN in your browser to read your account ID")
         self.account_button.clicked.connect(self.find_account_id)
         self.register_button = QPushButton("Register")
-        self.register_button.setToolTip("Register the board with the console selected under Consoles on the network")
+        self.register_button.setToolTip("Register this PS5 with the console selected under Consoles on the network")
         self.register_button.clicked.connect(self.register)
         fields = QHBoxLayout()
         fields.setContentsMargins(0, 0, 0, 0)
@@ -309,12 +309,12 @@ class MainWindow(QMainWindow):
         self.passcode_button.setToolTip("The 4-digit passcode of the PSN account on the console, if it has one")
         self.passcode_button.clicked.connect(self.set_passcode)
         self.remove_button = QPushButton("Remove")
-        self.remove_button.setToolTip("Forget this console's keys on the board")
+        self.remove_button.setToolTip("Forget this console's keys on this PS5")
         self.remove_button.clicked.connect(self.remove)
         console_cell = self._cell(self.console_state, hint_label(
             "The keys from registration are stored in ~/.config/ps5-remoteplay/consoles.json, readable only by "
-            "you. Remove forgets them here; a PS5 also lists the board under Link Device, where it can be removed. "
-            "A PS4 only keeps a history, under Remote Play Connection Settings > Connection History."))
+            "you. Remove forgets them here; a PS5 console also lists this PS5 under Link Device, where it can be "
+            "removed. A PS4 only keeps a history, under Remote Play Connection Settings > Connection History."))
 
         self.game_mode_button = QPushButton("Add to Game Mode")
         self.game_mode_button.setToolTip("A Steam shortcut for this console: in Game Mode it starts the stream full "
@@ -383,7 +383,7 @@ class MainWindow(QMainWindow):
         self.history_button.setToolTip("The games played through the app and the time played")
         self.history_button.clicked.connect(self.show_history)
         self.watch_button = style.primary_button("Stream", "Show the console's picture and play its sound until you "
-                                                 "close the window; the controllers on the board play")
+                                                 "close the window; the controllers on this PS5 play")
         self.watch_button.clicked.connect(self.watch)
         self.stream_window: StreamWindow | None = None
         self._stream_stop: threading.Event | None = None
@@ -794,7 +794,7 @@ class MainWindow(QMainWindow):
         if console is None:
             self.console_box.set_value("—", "Select a registered console.")
             self.console_state.setText("Select a registered console in the list below." if self.registered else
-                                       "No registered console yet: register the board with one first (step 2).")
+                                       "No registered console yet: register this PS5 with one first (step 2).")
             return
         self.console_state.setText(f"Selected: {console.nickname or 'Console'} ({console.target.console}).")
         info = self.console_info.get(console.key, {})
@@ -840,7 +840,7 @@ class MainWindow(QMainWindow):
         console = self.selected_registered()
         if console is None:
             return
-        answer = QMessageBox.question(self, APP_NAME, f"Forget {console.nickname or console.address}? The board "
+        answer = QMessageBox.question(self, APP_NAME, f"Forget {console.nickname or console.address}? This PS5 "
                                       "has to be registered again to use it.")
         if answer != QMessageBox.StandardButton.Yes:
             return

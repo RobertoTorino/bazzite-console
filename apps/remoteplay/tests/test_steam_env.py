@@ -24,7 +24,7 @@ def test_steams_overlay_is_left_and_the_rest_kept():
     calls = []
     preload = ("/usr/lib/extest/libextest.so:/home/u/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so:"
                "/home/u/.local/share/Steam/ubuntu12_64/gameoverlayrenderer.so")
-    env = {"LD_PRELOAD": preload, "LD_LIBRARY_PATH": "/opt/mine/lib"}       # the shortcut's (owner's board)
+    env = {"LD_PRELOAD": preload, "LD_LIBRARY_PATH": "/opt/mine/lib"}       # the shortcut's (owner's machine)
     steam_env.settle(env, lambda *args: calls.append(args))
     cleaned = calls[0][2]
     assert cleaned["LD_PRELOAD"] == "/usr/lib/extest/libextest.so" and cleaned["LD_LIBRARY_PATH"] == "/opt/mine/lib"

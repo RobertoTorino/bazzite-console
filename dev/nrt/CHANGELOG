@@ -1,3 +1,8 @@
+Changelog: 14-11-2026 12:11:51
+
+Fixed. The window's text says the console where it said the board, and an app that changes the system is
+called that. The tab Test on this board keeps its name.
+
 Changelog: 14-11-2026 03:28:21
 
 Breaking. Windows support is removed: this suite is made for and tested on Bazzite. Gone are run.ps1 and install.ps1,

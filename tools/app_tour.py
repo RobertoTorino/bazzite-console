@@ -16,7 +16,7 @@ APP is the app's key in the suite's portal/apps.toml (fan, cec, ...) or its fold
 suite; with one suite in the checkout it is the default). An app with two programs
 (compute, cores) needs --package to say which one (cu_bisect, cu_unlock, ...).
 
-The app starts as it does on a board, through its own __main__, in a temporary home folder (no settings of yours)
+The app starts as it does on a console, through its own __main__, in a temporary home folder (no settings of yours)
 and offscreen; the tour takes over where the app would wait for the user. pkexec, sudo and run0 refuse (and are
 named on stderr): nothing runs as root and no password is asked. The tour shows the app's title card, its summary
 from the manifest, the icon, the controls of the header with their own tooltips as the captions, the tabs (or the

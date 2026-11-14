@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 12:11:19
+
+Fixed. The window, its tooltips and messages, the log, the installer and the README call the PlayStation 5 the app runs on "this PS5", where they said "the board" or "the system"; "the console" is the PS4 or PS5 streamed from. For example, Register's tooltip reads "Register this PS5 with the console selected under Consoles on the network". The stream log's line with the processor and the system starts with "This PS5:". The menu entry's description says "on this PS5". The comments in the code follow.
+
 Changelog: 14-11-2026 03:50:37
 
 Release 1.0.0.

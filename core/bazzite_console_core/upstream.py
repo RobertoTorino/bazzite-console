@@ -9,7 +9,7 @@ found here, one file per app named after its key in the portal's manifest:
 
 and the portal lists each update under "Outside the suite", linked to the app's tile. An app writes an empty list
 when it found nothing to install, so a done update drops out of the notice. Pinned programs are not written: a newer
-one reaches the board with a new version of the app, which the portal announces as an app update.
+one reaches the console with a new version of the app, which the portal announces as an app update.
 
 Standard library only; nothing here asks the network. The apps that are not on bazzite_console_core yet carry a copy of this
 file; tools/tests checks that the copies match."""

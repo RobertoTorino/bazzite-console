@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Nexus Release Tool: the file edits of a release (versions, CHANGELOG entries, pins, the portal bump) of any suite in
-the repository, and the board checks of a portal release. It works on the checkout it lives in (Nexus, with its
+the repository, and the console checks of a portal release. It works on the checkout it lives in (Nexus, with its
 suites in the first column when the checkout holds several), so it is not part of a portal's releases and has none of its own."""
 
 APP_NAME = "Nexus Release Tool"

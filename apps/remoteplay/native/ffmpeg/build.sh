@@ -4,7 +4,7 @@
 # sources, pinned and checked, configured as small as the stream needs: the H.264 and HEVC decoders with VA-API,
 # and the Opus decoder for the sound (which needs libswresample).
 # LGPL only (no --enable-gpl, no external codec libraries). libva stays the system's, linked dynamically, so the
-# board's own drivers decode.
+# PS5's own drivers decode.
 #
 #   native/ffmpeg/build.sh [PREFIX]
 #

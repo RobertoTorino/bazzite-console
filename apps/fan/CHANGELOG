@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 12:12:59
+
+Fixed. The Fan box's tooltip says the Board temperature is the warmest of the three mainboard sensors.
+
 Changelog: 14-11-2026 03:50:36
 
 Release 1.0.0.

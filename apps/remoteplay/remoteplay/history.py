@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """The games played through the app and the time played (owner, 13-10-2026): during a stream the console is asked
 what it runs every INTERVAL seconds (the discovery answer's running-app name and title ID, as the Console box shows
-it), and the time since the last answer goes to the game that ran. Only streams to this board are counted: play on
+it), and the time since the last answer goes to the game that ran. Only streams to this PS5 are counted: play on
 the console itself is not seen.
 
 Kept in ~/.config/ps5-remoteplay/history.json (mode 0600: which games were played when is personal), one entry

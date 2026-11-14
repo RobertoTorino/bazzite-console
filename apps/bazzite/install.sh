@@ -125,8 +125,8 @@ else
         (cd "$CORE_SRC" && tar --exclude='__pycache__' -cf - .) |
             as_root tar -xf - -C "$STAGE/bazzite_console_core" --no-same-owner
     fi
-    if [ ! -f "$SRC/MANUAL.md" ] && [ -f "$SRC/../../docs/apps/check.md" ]; then   # likewise its manual
-        as_root cp "$SRC/../../docs/apps/check.md" "$STAGE/MANUAL.md"
+    if [ ! -f "$SRC/MANUAL.md" ] && [ -f "$SRC/../../docs/apps/bazzite.md" ]; then   # likewise its manual
+        as_root cp "$SRC/../../docs/apps/bazzite.md" "$STAGE/MANUAL.md"
     fi
     as_root chown -R root:root "$STAGE"
     as_root find "$STAGE" -type d -exec chmod 755 {} +

@@ -18,7 +18,7 @@ name = "Remote Play"
 launchers = ["~/.local/bin/ps5-remoteplay"]
 
 [app.clb]
-name = "Xbox Remote Play"
+name = "XBOX Remote Play"
 launchers = ["~/.local/bin/ps5-xbox-remoteplay"]
 
 [app.shadps4]
@@ -199,7 +199,7 @@ specifier = ">=2.5,<3"
 
 [[dependency]]
 name = "aiortc"
-description = "WebRTC streaming used by Xbox Remote Play."
+description = "WebRTC streaming used by XBOX Remote Play."
 
 [[dependency.source]]
 owner = "clb"
@@ -227,7 +227,7 @@ specifier = ">=3.4,<5"
 
 [[tool]]
 name = "pkexec"
-description = "Opens a privileged prompt for board-wide actions."
+description = "Opens a privileged prompt for system-wide actions."
 executables = ["pkexec"]
 
 [[tool.source]]

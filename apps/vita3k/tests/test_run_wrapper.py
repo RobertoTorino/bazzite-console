@@ -16,7 +16,7 @@ from vita3k_manager import ROOT
 
 WRAPPER = ROOT / "ps5-vita3k-run"
 
-# /proc/bus/input/devices with Steam running (the shadPS4 Manager's, from the owner's board): a DualShock 4 on USB,
+# /proc/bus/input/devices with Steam running (the shadPS4 Manager's, from the owner's console): a DualShock 4 on USB,
 # its motion sensors and touchpad, and Steam's virtual controller.
 DS4_AND_STEAM = """\
 I: Bus=0003 Vendor=054c Product=09cc Version=8111

@@ -775,12 +775,11 @@ class ExtractDialog(QDialog):
         elif any(same_path(Path(text), folder) for folder in self.game_folders):
             self.output_note.setText("A game folder of shadPS4: an extracted game shows up in the list.")
         elif self.game_folders:
-            self.output_note.setText("Not one of shadPS4's game folders: add it (Add folder…) to see the game in "
-                                     "the list, or extract into " + ", ".join(str(f) for f in self.game_folders)
-                                     + ".")
+            self.output_note.setText("Not one of shadPS4's game folders: the game will not show in the list. "
+                                     "To see it there, extract into "
+                                     + ", ".join(str(f) for f in self.game_folders) + ".")
         else:
-            self.output_note.setText("shadPS4 has no game folder yet: add this one (Add folder…) to see the game "
-                                     "in the list.")
+            self.output_note.setText("shadPS4 has no game folder yet: the game will not show in the list.")
 
     def is_busy(self) -> bool:
         return self._thread is not None

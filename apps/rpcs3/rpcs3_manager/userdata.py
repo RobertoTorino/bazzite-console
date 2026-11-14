@@ -23,11 +23,11 @@ PCSX2 Manager's pcsx2_settings), never while RPCS3 runs, since RPCS3 writes its 
 * RPCS3's GUI settings, GuiConfigs/CurrentSettings.ini (a Qt INI, gui_settings.h): its welcome dialog off
   (ib_show_welcome; the dialog waits for a tick in "I have read the Quickstart guide" before RPCS3's window opens,
   with "Show at startup" ticked) and its own update check off (m_check_upd_start; RPCS3's window offered a newer
-  build on the board and replaced the installed one with it, after which its config.yml held keys the other build
+  build on the console and replaced the installed one with it, after which its config.yml held keys the other build
   did not know and RPCS3 asked to remove "obsolete settings"). And, once, RPCS3's dark style when the suite's theme
   is dark (m_currentStylesheet; the welcome dialog would have ticked "Use Dark Theme" for a dark desktop).
 * Player 1 on the first controller, input_configs/global/Default.yml (cfg_input in pad_config.h): RPCS3 starts a
-  game with the keyboard as player 1 while that file is empty (cfg_input::load), as it was on the board. The app
+  game with the keyboard as player 1 while that file is empty (cfg_input::load), as it was on the console. The app
   writes RPCS3's SDL handler with RPCS3's own default mapping for it (sdl_pad_handler::init_config) and the
   controller as SDL names it, with RPCS3's " 1" after the name (sdl_pad_handler::enumerate_devices; a second
   controller of the same name is " 2"); a name RPCS3 has not seen yet it keeps as a device to attach when a
@@ -44,7 +44,7 @@ PCSX2 Manager's pcsx2_settings), never while RPCS3 runs, since RPCS3 writes its 
 One more file of another program the app only reads: RPCS3's own log, ~/.cache/rpcs3/RPCS3.log (fs::get_cache_dir;
 RPCS3 starts a new one on every start and keeps the one before it as RPCS3.log.gz), for what a headless install of
 packages did (owner, 24-10-2026: --installpkg without RPCS3's window; the lines main_window::InstallPackages and
-HandlePackageInstallation write). The volume the desktop remembers for RPCS3's sound (found muted on the board,
+HandlePackageInstallation write). The volume the desktop remembers for RPCS3's sound (found muted on the console,
 24-10-2026) is core's sound.py: RPCS3's stream is named "RPCS3"."""
 
 from __future__ import annotations

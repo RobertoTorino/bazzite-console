@@ -10,7 +10,7 @@ whether they make sense: a build date of the controller's era, versions that are
 there and symmetric (a sensor's plus and minus about as large).
 
 The check is built from genuine controllers' answers; what fakes answer is to be learned from a fake on the owner's
-board. A real proof would be the console's own challenge, which a genuine controller signs with Sony's key; that is
+machine. A real proof would be the console's own challenge, which a genuine controller signs with Sony's key; that is
 not done here."""
 
 from __future__ import annotations

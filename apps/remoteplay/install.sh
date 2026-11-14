@@ -63,7 +63,7 @@ if $UNINSTALL; then
     if $PURGE; then
         info "Removing the settings and the registered consoles"
         rm -rf "${CONFIG_DIR:?}/$APP_ID"
-        info "$APP_NAME is uninstalled. A PS5 still lists the board under Link Device; remove it there too."
+        info "$APP_NAME is uninstalled. A PS5 console still lists this PS5 under Link Device; remove it there too."
     else
         info "$APP_NAME is uninstalled. Its settings and registered consoles are kept in $CONFIG_DIR/$APP_ID."
     fi
@@ -160,7 +160,7 @@ Type=Application
 Version=1.0
 Name=$APP_NAME
 GenericName=Remote Play
-Comment=Find, wake and register PS4 and PS5 consoles for Remote Play on the system
+Comment=Find, wake and register PS4 and PS5 consoles for Remote Play on this PS5
 Exec=$LAUNCHER
 Icon=$APP_DIR/images/$APP_ID-128.png
 Terminal=false

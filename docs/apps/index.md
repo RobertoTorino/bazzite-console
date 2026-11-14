@@ -25,8 +25,8 @@ Coming soon.
 | ![](../assets/apps/rpcs3.webp){ .app-icon } [RPCS3 Manager](rpcs3.md) | Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode. |
 | ![](../assets/apps/shadps4.webp){ .app-icon } [shadPS4 Manager](shadps4.md) | Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode. |
 | ![](../assets/apps/vita3k.webp){ .app-icon } [Vita3K Manager](vita3k.md) | Install Vita3K for PS Vita games and add installed titles to Game Mode. |
-| ![](../assets/apps/clb.webp){ .app-icon } [Xbox Remote Play](clb.md) | Stream Xbox consoles or Xbox Cloud Gaming after signing in with a Microsoft account. |
-| ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Install Xenia Canary for Xbox 360 games and add games to Game Mode. |
+| ![](../assets/apps/clb.webp){ .app-icon } [XBOX Remote Play](clb.md) | Stream XBOX consoles or XBOX Cloud Gaming after signing in with a Microsoft account. |
+| ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Install Xenia Canary for XBOX 360 games and add games to Game Mode. |
 
 **Utilities**: Tools for files, peripherals, and storage.
 
@@ -38,4 +38,4 @@ Coming soon.
 | ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | Inspect storage health and drive information when supported. |
 | ![](../assets/apps/webcam.webp){ .app-icon } [Webcam](webcam.md) | Use a compatible PlayStation camera as a webcam. |
 
-Apps that change the system must explain their changes and ask before applying them.
+Apps that change the board must explain their changes and ask before applying them.

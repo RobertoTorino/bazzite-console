@@ -32,8 +32,9 @@ def installed_copy() -> Path | None:
 
 
 def state_dir() -> Path:
-    """Per-user portal state: installed app tags and prepared releases."""
-    return data_home() / APP_ID / "portal"
+    """Per-user portal state: installed app tags, prepared releases, the wallpaper. Not the installed portal's own
+    folder (portal/), which install.sh replaces at every install."""
+    return data_home() / APP_ID / "state"
 
 
 def is_suite(folder: Path) -> bool:

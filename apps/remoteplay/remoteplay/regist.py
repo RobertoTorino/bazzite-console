@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Registering the board with a console, on the local network.
+"""Registering this PS5 with a console, on the local network.
 
 The console shows an 8-digit PIN: a PS5 under Settings > System > Remote Play > Link Device, a PS4 under
-Settings > Remote Play Connection Settings > Add Device. The board says "SRC2"/"SRC3"
+Settings > Remote Play Connection Settings > Add Device. This PS5 says "SRC2"/"SRC3"
 on UDP port 9295 until the console answers "RES2"/"RES3", then POSTs a 0x1e0-byte block with the crypto seeds and
-the PSN account ID, encrypted with a key mixed from a table and the PIN. The console answers with the keys the
-board keeps: the registration key (for sessions and wake-ups) and RP-Key (the "morning" of the session crypto)."""
+the PSN account ID, encrypted with a key mixed from a table and the PIN. The console answers with the keys this
+PS5 keeps: the registration key (for sessions and wake-ups) and RP-Key (the "morning" of the session crypto)."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ class RegistError(Exception):
 
 @dataclass(frozen=True)
 class Registration:
-    """What the console hands out on registration; the board needs regist_key and rp_key for every session."""
+    """What the console hands out on registration; this PS5 needs regist_key and rp_key for every session."""
     target: Target
     nickname: str
     mac: bytes
@@ -125,7 +125,7 @@ def _search(host: str, target: Target, port: int, timeout: float) -> str:
             if data.startswith(answer):
                 return sender
     raise RegistError(f"No answer from {host}. Show the PIN on the console first (PS5: Link Device; PS4: Add "
-                      "Device), and check that the board and the console are on the same network.")
+                      "Device), and check that this PS5 and the console are on the same network.")
 
 
 def register(host: str, target: Target, account_id: bytes, pin: int, port: int = PORT, timeout: float = TIMEOUT,

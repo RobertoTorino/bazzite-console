@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The portal's system information (owner, 20-10-2026): the board, BIOS, CPU, GPU, memory, drives, displays, audio,
+"""The portal's system information (owner, 20-10-2026): the console, BIOS, CPU, GPU, memory, drives, displays, audio,
 network, USB devices, input devices (owner, 26-10-2026), sensors and OS, as the system reports them, in the window
 the Sys info pill opens. Everything is
 read when the window opens, from sysfs, /proc and /etc, without root and without starting a program; what a system
@@ -30,7 +30,7 @@ USB_SPEEDS = {"1.5": "USB 1.0", "12": "USB 1.1", "480": "USB 2.0", "5000": "USB 
 EDID_NAME = 0xFC                # the display descriptor with the monitor's name (0xFF holds its serial: never read)
 MAC = re.compile(r"([0-9a-f]{2}[:-]){5}[0-9a-f]{2}", re.IGNORECASE)
 INPUT_BUSES = {"0003": "USB", "0005": "Bluetooth", "0006": "virtual", "0011": "PS/2", "0018": "I2C",
-               "0019": "", "0001": ""}         # host and PCI: the board's own buttons and the GPU's audio jacks
+               "0019": "", "0001": ""}         # host and PCI: the console's own buttons and the GPU's audio jacks
 
 Section = tuple[str, list[tuple[str, str]]]
 
@@ -119,10 +119,10 @@ def _driver(device: Path) -> str:
 
 def board(sys_root: Path) -> Section:
     dmi = sys_root / "class" / "dmi" / "id"
-    rows = [("Board", _real(_read(dmi / "board_vendor"), _read(dmi / "board_name"), _read(dmi / "board_version"))),
+    rows = [("Mainboard", _real(_read(dmi / "board_vendor"), _read(dmi / "board_name"), _read(dmi / "board_version"))),
             ("Product", _real(_read(dmi / "sys_vendor"), _read(dmi / "product_name"),
                               _read(dmi / "product_version")))]
-    return "Board", rows
+    return "Console", rows
 
 
 def bios(sys_root: Path) -> Section:
@@ -287,7 +287,7 @@ def usb(sys_root: Path, usb_ids: tuple[Path, ...] = USB_IDS) -> Section:
 
 def inputs(sys_root: Path) -> Section:
     """The input devices plugged in or paired (keyboards, mice, controllers), each with the bus it is on: USB,
-    Bluetooth, PS/2, I2C or a virtual one. The board's own buttons and the GPU's audio jacks (the host and PCI buses)
+    Bluetooth, PS/2, I2C or a virtual one. The console's own buttons and the GPU's audio jacks (the host and PCI buses)
     are left out, and a device the kernel registers twice under one name is listed once."""
     rows: list[tuple[str, str]] = []
     devices = sorted((sys_root / "class" / "input").glob("input*"),

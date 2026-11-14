@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Settings > System overview: the board's configuration and latest measurements as colored boxes.
+"""Settings > System overview: the console's configuration and latest measurements as colored boxes.
 
 Everything is read when the page is opened, never in the background: a few sysfs files, one statvfs
 call and two small history queries, well under a millisecond in total.
@@ -225,7 +225,7 @@ class SystemOverviewPage(QWidget):
         title = QLabel("System overview")
         title.setStyleSheet("font-size:16px; font-weight:700;")
         layout.addWidget(title)
-        intro = QLabel("The board's configuration and the latest measurements. Hover a box for details.")
+        intro = QLabel("The console's configuration and the latest measurements. Hover a box for details.")
         intro.setWordWrap(True)
         layout.addWidget(intro)
         grid = QGridLayout()

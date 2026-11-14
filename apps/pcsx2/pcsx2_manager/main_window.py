@@ -463,7 +463,7 @@ class MainWindow(QMainWindow):
             tip = f"PCSX2 {pinned}, the stable release this version of the app was tried with"
         if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
             tip += (f"\nPCSX2 {self.newer.version} is out ({self.newer.published}). A later version of this app "
-                    f"brings it, once it has been tried on the board: {self.newer.url}")
+                    f"brings it, once it has been tried on the console: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
 
         page = style.link(self, userdata.BIOS_HELP_URL, "PCSX2's BIOS page")
@@ -528,7 +528,7 @@ class MainWindow(QMainWindow):
             self._show_state()
             self._update_buttons()
             self.note(f"PCSX2 {result.version} is out ({result.published}); a later version of this app brings it, "
-                      f"once it has been tried on the board: {result.url}")
+                      f"once it has been tried on the console: {result.url}")
 
     def chosen(self) -> Game | None:
         """The game whose row is selected."""

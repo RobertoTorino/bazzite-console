@@ -6,7 +6,7 @@ to UDP 9297, without crypto, that measures what the stream then asks for in its 
 2. Round trip: echo on, ten pings (version 7 audio packets of 0x224 bytes with a random tag), each answered by the
    console with a pong carrying the same tag; echo off. The average is the round trip.
 3. MTU in: the console sends a video packet of the size asked for; a binary search between 576 and 1454 bytes.
-4. MTU out: the board sends pings of the size tried; the same search, starting at MTU in, then a final
+4. MTU out: this PS5 sends pings of the size tried; the same search, starting at MTU in, then a final
    CLIENT_MTU_COMMAND. As in the reference, a search that does not start at 1454 ends at 1453 at most.
 
 When it fails, the reference streams with 1454 bytes both ways and 1 ms (stream.MTU, stream.RTT_MS), and so does the

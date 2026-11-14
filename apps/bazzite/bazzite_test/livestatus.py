@@ -92,7 +92,7 @@ class LiveStatus(QWidget):
         self.cpu.setText(f"CPU <b style='color:{_color(s.cpu)}'>{_pct(s.cpu)}</b>")
         self.gpu.setText(f"GPU <b style='color:{_color(s.gpu)}'>{_pct(s.gpu)}</b>")
         src = {"sensor": "kernel load sensor (gpu_busy_percent)",
-               "gpu_metrics": "gpu_metrics patched by the governor's fix-metrics",
+               "gpu_metrics": "gpu_metrics file (a patched copy mounted over the kernel's)",
                "fdinfo": "GPU engine time of this user's processes (/proc/*/fdinfo)"}.get(s.gpu_source, "not available")
         cost = (f"\nSampling every {self.timer.interval() / 1000:.0f} s took {s.cost_ms:.1f} ms"
                 + (f" (process scan {s.scan_ms:.1f} ms)" if s.scan_ms else ""))

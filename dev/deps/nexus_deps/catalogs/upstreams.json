@@ -100,7 +100,7 @@
     {
       "id": "xenia",
       "name": "Xenia Canary",
-      "what": "the Xbox 360 emulator; its builds are named after a commit, a later one is newer",
+      "what": "the XBOX 360 emulator; its builds are named after a commit, a later one is newer",
       "compare": "published",
       "apps": [
         {

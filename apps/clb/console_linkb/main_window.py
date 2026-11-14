@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         for box in (self.account_box, self.consoles_box, self.cloud_box):
             header.add_second(box)
         intro = hint_label(
-            "XBOX games on the PS5: stream your own XBOX (Remote Play) or a game from XBOX Cloud Gaming. Sign "
+            "XBOX games on this PS5: stream your own XBOX (Remote Play) or a game from XBOX Cloud Gaming. Sign "
             "in with your Microsoft account; the app never sees your password. " + style.link(self, MANUAL_URL,
                                                                                             "Manual"))
 
@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
                                                               "code to enter on microsoft.com/link")
         self.sign_in_button.clicked.connect(self.on_sign_in)
         self.sign_out_button = QPushButton("Sign out")
-        self.sign_out_button.setToolTip("Forget the account on this board")
+        self.sign_out_button.setToolTip("Forget the account on this PS5")
         self.sign_out_button.clicked.connect(self.on_sign_out)
         label = QLabel("Microsoft account")
         label.setStyleSheet("font-weight:700;")
@@ -107,7 +107,7 @@ class MainWindow(QMainWindow):
         self.wake_button.setToolTip("Wake the console from sleep (it needs the Sleep power mode and remote "
                                     "features on)")
         self.wake_button.clicked.connect(self.on_wake)
-        self.stream_console_button = style.primary_button("Stream", "Stream the console on the board")
+        self.stream_console_button = style.primary_button("Stream", "Stream the console on this PS5")
         self.stream_console_button.clicked.connect(self.on_stream_console)
         consoles_tab = QWidget()
         lay = QVBoxLayout(consoles_tab)
@@ -373,13 +373,13 @@ class MainWindow(QMainWindow):
 
     def on_sign_out(self) -> None:
         answer = QMessageBox.question(self, window_title("Sign out"),
-                                      "Sign out and forget the account on this board?\n\nSign in again with a new "
+                                      "Sign out and forget the account on this PS5?\n\nSign in again with a new "
                                       "code to use it.")
         if answer != QMessageBox.StandardButton.Yes:
             return
         self.account.sign_out()
         self.gamertag, self.consoles, self.titles, self.cloud_note = "", [], [], ""
-        self.say("Signed out; the account is forgotten on this board.")
+        self.say("Signed out; the account is forgotten on this PS5.")
         self._show_state()
 
     def on_wake(self) -> None:

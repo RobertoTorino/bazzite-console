@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """A console's stream settings (owner, 13-10-2026: per console, in a dialog): what the stream asks the console for
-(resolution, frame rate, bitrate) and how the board plays it (audio delay, low latency, the picture's fit on the
+(resolution, frame rate, bitrate) and how this PS5 plays it (audio delay, low latency, the picture's fit on the
 screen). Kept with the console in consoles.json, so the Game Mode shortcut streams with them too.
 
 Automatic is the reference's presets: 1080p at 15 Mbit/s from a PS5 or a PS4 Pro, 720p at 10 Mbit/s from a PS4.

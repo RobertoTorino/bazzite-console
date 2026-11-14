@@ -357,7 +357,7 @@ class ReleasePage(QWidget):
 
     def choose_drafts(self, drafts: list[str]) -> None:
         """Only the portals still drafts in the choice, the chosen one kept while it is one (owner, 05-11-2026: after
-        the board's Publish it stayed on portal-v15.2.0, so Publish published it again and the other suite's draft stayed)."""
+        the console's Publish it stayed on portal-v15.2.0, so Publish published it again and the other suite's draft stayed)."""
         if not drafts:
             return
         items = [self.portal_choice.itemText(i) for i in range(self.portal_choice.count())]

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The volume the desktop remembers for an application's sound (owner, 24-10-2026, found on the board with RPCS3
+"""The volume the desktop remembers for an application's sound (owner, 24-10-2026, found on the console with RPCS3
 muted: a game played without a sound). Bazzite's sound settings keep a volume and a mute per application, also once
 the application is closed: WirePlumber's restore-stream module writes them to
 ~/.local/state/wireplumber/stream-properties, a line per stream with the application's name in the key and the
@@ -21,7 +21,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 STREAM_PROPERTIES = Path("wireplumber") / "stream-properties"
-TIMEOUT = 10                            # s, for one pactl call (it answered in a moment on the board)
+TIMEOUT = 10                            # s, for one pactl call (it answered in a moment on the console)
 SILENCE = 2                             # s of silence the stream opened for a change plays
 STREAM_WAIT = 5                         # s to wait for that stream, and then for WirePlumber to store the change
 

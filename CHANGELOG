@@ -1,3 +1,48 @@
+Changelog: 14-11-2026 12:36:09
+
+Added. SFTP Tools, Webcam and Controller have installer tests (tools/installer-tests/sftp.sh, webcam.sh,
+controller.sh), so every app of the portal has one. The portal marks an app "changes the board" (its CHANGELOG), and
+the wiki's Home, Portal, Apps and Security pages say the same; the Portal Tour is recorded again with it.
+
+Changelog: 14-11-2026 12:22:49
+
+Fixed. A release of Bazzite Test records its engine's checksum again: tools/build_release.py runs the app's
+build_info.py on the staged copy, and tools/tests/test_build_release.py checks the tarball. SSD Check has an
+installer test (tools/installer-tests/ssd.sh). XBOX is written in capitals everywhere: the app's name, the wiki, the
+READMEs and the catalogs.
+
+Changelog: 14-11-2026 12:11:51
+
+Fixed. The suite says the console, or the PS5, where its windows, messages and comments said the board: the portal,
+the apps, the development apps and the tools (each CHANGELOG says what changed there). The portal's own update is
+repaired and its state has a folder of its own (the portal's CHANGELOG); tools/installer-tests/portal.sh now installs
+a portal, updates it from inside the installed one and from the state folder, and checks that what it remembered is
+kept. The wiki's page on the PlayStation 5 is rewritten, the gaming chapters all end with a License section, and the
+two Remote Play chapters name the two machines the same way throughout.
+
+Changelog: 14-11-2026 11:41:05
+
+Added. The wiki goes as deep as the apps do. Every app's chapter is written out from the app's code: what it needs,
+its window, its settings, its files, what it installs and how to remove it. The Portal chapter describes the header
+and its symbols, the tiles and their menu, the keys and the controller's buttons, updates, every setting, Sys info,
+what the portal installs and what stays after an uninstall. New pages: Portal Tour, with a two-minute video of the
+portal (docs/videos/portal-tour.mp4 and its poster, recorded with tools/record-tour.sh --wiki), and Covers from
+SteamGridDB; App categories explains the categories and their icons. The box that opens the chapter of an app that
+changes the console keeps its title, "Changes the board". The home page's license text names how the icons, the
+music and the sounds were made.
+
+Changelog: 14-11-2026 11:03:17
+
+Added. The wiki's home page has a new layout. Under the header and its pictures come a Beta notice, "What's in the
+suite?" (six cards: Diagnostics, Cooling, Graphics, Gaming, Streaming, Living room), "One dashboard for all the apps"
+with a picture of the portal, Get started, an FAQ and the license. The footer's links stay in the wiki: What is
+Bazzite and What is PlayStation 5 are pages of a new History section (docs/history/), License is the home page's
+License section. Security policy and Privacy are written out for the suite: reporting, checking a download,
+dependencies, root and passwords; what goes over the network, to whom and when, and what stays on the console. The
+Install, Security and Privacy pages carry their symbol. The portal's picture is taken from the portal itself by the
+new tools/portal_screenshot.py (offscreen, a fixed demo state, docs/images/home/portal.webp); the wiki's Development
+chapter says how. The navigation keeps the apps by category.
+
 Changelog: 14-11-2026 03:28:53
 
 Breaking. The Windows support is removed from the development tools and from core: a PlayStation 5 running

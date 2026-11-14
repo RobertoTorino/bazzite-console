@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: enter the new versions, and it edits the files of a release (plan.py) of the suite ticked in the
 first column (every suite in the checkout, tools/suites.py, with its portal's tag; hidden while there is one). The
-steps, the pins and the board tests are the ticked suite's; the git buttons and GitHub are the repository's.
+steps, the pins and the console tests are the ticked suite's; the git buttons and GitHub are the repository's.
 
 Step 1, Release apps: tick the apps to release, enter their versions and notes, Apply. It writes VERSION, the copies
 check_versions.py checks and a "Release x.y.z." CHANGELOG entry, runs check_versions.py and check_manifest.py (an
@@ -386,8 +386,8 @@ class PortalPage(QWidget):
             "<b>Publish</b> button beside Bump): the tag is what reaches the users. The commands appear in Commands after Bump portal (done before step 1's "
             "push, for an added app, they are step 1's commands with the bump in them).<br>"
             "<b>5.</b> Once the portal release is published: <b>Test Portal release</b> (tab Test on "
-            "this board) downloads and installs "
-            "that published release and starts it, so the board runs the official release again."))
+            "this console) downloads and installs "
+            "that published release and starts it, so the console runs the official release again."))
         lay.addLayout(top)
         lay.addWidget(self.pins, 1)
         lay.addWidget(self.empty_note)
@@ -501,7 +501,7 @@ class PortalPage(QWidget):
             return
         if not portal.released:
             text = (f"{portal.tag} is not published yet: nothing reaches the users until it is. After the test on a "
-                    f"board, push and publish it ({rp.TAG_SCRIPT} {portal.tag}).")
+                    f"console, push and publish it ({rp.TAG_SCRIPT} {portal.tag}).")
             color = ORANGE
         elif not has_workflow:
             text = (f"{portal.tag} is tagged for manual publishing. After it appears on GitHub, Test Portal release "
@@ -513,7 +513,7 @@ class PortalPage(QWidget):
                         f"may still be running; verify the release with {rp.CHECK_SCRIPT} release {portal.tag}.",
                     "running": f"{portal.tag} is tagged and GitHub is building its release; a notification comes "
                                "when it is ready for Test Portal release.",
-                    "passed": f"{portal.tag} is released: GitHub built it. Test Portal release installs it on this board.",
+                    "passed": f"{portal.tag} is released: GitHub built it. Test Portal release installs it on this console.",
                     "failed": f"{portal.tag} is tagged but GitHub's release workflow failed on it: click GitHub in "
                               "the header to open the run."}[state]
             color = {"": ORANGE, "running": ORANGE, "passed": GREEN, "failed": RED}[state]
@@ -587,7 +587,7 @@ class PortalPage(QWidget):
                 f"Bumped already: the portal is at {new}, and the newest entry of its CHANGELOG is this release's "
                 f"(\"{newest}\"). A second Bump is not needed: it would only give that entry a new time, or a "
                 "copy on top once it is pushed, which leaves the portal uncommitted again, and bump Nexus once "
-                "more.\n\nNothing was changed. The next steps are the commands shown: commit, test on a board, "
+                "more.\n\nNothing was changed. The next steps are the commands shown: commit, test on a console, "
                 "push, then tag the portal.")
             log.append(f"portal: bumped already ({new}, \"{newest}\" on top of its CHANGELOG); nothing written")
         else:
@@ -605,7 +605,7 @@ class PortalPage(QWidget):
                     run_check(root, rp.VERSIONS_CHECK),
                     run_check(root, rp.manifest_check(root, suite), "--base", self.release_window.base())]
         # Bumped before step 1's push (an app added, a pin moved): the bump goes into that push, with the app tags
-        # after it; the portal release comes after Pin. Otherwise commit, test on a board, push and tag the portal.
+        # after it; the portal release comes after Pin. Otherwise commit, test on a console, push and tag the portal.
         pending = rp.untagged_releases(units)
         if pending:
             amend = bool(rp.unpushed_release_commit(root, self.release_window.base()))
@@ -625,8 +625,8 @@ class PortalPage(QWidget):
 
 
 class WithdrawPage(QWidget):
-    """Withdrawing a release: marked in apps.toml (and, with the commands shown, on GitHub); tested on a board before
-    the portal release that removes it from the boards."""
+    """Withdrawing a release: marked in apps.toml (and, with the commands shown, on GitHub); tested on a console before
+    the portal release that removes it from the consoles."""
 
     def __init__(self, window: "ReleaseWindow"):
         super().__init__()
@@ -635,7 +635,7 @@ class WithdrawPage(QWidget):
         self.app_box.currentIndexChanged.connect(lambda _: self._show_state())
         self.state = QLabel()
         self.reason_edit = QLineEdit()
-        self.reason_edit.setPlaceholderText("Why: what is wrong with this release (shown on the boards)")
+        self.reason_edit.setPlaceholderText("Why: what is wrong with this release (shown on the consoles)")
         self.withdraw_button = accent_button("Retract", "Mark the pinned release withdrawn in apps.toml, with a "
                                              "CHANGELOG entry in the app")
         self.withdraw_button.clicked.connect(self.withdraw)
@@ -653,14 +653,14 @@ class WithdrawPage(QWidget):
         reason_row.addWidget(self.back_button)
         lay = QVBoxLayout(self)
         lay.addLayout(info_row(
-            "Retract marks a pinned release withdrawn, with the reason the boards show; test it, then release the "
+            "Retract marks a pinned release withdrawn, with the reason the consoles show; test it, then release the "
             "portal.",
             "For a release that must not be used any more (privacy, security, any reason):<br>"
-            "<b>1.</b> Retract: apps.toml marks the pinned release withdrawn, with the reason the boards show.<br>"
+            "<b>1.</b> Retract: apps.toml marks the pinned release withdrawn, with the reason the consoles show.<br>"
             "<b>2.</b> <b>Test withdrawal</b> (tab Test on this board) on the target platform with the app installed: the portal from this checkout shows "
             "it as \"App not available\" and removes it. Take back undoes the mark.<br>"
             "<b>3.</b> Mark the release on GitHub with the command shown (it stays, as a pre-release, so no update "
-            "check offers it), then release the portal in step 2: it removes the app from the boards."))
+            "check offers it), then release the portal in step 2: it removes the app from the consoles."))
         lay.addLayout(row)
         lay.addLayout(reason_row)
         lay.addStretch(1)
@@ -696,7 +696,7 @@ class WithdrawPage(QWidget):
         if unit is None:
             return
         if not reason:
-            QMessageBox.warning(self, "Retract", "Say why the release is withdrawn: the boards show it.")
+            QMessageBox.warning(self, "Retract", "Say why the release is withdrawn: the consoles show it.")
             return
         root = self.release_window.root
         changed = rp.withdraw(root, unit, reason, suite=self.release_window.suite)
@@ -723,7 +723,7 @@ def open_url(url: str) -> None:
 
 
 class RunPage(QWidget):
-    """Test on this board: the board checks of a release (check-release.sh in a terminal). The local apps, the
+    """Test on this board: the console checks of a release (check-release.sh in a terminal). The local apps, the
     wikis, the installer tests, the portal tour and Close issues are Nexus Dashboard's since 04-11-2026 (owner: the
     release tool is the release)."""
 
@@ -737,7 +737,7 @@ class RunPage(QWidget):
         self.release_button = QPushButton("Test Portal release")
         self.release_button.clicked.connect(lambda: self.check("release"))
         self.withdraw_button = QPushButton("Test withdrawal")
-        self.withdraw_button.setToolTip("On a board with the app installed: install the portal from this checkout "
+        self.withdraw_button.setToolTip("On a console with the app installed: install the portal from this checkout "
                                         "and start it (check-release.sh local); it must show the app as not available "
                                         "and remove it")
         self.withdraw_button.clicked.connect(lambda: self.check("withdrawal"))
@@ -757,7 +757,7 @@ class RunPage(QWidget):
             "The tests of a release, on the target platform. <b>Test app updates</b> (step 2, before the portal's push): the "
             "portal from this checkout, with the apps from their GitHub releases. <b>Test Portal release</b> (after "
             "GitHub built the portal): the published portal release. <b>Test withdrawal</b> (step 3): the portal from "
-            "this checkout on a board with the withdrawn app installed. Each runs in a terminal; close the portal "
+            "this checkout on a console with the withdrawn app installed. Each runs in a terminal; close the portal "
             "there to finish. A test on a machine without the suite removes what it installed when the portal "
             "closes; a machine that had the suite keeps it. <b>Remove suite</b> shows what is installed and "
             "removes it all. The apps and the wikis from this checkout, the installer tests, the portal tour and "
@@ -1004,7 +1004,7 @@ class BuildIndicator(Pill):
         if release.passed:
             summary = f"{release.ref} is ready" + (" to pin" if pin else "")
             body = "GitHub published it. " + ("Pin reads its checksum (step 2)." if pin else
-                                              "Test Portal release installs it on this board (step 2).")
+                                              "Test Portal release installs it on this console (step 2).")
         else:
             summary = f"{release.ref}: release failed"
             body = f"GitHub's release workflow ended with {release.outcome}: click GitHub in the header to open it."
@@ -1442,7 +1442,7 @@ class ReleaseWindow(QMainWindow):
         self.claude.check()
 
     def choose_suite(self, name: str) -> None:
-        """Another suite ticked in the first column: the steps, the pins and the board tests show it from now on,
+        """Another suite ticked in the first column: the steps, the pins and the console tests show it from now on,
         and the next start opens with it."""
         if not name or name == self.suite:
             return
@@ -1466,7 +1466,7 @@ class ReleaseWindow(QMainWindow):
 
     def step_wrote(self, page: QWidget, name: str, text: str, opens: bool) -> None:
         """A step's log (StepLog): it shows in Commands under the step's name, and Commands opens when the step
-        that wrote it is the tab open (*opens*; not for the board tests, whose lines come while you click)."""
+        that wrote it is the tab open (*opens*; not for the console tests, whose lines come while you click)."""
         self.commands.note(name, text)
         if opens and self.tabs.currentWidget() is page and text.strip():
             self.tabs.setCurrentIndex(self.commands_tab)

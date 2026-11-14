@@ -7,7 +7,7 @@
 # Remote Play
 
 Remote Play is a Linux Remote Play client for PlayStation 5 hardware running **Bazzite**. It finds PS4 and PS5
-consoles on your network, can wake them from rest mode, registers the client, and starts a session and stream.
+consoles on your network, can wake them from rest mode, registers this PS5 with one, and starts a session and stream.
 Console, firmware, and network compatibility vary.
 
 How to install and use it: [Remote Play in the manual](https://robertotorino.github.io/bazzite-console/apps/remoteplay/).

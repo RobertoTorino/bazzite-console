@@ -1,3 +1,8 @@
+Changelog: 14-11-2026 12:11:51
+
+Fixed. The window's text says the console where it said the board, and an app that changes the system is
+called that.
+
 Changelog: 14-11-2026 03:27:00
 
 Breaking. Windows support is removed: the suite is for Bazzite. run.sh takes the Linux venv alone (it no longer

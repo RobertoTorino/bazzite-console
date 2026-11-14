@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Xbox Remote Play as a desktop app, from a clone or the extracted release tarball:
+# Installs XBOX Remote Play as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 APP_ID="ps5-xbox-remoteplay"
-APP_NAME="Xbox Remote Play"
+APP_NAME="XBOX Remote Play"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 APP_DIR="$DATA_DIR/$APP_ID/app"
@@ -61,7 +61,7 @@ if $UNINSTALL; then
     if $PURGE; then
         info "Removing the settings and forgetting the account"
         rm -rf "${CONFIG_DIR:?}/$APP_ID"
-        info "$APP_NAME is uninstalled, and the account is forgotten on this board."
+        info "$APP_NAME is uninstalled, and the account is forgotten on this PS5."
     else
         info "$APP_NAME is uninstalled. Its settings and the signed-in account are kept in $CONFIG_DIR/$APP_ID."
     fi
@@ -126,7 +126,7 @@ Type=Application
 Version=1.0
 Name=$APP_NAME
 GenericName=XB Remote Play
-Comment=Stream your XBOX or XBOX Cloud Gaming to the PS5
+Comment=Stream your XBOX or XBOX Cloud Gaming to this PS5
 Exec=$LAUNCHER
 Terminal=false
 Categories=Game;Network;
@@ -137,7 +137,7 @@ if [ -f "$APP_DIR/images/$APP_ID-128.png" ]; then
     DESKTOP_FILE_CONTENT="$DESKTOP_FILE_CONTENT
 Icon=$APP_DIR/images/$APP_ID-128.png"
 else
-    info "No Xbox Remote Play icon is bundled; the desktop will use its default icon."
+    info "No XBOX Remote Play icon is bundled; the desktop will use its default icon."
 fi
 
 info "Adding the app menu entry"

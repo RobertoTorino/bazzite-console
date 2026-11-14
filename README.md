@@ -18,13 +18,13 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 
 - <img src="portal/images/apps/rpcs3.webp" width="20" height="20" alt=""/> **[RPCS3 Manager](apps/rpcs3)**: Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode.
 - <img src="portal/images/apps/remoteplay.webp" width="20" height="20" alt=""/> **[Remote Play](apps/remoteplay)**: Find, wake, and register PS4 and PS5 consoles on the network, and stream Remote Play.
-- <img src="portal/images/apps/clb.webp" width="20" height="20" alt=""/> **[Xbox Remote Play](apps/clb)**: Stream Xbox consoles or Xbox Cloud Gaming after signing in with a Microsoft account.
+- <img src="portal/images/apps/clb.webp" width="20" height="20" alt=""/> **[XBOX Remote Play](apps/clb)**: Stream XBOX consoles or XBOX Cloud Gaming after signing in with a Microsoft account.
 - <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode.
 - <img src="portal/images/apps/datstation.webp" width="20" height="20" alt=""/> **[Bazzite DatStation](apps/datstation)**: Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news.
 - <img src="portal/images/apps/ppsspp.webp" width="20" height="20" alt=""/> **[PPSSPP Manager](apps/ppsspp)**: Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode.
 - <img src="portal/images/apps/pcsx2.webp" width="20" height="20" alt=""/> **[PCSX2 Manager](apps/pcsx2)**: Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode.
 - <img src="portal/images/apps/vita3k.webp" width="20" height="20" alt=""/> **[Vita3K Manager](apps/vita3k)**: Install Vita3K for PS Vita games and add installed titles to Game Mode.
-- <img src="portal/images/apps/xenia.webp" width="20" height="20" alt=""/> **[Xenia Manager](apps/xenia)**: Install Xenia Canary for Xbox 360 games and add games to Game Mode.
+- <img src="portal/images/apps/xenia.webp" width="20" height="20" alt=""/> **[Xenia Manager](apps/xenia)**: Install Xenia Canary for XBOX 360 games and add games to Game Mode.
 
 **Utilities**: Tools for files, peripherals, and storage.
 

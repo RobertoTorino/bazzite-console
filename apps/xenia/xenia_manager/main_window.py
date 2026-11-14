@@ -335,7 +335,7 @@ class MainWindow(QMainWindow):
                        "on Linux, so not every game starts")
         if self.newer is not None:
             tip += (f"\nXenia {self.newer.version} is out ({self.newer.published}). A later version of this app "
-                    f"brings it, once it has been tried on the board: {self.newer.url}")
+                    f"brings it, once it has been tried on the console: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
 
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
@@ -361,7 +361,7 @@ class MainWindow(QMainWindow):
         if release is not None:
             self._show_state()
             self.note(f"Xenia {release.version} is out ({release.published}); a later version of this app brings it, "
-                      f"once it has been tried on the board: {release.url}")
+                      f"once it has been tried on the console: {release.url}")
 
     def _fill_table(self) -> None:
         self.table.blockSignals(True)

@@ -41,8 +41,8 @@ detect = ["~/.local/bin/ps5-remoteplay"]
 launch = [["Open", "~/.local/bin/ps5-remoteplay"]]
 
 [apps.clb]
-name = "Xbox Remote Play"
-summary = "Stream Xbox consoles or Xbox Cloud Gaming after signing in with a Microsoft account."
+name = "XBOX Remote Play"
+summary = "Stream XBOX consoles or XBOX Cloud Gaming after signing in with a Microsoft account."
 tag = "ps5-clb-v1.0.0"
 sha256 = "896271f45c6f9ab48aafc950b72f88f2d7b3a0b734e5ed17426c29556a5aac6d"
 required = false
@@ -120,7 +120,7 @@ launch = [["Open", "~/.local/bin/ps5-vita3k-manager"]]
 
 [apps.xenia]
 name = "Xenia Manager"
-summary = "Install Xenia Canary for Xbox 360 games and add games to Game Mode."
+summary = "Install Xenia Canary for XBOX 360 games and add games to Game Mode."
 tag = "ps5-xenia-v1.0.0"
 sha256 = "f5c755305d48e95f17c6710f1bb01afaf5b0989fd3c068f8c982916bd8bc80da"
 required = false

@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-tray-arrow-down:</span>
+
 # Install
 
 You install one thing: the **portal**. It is the suite's app library, and it installs every other app for you, each

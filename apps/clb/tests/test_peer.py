@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The WebRTC side: the codec order, the offer, and a whole connection on this machine with a stand-in for the
 streaming service (an aiortc peer that answers, acknowledges the handshake, sends video and sound, rumble and the
-stream's end, and records what the board sends)."""
+stream's end, and records what this PS5 sends)."""
 
 from __future__ import annotations
 

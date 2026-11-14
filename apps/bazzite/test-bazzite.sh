@@ -4,7 +4,7 @@
 # Change permissions: sudo chmod +x test-bazzite.sh
 # Run with: sudo ./test-bazzite.sh
 # Stress mode: sudo ./test-bazzite.sh --stress=180
-# Benchmark:   sudo ./test-bazzite.sh --only=42 --bench   (add --save-baseline on a stock board)
+# Benchmark:   sudo ./test-bazzite.sh --only=42 --bench   (add --save-baseline to save the baseline)
 # Disk speed:  sudo ./test-bazzite.sh --only=10,43 --disk-bench   (--disk-write=8 also tests writes)
 # Internet:    sudo ./test-bazzite.sh --only=44 --speedtest
 # Output: /var/log/bazzite-test/ps5-test-results-YYYYmmdd-HHMMSS.log, also copied to
@@ -45,7 +45,7 @@ Usage: sudo ./test-bazzite.sh [options]
                        and GPU FP32 compute (vkpeak), scored against the saved
                        baseline (/var/log/bazzite-test/bench-baseline.json).
   --save-baseline      With --bench: save this run as the baseline. Run it once
-                       on a stock board (6C/12T, 24 CUs, governor max 1850 MHz).
+                       on this PS5 with its usual settings (8C/16T, 36 CUs).
   --disk-bench         Run the disk speed test (test 43) on the system disk:
                        sequential read, and random 4K read when fio is
                        installed. Read-only, nothing is written.
@@ -148,7 +148,7 @@ EXCLUSIONS=(
   "x86 CPU feature dependency check failure.*pcid"
   # --- amdgpu on Cyan Skillfish: display block reports these on every boot ---
   "dal_irq_service_dummy_(set|ack)"
-  # The DC layer WARN_ONs at probe on this board, and kwin probes a format DC rejects.
+  # The DC layer WARN_ONs at probe on the PS5, and kwin probes a format DC rejects.
   "dal_irq_service_(set|ack)\.cold"
   "display/dc/irq/irq_service\.c"
   "Unsupported screen format RA24"
@@ -212,7 +212,7 @@ EXCLUSIONS=(
   "IOCTL failed: .* \\[FW_CMDRESP\\]"
 )
 
-# GPU governor packages made for another board's SMU; on a PS5 test 18 warns when one is installed.
+# GPU governor packages made for other hardware's SMU; on a PS5 test 18 warns when one is installed.
 GOVERNORS=(
   "cyan-skillfish-governor-smu"
   "cyan-skillfish-governor-tt"
@@ -248,7 +248,7 @@ filter_logs() {
 LOG_ADVICE=(
   # --- Real faults ---
   "ring [a-z0-9_.]+ timed? ?out|amdgpu_job_timedout|GPU reset|gpu_recover|Waiting for fences timed out|MES failed"
-  "GPU hang or reset: usually an unstable CU unlock, GPU overclock or governor setting. Go back to the last stable one (cu-bisect, gpu-oc-bisect, governor) and check test 35."
+  "GPU hang or reset: usually overheating or a GPU overclock. Check the GPU temperature (test 22) and test 35."
   "VM_L2_PROTECTION_FAULT|GPU fault detected|page fault \(src_id"
   "GPU page fault: a game or the driver used invalid GPU memory. Once is usually a game bug; if it repeats, update Bazzite (Mesa) and undo any GPU overclock."
   "flip_done timed out|commit wait timed out"
@@ -260,9 +260,9 @@ LOG_ADVICE=(
   "I/O error, dev|Buffer I/O error|EXT4-fs error|BTRFS (error|critical)|critical medium error"
   "Disk read or write errors: back up your data now and check the drive health (test 10, sudo smartctl -a /dev/nvme0n1)."
   "Machine check|mce: \[Hardware Error\]"
-  "CPU hardware error (MCE): usually an unstable core unlock, undervolt or overheating. Go back to stock settings and check the cooling (tests 22, 36 and 46)."
+  "CPU hardware error (MCE): usually overheating or an unstable overclock. Go back to stock settings and check the cooling (tests 22 and 36)."
   "Out of memory: Killed process|oom-kill|invoked oom-killer"
-  "Out of memory, the kernel killed a program: close programs, check the swap layout (test 14) or move RAM from VRAM to the CPU with memory-manager."
+  "Out of memory, the kernel killed a program: close programs, check the swap layout (test 14) or lower the VRAM share in /boot/efi/vram.txt."
   "segfault at|dumped core|Failed with result 'core-dump'|coredump|__stack_chk_fail|__fortify_fail"
   "A program crashed: coredumpctl list shows which, coredumpctl info <name> shows why. If it repeats, update Bazzite or the app."
   "Failed at step EXEC spawning (/var)?/home/"
@@ -371,7 +371,7 @@ check_masked() {
 # Shared discovery. Several tests read these, so they are resolved up front and
 # stay valid when only a subset of tests is selected with --only.
 # ----------------------------------------------------------------------------
-# A GPU governor made for another board, which should not be on a PS5 (test 18 warns about it).
+# A GPU governor made for other hardware, which should not be on a PS5 (test 18 warns about it).
 GOV_FOUND=""
 for gov in "${GOVERNORS[@]}"; do
     if [ -n "$(systemctl list-unit-files --no-legend "${gov}.service" 2>/dev/null)" ]; then
@@ -455,7 +455,7 @@ run_as_user() {
 GPU_HANG_RE="ring [a-z0-9_.]+ timed? ?out|amdgpu_job_timedout|GPU reset begin|GPU reset\(|amdgpu_device_gpu_recover|Waiting for fences timed out|VM_L2_PROTECTION_FAULT|GPU fault detected|page fault \(src_id|MES failed|Failed to evict|GPU hang|soft recovery|reset was successful|failed to write reg|SMU: I'm not done"
 # "BUG: " only as a word: the match ignores case, so a bare "BUG: " also hit "PM: suspend debug: Waiting".
 PANIC_RE="Kernel panic|\bOops\b|(^|[^a-z])BUG: |general protection fault|soft lockup|hard LOCKUP|watchdog: (BUG|Watchdog detected)|unable to handle (kernel|page)|Call Trace:|RIP: 0010"
-# The amdgpu DC layer throws a harmless WARN_ON at probe on this board, which drags a
+# The amdgpu DC layer throws a harmless WARN_ON at probe on the PS5, which drags a
 # RIP and a Call Trace into the journal on every boot. It is never a real fault.
 PANIC_BENIGN_RE="dal_irq_service_(set|ack)|irq_service\.c|NMI watchdog: Enabled|amdgpu_dm_hpd_init|traps: .*(general protection fault|trap int3)"
 
@@ -897,7 +897,7 @@ if [ -n "$SWAP_TABLE" ]; then
     swapon --show 2>/dev/null | tee -a "$LOG_FILE"
 else
     log_result "WARNING: No swap is active at all."
-    log_result "HINT: On this board an OOM can present as a hard freeze. Configure a disk swapfile with zswap in front of it."
+    log_result "HINT: On the PS5 an OOM can present as a hard freeze. Configure a disk swapfile with zswap in front of it."
     WARN_FOUND=true
 fi
 
@@ -981,10 +981,10 @@ elif [ "$ZSWAP_ACTIVE" = true ] && [ "$DISK_SWAP_ACTIVE" = false ]; then
     log_result "HINT: zswap is a cache in front of real swap; add a swapfile."
     WARN_FOUND=true
 elif [ "$ZSWAP_ACTIVE" = true ] && [ "$DISK_SWAP_ACTIVE" = true ]; then
-    log_result "SUCCESS: zswap is backed by disk swap, which is the recommended layout for this board."
+    log_result "SUCCESS: zswap is backed by disk swap, which is the recommended layout for the PS5."
 elif [ "$ZRAM_ACTIVE" = true ] && [ "$DISK_SWAP_ACTIVE" = true ]; then
     log_result "SUCCESS: zram has a disk swap backstop, so memory pressure will not go straight to OOM."
-    log_result "HINT: zswap in front of the swapfile (zram disabled) is more stable for gaming and is the System score default."
+    log_result "HINT: zswap in front of the swapfile (zram disabled) is more stable for gaming."
     # The disk swap is only an emergency backstop if zram has the higher priority (used first).
     ZRAM_PRIO=$(awk 'NR > 1 && $1 ~ /zram/ {print $NF}' <<<"$SWAP_TABLE" | sort -n | head -1)
     DISK_PRIO=$(awk 'NR > 1 && $1 !~ /zram/ {print $NF}' <<<"$SWAP_TABLE" | sort -n | tail -1)
@@ -1098,11 +1098,11 @@ else
 fi
 if [ -n "$GOV_FOUND" ]; then
     if systemctl is-active --quiet "${GOV_FOUND}.service" || systemctl is-enabled --quiet "${GOV_FOUND}.service" 2>/dev/null; then
-        log_result "WARNING: The GPU governor $GOV_FOUND is $(systemctl is-active "${GOV_FOUND}.service") / $(systemctl is-enabled "${GOV_FOUND}.service" 2>/dev/null). It is made for another board's SMU, not the PS5."
+        log_result "WARNING: The GPU governor $GOV_FOUND is $(systemctl is-active "${GOV_FOUND}.service") / $(systemctl is-enabled "${GOV_FOUND}.service" 2>/dev/null). It is made for other hardware, not the PS5."
         log_result "HINT: sudo systemctl disable --now ${GOV_FOUND}.service"
         WARN_FOUND=true
     else
-        log_result "INFO: Bazzite ships the GPU governor $GOV_FOUND, made for another board; it is off, as it should be on a PS5."
+        log_result "INFO: Bazzite ships the GPU governor $GOV_FOUND, made for other hardware; it is off, as it should be on a PS5."
     fi
 fi
 echo
@@ -1232,7 +1232,7 @@ echo
 fi  # TEST 21
 if want 22; then
 log_result "[TEST 22] Hardware Sensors Test"
-log_result "Check the PS5's sensors: ps5_fan (SoC, board, fan), k10temp (CPU), amdgpu (GPU, kernel 7.3.1 on), NVMe"
+log_result "Check the PS5's sensors: ps5_fan (SoC, mainboard, fan), k10temp (CPU), amdgpu (GPU, kernel 7.3.1 on), NVMe"
 FAN_HW=$(hwmon_by_name ps5_fan)
 if [ -n "$FAN_HW" ]; then
     log_result "SUCCESS: ps5_fan is there ($FAN_HW)."
@@ -1685,7 +1685,7 @@ fi  # TEST 45
 
 # ----------------------------------------------------------------------------
 # Gaming / stability tests. The PS5 is often used as a Steam box, so these
-# focus on crash forensics and the things that actually take this board down
+# focus on crash forensics and the things that actually take the console down
 # mid-game: GPU hangs, unified-memory exhaustion and power delivery.
 # ----------------------------------------------------------------------------
 if want 34; then
@@ -1749,8 +1749,8 @@ done
 if [ -n "$GPU_HANGS" ]; then
     log_result "ERROR: GPU hang or reset activity detected:"
     echo "$GPU_HANGS" | tee -a "$LOG_FILE"
-    log_result "HINT: On the PS5 check the GPU temperature (test 22) and that nothing overclocks the GPU or"
-    log_result "HINT: sclk/voltage pair. Lower the ceiling in /etc/cyan-skillfish-governor-smu/config.toml."
+    log_result "HINT: On the PS5 check the GPU temperature (test 22) and that nothing overclocks the GPU."
+    log_result "HINT: The GPU clock ceiling is ps5-gpufreq's max_freq (tests 19 and 40)."
     ERROR_FOUND=true
 else
     log_result "SUCCESS: No GPU hangs or resets recorded in the retained boots."
@@ -1992,8 +1992,8 @@ fi  # TEST 40
 if want 41; then
 log_result "[TEST 41] Combined CPU + GPU Stress and Telemetry Test"
 if [ "$STRESS_MODE" != true ]; then
-    log_howto "INFO: Skipped. Re-run with --stress (or --stress=SECONDS) to load the board and" \
-              "INFO: Skipped. Start test 41 (Stability and thermals page) to load the board and"
+    log_howto "INFO: Skipped. Re-run with --stress (or --stress=SECONDS) to load the console and" \
+              "INFO: Skipped. Start test 41 (Stability and thermals page) to load the console and"
     log_result "INFO: sample clocks, temperatures, power and fans while it is under load."
     echo
 else
@@ -2019,7 +2019,7 @@ read_dpm()   { grep '\*' "$1" 2>/dev/null | head -1 | awk '{print $2}' | tr -dc 
 read_num()   { local v; v=$(cat "$1" 2>/dev/null | tr -dc '0-9'); echo "${v:-0}"; }
 
 # Stock kernels have no GPU-load sensor for Cyan Skillfish: gpu_busy_percent fails with
-# EOPNOTSUPP, and overlays only show a load when the governor's fix-metrics patches it in.
+# EOPNOTSUPP, and overlays only show a load when a patched gpu_metrics is mounted over it.
 # Fall back to per-client gfx engine time from /proc/*/fdinfo, the method nvtop and the
 # governor's "process" mode use. Prints "<client-id> <ns>" lines.
 gfx_engine_clients() {
@@ -2153,7 +2153,7 @@ start_gpu_worker() {
 }
 
 # Preference: headless compute tools first. They queue GPU work back to back, while the benchmark
-# tools render one light frame at a time: vkmark ran ~2000 FPS in every scene on a test board and
+# tools render one light frame at a time: vkmark ran ~2000 FPS in every scene on a test system and
 # left the GPU ~20% busy at 1000 MHz. memtest_vulkan also checks the VRAM for errors.
 # vkmark/glmark2 fall back to a 2560x1440 window with only the heaviest work: effect2d blur (the one
 # scene that reached ~60% busy at 1080p) and the desktop scene with 16 large overlapping windows.
@@ -2162,7 +2162,7 @@ GPU_LOAD_SIZE="2560x1440"
 if find_tool memtest_vulkan; then
     GPU_WORKER="memtest_vulkan"
     # By default memtest_vulkan takes all free RAM minus 400 MB on an APU (it allocated 9.6 GB of GTT
-    # on a test board and the OOM killer took the desktop). Limit it to 3/4 of the VRAM carve-out (at least 2 GiB) and at most
+    # on a test system and the OOM killer took the desktop). Limit it to 3/4 of the VRAM carve-out (at least 2 GiB) and at most
     # half of the RAM that is available now. Arguments: <device> <max bytes>; device 0 = autoselect.
     # Passing them also skips the interactive prompt; the endless test loop runs the same way.
     MEM_AVAIL_MIB=$(( $(awk '/^MemAvailable:/ {print $2}' /proc/meminfo) / 1024 ))
@@ -2500,7 +2500,7 @@ log_result "Check for faults logged during the stress run"
 POST=$(journalctl -k --no-pager -q --since "@$START" 2>/dev/null | \
     grep -EI "$GPU_HANG_RE|$PANIC_RE|throttl|Out of memory|oom-kill" | head -40)
 if [ -n "$POST" ]; then
-    log_result "ERROR: Faults were logged while the board was under load:"
+    log_result "ERROR: Faults were logged while the console was under load:"
     echo "$POST" | tee -a "$LOG_FILE"
     ERROR_FOUND=true
 else
@@ -3147,7 +3147,7 @@ if [ "$VRAM_B" -gt 0 ]; then
     VRAM_G=$((VRAM_B / 1073741824))
     log_result "INFO: VRAM carveout: ${VRAM_G} GiB (plus GTT spill from shared memory)."
     if [ "$VRAM_G" -lt 8 ]; then
-        log_result "NOTE: Modern AAA titles recommend 8 GiB+ of VRAM. On this unified-memory board the carveout is"
+        log_result "NOTE: Modern AAA titles recommend 8 GiB+ of VRAM. On this unified-memory console the carveout is"
         log_result "NOTE: adjustable: /boot/efi/vram.txt sets the split (a larger split also fixes pin failures)."
     else
         log_result "SUCCESS: The ${VRAM_G} GiB carveout meets the common 8 GiB recommendation of current AAA titles."
@@ -3249,7 +3249,7 @@ if find_tool stress-ng; then
         log_result "INFO: CPU memory bandwidth: single-thread ${MEMBW_1G} GB/s | all threads ${MEMBW_NG} GB/s"
         log_result "NOTE: For context: a desktop with dual-channel DDR4-3200 reaches roughly 20-40 GB/s here."
         log_result "NOTE: A low single-thread figure next to a healthy all-thread figure is the GDDR6 latency at"
-        log_result "NOTE: work: it explains why single-thread-bound games lose more on this board than compute"
+        log_result "NOTE: work: it explains why single-thread-bound games lose more on the PS5 than compute"
         log_result "NOTE: benchmarks (test 42) suggest."
         if awk -v n="$MEMBW_N" -v s="$MEMBW_1" 'BEGIN {exit !(s > 0 && n < s * 1.5)}'; then
             log_result "WARNING: All-thread bandwidth barely scales over one thread; memory is the bottleneck under load."
@@ -3279,7 +3279,7 @@ if [ -n "$VCN_BOOT" ]; then
     echo "$VCN_BOOT" | tee -a "$LOG_FILE"
 else
     log_result "NOTE: The kernel logged nothing about VCN this boot: amdgpu did not initialize a media block"
-    log_result "NOTE: on this board. Then there is no hardware video decode or encode at all — a hardware fact,"
+    log_result "NOTE: on this console. Then there is no hardware video decode or encode at all — a hardware fact,"
     log_result "NOTE: not a configuration problem. Video plays fine but decodes on the CPU."
 fi
 if command -v vainfo >/dev/null 2>&1; then
@@ -3309,7 +3309,7 @@ if command -v vainfo >/dev/null 2>&1; then
         fi
     elif [ -z "$VCN_BOOT" ]; then
         log_result "INFO: vainfo exposes no profiles, consistent with the kernel initializing no VCN block (above):"
-        log_result "INFO: this board simply has no hardware video engine to talk to. Nothing to fix."
+        log_result "INFO: this console simply has no hardware video engine to talk to. Nothing to fix."
     else
         log_result "WARNING: The kernel initialized VCN, but vainfo exposes no profiles; the VA-API userspace is broken."
         log_result "INFO: vainfo said:"

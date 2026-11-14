@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Records the video tour of one app from this checkout (tools/app_tour.py): the same for every app, only the name
-# changes. Nothing is shown on screen and nothing outside the output file is touched; the app reads the board as it
+# changes. Nothing is shown on screen and nothing outside the output file is touched; the app reads the console as it
 # does when it starts, so watch the video before publishing it.
 #
 #   tools/record-app-tour.sh APP [OUT.mp4] [--package PACKAGE] [--seconds 40] [--music FILE | --no-music]

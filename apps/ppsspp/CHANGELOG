@@ -1,3 +1,9 @@
+Changelog: 14-11-2026 12:12:03
+
+Fixed. The tooltip and the log line about a newer PPSSPP release say "once it has been tried on the console", not "on
+the board". The hint in the Rename files window names the real button: a renamed game that is in Steam needs Update
+Steam afterwards, where it said Update Game Mode.
+
 Changelog: 14-11-2026 03:50:36
 
 Release 1.0.0.

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The drive's read and write speed as measured in this board (owner, 05-11-2026): a test file of up to SIZE bytes
+"""The drive's read and write speed as measured in this console (owner, 05-11-2026): a test file of up to SIZE bytes
 written to a folder on the drive and read back, both past the page cache (O_DIRECT, and the file's cached pages
 dropped before the read), then deleted. Without root SSD Check cannot read the drive itself, so the file goes where
 the user may write: the home folder when it is on the drive, else the first mount point of the drive that is

@@ -107,6 +107,15 @@ Publishing a portal release builds the wiki again, so the Install page names tha
 `main` only, and a release's run belongs to its tag: that run starts the workflow on `main` and builds nothing itself,
 so the Actions list shows two Wiki runs for a release. By hand: `gh workflow run docs.yml --ref main`.
 
+The picture of the portal on the home page (`docs/images/home/portal.webp`) is taken from the portal itself:
+`tools/portal_screenshot.py` opens its window offscreen on this checkout's `apps.toml` and icons, in a home folder
+of its own, with a fixed demo state (one update, one app not installed, the Gaming tab open), and saves it. Run it
+again when the portal's look or its apps changed:
+
+```bash
+python tools/portal_screenshot.py          # from the venv; --out FILE to save it elsewhere
+```
+
 ## Dependabot
 
 `.github/dependabot.yml` has Dependabot open one pull request a week when the actions the workflows use

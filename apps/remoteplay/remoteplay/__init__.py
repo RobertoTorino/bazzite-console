@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Remote Play for the system: find the consoles on the network, wake them, register the board with one, and start
+"""Remote Play on this PS5: find the consoles on the network, wake them, register this PS5 with one, and start
 and close a Remote Play session and its stream with it. The protocol code is ported from the reference implementation
 (AGPL-3.0; see the README's License section)."""
 

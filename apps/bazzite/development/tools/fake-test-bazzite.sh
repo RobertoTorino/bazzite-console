@@ -57,15 +57,15 @@ for t in $TESTS; do
     log "[TEST $t] Simulated test $t"
     sleep 0.3
     if [ "$t" = 41 ] && [ "$STRESS_MODE" != true ]; then
-        log "INFO: Skipped. Re-run with --stress to load the board."
+        log "INFO: Skipped. Re-run with --stress to load the console."
         echo; continue
     fi
     if [ "$t" = 42 ]; then
         if [ "$BENCH_MODE" != true ]; then
             log "INFO: Skipped. Re-run with --bench to measure CPU and GPU performance."
         else
-            # Simulated 32-CU / 6C12T board, against a 24-CU stock baseline of 612 / 4410 / 5520.
-            log "INFO: Configuration: a simulated board, 6C/12T, 32 CUs, governor max 1850 MHz, mitigations off"
+            # Simulated 32-CU / 6C12T system, against a 24-CU stock baseline of 612 / 4410 / 5520.
+            log "INFO: Configuration: a simulated system, 6C/12T, 32 CUs, governor max 1850 MHz, mitigations off"
             sleep 1
             log "INFO: CPU single-thread: 615.3 ops/s | multi-thread: 4432.8 ops/s (7.2x)"
             log "INFO: GPU FP32: 7310.4 GFLOPS | VRAM copy: 198.2 GB/s | clock under load: ~1850 MHz"

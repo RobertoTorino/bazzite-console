@@ -71,7 +71,7 @@ def user_folders(steam: Path) -> list[Path]:
 
 def steam_running(proc: Path = Path("/proc")) -> bool:
     """Whether a Steam client process runs (its process name is steam). A finished one that its parent has not
-    collected yet (a zombie, state Z) does not count: on the owner's board (13-10-2026) the app's own finished
+    collected yet (a zombie, state Z) does not count: on the owner's console (13-10-2026) the app's own finished
     steam -shutdown was one, and Steam seemed not to close."""
     for folder in proc.glob("[0-9]*"):
         try:

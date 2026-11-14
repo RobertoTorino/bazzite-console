@@ -81,7 +81,7 @@ CATEGORIES: list[Category] = [
         TestDef("17", "amdgpu Driver",
                 "Confirms amdgpu is bound to the PS5 APU (Oberon, Cyan Skillfish family)."),
         TestDef("18", "GPU Governor",
-                "The kernel's ps5-gpufreq (devfreq) sets the GPU clock: its governor and the temperature limit. Warns when a GPU governor made for another board is installed."),
+                "The kernel's ps5-gpufreq (devfreq) sets the GPU clock: its governor and the temperature limit. Warns when a GPU governor made for other hardware is installed."),
         TestDef("19", "GPU Frequency Scaling",
                 "The ps5-gpufreq clock steps (500-2230 MHz), the allowed range and the clock changes since boot."),
         TestDef("20", "Vulkan / Mesa", "Confirms RADV reports GFX1013 and not the llvmpipe software fallback."),
@@ -113,7 +113,7 @@ CATEGORIES: list[Category] = [
     ]),
     Category("stability", "Stability and thermals", [
         TestDef("22", "Hardware Sensors",
-                "ps5_fan (SoC and board temperatures, the fan's duty and curve), k10temp, the GPU (kernel 7.3.1 on) and NVMe."),
+                "ps5_fan (SoC and mainboard temperatures, the fan's duty and curve), k10temp, the GPU (kernel 7.3.1 on) and NVMe."),
         TestDef("27", "Handheld Daemon",
                 "Confirms hhd.service is masked: the PS5 has no handheld controls and it can cause micro-stuttering."),
         TestDef("28", "Suspend Targets",

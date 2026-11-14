@@ -182,7 +182,7 @@ def test_a_click_runs_an_app_from_the_checkout(qapp, nexus, tmp_path, monkeypatc
     window.local_apps.itemClicked.emit(alpha)
     assert started == [([sys.executable, "-m", "alpha"], nexus / "bc/apps/alpha", tmp_path / "logs/alpha.log")]
     with mock.patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No) as asked:
-        window.local_apps.itemClicked.emit(beta)                              # a board app asks first
+        window.local_apps.itemClicked.emit(beta)                              # a console app asks first
     assert asked.called and len(started) == 1
     with mock.patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
         window.local_apps.itemClicked.emit(beta)

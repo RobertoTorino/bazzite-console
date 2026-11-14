@@ -1,3 +1,8 @@
+Changelog: 14-11-2026 12:12:03
+
+Fixed. The tooltip and the log line about a newer Vita3K build say "once it has been tried on the console", not "on
+the board".
+
 Changelog: 14-11-2026 03:50:37
 
 Release 1.0.0.

@@ -523,8 +523,8 @@ class MainWindow(QMainWindow):
                 "then vkpeak on the GPU (about a minute). Close games and other heavy apps first.")
         if b.save_baseline:
             text += ("\n\nThis run will be SAVED AS THE BASELINE (= 100) for all later scores. Only do this "
-                     "with the board in its stock configuration: 24 CUs, 6 cores / 12 threads, governor "
-                     "max 1850 MHz.")
+                     "with the PS5 in its usual configuration (36 CUs, 8 cores / 16 threads), the CPU boost "
+                     "as you use it and nothing else running.")
             if b.baseline():
                 text += f"\n\nThe existing baseline in {b.baseline_path} will be replaced."
         answer = QMessageBox.question(self, "Performance benchmark", text + "\n\nContinue?")

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""The controllers on the board: SDL's buttons, axes and touchpad fingers as the console's controller state (the
+"""The controllers on this PS5: SDL's buttons, axes and touchpad fingers as the console's controller state (the
 reference's mapping), several controllers combined, the motion fed to each controller's orientation tracker, and
 the reader thread against a stand-in for SDL (fake_gamepad.py). One test opens the real SDL3 where it is installed;
 the tracker itself is tested against the reference's vectors in test_native.py."""

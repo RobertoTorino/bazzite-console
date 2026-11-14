@@ -2,7 +2,7 @@
 """Bazzite's own HDMI-CEC: which mode is on, and the settings of Valve's CEC daemon (cecd) for this user.
 
 Bazzite ships two CEC setups and `ujust cec-mode` picks one:
- * native: Valve's cecd (linux-cec), a user service; it wakes and suspends the TV with the board and turns the
+ * native: Valve's cecd (linux-cec), a user service; it wakes and suspends the TV with the console and turns the
    remote's keys into key presses. The one for a machine with its own CEC adapter, as the PS5 has (ps5-cec).
  * dgpu: the older cec-control script with three system services (boot, sleep, power-off), for USB adapters.
 With neither enabled the mode is "disabled", as `ujust cec-mode status` reports it.

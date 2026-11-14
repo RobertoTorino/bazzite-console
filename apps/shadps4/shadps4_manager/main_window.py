@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The main window, built as PCSX2 Manager's and RPCS3 Manager's (owner, 24-10-2026: the manager that works is the
 pattern for the others): the header with the Refresh pill and the state boxes, a row of action pills (Install and
-Uninstall for shadPS4, Install for the system modules, Install (Extract PKG) and Add folder for the games, Account
+Uninstall for shadPS4, Install for the system modules, Install (Extract PKG) for the games, Account
 for shadNet; the owner's order, 24-10-2026) in place of the four numbered steps with buttons, the state of each
 (shadPS4, the system modules, the game folders, shadNet) in a short line, then three tabs: the games found, each
 with a box for Steam; shadPS4's settings (settings_page.py); and the app's log. Downloading shadPS4, asking GitHub
@@ -13,7 +13,7 @@ Update Steam looks up a cover for each game's portrait first (core's covers).
 A game runs from Steam: the last tab, Start game, starts the chosen one there (owner, 12-11-2026). The window keeps what
 the app owns in shadPS4's files (userdata.py): the quit hotkeys. shadPS4's own window (Big Picture, shadPS4 settings
 under the games) stays for what the Settings tab does not set. The window also reads the volume Bazzite remembers for
-shadPS4 and says when it is muted (seen on the board). What the window says it also writes to the app's log (core's
+shadPS4 and says when it is muted (seen on the console). What the window says it also writes to the app's log (core's
 applog), shown in the Log tab.
 
 Packages (owner, 05-11-2026): a .pkg put in a game
@@ -510,7 +510,7 @@ class MainWindow(QMainWindow):
             tip = f"shadPS4 {self.version} is installed; this version of the app brings {pinned}: Install puts it in."
         if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
             tip += (f"\nshadPS4 {self.newer.version} is out ({self.newer.published}). A later version of this app "
-                    f"brings it, once it has been tried on the board: {self.newer.url}")
+                    f"brings it, once it has been tried on the console: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
 
         m = self.modules                        # Ok in green or Missing sys modules in red (owner, 24-10-2026)
@@ -641,7 +641,7 @@ class MainWindow(QMainWindow):
             self._show_state()
             self._update_buttons()
             self.note(f"shadPS4 {release.version} is out ({release.published}); a later version of this app brings "
-                      f"it, once it has been tried on the board: {release.url}")
+                      f"it, once it has been tried on the console: {release.url}")
 
     def chosen(self) -> Game | None:
         """The game whose row is selected."""

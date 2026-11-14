@@ -38,7 +38,7 @@ STREAMING_TYPES = {"h264": 1, "h265": 2, "h265_hdr": 3}
 
 # Ctrl message types.
 SESSION_ID = 0x33
-INVALID_SESSION_ID = b"InvalidSessionId"     # what a PS4 Pro sent instead of an ID (owner's board, 12-10-2026)
+INVALID_SESSION_ID = b"InvalidSessionId"     # what a PS4 Pro sent instead of an ID (owner's machine, 12-10-2026)
 HEARTBEAT_REQ = 0xfe
 HEARTBEAT_REP = 0x1fe
 LOGIN_PIN_REQ = 0x4
@@ -121,7 +121,7 @@ class Session:
     def _request_once(self, target: Target) -> bytes:
         version = rp_version(target)
         if version is None:
-            raise SessionError("The console's Remote Play version is unknown; register the board again.")
+            raise SessionError("The console's Remote Play version is unknown; register this PS5 again.")
         init_path, _ctrl = _paths(target)
         request = (f"GET {init_path} HTTP/1.1\r\nHost: {self.host}:{self.port}\r\nUser-Agent: remoteplay Windows\r\n"
                    f"Connection: close\r\nContent-Length: 0\r\nRP-Registkey: {regist_key_hex(self.regist_key)}\r\n"

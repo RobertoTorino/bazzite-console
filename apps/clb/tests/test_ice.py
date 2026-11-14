@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The candidates: read from the board's offer, the service's with their Teredo addresses, put in the answer."""
+"""The candidates: read from this PS5's offer, the service's with their Teredo addresses, put in the answer."""
 
 from __future__ import annotations
 

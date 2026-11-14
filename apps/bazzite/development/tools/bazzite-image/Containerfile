@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Local Bazzite OCI image for package testing: layers the tools the test suite uses,
-# so a rebased board (or container) matches a user's fully set-up system.
+# so a rebased system (or container) matches a user's fully set-up system.
 # Build with ./build.sh in this directory.
 FROM ghcr.io/ublue-os/bazzite:latest
 

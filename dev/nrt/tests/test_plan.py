@@ -885,9 +885,9 @@ def test_window_warns_about_a_bad_tag(window, repo):
     assert not window.bad_tags.isHidden() and "git tag -d beta-v0.2.0" in text and "tag-release.sh beta-v0.2.0" in text
 
 
-@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="the checks run on the board: Linux only")
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="the checks run on the console: Linux only")
 def test_window_check_buttons(window, repo):
-    """The board checks are on the Test on this board tab (owner, 20-10-2026), not on the steps."""
+    """The console checks are on the Test on this board tab (owner, 20-10-2026), not on the steps."""
     page = window.run_page
     launched.clear()
     page.local_button.click()                                    # the suite has no check-release.sh yet
@@ -1361,7 +1361,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path, monkeypatch
     assert "building its release" in page.portal_state.text()
     assert main_window.ORANGE in page.portal_state.styleSheet()                # the warning color, as the others
     build.checked((rp.parse_runs({"workflow_runs": [run("Release", "portal-v0.1.0", n=3), run(n=2)]}), "e5"))
-    assert notes[-1] == ("portal-v0.1.0 is ready", "GitHub published it. Test Portal release installs it on this board "
+    assert notes[-1] == ("portal-v0.1.0 is ready", "GitHub published it. Test Portal release installs it on this console "
                                                    "(step 2).")
     assert "portal-v0.1.0 is released" in page.portal_state.text()
     w.close()

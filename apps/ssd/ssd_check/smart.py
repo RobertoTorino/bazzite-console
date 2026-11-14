@@ -112,10 +112,10 @@ class Drive:
     interface: str = ""                     # "NVMe 1.3", "SATA", "USB"
     speed: str = ""                         # the link now: "PCIe 2.0 x2", "6.0 Gb/s", "5 Gb/s"
     speed_tip: str = ""                     # what the link could do, the standard's name
-    slow_link: str = ""                     # the link is slower than the board's port allows: why, what to try
+    slow_link: str = ""                     # the link is slower than the console's port allows: why, what to try
     link_mbps: int | None = None            # what the link now carries at most, MB/s
     drive_mbps: int | None = None           # what the drive's own fastest link carries
-    board_link: str = ""                    # the board's port: the most it offers ("PCIe 2.0 x2", "6.0 Gb/s")
+    board_link: str = ""                    # the console's port: the most it offers ("PCIe 2.0 x2", "6.0 Gb/s")
     board_mbps: int | None = None           # what that carries at most, MB/s
     rated_read: int | None = None           # the maker's rated speeds, MB/s (rated.py); None: not in the list
     rated_write: int | None = None
@@ -157,7 +157,7 @@ def number(text: str) -> str:
 
 def link(drive: Drive, sysfs: Path = SYSFS) -> None:
     """The drive's link from sysfs, walking up from its block device: the first USB device (a "speed" in Mb/s), SATA
-    port (ataN: its link's sata_spd) or PCIe function (current_link_speed and _width) on the way gives it. The board's
+    port (ataN: its link's sata_spd) or PCIe function (current_link_speed and _width) on the way gives it. The console's
     side is the most its port offers: the PCIe port above the drive, the SATA port's hardware limit, the USB bus."""
     if not drive.device:
         return
@@ -190,7 +190,7 @@ def link(drive: Drive, sysfs: Path = SYSFS) -> None:
                 drive.speed = now
                 drive.speed_tip = f"The drive can do {most}" if most and most != now else "As fast as the drive goes"
                 drive.link_mbps, drive.drive_mbps = pcie_mbps(speed, width), pcie_mbps(*best)
-            port = folder.parent                # the port the drive sits in: what the board offers
+            port = folder.parent                # the port the drive sits in: what the console offers
             board = sysfs_text(port / "max_link_speed"), sysfs_text(port / "max_link_width")
             if pcie(*board):
                 drive.board_link, drive.board_mbps = pcie(*board), pcie_mbps(*board)
@@ -234,7 +234,7 @@ def usb_link(drive: Drive, device: Path) -> None:
         if speed and float(speed) <= 480 < 5000 <= float(most):
             drive.slow_link = (f"The drive linked at {USB_SPEEDS.get(speed, usb_text(speed))}, though its port does "
                                f"{USB_SPEEDS.get(most, usb_text(most))} ({usb_text(most)}). Try another cable (many "
-                               "USB-C cables carry only USB 2.0), plug it straight into the board, or plug it in again.")
+                               "USB-C cables carry only USB 2.0), plug it straight into the console, or plug it in again.")
 
 
 def usb_text(speed: str) -> str:
@@ -250,7 +250,7 @@ def pcie_mbps(speed: str, width: str) -> int | None:
 
 
 def held_back(drive: Drive) -> bool | None:
-    """Whether the board's port carries less than the drive can do (its rated read, else its fastest link); None
+    """Whether the console's port carries less than the drive can do (its rated read, else its fastest link); None
     when either is unknown."""
     can = drive.rated_read or drive.drive_mbps
     return None if not (can and drive.board_mbps) else drive.board_mbps < can

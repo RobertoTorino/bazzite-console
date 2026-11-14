@@ -20,7 +20,7 @@ USER_ID = "4782394583276428394"
 
 
 class FakePsn(BaseHTTPRequestHandler):
-    user_info: dict = {"user_id": USER_ID, "online_id": "board_player", "scopes": "psn:clientapp"}
+    user_info: dict = {"user_id": USER_ID, "online_id": "couch_player", "scopes": "psn:clientapp"}
     requests: list = []
 
     def log_message(self, *args):
@@ -57,7 +57,7 @@ class FakePsn(BaseHTTPRequestHandler):
 @pytest.fixture
 def psn_service():
     FakePsn.requests = []
-    FakePsn.user_info = {"user_id": USER_ID, "online_id": "board_player", "scopes": "psn:clientapp"}
+    FakePsn.user_info = {"user_id": USER_ID, "online_id": "couch_player", "scopes": "psn:clientapp"}
     server = ThreadingHTTPServer(("127.0.0.1", 0), FakePsn)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -88,7 +88,7 @@ def test_code_from_the_pasted_address():
 
 def test_account_id_from_psn(psn_service):
     account = psn.account_id(CODE, auth_base=psn_service)
-    assert account.number == int(USER_ID) and account.online_id == "board_player"
+    assert account.number == int(USER_ID) and account.online_id == "couch_player"
     assert account.account_id == int(USER_ID).to_bytes(8, "little")
     assert account.code == base64.b64encode(int(USER_ID).to_bytes(8, "little")).decode()
     assert [r[:2] for r in FakePsn.requests] == [("POST", "/oauth/token"),
@@ -114,6 +114,6 @@ def test_psn_unreachable():
 def test_job(psn_service):
     outcome = jobs.psn_account(f"{psn.REDIRECT_URI}?code={CODE}", auth_base=psn_service)
     assert outcome.ok and outcome.value.number == int(USER_ID)
-    assert "(board_player)" in outcome.message and outcome.value.code in outcome.message
+    assert "(couch_player)" in outcome.message and outcome.value.code in outcome.message
     failed = jobs.psn_account("https://example.com/", auth_base=psn_service)
     assert not failed.ok and "no code" in failed.message

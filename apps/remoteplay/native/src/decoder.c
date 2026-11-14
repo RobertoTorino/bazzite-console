@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The video decoder over FFmpeg's libavcodec (as the reference's ffmpegdecoder.c uses it): H.264 or HEVC, with VA-API
-// when the board's driver opens, else in software; and the Opus decoder for the sound. A small C interface, so the
+// when this PS5's driver opens, else in software; and the Opus decoder for the sound. A small C interface, so the
 // Rust side (decoder.rs) needs neither bindgen nor FFmpeg's struct layouts.
 
 #include <errno.h>

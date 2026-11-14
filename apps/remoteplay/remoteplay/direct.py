@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """The direct start (ps5-remoteplay --stream <console>), as a Steam shortcut in Game Mode runs it: no main
 window, only the stream, full screen. The console is found among the registered ones by its name, host id or
-address, woken from rest mode when it is there, and streamed with the board's controllers; what happens shows in the
+address, woken from rest mode when it is there, and streamed with this PS5's controllers; what happens shows in the
 stream window's status line. Closing the window ends the program."""
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ class DirectStream:
 
     def _closed(self) -> None:
         """The window closed: the stream stops, and the app quits once the stream has closed the session (the
-        console is told), within CLOSE_TIMEOUT. Quitting at once cut that short (owner's board, 13-10-2026)."""
+        console is told), within CLOSE_TIMEOUT. Quitting at once cut that short (owner's machine, 13-10-2026)."""
         self.stop.set()
         self._quit_when_done(time.monotonic() + CLOSE_TIMEOUT)
 

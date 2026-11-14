@@ -1,3 +1,12 @@
+Changelog: 14-11-2026 12:22:49
+
+Added. The installer has its test, tools/installer-tests/ssd.sh: an install from the checkout and from a staged
+release, the refusal to run as root, and uninstall with and without --purge. The app is unchanged.
+
+Changelog: 14-11-2026 12:12:59
+
+Fixed. The window no longer calls the PS5 "the board": the pill Board link keeps its name, and the tooltips say "The console's port", "Measured in this console" and "plug it straight into the console".
+
 Changelog: 14-11-2026 03:50:37
 
 Release 1.0.0.

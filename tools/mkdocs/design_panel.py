@@ -7,7 +7,7 @@ are the stylesheet's comments: the one before a rule names the group, the one af
 it does. Each wiki has stylesheets of its own, so a change is to that wiki alone; the panel names the wiki and the
 files its changes go in. The server keeps the
 mock at <the config's folder>/.design-mock.json (git ignores it) and answers at <the site's path>/__design__: a POST
-stores it, a GET returns it. Every open page asks once a second, so a phone, the board and the TV on the same server
+stores it, a GET returns it. Every open page asks once a second, so a phone, the console and the TV on the same server
 all show the same mock. Copy CSS gives the changed variables to paste into the stylesheet; Copy stylesheet gives the
 whole stylesheet with the changes written in, to paste over the file (merge() below does the same for
 tools/apply_design.py). Screens opens <the site's path>/__design__/screens (design_screens.html): the page at the

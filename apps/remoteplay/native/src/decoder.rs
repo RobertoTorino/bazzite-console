@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! The decoders (decoder.c over FFmpeg): video as the reference's ffmpegdecoder.c, the stream's header from STREAMINFO
-//! first, then the frames. With VA-API when the board's driver opens, else in software. Built only with the cargo
+//! first, then the frames. With VA-API when this PS5's driver opens, else in software. Built only with the cargo
 //! feature "decoder", which links the FFmpeg of ffmpeg/build.sh statically.
 
 use std::ffi::{c_char, c_int, CStr};

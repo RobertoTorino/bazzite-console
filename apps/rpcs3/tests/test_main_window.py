@@ -303,7 +303,7 @@ def test_what_an_install_says(tmp_path):
 
 def test_bazzites_volume_for_rpcs3(qapp, folders, tmp_path):
     """The volume Bazzite remembers for RPCS3 (WirePlumber's stream-properties): in the Settings tab's Sound box,
-    and said once while RPCS3 is muted there (found on the board, 24-10-2026)."""
+    and said once while RPCS3 is muted there (found on the console, 24-10-2026)."""
     state = tmp_path / "state" / "wireplumber" / "stream-properties"
     state.parent.mkdir(parents=True)
     window = _window(folders, sound_state=state)
@@ -776,7 +776,7 @@ def test_another_build_installed_than_the_app_brings(qapp, folders):
 def test_the_settings_tab_is_not_squeezed_under_the_introduction(qapp, folders):
     """The introduction wraps to several lines and the state lines may too; their minimum heights count, so the
     tabs below get their minimum and the Sound box's rows keep their height (owner, 24-10-2026: squeezed
-    unreadable on the board)."""
+    unreadable on the console)."""
     _install(folders["home"])
     window = _window(folders)
     window.tabs.setCurrentIndex(1)

@@ -11,14 +11,14 @@ A release has two steps, because an app's checksum only exists once its release 
    starts with Breaking. asks for a major release, Added. for a minor one, Fixed. for a patch.
    Commit and push the versioned app, then run tools/tag-release.sh <app>-v<x.y.z> to build and publish its asset.
 2. Pin and release Portal: pin each released app in portal/apps.toml (tag and sha256, as tools/pin_app.py), bump portal/VERSION at
-   least as much as tools/check_manifest.py asks, and a CHANGELOG entry listing the pins. Commit, test on a board
+   least as much as tools/check_manifest.py asks, and a CHANGELOG entry listing the pins. Commit, test on a console
    (check-release.sh local), then push and run tools/tag-release.sh portal-v<x.y.z>, and check the published release
    (check-release.sh release).
 
 A withdrawal (owner's decisions, 13-10-2026): an app release that must not be used any more (privacy, security, any
 reason) is marked withdrawn in portal/apps.toml with the reason, and on GitHub (a pre-release titled "Withdrawn: ...",
 so no update check offers it; the release itself stays). The next portal release shows the app as not available and
-removes it from the boards that have it. Test it on a board with Test withdrawal before that portal is pushed."""
+removes it from the consoles that have it. Test it on a console with Test withdrawal before that portal is pushed."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ TAG_SCRIPT = "tools/tag-release.sh"     # builds and publishes a release from th
 CI_LOCAL = "tools/ci-local.sh"          # the suite's local checks before a Linux push
 VERSIONS_CHECK = "tools/check_versions.py"                        # the Nexus tools' check, every suite
 # A suite's own tools, in its tools/ (check_script() and manifest_check() give the path in the checkout): the
-# board checks of a portal release and the manifest check.
+# console checks of a portal release and the manifest check.
 CHECK_SCRIPT = "tools/check-release.sh"
 MANIFEST_CHECK = "tools/check_manifest.py"
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
@@ -117,7 +117,7 @@ def rel(root: Path, *parts: str, suite: str | None = None) -> str:
 
 
 def check_script(root: Path, suite: str | None = None) -> str:
-    """The suite's board checks of a portal release (check-release.sh local|release|draft), relative to the
+    """The suite's console checks of a portal release (check-release.sh local|release|draft), relative to the
     checkout."""
     return rel(root, *CHECK_SCRIPT.split("/"), suite=suite)
 
@@ -949,7 +949,7 @@ def changed_withdrawals(root: Path, base: str, suite: str | None = None) -> list
 
 def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = None) -> str:
     """What stays the owner's: mark the GitHub release (it stays, as a pre-release, so no update check offers it),
-    then the portal release that removes the app from the boards."""
+    then the portal release that removes the app from the consoles."""
     date = amsterdam_now(now).strftime("%d-%m-%Y")
     notes = f"Withdrawn on {date}: {reason.strip()} Do not install this release."
     return "\n".join([
@@ -1743,7 +1743,7 @@ def unpushed_release_commit(root: Path, base: str) -> str:
 
 
 def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRIPT) -> str:
-    """Commit, test on a board, and only then push and tag: the tag is what reaches the users' portals. *check*:
+    """Commit, test on a console, and only then push and tag: the tag is what reaches the users' portals. *check*:
     the suite's check-release.sh, relative to the checkout (check_script())."""
     return "\n".join([
         "# 1. Commit (no push yet):",

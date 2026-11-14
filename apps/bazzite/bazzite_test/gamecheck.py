@@ -253,7 +253,7 @@ def _throttle_checks(rows: list[dict[str, str]], budget: dict, duration: float) 
     cap = budget.get("power_cap_w")
     if power and cap and 100 * max(power) / cap >= 95:
         out.append(Check("info", "Power-capped",
-                         f"GPU power peaked at {max(power):.0f} W against the {cap:.0f} W cap: the board "
+                         f"GPU power peaked at {max(power):.0f} W against the {cap:.0f} W cap: the GPU "
                          f"is at its power limit. That is normal under full load, but clocks cannot rise "
                          f"any further (test 40)."))
     temp = column(rows, "gpu_temp_c")
@@ -286,8 +286,8 @@ def _throttle_checks(rows: list[dict[str, str]], budget: dict, duration: float) 
     fan = column(rows, "fan_rpm")
     if fan and temp and max(fan) == 0 and max(temp) >= 70:
         out.append(Check("warn", "No fan RPM reported",
-                         "The fan never reported a speed while the GPU passed 70 °C — either the SuperIO "
-                         "sensor is missing (test 22) or the fan is not spinning."))
+                         "The fan never reported a speed while the GPU passed 70 °C — either no sensor "
+                         "reports the fan's speed (test 22) or the fan is not spinning."))
     return out
 
 

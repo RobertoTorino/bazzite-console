@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The main window, built as PCSX2 Manager's (owner, 24-10-2026: the manager that works is the pattern for the
 others): the header with the Refresh pill and the state boxes, a row of action pills (Install and Uninstall for
-RPCS3, Install for the firmware, Install and Add folder for the games) in place of the three numbered steps with
+RPCS3, Install for the firmware, Install for the games) in place of the three numbered steps with
 buttons, the state of each (RPCS3, the firmware, the disc games, the PKG games) in a line, then three tabs: the
 games found, each with a box for Steam and how it fills the screen; RPCS3's settings (settings_page.py); and the
 app's log. Downloading RPCS3, asking
@@ -15,7 +15,7 @@ update check off, player 1 on the first controller. RPCS3's own window is opened
 settings, under the games). The packages RPCS3 installs without its window (--headless --installpkg, one run per file,
 the window's job meanwhile; owner, 24-10-2026), and the firmware too (--headless --installfw; owner, 11-11-2026: RPCS3's
 window and its Success! box came up when the firmware was dropped in its folder); the result is read from RPCS3's log.
-The window also reads the volume Bazzite remembers for RPCS3 and says when it is muted (found on the board). What the
+The window also reads the volume Bazzite remembers for RPCS3 and says when it is muted (found on the console). What the
 window says it also writes to the app's log (core's applog), shown in the Log tab."""
 
 from __future__ import annotations
@@ -427,9 +427,7 @@ class MainWindow(QMainWindow):
             self.controller.set_status("Controller connected" if len(found) == 1 else f"{len(found)} controllers",
                                        "ok", "Connected: " + ", ".join(found) + ". A game started from Steam "
                                        "reads it; Share + Options together open RPCS3's menu in the game, with "
-                                       "Exit Game in it. Switched off or asleep during a game (its idle timer, "
-                                       "its battery), this RPCS3 build does not pick it up again when it comes "
-                                       "back: quit the game and start it again.")
+                                       "Exit Game in it.")
             self.prepare_pads()
         else:
             self.controller.set_status("No controller", "warn",
@@ -519,7 +517,7 @@ class MainWindow(QMainWindow):
             tip = f"RPCS3 {pinned}, the build this version of the app was tried with"
         if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
             tip += (f"\nRPCS3 {self.newer.version} is out ({self.newer.published}). A later version of this app "
-                    f"brings it, once it has been tried on the board: {self.newer.url}")
+                    f"brings it, once it has been tried on the console: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
         self.emulator_state.setOpenExternalLinks(True)
 
@@ -592,7 +590,7 @@ class MainWindow(QMainWindow):
             self._show_state()
             self._update_buttons()
             self.note(f"RPCS3 {release.version} is out ({release.published}); a later version of this app brings "
-                      f"it, once it has been tried on the board: {release.url}")
+                      f"it, once it has been tried on the console: {release.url}")
 
     def chosen(self) -> Game | None:
         """The game whose row is selected."""

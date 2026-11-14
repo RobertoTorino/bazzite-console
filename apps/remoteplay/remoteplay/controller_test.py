@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Controller test: every input of the controllers on the board, live, so a broken button or a drifting stick shows
+"""Controller test: every input of the controllers on this PS5, live, so a broken button or a drifting stick shows
 up before the app is suspected; the motors and the light bar on request; and, for a Sony controller, whether it is
 genuine or fake (genuine.py).
 
@@ -211,7 +211,7 @@ class ControllerTest(QDialog):
         for note in notes:
             if note.startswith("Rumble sent"):
                 note += (" Felt nothing? Try another controller: when that one rumbles, this one's motor is faulty "
-                         "(on the owner's board, rumble worked by USB and Bluetooth, with Steam running or not).")
+                         "(on the owner's machine, rumble worked by USB and Bluetooth, with Steam running or not).")
             self.status_label.setText(note)
         ids = list(pads)
         if ids != [self.pad_box.itemData(i) for i in range(self.pad_box.count())]:
@@ -228,7 +228,7 @@ class ControllerTest(QDialog):
         for button in (self.left_motor, self.right_motor, self.light_button):
             button.setEnabled(has_pad)
         if not has_pad:
-            self.info_label.setText("No controller found. Connect one to the board by USB cable or Bluetooth.")
+            self.info_label.setText("No controller found. Connect one to this PS5 by USB cable or Bluetooth.")
             self.genuine_label.setText("")
             return
         info, reading, battery = pads[pad_id]

@@ -1,3 +1,9 @@
+Changelog: 14-11-2026 12:12:03
+
+Fixed. The tooltip and the log line about a newer RPCS3 release say "once it has been tried on the console", not "on
+the board". The controller's tooltip no longer says that this RPCS3 build does not pick up a controller that comes
+back during a game. Comments say the console instead of the board.
+
 Changelog: 14-11-2026 03:50:37
 
 Release 1.0.0.

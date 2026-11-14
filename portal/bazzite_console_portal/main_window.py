@@ -3,7 +3,7 @@
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
 icon (a click opens the wiki), spanning the name with the version and the stage, a line that says what the open
 category is for, ☰ at the top right, and under them a row of big symbols (owner, 05-11-2026: in place of the pills):
-Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py), Install all apps and
+Refresh, Sys info (a small window with what the system reports about the console, sysinfo.py), Install all apps and
 Install all updates (the counts in their tooltips, the updates waiting on a red badge). On the right of the symbols
 how many apps are installed (installed / listed), and under it the CPU's and the GPU's load and temperature with the
 date and time (status.py: the loads every 2 s, the clock every second), the clock on a second line when one is too
@@ -24,7 +24,7 @@ app's update or reinstall; a right click on a tile with nothing to update opens 
 uninstall run the app's own installer in a terminal window (they may ask for the sudo password and print what they
 do); the portal watches for the exit file the terminal writes and then refreshes. A terminal whose installer ended
 well closes by itself (owner, 26-10-2026); one that failed stays open with what happened until Enter is pressed. An
-app that changes the system gets a warning before it is installed or opened.
+app that changes the board gets a warning before it is installed or opened.
 
 Updates: a red dot marks every tile whose installed app differs from the version this portal pins, a red circular
 arrow every installed app the portal has no record of (installed by hand, or under an earlier name of the app: its
@@ -40,7 +40,7 @@ checks it, runs its install.sh in a terminal and starts the new portal.
 Install all updates: every app the notice names (an update or a reinstall), one after the other, each in its own
 terminal as a single install. An installer that asks for the sudo password waits for it in its terminal, and so
 does the batch: the next one starts when it has ended. One question first, with the board warning when one of them
-changes the system; one message at the end names those that failed. Install all apps (owner, 26-10-2026) installs
+changes the board; one message at the end names those that failed. Install all apps (owner, 26-10-2026) installs
 the same way every app of the open category that is not installed yet, so a portal installed for the first time
 fills a category with one click.
 
@@ -158,7 +158,7 @@ CATEGORY_HINTS = {
 }
 
 BOARD_WARNING = (
-    "<p><b>{name} changes the console's system settings.</b></p>"
+    "<p><b>{name} changes the board.</b></p>"
     "<p>A wrong setting can make the system unstable or stop it from booting. Read the app's manual first and know "
     "how to undo the change.</p>"
     "<p>{action}?</p>")
@@ -258,9 +258,9 @@ class AppState:
                "Press it to open: " + ", ".join(label for label, _ in entry.launch) + "." if entry.launch else
                "Not a program: nothing to open.")
         source = entry.tag or "runs from the suite checkout"
-        # An app that changes the system says on hover what it touches and how that is undone (apps.toml's
+        # An app that changes the board says on hover what it touches and how that is undone (apps.toml's
         # board_change), under the orange line its tile shows.
-        system = (f"<p style='color:{ORANGE};'><b>Changes the system.</b> {escape(entry.board_change)}</p>"
+        system = (f"<p style='color:{ORANGE};'><b>Changes the board.</b> {escape(entry.board_change)}</p>"
                   if entry.changes_board and entry.board_change else "")
         self.tooltip = (f"<p><b>{escape(entry.name)}</b></p><p>{escape(entry.summary)}</p>" + system
                         + f"<p style='color:gray;'>{escape(detail)}<br>{escape(source)}"
@@ -294,7 +294,7 @@ class TogglePill(HeaderPill):
 
 
 class SysInfoDialog(QDialog):
-    """What the system reports about the board (sysinfo.py): a section per part in two columns of about the same
+    """What the system reports about the console (sysinfo.py): a section per part in two columns of about the same
     length, the names muted, the values selectable; Copy puts it all on the clipboard as plain text. Its background
     is the window color at SYSINFO_OPACITY (owner, 20-10-2026); the text stays opaque, so it reads as well."""
 
@@ -1546,8 +1546,8 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, APP_NAME, f"{card.name} could not be started with {card.flatpak_name}.")
 
     def install_from_tile(self, entry: AppEntry) -> None:
-        """A tile of an app that is not installed: install it after one question; for an app that changes the system
-        the system warning is that question."""
+        """A tile of an app that is not installed: install it after one question; for an app that changes the board
+        the board warning is that question."""
         if self.busy() or entry.withdrawn:
             return
         if entry.changes_board:
@@ -1602,7 +1602,7 @@ class MainWindow(QMainWindow):
 
     def update_action(self, entry: AppEntry | None) -> bool:
         """Y, or a right click on a tile: the portal's own update while a newer portal is out, else the app's update
-        or reinstall (with the system warning for an app that changes the system). False when there is nothing to
+        or reinstall (with the board warning for an app that changes the board). False when there is nothing to
         update."""
         if self.update_available():
             self.portal_update_action()
@@ -1724,8 +1724,8 @@ class MainWindow(QMainWindow):
             self._start(entry, "uninstall")
 
     def install_all(self) -> None:
-        """Install all updates: every app the notice names, after one question (with the system warning when one of
-        them changes the system), one after the other."""
+        """Install all updates: every app the notice names, after one question (with the board warning when one of
+        them changes the board), one after the other."""
         self._start_batch([entry for entry, _ in self.marked], "updates", self.updates_button)
 
     def install_missing(self) -> None:
@@ -1738,10 +1738,10 @@ class MainWindow(QMainWindow):
         if self.busy() or not entries:
             return
         names = "".join(f"<li>{escape(entry.name)}"
-                        + (f" <b style='color:{ORANGE};'>(changes the system)</b>" if entry.changes_board else "")
+                        + (f" <b style='color:{ORANGE};'>(changes the board)</b>" if entry.changes_board else "")
                         + "</li>" for entry in entries)
         board = [entry.name for entry in entries if entry.changes_board]
-        warning = ("<p><b>Some of them change the console's system settings.</b> A wrong setting can make the system "
+        warning = ("<p><b>Some of them change the board.</b> A wrong setting can make the system "
                    "unstable or stop it from booting. Read their manuals first.</p>") if board else ""
         answer = QMessageBox.question(
             self, APP_NAME, f"<p>Install these {len(entries)} {what}{f' on {where}' if where else ''}, one after the "

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """A console on localhost for the tests: the console's side of discovery, registration and the control connection,
-with the same crypto. It checks what the board sends (paths, keys, counters) and records it, so a test can assert
+with the same crypto. It checks what this PS5 sends (paths, keys, counters) and records it, so a test can assert
 both what the app shows and what reached the console."""
 
 from __future__ import annotations
@@ -238,7 +238,7 @@ class SessionConsole(_TcpConsole):
             names.append("RP-StreamingType")
         for counter, name in enumerate(names):
             self.decrypted[name] = crypt.decrypt(counter, base64.b64decode(headers[name]))
-        remote = len(names)                     # the board's next counter
+        remote = len(names)                     # this PS5's next counter
         server_type = base64.b64encode(crypt.encrypt(0, bytes([self.server_type]) + bytes(15))).decode()
         conn.sendall(f"HTTP/1.1 200 OK\r\nRP-Server-Type: {server_type}\r\n\r\n".encode())
         local = 1

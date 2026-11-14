@@ -352,7 +352,7 @@ class AppsTourDialog(TourDialog):
             "Apps video tour",
             "Record a short video tour of each app you tick, from the checkout as it is now: the app's real window, "
             "offscreen, with its own tooltips as the captions. Each takes a few seconds and goes to your Videos "
-            "folder. What an app reads from the board is real: watch a video before you publish it.",
+            "folder. What an app reads from the console is real: watch a video before you publish it.",
             checkout, play, parent)
         self.apps = QListWidget()
         self.apps.itemChanged.connect(lambda _item: self.update_buttons())

@@ -12,6 +12,7 @@ SUITE_DIR="$DATA_DIR/$APP_ID"
 VENV="$SUITE_DIR/venv"
 VENV_USERS="$SUITE_DIR/venv-users"
 PORTAL_DIR="$SUITE_DIR/portal"
+STATE_DIR="$SUITE_DIR/state"            # what the portal remembers: the installed apps, downloads, the wallpaper
 LAUNCHER="$HOME/.local/bin/$APP_ID"
 MENU_ENTRY="$DATA_DIR/applications/$APP_ID.desktop"
 DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
@@ -56,7 +57,7 @@ if $UNINSTALL; then
     rm -rf "${PORTAL_DIR:?}"
     rm -f "$VENV_USERS/$APP_ID-portal"
     if $PURGE; then
-        rm -rf "${CONFIG_DIR:?}/$APP_ID"
+        rm -rf "${CONFIG_DIR:?}/$APP_ID" "${STATE_DIR:?}"
     fi
     info "Bazzite Test stays installed; remove it with its own installer."
     exit 0
@@ -73,14 +74,28 @@ if [ -d "$SRC/bazzite_console_core" ]; then CORE_SRC="$SRC/bazzite_console_core"
 info "Installing the required Bazzite Test app"
 bash "$APP_SRC/install.sh" --no-desktop-shortcut
 info "Copying the portal to $PORTAL_DIR"
-rm -rf "${PORTAL_DIR:?}"
-mkdir -p "$PORTAL_DIR"
+# The new portal is copied beside the installed one first and takes its place only then: the portal's own update
+# runs this script from a folder inside the installed portal, which the removal below takes with it.
+NEW_DIR="$SUITE_DIR/.portal.new"
+rm -rf "${NEW_DIR:?}"
+mkdir -p "$NEW_DIR"
 (cd "$SRC" && tar --exclude='./tests' --exclude='__pycache__' --exclude='./.git' -cf - .) |
-    tar -xf - -C "$PORTAL_DIR"
+    tar -xf - -C "$NEW_DIR"
 if [ "$CORE_SRC" != "$SRC/bazzite_console_core" ]; then
-    mkdir -p "$PORTAL_DIR/bazzite_console_core"
-    (cd "$CORE_SRC" && tar --exclude='__pycache__' -cf - .) | tar -xf - -C "$PORTAL_DIR/bazzite_console_core"
+    mkdir -p "$NEW_DIR/bazzite_console_core"
+    (cd "$CORE_SRC" && tar --exclude='__pycache__' -cf - .) | tar -xf - -C "$NEW_DIR/bazzite_console_core"
 fi
+# Up to portal 1.0.0 the portal kept what it remembers in its program folder, where every install removed it: move
+# it to the state folder, once.
+mkdir -p "$STATE_DIR"
+for kept in "$PORTAL_DIR"/installed.json "$PORTAL_DIR"/releases "$PORTAL_DIR"/wallpapers.json \
+            "$PORTAL_DIR"/wallpaper-example "$PORTAL_DIR"/wallpaper.*; do
+    if [ -e "$kept" ] && [ ! -e "$STATE_DIR/${kept##*/}" ]; then
+        mv "$kept" "$STATE_DIR/"
+    fi
+done
+rm -rf "${PORTAL_DIR:?}"
+mv "$NEW_DIR" "$PORTAL_DIR"
 # A venv made by an older Python has no site-packages for the one that runs it now (a Bazzite update moves
 # /usr/bin/python3 to the next version, and the venv's python links to it): make it again.
 VENV_FITS='import os, sysconfig; raise SystemExit(not os.path.isdir(sysconfig.get_path("purelib")))'

@@ -3,9 +3,9 @@
 the health, the serial (a popup shows it), the speed test and Refresh on the second row (owner, 05-11-2026); below
 it the drive chosen by its number, its model and where its values come from, and its specs as pills: the power
 cycles, the power-on hours and days, the device, the data the host read and wrote, the firmware and whether a newer
-one exists, then a row on speed: the interface, the link now, the most the board's port carries and the maker's
-rated read and write (rated.py), beside the speeds measured in this board at the top (speedtest.py), so it shows
-whether the board holds the drive back. The reading and the measuring run off the GUI thread: udisks may wake a sleeping drive first.
+one exists, then a row on speed: the interface, the link now, the most the console's port carries and the maker's
+rated read and write (rated.py), beside the speeds measured in this console at the top (speedtest.py), so it shows
+whether the console holds the drive back. The reading and the measuring run off the GUI thread: udisks may wake a sleeping drive first.
 Screenshot, beside the drive's list (owner, 05-11-2026), saves the window with the values it shows as a PNG in the
 Pictures folder; the serial stays hidden in it, as on the screen."""
 
@@ -179,8 +179,8 @@ class MainWindow(QMainWindow):
         self.device_box = MetricBox("Drive")
         self.read_box = MetricBox("Host reads")
         self.written_box = MetricBox("Host writes")
-        # Speed (owner, 05-11-2026): the link now, the most the board's port carries and the maker's rated speeds,
-        # against the speeds measured here (the Test pill at the top): whether the board holds the drive back.
+        # Speed (owner, 05-11-2026): the link now, the most the console's port carries and the maker's rated speeds,
+        # against the speeds measured here (the Test pill at the top): whether the console holds the drive back.
         self.board_box = MetricBox("Board link")
         self.rated_box = MetricBox("Rated R / W MB/s")
         rows = [[self.cycles_box, self.hours_box, self.days_box, self.device_box],
@@ -331,7 +331,7 @@ class MainWindow(QMainWindow):
         else:
             verdict = (f"The drive's fastest link carries about {drive.drive_mbps:,} MB/s: "
                        + ("the reported port limit is lower." if held else "the reported port limit is sufficient."))
-        self.board_box.set_value(drive.board_link or NONE, f"The board's port: {board}. {verdict}" if board else "")
+        self.board_box.set_value(drive.board_link or NONE, f"The console's port: {board}. {verdict}" if board else "")
         self.board_box.set_colour(ORANGE if held else GREEN if held is False else GREY)
         if drive.rated_read is not None:
             self.rated_box.set_value(rw(drive.rated_read, drive.rated_write),
@@ -357,13 +357,13 @@ class MainWindow(QMainWindow):
             self.measure_pill.set_value(NONE, "Mount the drive to measure it: the test needs a folder on it")
         elif drive.path in self.measured:
             self.measure_pill.set_value(rw(*self.measured[drive.path]),
-                                        "Measured in this board. Click to measure again.")
+                                        "Measured in this console. Click to measure again.")
         else:
             self.measure_pill.set_value("Test", "Click to measure: writes a test file of 1 GB to the drive, reads it "
                                                 "back and deletes it. A few seconds.")
 
     def measure(self) -> None:
-        """The chosen drive's read and write speed in this board, off the GUI thread."""
+        """The chosen drive's read and write speed in this console, off the GUI thread."""
         drive = self.current()
         folder = self.test_folder(drive) if drive else None
         if drive is None or folder is None or self.speed_test is not None:

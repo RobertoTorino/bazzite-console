@@ -193,6 +193,12 @@
 }
 
 /* A page's own icon where an app chapter has the app's logo: a symbol in the suite's color, as large. */
+/* A video on a page (the Portal Tour). */
+.md-typeset video.tour-video {
+  width: 100%;
+  border-radius: var(--suite-radius-medium);
+}
+
 .md-typeset .page-icon {
   float: right;
   margin: 0 0 1em 1em;

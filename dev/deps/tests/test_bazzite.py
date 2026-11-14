@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Bazzite's update state from rpm-ostree's and systemd's answers (recorded on the owner's board, 15-10-2026, and
-the other states a board can be in), what the card says, and when the weekly reminder speaks."""
+"""Bazzite's update state from rpm-ostree's and systemd's answers (recorded on the owner's console, 15-10-2026, and
+the other states a console can be in), what the card says, and when the weekly reminder speaks."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def status(*deployments: dict) -> str:
 
 
 def fake_run(rpm: str, timer: str = LAST_RUN, result: str = "success", rpm_code: int = 0):
-    """subprocess.run for rpm-ostree and systemctl, answering what a board would; records the commands."""
+    """subprocess.run for rpm-ostree and systemctl, answering what a console would; records the commands."""
     calls: list[list[str]] = []
 
     def run(argv, **kwargs):
@@ -66,7 +66,7 @@ def test_an_update_waits_for_a_reboot():
     assert state.update_waiting and not state.rollback_waiting and state.next_boot.staged
     kind, text = bazzite.describe(state)
     assert kind == "warn" and "Bazzite 44.20261019.0" in text and "waits for a reboot" in text
-    assert bazzite.reminder(state, NOW) == "Bazzite 44.20261019.0 waits for a reboot: restart the board to use it."
+    assert bazzite.reminder(state, NOW) == "Bazzite 44.20261019.0 waits for a reboot: restart the console to use it."
 
 
 def test_a_rollback_is_not_an_update():

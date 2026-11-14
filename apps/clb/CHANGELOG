@@ -1,3 +1,12 @@
+Changelog: 14-11-2026 12:22:49
+
+Fixed. The app is named XBOX Remote Play, with XBOX in capitals as its window already wrote it: its name in the
+window, the menu entry, the installer's messages and the README.
+
+Changelog: 14-11-2026 12:11:19
+
+Fixed. The window, its tooltips and messages, and the installer call the PlayStation 5 the app runs on "this PS5", where they said "the board" or "the PS5": Sign out forgets the account "on this PS5", and Stream's tooltip reads "Stream the console on this PS5". The menu entry's description says "to this PS5". The comments in the code follow.
+
 Changelog: 14-11-2026 03:50:36
 
 Release 1.0.0.

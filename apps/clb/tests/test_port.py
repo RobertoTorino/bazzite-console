@@ -72,7 +72,7 @@ exit 0
     data = home / "data" / APP_ID
     assert (data / "app" / "bazzite_console_core" / "__init__.py").is_file()
     assert (data / "venv" / "bin" / "python").is_file()
-    assert "No Xbox Remote Play icon" not in result.stdout
+    assert "No XBOX Remote Play icon" not in result.stdout
     launcher = (home / ".local" / "bin" / APP_ID).read_text()
     assert str(data / "venv" / "bin" / "python") in launcher
     assert "-m console_linkb" in launcher

@@ -13,7 +13,7 @@ APPS = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8"
 _LINK = re.compile(r"\]\((?:apps/)?([a-z0-9]+)\.md\)")
 CATEGORIES = ("sustainable", "graphics", "gaming", "utilities")     # the navigation's headers, in the portal's order
 # The pages of docs/apps/ that are no app's chapter: the overviews, and a category without an app ("Coming soon.").
-OTHER = {"index", "categories"} | {c for c in CATEGORIES if all(app["category"] != c for app in APPS.values())}
+OTHER = {"index", "categories", "covers"} | {c for c in CATEGORIES if all(app["category"] != c for app in APPS.values())}
 
 
 def test_every_app_has_a_chapter_and_no_chapter_is_left_over():
@@ -24,7 +24,7 @@ def test_every_app_has_a_chapter_and_no_chapter_is_left_over():
 def test_the_overviews_list_exactly_the_apps():
     for page in ("docs/apps/index.md", "docs/apps/categories.md", "docs/index.md"):
         text = (SUITE / page).read_text(encoding="utf-8")
-        assert set(_LINK.findall(text)) - {"install", "portal"} - OTHER == set(APPS), page
+        assert set(_LINK.findall(text)) - {"install", "portal", "privacy"} - OTHER == set(APPS), page
         for app in APPS.values():
             assert app["name"] in text, f"{page}: {app['name']}"
 

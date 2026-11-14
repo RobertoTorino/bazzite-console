@@ -5,9 +5,9 @@ them, kept in sync with the apps (owner, 09-11-2026: a separate JSON file, kept 
 launchers are read from each app's code and its portal's apps.toml by sync() (`dev/deps/run.sh
 --sync-upstreams`), without importing the apps; tests/test_upstreams.py fails while the file is stale or misses an app.
 
-* github: an emulator or Decky Loader, which each app pins at a build tested on a board. Two kinds of update: the
+* github: an emulator or Decky Loader, which each app pins at a build tested on a console. Two kinds of update: the
   installed one is not the pin (the app's Install puts the pin in place), or upstream has a newer release than the
-  pin (it comes with a release of the app, after a test on a board: release work). Neither is installed from here.
+  pin (it comes with a release of the app, after a test on a console: release work). Neither is installed from here.
 * sony: firmware Sony publishes a version list for (the DualSense controllers, the PS4), compared with what was seen
   before, so a new version is news once; and firmware with no list a program can read (the PS5, the PlayStation
   Portal), whose card says how to check on the device.
@@ -287,7 +287,7 @@ def check_github(entry: dict, fetch: Fetch = _fetch, home: Path = Path.home()) -
         pins = sorted({app["version"] for app in late})
         updates.append(Update(f"{name} on GitHub", ", ".join(pins), tag))
         notes.append(f"{name} {tag} is newer than the tested one of {', '.join(_app_label(app) for app in late)}: "
-                     "it comes with a release of the app, after a test on a board.")
+                     "it comes with a release of the app, after a test on a console.")
     detail = f"Latest on GitHub: {tag} ({str(latest.get('published_at', ''))[:10]})."
     if without:
         detail += f" Installed without {name} so far: {', '.join(dict.fromkeys(without))}."
@@ -301,11 +301,11 @@ def _github_about(entry: dict, latest: dict) -> str:
     page = escape(str(latest.get("html_url") or f"https://github.com/{entry['apps'][0]['repo']}/releases"),
                   quote=True)
     text = (f"<p>{name}, {escape(entry['what'])}. Each app installs the build of {name} it was tested with on a "
-            f"board (its pin):</p><ul>{pins}</ul>"
+            f"console (its pin):</p><ul>{pins}</ul>"
             f"<p><b>Installed is not the pin</b>: open the app and use its Install; it downloads the pin, checks it "
             "and swaps it in. Close the program first.</p>"
             f"<p><b>Newer on GitHub</b>: it is not installed from here. A newer {name} comes with a release of the "
-            "app, once it has been tried on a board (release work); until then the app keeps the tested one. "
+            "app, once it has been tried on a console (release work); until then the app keeps the tested one. "
             f"See <a href='{page}'>the release</a> for what changed.</p>")
     if entry["id"] == "decky":
         text += ("<p>Decky Loader can update itself from its settings in Game Mode; the app's Install asks for your "

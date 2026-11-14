@@ -56,7 +56,7 @@ def test_an_update_beside_its_game_is_left_out(tmp_path):
 
 def test_a_game_with_its_update_in_it_is_a_game(tmp_path):
     """Dumped from a PS4 with the update installed: param.sfo says "gp", and there is no other game with its ID
-    (LUMINES REMASTERED, CUSA11624, on the owner's board, 14-10-2026)."""
+    (LUMINES REMASTERED, CUSA11624, on the owner's console, 14-10-2026)."""
     eboot = make_game(tmp_path / "games" / "CUSA11624", "LUMINES REMASTERED", "CUSA11624", "01.05", category="gp")
     assert scan([tmp_path / "games"]) == [Game(eboot, "LUMINES REMASTERED", "CUSA11624", "01.05")]
     assert read_game(eboot).patched

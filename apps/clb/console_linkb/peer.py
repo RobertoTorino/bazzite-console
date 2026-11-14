@@ -3,7 +3,7 @@
 # UnknownSKL (Jim Kroon); the MIT notice is in the README's License section.
 """The stream's WebRTC connection, with aiortc on an asyncio loop of its own thread.
 
-As the reference sets it up: sound both ways (the board sends none), video received only, H.264 first, and four
+As the reference sets it up: sound both ways (this PS5 sends none), video received only, H.264 first, and four
 data channels: chat, control, input and message. Once the message channel's handshake is acknowledged, the control
 channel authorizes the client and announces the pad, the client sends its configuration, and the input channel
 starts: its first report says the client has one touch point, then every 16 ms the pads' states go out, with the
@@ -101,7 +101,7 @@ class Peer:
     # --- From other threads -------------------------------------------------------------------------------------
 
     def offer(self) -> str:
-        """The board's offer (SDP), with its candidates."""
+        """This PS5's offer (SDP), with its candidates."""
         return self._call(self._offer())
 
     def answer(self, sdp: str) -> None:
@@ -140,7 +140,7 @@ class Peer:
 
     async def _offer(self) -> str:
         from aiortc import RTCConfiguration, RTCPeerConnection, RTCRtpReceiver
-        # No STUN server, as the reference (RTCPeerConnection({})): the board's own addresses only
+        # No STUN server, as the reference (RTCPeerConnection({})): this PS5's own addresses only
         pc = self.pc = RTCPeerConnection(RTCConfiguration(iceServers=[]))
         pc.addTransceiver("audio", direction="sendrecv")
         video = pc.addTransceiver("video", direction="recvonly")

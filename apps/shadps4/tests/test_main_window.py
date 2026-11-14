@@ -399,7 +399,7 @@ def test_the_settings_tab_follows_shadps4s_file(qapp, folders):
 
 def test_bazzites_volume_for_shadps4(qapp, folders, tmp_path):
     """The volume Bazzite remembers for shadPS4 (WirePlumber's stream-properties): in the Settings tab's Sound box,
-    and said once while shadPS4 is muted there (as on the board, 24-10-2026)."""
+    and said once while shadPS4 is muted there (as on the console, 24-10-2026)."""
     state = tmp_path / "state" / "wireplumber" / "stream-properties"
     state.parent.mkdir(parents=True)
     window = _window(folders, sound_state=state)

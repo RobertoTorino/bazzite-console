@@ -7,7 +7,7 @@
 #   ./build.sh --no-cache # full rebuild
 #   ./build.sh --test     # also run a post-build sanity check (rpm-ostree status)
 #
-# Test the image on a Bazzite board afterwards (undo with: rpm-ostree rollback):
+# Test the image on a Bazzite system afterwards (undo with: rpm-ostree rollback):
 #   sudo rpm-ostree rebase ostree-unverified-image:containers-storage:localhost/bazzite-custom:latest
 set -euo pipefail
 

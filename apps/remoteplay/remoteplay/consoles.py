@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""The consoles the board is registered with, and the input the window takes for registering: the PSN account ID,
+"""The consoles this PS5 is registered with, and the input the window takes for registering: the PSN account ID,
 the console's PIN and the optional login passcode.
 
 The keys a console hands out at registration let anyone on the network start a session as this account, so they

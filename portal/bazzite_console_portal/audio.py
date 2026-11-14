@@ -18,7 +18,7 @@ NO_OUTPUT = "No audio output was found, so the portal stays silent."
 
 
 class Sounds:
-    """Plays the portal's sound; *enabled* is the user's choice (the Sound pill), available() whether the board has
+    """Plays the portal's sound; *enabled* is the user's choice (the Sound pill), available() whether the console has
     an audio output to play on."""
 
     def __init__(self, folder: Path = SOUNDS):

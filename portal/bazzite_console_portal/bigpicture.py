@@ -109,7 +109,7 @@ class ElidedLabel(QLabel):
 
 
 class StatusLine(QWidget):
-    """The board status, clock, and optional weather shown to the right of the header symbols."""
+    """The console status, clock, and optional weather shown to the right of the header symbols."""
 
     def __init__(self):
         super().__init__()
@@ -749,7 +749,7 @@ class BigPicture(Backdrop):
         self.installed.setToolTip(tooltip)
 
     def set_status(self, loads: str, clock: str = "") -> None:
-        """The board load and the clock on the right of the symbols."""
+        """The console load and the clock on the right of the symbols."""
         self.status.set_parts(loads, clock)
         self._refit()
 
@@ -799,7 +799,7 @@ class BigPicture(Backdrop):
             pixmap = self.art(entry.category, key, state.installed)
             marker = "update" if state.update else "reinstall" if state.reinstall else ""
             status = state.status if state.status != "Installed" else state.outside or (
-                "changes the system" if entry.changes_board else "")
+                "changes the board" if entry.changes_board else "")
             colour = BLUE if state.busy else \
                 RED if state.status in ("Update", "Reinstall needed", "App not available") else \
                 ORANGE if status and state.status == "Installed" else muted(current_theme())

@@ -38,7 +38,7 @@ def _wait_for(predicate, ms=3000):
 
 def _window(result: CheckResult, bazzite=None, system=(), extra_tools=(), **kwargs) -> DependencyWindow:
     """The window on *result*; Bazzite's state from *bazzite*, else none, and the machine's updates from *system* (the
-    board's own are never read here). Fix's question is answered No unless a test passes its own *ask*.
+    console's own are never read here). Fix's question is answered No unless a test passes its own *ask*.
     *extra_tools* get a card after the catalog's."""
     kwargs.setdefault("ask", lambda text: False)
     window = DependencyWindow(load_catalog(CATALOG), [*load_tools(CATALOG), *extra_tools], load_apps(CATALOG),

@@ -4,7 +4,7 @@ the Settings tab when it is rebuilt on PCSX2 Manager's). One box per group (shad
 the sound, the controller and mouse, what shows in a game), each setting a choice, a switch or a percentage, read
 from config.json and written the moment it is changed, while shadPS4 does not run. Built as RPCS3 Manager's
 settings_page. The Sound box also shows, beside shadPS4's volume, the volume Bazzite's sound settings remember for
-shadPS4 (muted there, a game plays without a sound; seen on the board, 24-10-2026): the window passes it
+shadPS4 (muted there, a game plays without a sound; seen on the console, 24-10-2026): the window passes it
 (show_sound), and Unmute beside it turns a muted one on again (core's sound.unmute; owner, 24-10-2026)."""
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ from . import shadps4_settings, userdata
 from .shadps4_settings import CHOICE, PERCENT, Setting
 
 RUNNING = "shadPS4 is running: close it first, it writes its own settings over the change when it closes."
-STREAM = "shadPS4"                      # shadPS4's sound stream, as PipeWire names it (core's sound; seen on the board)
+STREAM = "shadPS4"                      # shadPS4's sound stream, as PipeWire names it (core's sound; seen on the PS5)
 SOUND_TIP = sound.tip(STREAM)
 SOUND_MUTED = sound.muted_text(STREAM)
 SOUND_DOWN = sound.down_text(STREAM)

@@ -2,7 +2,7 @@
 """The environment Steam starts the app with (its Game Mode shortcut, or a non-Steam game on the desktop), put right
 before Qt loads. Only the standard library here: this runs first.
 
-Two things Steam adds break the app's OpenGL, and with it the stream's picture (on the owner's board, 13-10-2026:
+Two things Steam adds break the app's OpenGL, and with it the stream's picture (on the owner's machine, 13-10-2026:
 "EGL not available", sound but no picture):
 - its overlay, gameoverlayrenderer.so in LD_PRELOAD, which hooks a program's OpenGL to draw Steam's overlay; a
   non-Steam game gets it (reproduced with the shortcut's own environment: no OpenGL with it, OpenGL without it);

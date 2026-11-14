@@ -18,7 +18,7 @@
   newest ps5-portal-v<x.y.z> tag; REF while there is no portal tag yet), portal/VERSION must have been bumped from that
   release at least as much as the largest app bump it pins: an app patch release needs at least a portal patch
   release, an app minor release at least a portal minor release, and so on. An added, removed or withdrawn app
-  needs at least a minor bump (a withdrawn one is removed from the boards); any other change to apps.toml (a new
+  needs at least a minor bump (a withdrawn one is removed from the consoles); any other change to apps.toml (a new
   checksum, other commands) at least a patch bump. The comparison is with the release, not the push: a portal
   version that is not tagged yet may still change what it pins (the apps' checksums come once GitHub has built
   them), without a bump for every push."""

@@ -128,7 +128,7 @@ def test_the_quit_hotkeys(tmp_path):
     assert userdata.add_quit_bindings(tmp_path) == list(userdata.QUIT_BINDINGS)
     assert path.read_text() == userdata.GLOBAL_INI_HEADER + "".join(f"{b}\n" for b in userdata.QUIT_BINDINGS)
     assert userdata.add_quit_bindings(tmp_path) == []
-    # As shadPS4 0.20.0 writes it (the owner's board): its own Ctrl+Shift+End stays, the other two are added, every
+    # As shadPS4 0.20.0 writes it (the owner's console): its own Ctrl+Shift+End stays, the other two are added, every
     # other line stays as it is; spacing as shadPS4 reads it, and a file without a newline at the end.
     written = (userdata.GLOBAL_INI_HEADER + "hotkey_pause = f9\nhotkey_quit=lctrl,lshift,end\n"
                "hotkey_volume_up = kpplus")
@@ -179,7 +179,7 @@ def test_modules_copied_from_a_folder(tmp_path):
 
 
 def test_play_time_as_shadps4_writes_it(tmp_path):
-    """play_time.txt as shadPS4 0.20.0 writes it, from the owner's board (24-10-2026)."""
+    """play_time.txt as shadPS4 0.20.0 writes it, from the owner's console (24-10-2026)."""
     assert userdata.play_times(tmp_path) == {}
     (tmp_path / "play_time.txt").write_text("CUSA11624 1:22:47 1792613335\nCUSA53672 0:43:31 1792710015\n"
                                             "CUSA00001 0:01:02\nnonsense\nCUSA00002 x:y:z 1\n")

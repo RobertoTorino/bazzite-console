@@ -10,7 +10,7 @@ Built to cost next to nothing, so it can stay on during gameplay:
 
 GPU load, in order of preference:
 1. gpu_busy_percent, the kernel load sensor (fails with EOPNOTSUPP on a stock Cyan Skillfish kernel);
-2. gpu_metrics, when the governor's fix-metrics has mounted its patched copy (as MangoHud reads it);
+2. gpu_metrics, when a patched copy is mounted over the kernel's (as MangoHud reads it);
 3. gfx/compute engine time per client from /proc/<pid>/fdinfo, as nvtop and the stress test do.
    Only this user's processes are readable, which includes the games and the compositor.
 Network speed: the byte counters of the physical interfaces (Ethernet, Wi-Fi) in /proc/net/dev, one
@@ -111,7 +111,7 @@ class Sampler:
         v = _read(dev / "gpu_busy_percent", 16)
         if v is not None and v.strip().isdigit():
             return float(v.strip()), "sensor"
-        # Without fix-metrics a stock kernel's gpu_metrics holds 0 or 0xFFFF (the "0%" / "655%" overlay bug).
+        # Without a patched copy a stock kernel's gpu_metrics holds 0 or 0xFFFF (the "0%" / "655%" overlay bug).
         mounts = _read(self.proc / "self" / "mountinfo") or ""
         if "gpu_metrics" in mounts:
             try:

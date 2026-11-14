@@ -45,7 +45,7 @@ if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVIC
 fi
 # On a Wayland desktop shadPS4 opens its window through Wayland itself, and Steam sees only X11 windows: no overlay
 # (Shift+Tab, the PS button) over a game it started, so no way to its page, controller layout or settings (owner's
-# board, 14-10-2026). A game Steam starts there opens its window through XWayland. Game Mode is X11 already.
+# console, 14-10-2026). A game Steam starts there opens its window through XWayland. Game Mode is X11 already.
 if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ] &&
    [ -z "${SDL_VIDEO_DRIVER:-}" ]; then
     export SDL_VIDEO_DRIVER=x11

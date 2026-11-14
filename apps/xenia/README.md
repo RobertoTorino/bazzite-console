@@ -7,7 +7,7 @@
 # Xenia Manager
 
 Xenia Manager installs [Xenia Canary](https://xenia.jp) on **Bazzite** running on PlayStation 5 hardware, scans
-folders for Xbox 360 games, and creates Steam entries for Game Mode. Game compatibility and performance vary by
+folders for XBOX 360 games, and creates Steam entries for Game Mode. Game compatibility and performance vary by
 title and are not guaranteed on this hardware.
 
 How to install and use it: [Xenia Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/xenia/).

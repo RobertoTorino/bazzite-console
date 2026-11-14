@@ -33,7 +33,7 @@ NEXUS_PAGE = SUITE_MANUAL_URL
 LOCAL_LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / APP_ID / "local"
 ABOUT = ("One place for Bazzite Console development tools. The first tiles are the developer apps of this checkout, "
          "each a window of its own that keeps running when the dashboard closes: Nexus Release Tool (a release's "
-         "versions, CHANGELOG entries, pins and the board checks), Nexus Installer Tests (a suite's installer tests "
+         "versions, CHANGELOG entries, pins and the console checks), Nexus Installer Tests (a suite's installer tests "
          "one at a time), Nexus Demo Recorder (a portal installation recorded with OBS), Nexus Deps (runtime "
          "packages and system tools) and Nexus Sound Lab (short "
          "sound effects for the windows, made from sliders and saved as WAV).\n\n"

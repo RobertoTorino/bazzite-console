@@ -3,10 +3,10 @@
 ![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Xbox Remote Play
+# XBOX Remote Play
 
-Xbox Remote Play streams an Xbox console or Xbox Cloud Gaming to PS5 hardware running Bazzite. Sign in with a
-Microsoft account, select a console or cloud game, and start streaming. Xbox Cloud Gaming requires an eligible
+XBOX Remote Play streams an XBOX console or XBOX Cloud Gaming to PS5 hardware running Bazzite. Sign in with a
+Microsoft account, select a console or cloud game, and start streaming. XBOX Cloud Gaming requires an eligible
 subscription; service and device compatibility may vary.
 
 ## Install and use
@@ -20,16 +20,16 @@ Launch `ps5-xbox-remoteplay` from the app menu or terminal. The app key is `clb`
 The app and its private venv live under `${XDG_DATA_HOME:-~/.local/share}/ps5-xbox-remoteplay/`. Its settings
 and sign-in are under `${XDG_CONFIG_HOME:-~/.config}/ps5-xbox-remoteplay/`; the refresh token in `account.json`
 is restricted to the user (mode 0600). The installer downloads PyQt6, aiortc (which includes PyAV as a dependency),
-and pygame-ce into the private venv, separate from the suite environment. Until Xbox-specific artwork is available,
+and pygame-ce into the private venv, separate from the suite environment. Until XBOX-specific artwork is available,
 the desktop icon uses the suite's generic Gaming artwork.
 
-Sign in using the device code shown, then select and stream your Xbox or a cloud game. Escape closes the main
+Sign in using the device code shown, then select and stream your XBOX or a cloud game. Escape closes the main
 window, but is passed to the game during a stream. The app communicates with Microsoft services over the internet.
 
 ## Disclaimer
 
 Bazzite Console is an independent community project, not affiliated with or endorsed by Sony, Microsoft, or the
-Bazzite / Universal Blue project. Xbox and Xbox Cloud Gaming are Microsoft trademarks; PlayStation and PS5 are
+Bazzite / Universal Blue project. XBOX and XBOX Cloud Gaming are Microsoft trademarks; PlayStation and PS5 are
 Sony trademarks. Names are used only to describe compatibility.
 
 ## License

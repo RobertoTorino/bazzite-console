@@ -8,7 +8,7 @@ forceActivate() asks for it, and `active` false hides it.
 KWin shows it only as its `mode` allows (KWin 6.7, VirtualKeyboardVisibility): 0 never, 1 after touch or pen input
 (Bazzite's default), 2 for any input. A controller is not touch, so R3 sets mode 2 while the keyboard shows and sets
 the user's mode back when R3 hides it or the portal closes (owner, 05-11-2026: the desktop stays as the user has it).
-Tried on the owner's board, 05-11-2026: with mode 1 forceActivate() left it hidden, with mode 2 it showed."""
+Tried on the owner's console, 05-11-2026: with mode 1 forceActivate() left it hidden, with mode 2 it showed."""
 
 from __future__ import annotations
 

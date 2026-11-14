@@ -2,7 +2,7 @@
 """The controllers connected, as the kernel lists them (/proc/bus/input/devices): a device with a joystick handler
 (js0, js1…) that is not Steam's virtual controller (vendor 28DE), the same rule as the run wrapper's; a
 controller's motion sensors, which the kernel lists as a joystick of their own over Bluetooth (the DualSense Edge
-on the owner's board), are not a second controller. The window says when there is none (owner, 24-10-2026: a
+on the owner's console), are not a second controller. The window says when there is none (owner, 24-10-2026: a
 controller switched off by its idle timer left a game without one), since a game started from Steam reads the
 controller that is there when it starts.
 

@@ -75,7 +75,7 @@ def test_scan_finds_games_sorted_once_and_not_too_deep(tmp_path):
 
 def test_the_crc_as_pcsx2_computes_it(tmp_path):
     """Every 32-bit word XORed; the bytes after the last whole word left out. Lumines Plus (SLUS-21553), whose
-    program PCSX2 logged as 93262D20, came out the same on the board."""
+    program PCSX2 logged as 93262D20, came out the same on the console."""
     assert elf_crc(b"") == 0
     assert elf_crc(bytes.fromhex("01000000 02000000 04000000 ff")) == 7
     program = b"\x7fELF" + bytes(range(1, 200))

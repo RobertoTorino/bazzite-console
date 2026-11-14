@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""udisks as busctl answers it: the owner's board (05-11-2026, a Samsung 970 EVO Plus on NVMe, its serial replaced)
+"""udisks as busctl answers it: the owner's machine (05-11-2026, a Samsung 970 EVO Plus on NVMe, its serial replaced)
 and other setups, a SATA SSD by Crucial, a SATA drive without a known health attribute and a USB stick; fwupd's
 devices and sysfs' links for the same drives."""
 
@@ -116,18 +116,18 @@ ENCLOSED = {
                                                          mounts=("/run/media/user/bazzite",)),
 }
 
-# fwupd's GetDevices: the board's drive, updatable (fwupd 2.1.8 on the board, 05-11-2026), and the Crucial, not
+# fwupd's GetDevices: the machine's drive, updatable (fwupd 2.1.8 on the machine, 05-11-2026), and the Crucial, not
 FWUPD_DEVICES = [
     {"DeviceId": v("s", "samsung-id"), "Name": v("s", "SSD 970 EVO Plus 2TB"), "Serial": v("s", "SAMSUNG-SERIAL"),
      "Flags": v("t", 4644337652597003), "Version": v("s", "2B2QEXM7"), "Plugin": v("s", "nvme")},
     {"DeviceId": v("s", "crucial-id"), "Name": v("s", "CT500MX500SSD1"), "Serial": v("s", "CRUCIAL-SERIAL"),
      "Flags": v("t", 1), "Version": v("s", "M3CR046")},
 ]
-NO_SILO = "Call failed: no components in silo"      # the board's answer before fwupdmgr refresh
+NO_SILO = "Call failed: no components in silo"      # the machine's answer before fwupdmgr refresh
 
 
 def sysfs(root: Path) -> Path:
-    """A /sys with the board's NVMe link (PCIe 2.0 x2 of 3.0 x4, in a port of PCIe 2.0 x2), a SATA link at 6 Gb/s
+    """A /sys with the machine's NVMe link (PCIe 2.0 x2 of 3.0 x4, in a port of PCIe 2.0 x2), a SATA link at 6 Gb/s
     (the port's limit too) and a USB stick at 5 Gb/s on a 10 Gb/s bus."""
     def folder(path: str, files: dict[str, str]) -> Path:
         where = root / path

@@ -7,8 +7,8 @@ console's ID) and a cloud game ("cloud", with the game's title ID).
 1. play starts the session; the service then gets the console or a cloud server ready (Provisioning), may queue a
    cloud game (WaitingForResources, with a waiting time), and asks for the account's transfer token once
    (ReadyToConnect, answered with connect) before it is Provisioned, or Failed.
-2. sdp: the board's WebRTC offer goes up, the service's answer comes back (polled: 204 while it has none).
-3. ice: the board's candidates go up, the service's come back.
+2. sdp: this PS5's WebRTC offer goes up, the service's answer comes back (polled: 204 while it has none).
+3. ice: this PS5's candidates go up, the service's come back.
 4. keepalive every 30 s while the stream runs, and the session's address with DELETE at the end."""
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ DEVICE_INFO = json.dumps({
             "displayInfo": {"dimensions": {"widthInPixels": 1920, "heightInPixels": 1080},
                             "pixelDensity": {"dpiX": 1, "dpiY": 1}}},
 })
-CHANNELS = {                                # the data channels' versions the board speaks
+CHANNELS = {                                # the data channels' versions this PS5 speaks
     "chatConfiguration": {"bytesPerSample": 2, "expectedClipDurationMs": 20,
                           "format": {"codec": "opus", "container": "webm"}, "numChannels": 1,
                           "sampleFrequencyHz": 24000},
@@ -170,7 +170,7 @@ class Session:
         raise SessionError(f"{part.strip('/')}: the streaming service gave no answer")
 
     def exchange_sdp(self, offer: str) -> str:
-        """The board's offer up, the service's answer (its SDP) back."""
+        """This PS5's offer up, the service's answer (its SDP) back."""
         answer = self._exchange("/sdp", {"messageType": "offer", "sdp": offer, "configuration": CHANNELS})
         sdp = answer.get("sdp") if isinstance(answer, dict) else None
         if not isinstance(sdp, str) or not sdp:
@@ -178,7 +178,7 @@ class Session:
         return sdp
 
     def exchange_ice(self, candidates: list[dict]) -> list[dict]:
-        """The board's ICE candidates up ({candidate, sdpMid, sdpMLineIndex}), the service's back."""
+        """This PS5's ICE candidates up ({candidate, sdpMid, sdpMLineIndex}), the service's back."""
         answer = self._exchange("/ice", {"messageType": "iceCandidate", "candidate": candidates})
         if not isinstance(answer, list):
             raise SessionError("ice: the answer has no candidates")

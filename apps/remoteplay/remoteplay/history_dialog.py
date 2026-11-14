@@ -29,8 +29,8 @@ class HistoryDialog(QDialog):
         for column in range(1, len(COLUMNS)):
             self.table.horizontalHeader().setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         self.total = QLabel()
-        note = QLabel("Counted while a console streams to this board, the Game Mode shortcut included; play on the "
-                      "console itself is not seen. Kept only on this board, in "
+        note = QLabel("Counted while a console streams to this PS5, the Game Mode shortcut included; play on the "
+                      "console itself is not seen. Kept only on this PS5, in "
                       "~/.config/ps5-remoteplay/history.json.")
         note.setWordWrap(True)
         note.setStyleSheet("color:palette(placeholder-text);")

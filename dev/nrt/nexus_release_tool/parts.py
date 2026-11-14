@@ -25,7 +25,7 @@ def info_row(short: str, text: str) -> QHBoxLayout:
 
 
 class StepLog(Terminal):
-    """A step's log (what Apply, Pin, Bump, Retract or a board test wrote), kept here as a page's own record and
+    """A step's log (what Apply, Pin, Bump, Retract or a console test wrote), kept here as a page's own record and
     relayed to the Commands tab as it is written: set_text() for a step that writes its log at once, appendPlainText()
     for lines that come while something runs. *relay* is the window's: it shows the text in Commands and opens that
     tab when *opens* and the page is the one open."""

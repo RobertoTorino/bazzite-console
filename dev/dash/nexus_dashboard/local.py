@@ -18,9 +18,9 @@ from .checkout import suites
 
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 DOCS_HOST = "127.0.0.1"
-DOCS_PORT = 8765                        # not mkdocs' default 8000, which other dev servers like to take
+DOCS_PORT = 8775                        # not mkdocs' default 8000, which other dev servers like to take
 NETWORK_HOST = "0.0.0.0"                # every address of this computer, for the other devices
-NETWORK_PORT = 8785                     # ports of their own, so a wiki can be served both ways at once
+NETWORK_PORT = 8795                     # ports of their own, so a wiki can be served both ways at once
 _CONSTANT = re.compile(r'^(APP_NAME|APP_ID)\s*=\s*"([^"]+)"', re.M)
 
 

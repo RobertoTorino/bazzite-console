@@ -3,7 +3,7 @@
 # System Overlay
 
 A small window that stays on top of your desktop and shows the **PlayStation 5**'s live system values on **Bazzite**:
-CPU load and clock, GPU load and clock, VRAM, RAM, refresh rate, the fan's duty and mode, the CPU, SoC, GPU, board
+CPU load and clock, GPU load and clock, VRAM, RAM, refresh rate, the fan's duty and mode, the CPU, SoC, GPU, mainboard
 and NVMe temperatures, the GPU's temperature limit, network and disk. It only reads sensors: nothing changes and it
 needs no root.
 

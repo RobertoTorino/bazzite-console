@@ -11,7 +11,7 @@ from ssd_check import rated
 
 
 @pytest.mark.parametrize("model, speeds", [
-    ("Samsung SSD 970 EVO Plus 2TB", (3500, 3300)),            # the owner's board
+    ("Samsung SSD 970 EVO Plus 2TB", (3500, 3300)),            # the owner's machine
     ("Samsung SSD 970 EVO Plus 500GB", (3500, 3200)),
     ("Samsung SSD 980 PRO 250GB", (6400, 2700)),
     ("Samsung SSD 990 PRO 4TB", (7450, 6900)),

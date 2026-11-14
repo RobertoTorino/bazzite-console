@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         self.fan_box.set_value(f"{fan.duty} %", fan.mode_text)
         rows = [f"<b>Duty</b>: {fan.duty} % of full speed, {escape(fan.mode_text, quote=False)}"]
         if reading.board_c is not None:
-            rows.append(f"<b>Board</b>: {reading.board_c:.0f} °C (the warmest of the three board sensors)")
+            rows.append(f"<b>Board</b>: {reading.board_c:.0f} °C (the warmest of the three mainboard sensors)")
         if reading.gpu_c is not None:
             rows.append(f"<b>GPU</b>: {reading.gpu_c:.0f} °C")
         if fan.curve:

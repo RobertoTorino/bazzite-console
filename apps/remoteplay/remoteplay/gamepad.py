@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""The controllers on the board, read with SDL3 (the system's libSDL3, through ctypes) and passed to the stream as
+"""The controllers on this PS5, read with SDL3 (the system's libSDL3, through ctypes) and passed to the stream as
 the console's controller state.
 
 SDL names the buttons by position (south, east, ...) for every kind of gamepad, so a DualShock 4, a DualSense, an

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The makers' rated read and write speeds of known drives (owner, 05-11-2026: the official speed is what the drive
-can do; the measurement shows what the board lets it do). No drive reports them, so SSD Check keeps this list, from
+can do; the measurement shows what the console lets it do). No drive reports them, so SSD Check keeps this list, from
 the makers' spec sheets; a drive not in it shows its fastest link instead. NVMe drives of PCIe 3.0 and later, and a
 few SATA SSDs; the weekly backlog review (MIGRATION.md) looks for new models.
 

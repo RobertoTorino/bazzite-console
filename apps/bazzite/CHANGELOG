@@ -1,3 +1,13 @@
+Changelog: 14-11-2026 12:22:49
+
+Fixed. A release of the app records the checksum of its test engine again, so an installed release refuses a
+test-bazzite.sh that was changed, as its window and the wiki say. The release build had lost that step
+(tools/build_release.py); an install from a checkout is unchanged and only warns.
+
+Changelog: 14-11-2026 12:12:59
+
+Fixed. The app and its test engine no longer call the PS5 "the board": the hints, notes and messages say the PS5 or the console. The question before saving a benchmark baseline, and the engine's help for --save-baseline, name a PS5's configuration (36 CUs, 8 cores / 16 threads) instead of another machine's. The advice on journal lines no longer names CU and core unlocks or tools a PS5 does not have, and no longer points to a test 46 that does not exist; the hint after a GPU hang names ps5-gpufreq's clock ceiling instead of a governor's configuration file; the swap hint of test 14 no longer mentions a system score. The session check for a fan without a speed reading and the GPU load's tooltip no longer name parts a PS5 does not have. An install from the checkout now gets the manual (the installer looked for the wiki chapter under an old name). The README gives the real number of tests and groups and names the stress test and the benchmarks. .gitignore names the build-info file in the right folder.
+
 Changelog: 14-11-2026 03:50:36
 
 Release 1.0.0.

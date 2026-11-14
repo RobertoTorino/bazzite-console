@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Whether a Sony controller is genuine or fake (genuine.py): the owner's DualShock 4 (CUH-ZCT1, Bluetooth;
-its answers read on the board on 13-10-2026, the versions as the kernel logged them), the same answers in the USB
-order, a DualSense built to the kernel driver's layout, and the ways a copy fails."""
+its answers read on the owner's machine on 13-10-2026, the versions as the kernel logged them), the same answers in
+the USB order, a DualSense built to the kernel driver's layout, and the ways a copy fails."""
 
 from __future__ import annotations
 

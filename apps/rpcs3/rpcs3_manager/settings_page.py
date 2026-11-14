@@ -4,7 +4,7 @@ PCSX2 Manager has, at least). One box per group (rpcs3_settings.SETTINGS: the pi
 messages in a game), each setting a choice, a switch or a percentage, read from config.yml and written the moment it
 is changed, while RPCS3 does not run. Built as PCSX2 Manager's settings_page. The Sound box also shows, beside
 RPCS3's volume, the volume Bazzite's sound settings remember for RPCS3 (muted there, a game plays without a sound;
-found on the board, 24-10-2026): the window passes it (show_sound), and Unmute beside it turns a muted one on again
+found on the console, 24-10-2026): the window passes it (show_sound), and Unmute beside it turns a muted one on again
 (core's sound.unmute; owner, 24-10-2026)."""
 
 from __future__ import annotations

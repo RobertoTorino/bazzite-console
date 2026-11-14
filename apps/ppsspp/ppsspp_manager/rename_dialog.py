@@ -103,8 +103,8 @@ class RenameDialog(QDialog):
 
         lay = QVBoxLayout(self)
         lay.addLayout(top)
-        lay.addWidget(hint_label("The new name comes from the game's own PARAM.SFO. A renamed game that is in Game "
-                                 "Mode needs Update Game Mode afterwards: its shortcut names the file."))
+        lay.addWidget(hint_label("The new name comes from the game's own PARAM.SFO. A renamed game that is in "
+                                 "Steam needs Update Steam afterwards: its shortcut names the file."))
         lay.addWidget(self.table, 1)
         lay.addLayout(details)
         lay.addLayout(buttons)

@@ -335,7 +335,7 @@ class StreamWindow(QWidget):
 
     def bring_forward(self) -> None:
         """Asks the desktop to put the window in front and give it the keyboard: started from Steam's Big Picture,
-        KDE otherwise opens it behind (owner's board, 13-10-2026). The desktop may still say no."""
+        KDE otherwise opens it behind (owner's machine, 13-10-2026). The desktop may still say no."""
         self.raise_()
         self.activateWindow()
         if self.windowHandle() is not None:

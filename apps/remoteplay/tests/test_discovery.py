@@ -10,7 +10,7 @@ from remoteplay.target import Target
 from fake_console import DiscoveryConsole, free_port
 
 # Written for these tests in the format the reference parses (lib/src/discovery.c: the status line, then key:value lines
-# ending in "\n"); not recorded from a console yet. Replace them with recorded answers after the board check.
+# ending in "\n"); not recorded from a console yet. Replace them with answers recorded from a console.
 STANDBY_PS5 = (b"HTTP/1.1 620 Server Standby\nhost-id:A1B2C3D4E5F6\nhost-type:PS5\nhost-name:PS5-123\n"
                b"host-request-port:997\ndevice-discovery-protocol-version:00030010\nsystem-version:09060004\n")
 READY_PS4 = (b"HTTP/1.1 200 Ok\nhost-id:001122334455\nhost-type:PS4\nhost-name:PS4-Pro\nhost-request-port:997\n"

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""The sound on the board's default audio output (Qt Multimedia's QAudioSink, pulling from a SoundBuffer). The
+"""The sound on this PS5's default audio output (Qt Multimedia's QAudioSink, pulling from a SoundBuffer). The
 stream's thread calls push(); the first push with a rate and channel count starts the sink, in the GUI thread
 (a queued signal), as Qt wants it."""
 

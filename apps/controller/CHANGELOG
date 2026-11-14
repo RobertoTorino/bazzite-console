@@ -1,3 +1,8 @@
+Changelog: 14-11-2026 12:36:09
+
+Added. The installer has its test, tools/installer-tests/controller.sh: an install from the checkout and from a staged
+release, the refusal to run as root, no idle-off service unless --enable-idle-service asks for it, that service enabled and removed, and --purge. The app is unchanged.
+
 Changelog: 14-11-2026 03:50:36
 
 Release 1.0.0.

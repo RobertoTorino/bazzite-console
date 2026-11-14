@@ -372,7 +372,7 @@ class MainWindow(QMainWindow):
                 tip = f"Vita3K build {pinned} ({emulator.SEMVER}), the build this version of the app was tried with"
         if self.newer is not None:
             tip += (f"\nVita3K build {self.newer.version} is out ({self.newer.published}). A later version of this "
-                    f"app brings a newer build, once it has been tried on the board: {self.newer.url}")
+                    f"app brings a newer build, once it has been tried on the console: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
 
         fw = self.firmware                      # the state of each part; where it comes from: the info symbol
@@ -419,7 +419,7 @@ class MainWindow(QMainWindow):
         if release is not None:
             self._show_state()
             self.note(f"Vita3K build {release.version} is out ({release.published}); a later version of this app "
-                      f"brings a newer build, once it has been tried on the board: {release.url}")
+                      f"brings a newer build, once it has been tried on the console: {release.url}")
 
     def _fill_table(self) -> None:
         self.table.blockSignals(True)

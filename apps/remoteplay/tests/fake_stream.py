@@ -5,7 +5,7 @@ video frames (split into units with FEC units, as a console does) and audio pack
 video is a real clip (video_vectors.json) in the codec the launch spec asked for: its parameter sets as STREAMINFO's
 header, its access units as the frames. The sound is a real Opus clip (audio_vectors.json): each packet a new 10 ms
 frame and an FEC copy of the one before. It speaks Takion through the native core's packet functions and
-records what the board sent."""
+records what this PS5 sent."""
 
 from __future__ import annotations
 
@@ -86,7 +86,7 @@ class StreamConsole:
     big: dict = field(default_factory=dict)
     spec: dict = field(default_factory=dict)
     client_signature_ok: bool | None = None
-    received: list[int] = field(default_factory=list)      # message types from the board, in order
+    received: list[int] = field(default_factory=list)      # message types from this PS5, in order
     big_fragments: int = 0
     heartbeats: int = 0
     congestion_reports: list[tuple[int, int]] = field(default_factory=list)     # (received, lost)
@@ -118,7 +118,7 @@ class StreamConsole:
         return 12 if self.target.ps5 else 9
 
     def wait_until(self, condition, timeout: float = 2.0) -> bool:
-        """For the tests: the console's thread handles what arrives a moment after the board sent it."""
+        """For the tests: the console's thread handles what arrives a moment after this PS5 sent it."""
         deadline = time.monotonic() + timeout
         while not condition():
             if time.monotonic() > deadline:

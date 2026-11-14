@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Xbox Remote Play: signs in with a Microsoft account, lists the XBOX consoles on it and the games of
-XBOX Cloud Gaming, wakes a console and streams it or a cloud game to the board. The protocol code is ported from
+"""XBOX Remote Play: signs in with a Microsoft account, lists the XBOX consoles on it and the games of
+XBOX Cloud Gaming, wakes a console and streams it or a cloud game to this PS5. The protocol code is ported from
 Greenlight and xal-node (MIT; see the README's License section)."""
 
-APP_NAME = "Xbox Remote Play"
+APP_NAME = "XBOX Remote Play"
 APP_ID = "ps5-xbox-remoteplay"
 __version__ = "1.0.0"
 

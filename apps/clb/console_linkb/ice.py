@@ -4,7 +4,7 @@
 # the README's License section.
 """The ICE candidates of the stream, in the form the streaming service exchanges them.
 
-aiortc gathers the board's candidates before the offer and puts them in its SDP, so they are read from there. The
+aiortc gathers this PS5's candidates before the offer and puts them in its SDP, so they are read from there. The
 service's candidates come back as "a=candidate:..." lines. An XBOX at home announces a Teredo address (2001::/32)
 among them; as in the reference, the IPv4 address and port inside it are added as two more candidates (the port the
 Teredo address names, and 9002), since that is where the console answers."""
@@ -15,7 +15,7 @@ import ipaddress
 
 
 def local_candidates(sdp: str) -> list[dict]:
-    """The candidates in the board's SDP: {candidate, sdpMid, sdpMLineIndex} for those of the first media section
+    """The candidates in this PS5's SDP: {candidate, sdpMid, sdpMLineIndex} for those of the first media section
     (the offer bundles all sections on its transport)."""
     lines, index, mid = [], -1, "0"
     for line in sdp.splitlines():

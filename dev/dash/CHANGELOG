@@ -1,3 +1,14 @@
+Changelog: 14-11-2026 12:11:51
+
+Fixed. The window's text says the console where it said the board, and an app that changes the system is
+called that.
+
+Changelog: 14-11-2026 11:41:05
+
+Fixed. The wiki is served on ports of this suite's own, 8775 (and 8795 on the network), no longer on 8765 and 8785:
+another checkout's dashboard uses those for its wikis, and whichever started second opened the other's wiki in the
+browser, because a server that already answers on the port is taken for the wiki's own.
+
 Changelog: 14-11-2026 03:27:00
 
 Breaking. Windows support is removed: the suite is for Bazzite. run.ps1 and install.ps1 are gone, an app of dev/

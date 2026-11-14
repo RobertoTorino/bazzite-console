@@ -1,3 +1,25 @@
+Changelog: 14-11-2026 12:36:09
+
+Fixed. An app that changes how the console runs is marked "changes the board", the name its chapter of the wiki
+opens with: under its tile, in the tile's popup ("Changes the board."), in the question before it is installed or
+opened and in the list of Install all. It said "changes the system".
+
+Changelog: 14-11-2026 12:22:49
+
+Fixed. The portal lists XBOX Remote Play under that name, with XBOX in capitals (apps.toml).
+
+Changelog: 14-11-2026 12:11:51
+
+Fixed. The portal's own update works: until now it failed and left no portal installed. The portal unpacks the new
+release inside its own folder and runs its installer from there, and the installer removed that folder, itself
+included, before it copied the new portal. The installer now copies the new portal beside the installed one first
+and lets it take its place only then. What the portal remembers (the apps it installed and their releases, the
+wallpaper and the ones used before, a downloaded update) is in a folder of its own,
+~/.local/share/bazzite-console-suite/state, no longer in the program's folder, where every install and update
+removed it; an install moves what an earlier portal kept there, once. --uninstall keeps that folder and --purge
+removes it. Sys info's first section is Console, with the Mainboard and the Product. The portal's text says the
+console where it said the board.
+
 Changelog: 14-11-2026 03:50:37
 
 Release 1.0.0. Pins ps5-bazzite-v1.0.0, ps5-rpcs3-v1.0.0, ps5-remoteplay-v1.0.0, ps5-clb-v1.0.0, ps5-shadps4-v1.0.0, ps5-datstation-v1.0.0, ps5-ppsspp-v1.0.0, ps5-pcsx2-v1.0.0, ps5-vita3k-v1.0.0, ps5-xenia-v1.0.0, ps5-sftp-v1.0.0, ps5-webcam-v1.0.0, ps5-controller-v1.0.0, ps5-ssd-v1.0.0, ps5-overlay-v1.0.0, ps5-fan-v1.0.0, ps5-cec-v1.0.0.

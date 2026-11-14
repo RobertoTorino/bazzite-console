@@ -483,7 +483,7 @@ def test_the_release_run_lasts_until_other_work_is_committed(nexus):
 
 def test_a_release_with_a_draft_to_test_lasts_with_other_work_on_top(nexus):
     """Other work pushed before a portal draft's device test (owner, 04-11-2026: a suite's portal, after a fix
-    to the board's): the release lasts until the draft is published or Not OK, so Start never replaces it."""
+    to the console's): the release lasts until the draft is published or Not OK, so Start never replaces it."""
     write(nexus / "ws/portal/VERSION", "1.1.0\n")                  # what the release wrote: ws-portal-v1.1.0, a draft
     sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Release ws-portal-v1.1.0")
     head = sh(nexus, "rev-parse", "HEAD").strip()
@@ -574,7 +574,7 @@ def test_the_portal_choice_holds_only_the_drafts(release_window, monkeypatch):
 
 def test_each_suite_stands_apart(nexus):
     """Two suites on the Nexus release (owner, 05-11-2026: one suite's draft, waiting for its device, held up the
-    board's next release): each release is of one suite, its run says which, and only its own draft keeps it."""
+    console's next release): each release is of one suite, its run says which, and only its own draft keeps it."""
     bc = nexus / "bc"
     write(bc / "SYSTEM", "bazzite\n")
     write(bc / "portal/VERSION", "2.0.0\n")
@@ -584,18 +584,18 @@ def test_each_suite_stands_apart(nexus):
     sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "add", "-A")
     sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "Release ws-portal-v1.1.0")
     head = sh(nexus, "rev-parse", "HEAD").strip()
-    sh(nexus, "tag", "portal-v2.0.0")                                # the board's portal is out
+    sh(nexus, "tag", "portal-v2.0.0")                                # the console's portal is out
     sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "Other work")
     assert flow.release_suites(nexus) == ["bc", "ws"]
     assert flow.waiting_portals(nexus) == ["portal-v2.0.0", "ws-portal-v1.1.0"]
     assert flow.waiting_portals(nexus, "bc") == ["portal-v2.0.0"]
     assert {p.suite for p in flow.picks(nexus, "ws")} == {"ws", ""}           # its apps and portal, core and Nexus
-    # A run of before 05-11-2026 carried every suite: the ws draft keeps the ws release, not the board's
+    # A run of before 05-11-2026 carried every suite: the ws draft keeps the ws release, not the console's
     old = _run(head)
     assert flow.run_suites(old) is None
     assert flow.cycle_run(nexus, [old], suite="ws") is old
-    assert flow.cycle_run(nexus, [old], suite="bc") is None          # Start new release for the board
-    # A run started for the board says so in its title, and is not the ws release's
+    assert flow.cycle_run(nexus, [old], suite="bc") is None          # Start new release for the console
+    # A run started for the console says so in its title, and is not the ws release's
     board = _run("f" * 40, title="Release: bc")
     assert flow.run_suites(board) == ["bc"]
     assert flow.release_run([board, old], suite="bc") is board
