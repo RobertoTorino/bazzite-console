@@ -18,6 +18,7 @@ jobs:
       matrix:
         directory:
           - apps/bazzite
+          - apps/btpair
           - apps/cec
           - apps/fan
           - apps/overlay
@@ -32,6 +33,7 @@ jobs:
           - apps/sftp
           - apps/shadps4
           - apps/ssd
+          - apps/upscaler
           - apps/vita3k
           - apps/xenia
           - portal

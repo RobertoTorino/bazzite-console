@@ -12,7 +12,9 @@
 
 **Graphics**: Graphics features and tools for games.
 
-Coming soon.
+| App | What it does |
+|---|---|
+| ![](../assets/apps/upscaler.webp){ .app-icon } [Upscaler Manager](upscaler.md) | Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games. |
 
 **Gaming**: Emulators and console tools for games.
 
@@ -32,6 +34,7 @@ Coming soon.
 
 | App | What it does |
 |---|---|
+| ![](../assets/apps/btpair.webp){ .app-icon } [Bluetooth Pairing](btpair.md) | Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed. |
 | ![](../assets/apps/controller.webp){ .app-icon } [Controller](controller.md) | Manage DualSense and DualSense Edge controllers. |
 | ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC. |
 | ![](../assets/apps/sftp.webp){ .app-icon } [SFTP Tools](sftp.md) | Transfer files over SFTP and manage SSH servers on Bazzite hosts. |

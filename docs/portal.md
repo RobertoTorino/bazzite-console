@@ -163,7 +163,7 @@ nothing in the portal. There are two ways to get every button:
   into the new portal, which then shows the red dot on the apps it updates. While an app installs or uninstalls,
   the button waits for it to end.
 - **Installed apps**, on the right of the symbols: how many of the portal's apps are installed, for example
-  **12/17 installed**. An app that is not available any more is not counted.
+  **12/19 installed**. An app that is not available any more is not counted.
 - **The status**, under it, in three lines. The first: the CPU's load and temperature and the GPU's load and
   temperature, read every two seconds. The second: the day, the date (month/day/year) and the time with its time
   zone, read every second; **Clock** on the Settings page sets how the time reads. The third, with a place chosen

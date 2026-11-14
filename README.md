@@ -14,6 +14,10 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/overlay.webp" width="20" height="20" alt=""/> **[System Overlay](apps/overlay)**: A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values.
 - <img src="portal/images/apps/fan.webp" width="20" height="20" alt=""/> **[Fan Control](apps/fan)**: The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature.
 
+**Graphics**: Graphics features and tools for games.
+
+- <img src="portal/images/apps/upscaler.webp" width="20" height="20" alt=""/> **[Upscaler Manager](apps/upscaler)**: Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games.
+
 **Gaming**: Emulators and console tools for games.
 
 - <img src="portal/images/apps/rpcs3.webp" width="20" height="20" alt=""/> **[RPCS3 Manager](apps/rpcs3)**: Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode.
@@ -33,6 +37,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/controller.webp" width="20" height="20" alt=""/> **[Controller](apps/controller)**: Manage DualSense and DualSense Edge controllers.
 - <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: Inspect storage health and drive information when supported.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC.
+- <img src="portal/images/apps/btpair.webp" width="20" height="20" alt=""/> **[Bluetooth Pairing](apps/btpair)**: Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed.
 
 ## Install
 

@@ -14,6 +14,19 @@ uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bazzite-test"]
 launch = [["Open", "~/.local/bin/bazzite-test"]]
 
+[apps.upscaler]
+name = "Upscaler Manager"
+summary = "Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games."
+tag = "ps5-upscaler-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "graphics"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-upscaler"]
+launch = [["Open", "~/.local/bin/ps5-upscaler"]]
+
 [apps.rpcs3]
 name = "RPCS3 Manager"
 summary = "Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode."
@@ -233,3 +246,16 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/ps5-hdmi-cec"]
 launch = [["Open", "~/.local/bin/ps5-hdmi-cec"]]
+
+[apps.btpair]
+name = "Bluetooth Pairing"
+summary = "Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed."
+tag = "ps5-btpair-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-bluetooth-pairing"]
+launch = [["Open", "~/.local/bin/ps5-bluetooth-pairing"]]

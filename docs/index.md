@@ -39,7 +39,8 @@ console down cleanly at a critical temperature.
 <div class="home-card" markdown>
 #### :material-expansion-card: Graphics
 
-Graphics features and tools for games. [Coming soon.](apps/graphics.md)
+[Upscaler Manager](apps/upscaler.md) puts HelixSR, an FSR 3.1 drop-in upscaler with DLSS-style networks, into
+games, and takes it out again.
 </div>
 <div class="home-card" markdown>
 #### :material-gamepad-variant: Gaming
@@ -59,8 +60,9 @@ emulator, and [Bazzite DatStation](apps/datstation.md) has a PlayStation quiz an
 #### :material-television: Living room
 
 [HDMI CEC Manager](apps/cec.md) turns the TV on and off with the PS5, [SFTP Tools](apps/sftp.md) moves files
-between computers, [Webcam](apps/webcam.md) makes a PlayStation camera a webcam, and
-[Controller](apps/controller.md) manages DualSense controllers and updates their firmware.
+between computers, [Webcam](apps/webcam.md) makes a PlayStation camera a webcam,
+[Controller](apps/controller.md) manages DualSense controllers and updates their firmware, and
+[Bluetooth Pairing](apps/btpair.md) pairs your keyboard, mouse and controllers at boot.
 </div>
 </div>
 

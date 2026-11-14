@@ -1,0 +1,13 @@
+[Desktop Entry]
+# SPDX-License-Identifier: GPL-3.0-or-later
+Type=Application
+Name=Upscaler Manager
+GenericName=HelixSR Upscaler Installer
+Comment=Import a HelixSR release and deploy it into FSR games on Bazzite
+Exec=ps5-upscaler
+Icon=ps5-upscaler
+Terminal=false
+Categories=Game;Utility;Qt;
+Keywords=HelixSR;FSR;upscaler;DLSS;PlayStation 5;Bazzite;Steam;Proton;
+StartupNotify=true
+StartupWMClass=ps5-upscaler

@@ -33,6 +33,8 @@ APP_LAUNCHERS = frozenset(f"{app_id}.desktop" for app_id in (
     "ps5-system-overlay",
     "ps5-fan-control",
     "ps5-hdmi-cec",
+    "ps5-upscaler",
+    "ps5-bluetooth-pairing",
 ))
 
 

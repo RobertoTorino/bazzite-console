@@ -20,7 +20,8 @@ from nexus_deps.dependencies import (
 
 SUITE = Path(__file__).resolve().parents[3]
 PREFIX = "nexus_deps.dependencies"
-TOOLS = {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "paplay", "cec-ctl", "FFmpeg"}
+TOOLS = {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "paplay", "cec-ctl", "FFmpeg",
+         "bluetoothctl", "dbus-python", "PyGObject", "kwriteconfig6"}
 # Tools of the kinds this suite's catalog has none of, for the checks every catalog may ask for: one of two commands,
 # and a flashrom that must have the internal programmer.
 SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("bazzite", "Internet speed test."),))

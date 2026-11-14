@@ -30,7 +30,8 @@ Generated: 2026-11-10
 | sftp | ✓ | ✓ | Both |
 | shadps4 | ✓ | ✓ | Both |
 | ssd | ✓ | ✓ | Both |
-| upscaler | ✓ | | BC250 only |
+| upscaler | ✓ | ✓ | Both |
+| btpair | ✓ | ✓ | Both |
 | vita3k | ✓ | ✓ | Both |
 | vram | ✓ | | BC250 only |
 | xenia | ✓ | ✓ | Both |

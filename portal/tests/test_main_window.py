@@ -31,7 +31,7 @@ def test_portal_shows_required_app(window):
     assert [entry.key for entry in window.entries if entry.required] == ["bazzite"]
     assert window.states["bazzite"].title == "Bazzite Test"
     assert [action.text() for action in window.tile_menu(window.entries[0]).actions()][0] == "Open"
-    assert window.big.categories == ["sustainable", "gaming", "utilities"]
+    assert window.big.categories == ["sustainable", "graphics", "gaming", "utilities"]
 
 
 class FakeTour:

@@ -1,3 +1,12 @@
+Changelog: 14-11-2026 16:15:37
+
+Added. Two apps join the suite (owner, 14-11-2026): Upscaler Manager (apps/upscaler, Graphics: HelixSR and
+OptiScaler in games) and Bluetooth Pairing (apps/btpair, Utilities: keyboard, mouse and controllers paired at boot).
+Each has its installer test (tools/installer-tests/upscaler.sh, btpair.sh), its wiki chapter, its icons
+(icons/categories.toml) and its entry in the portal's apps.toml, the wiki's lists and navigation, the README and the
+Dependency Checker's catalog (with the Bluetooth tools Bluetooth Pairing uses). The wiki's Graphics page, which said
+Coming soon, is gone: the category has its app.
+
 Changelog: 14-11-2026 15:50:35
 
 Added. The picture of the portal on the wiki's home page keeps up with the portal by itself (owner, 14-11-2026), as

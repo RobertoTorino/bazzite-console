@@ -1,0 +1,6 @@
+Changelog: 14-11-2026 16:13:12
+
+Added. Bluetooth Pairing is an app of the Bazzite Console Suite (owner, 14-11-2026), in the portal's Utilities tab:
+it pairs your Bluetooth keyboard, mouse and controllers at boot, shows PlayStation controller batteries in the
+Bluetooth icon and has Plasma switch Bluetooth on at every login. Its installer has its test,
+tools/installer-tests/btpair.sh, and the wiki its chapter.

@@ -23,9 +23,9 @@ The categories are also the [portal's](../portal.md) categories: an app's tile i
 | Icon | Category | What it stands for |
 |---|---|---|
 | ![](../assets/categories/sustainable.webp){ .app-icon } | **Sustainable** | The console itself: test it, watch it and keep it cool, so it runs well for a long time. |
-| ![](../assets/categories/graphics.webp){ .app-icon } | **Graphics** | Graphics features and tools for games. |
+| ![](../assets/categories/graphics.webp){ .app-icon } | **Graphics** | Better pictures in games: an upscaler put into the games that can use one. |
 | ![](../assets/categories/gaming.webp){ .app-icon } | **Gaming** | Playing: emulators, Remote Play with your consoles, and PlayStation trivia. |
-| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the console: the controllers, a PlayStation camera as a webcam, the TV over HDMI-CEC, file transfer and the drives. |
+| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the console: Bluetooth devices paired at boot, the controllers, a PlayStation camera as a webcam, the TV over HDMI-CEC, file transfer and the drives. |
 
 ## Apps by category
 
@@ -36,7 +36,7 @@ Every app with its icon and its category.
 | ![](../assets/apps/bazzite.webp){ .app-icon } [Bazzite Test](bazzite.md) | Sustainable |
 | ![](../assets/apps/fan.webp){ .app-icon } [Fan Control](fan.md) | Sustainable |
 | ![](../assets/apps/overlay.webp){ .app-icon } [System Overlay](overlay.md) | Sustainable |
-| [Coming soon.](graphics.md) | Graphics |
+| ![](../assets/apps/upscaler.webp){ .app-icon } [Upscaler Manager](upscaler.md) | Graphics |
 | ![](../assets/apps/datstation.webp){ .app-icon } [Bazzite DatStation](datstation.md) | Gaming |
 | ![](../assets/apps/pcsx2.webp){ .app-icon } [PCSX2 Manager](pcsx2.md) | Gaming |
 | ![](../assets/apps/ppsspp.webp){ .app-icon } [PPSSPP Manager](ppsspp.md) | Gaming |
@@ -46,6 +46,7 @@ Every app with its icon and its category.
 | ![](../assets/apps/vita3k.webp){ .app-icon } [Vita3K Manager](vita3k.md) | Gaming |
 | ![](../assets/apps/clb.webp){ .app-icon } [XBOX Remote Play](clb.md) | Gaming |
 | ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Gaming |
+| ![](../assets/apps/btpair.webp){ .app-icon } [Bluetooth Pairing](btpair.md) | Utilities |
 | ![](../assets/apps/controller.webp){ .app-icon } [Controller](controller.md) | Utilities |
 | ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Utilities |
 | ![](../assets/apps/sftp.webp){ .app-icon } [SFTP Tools](sftp.md) | Utilities |

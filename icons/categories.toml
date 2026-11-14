@@ -86,3 +86,13 @@ tile = "portal/images/apps/fan.webp"
 category = "utilities"
 icons = ["apps/cec/images/ps5-hdmi-cec"]
 tile = "portal/images/apps/cec.webp"
+
+[upscaler]
+category = "graphics"
+icons = ["apps/upscaler/images/ps5-upscaler"]
+tile = "portal/images/apps/upscaler.webp"
+
+[btpair]
+category = "utilities"
+icons = ["apps/btpair/images/ps5-bluetooth-pairing"]
+tile = "portal/images/apps/btpair.webp"
