@@ -140,16 +140,39 @@ def test_first_start_detects_console_shortcuts_and_toggle_restores_them(window, 
     assert not (desktop / name).exists()
 
 
-def test_the_theme_pill_takes_the_next_theme_and_the_portal_stays_open(window, monkeypatch):
-    """A click on the pill is the next theme, saved for every app; the portal does not start again for it."""
-    from bazzite_console_core import theme
+def test_the_theme_pill_shows_the_next_theme_at_once_and_the_portal_stays_open(window, qapp, monkeypatch):
+    """A click on the pill is the next theme, saved for every app and shown by the portal at once: the application's
+    palette, the view's style sheets and the tiles' muted line are the new theme's. The portal does not start again
+    for it."""
+    from PyQt6.QtGui import QPalette
 
+    from bazzite_console_core import theme, widgets
+
+    before = widgets.current_theme()
+    card = next(iter(window.big.cards), None)
     started = []
     monkeypatch.setattr(window, "launch", lambda argv: started.append(argv) or True)
     monkeypatch.setattr(window, "restart_portal", lambda: started.append("restart"))
     seen = []
-    for _ in range(3):
-        window.theme_pill.clicked.emit()
-        seen.append((theme.theme_name(), window.theme_pill.value.text()))
+    try:
+        for _ in range(3):
+            window.theme_pill.clicked.emit()
+            qapp.processEvents()                # a window not shown yet takes the palette on its next event
+            name = theme.theme_name()
+            now = theme.THEMES[name]
+            seen.append((name, window.theme_pill.value.text()))
+            assert widgets.current_theme() is now
+            assert qapp.palette().color(QPalette.ColorRole.Window).name() == now.window
+            assert window.big.palette().color(QPalette.ColorRole.WindowText).name() == now.text
+            assert now.window in window.theme_pill.styleSheet()
+            assert theme.outline(now) in window.big.bar.styleSheet()
+            assert theme.muted(now) in window.big.hint.styleSheet()
+            assert now.accent in window.big.info.styleSheet()
+            if card is not None:
+                assert window.big.tiles[card].status_colour == theme.muted(now)
+    finally:
+        from bazzite_console_core.app import switch_theme
+
+        switch_theme(before)                    # the session's QApplication, as the other tests found it
     assert seen == [("silver", "Silver"), ("warm", "Warm"), ("gunmetal", "Gunmetal")]
     assert not started

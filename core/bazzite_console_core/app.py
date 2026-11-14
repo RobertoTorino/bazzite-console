@@ -16,6 +16,7 @@ import signal
 import sys
 from collections.abc import Callable, Sequence
 
+from PyQt6 import sip
 from PyQt6.QtCore import QSettings, QTimer
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QWidget
@@ -54,6 +55,22 @@ def create_app(info: AppInfo, qt_args: Sequence[str] = (), stylesheet: str = "",
     if info.logo is not None and info.logo.is_file():
         app.setWindowIcon(QIcon(str(info.logo)))
     return app
+
+
+def switch_theme(theme: Theme, stylesheet: str = "") -> None:
+    """Another theme on the running app, at once: the widgets draw with *theme* from now on, and the application
+    takes its palette and style sheet (*stylesheet* after it, as create_app's) and the tooltips their border. A
+    widget that put the theme's colors in a style sheet of its own styles itself again (InfoButton.restyle(), the
+    window's own code); saving the choice for the next start is theme.save_theme_name()."""
+    set_theme(theme)
+    app = QApplication.instance()
+    if app is None:
+        return
+    apply_theme(app, stylesheet, theme)
+    if RoundedToolTip._instance is not None and not sip.isdeleted(RoundedToolTip._instance):
+        RoundedToolTip._instance.restyle()
+    for widget in app.allWidgets():
+        widget.update()
 
 
 def exec_app(app: QApplication) -> int:

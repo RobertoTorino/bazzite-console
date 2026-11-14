@@ -21,7 +21,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QToolButton, QVBoxLayout, QWidget,
 )
 
-from bazzite_console_core.theme import ACCENT, BLUE, ORANGE, OUTLINE, RED, header_font, muted, outline
+from bazzite_console_core.theme import BLUE, ORANGE, RED, header_font, muted, outline
 from bazzite_console_core.widgets import InfoButton, Pill, current_theme
 
 from . import APP_ICONS, APP_NAME, CARD_ICONS, CATEGORY_ICONS, INTRO_LOGO, LOGO_PATH, glyphs
@@ -278,7 +278,7 @@ class BigTile(QAbstractButton):
         self.key = key
         self.name = key
         self.status = ""
-        self.status_colour = muted()
+        self.status_colour = muted(current_theme())
         self.pixmap = QPixmap()
         self._shown: tuple[int, float, int] | None = None   # what the scaled copy was made for: side, ratio, picture
         self._scaled = QPixmap()
@@ -356,10 +356,10 @@ class BigTile(QAbstractButton):
         frame = QRectF(self.rect()).adjusted(3, 3, -3, -3)
         focused = self.hasFocus()
         if focused or self.underMouse():
-            fill = QColor(ACCENT)
+            fill = QColor(current_theme().accent)
             fill.setAlpha(60 if focused else 28)
             painter.setBrush(fill)
-            painter.setPen(QPen(QColor(OUTLINE), 4) if focused else Qt.PenStyle.NoPen)
+            painter.setPen(QPen(QColor(outline(current_theme())), 4) if focused else Qt.PenStyle.NoPen)
             painter.drawRoundedRect(frame, 22 * s, 22 * s)
         side = round(ICON_PX * s)
         icon = QRect((width - side) // 2, round(18 * s), side, side)
@@ -457,10 +457,10 @@ class SymbolButton(QAbstractButton):
         frame = QRectF(self.rect()).adjusted(2, 2, -2, -2)
         focused = self.hasFocus()
         if (focused or self.underMouse()) and self.isEnabled():
-            fill = QColor(ACCENT)
+            fill = QColor(current_theme().accent)
             fill.setAlpha(60 if focused else 28)
             painter.setBrush(fill)
-            painter.setPen(QPen(QColor(OUTLINE), 3) if focused else Qt.PenStyle.NoPen)
+            painter.setPen(QPen(QColor(outline(current_theme())), 3) if focused else Qt.PenStyle.NoPen)
             painter.drawRoundedRect(frame, 16 * s, 16 * s)
         theme = current_theme()
         side = round(GLYPH_PX * s)
@@ -501,7 +501,7 @@ class NoticeButton(QToolButton):
             f"QToolButton {{ color:{self.colour}; font-weight:700; font-size:{max(13, round(18 * scale))}px;"
             f" background:transparent; border:2px solid transparent; border-radius:{round(8 * scale)}px;"
             f" padding:{round(4 * scale)}px {round(10 * scale)}px; }}"
-            f"QToolButton:hover, QToolButton:focus {{ border-color:{OUTLINE}; }}")
+            f"QToolButton:hover, QToolButton:focus {{ border-color:{outline(current_theme())}; }}")
 
     def set_notice(self, text: str, tooltip: str = "") -> None:
         self.setText(text)
@@ -526,7 +526,7 @@ class UpdateBanner(QToolButton):
             f"QToolButton {{ color:white; background:{ORANGE}; font-weight:800; font-size:{max(13, round(18 * scale))}px;"
             f" border:2px solid {ORANGE}; border-radius:{round(8 * scale)}px;"
             f" padding:{round(4 * scale)}px {round(14 * scale)}px; }}"
-            f"QToolButton:hover, QToolButton:focus {{ border-color:{OUTLINE}; }}")
+            f"QToolButton:hover, QToolButton:focus {{ border-color:{outline(current_theme())}; }}")
 
     def set_banner(self, text: str, tooltip: str = "") -> None:
         self.setText(text)
@@ -697,7 +697,7 @@ class BigPicture(Backdrop):
                 if isinstance(item, CardEntry):
                     tile.clicked.connect(lambda _=False, k=item.key: self.open_requested.emit(self.cards[k]))
                     tile.set_look(item.name, QPixmap(str(CARD_ICONS / item.icon)),
-                                  f"{item.flatpak_name} required", muted(), "")
+                                  f"{item.flatpak_name} required", muted(current_theme()), "")
                     tile.setToolTip(item.summary)
                 else:
                     tile.clicked.connect(lambda _=False, k=item.key: self.open_requested.emit(self.entries[k]))
@@ -802,7 +802,7 @@ class BigPicture(Backdrop):
                 "changes the system" if entry.changes_board else "")
             colour = BLUE if state.busy else \
                 RED if state.status in ("Update", "Reinstall needed", "App not available") else \
-                ORANGE if status and state.status == "Installed" else muted()
+                ORANGE if status and state.status == "Installed" else muted(current_theme())
             tile.set_look(state.title, pixmap, status, colour, marker)
             tile.setToolTip(state.tooltip)
 
@@ -856,6 +856,16 @@ class BigPicture(Backdrop):
         tile.setFocus()
         self.current_page().ensureWidgetVisible(tile, 0, 24)
 
+    def restyle(self) -> None:
+        """The view in the theme the widgets draw with now, after a change of theme (the Theme pill): every style
+        sheet that holds a color of the theme is written again, and the cards' muted line takes the new one. The
+        apps' tiles take theirs from the window's next sync()."""
+        self.info.restyle()
+        for key in self.cards:
+            self.tiles[key].status_colour = muted(current_theme())
+        self.set_scale(self.scale)
+        self.update()
+
     # --------------------------------------------------------------------------------------------- layout
     def set_scale(self, scale: float) -> None:
         """Everything at *scale* of its size for a 1080 p screen: a handheld's 1280 x 720 or 1280 x 800 shows the
@@ -873,20 +883,21 @@ class BigPicture(Backdrop):
         self.banner.setStyleSheet(f"background:{ORANGE}; color:white; font-weight:700; padding:6px 10px;"
                                   f" font-size:{max(12, round(16 * s))}px;")
         self.title.setStyleSheet(header_font() + f"font-size:{round(44 * s)}px; font-weight:800;")
-        self.version.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(20 * s))}px; padding-bottom:"
+        theme = current_theme()
+        self.version.setStyleSheet(f"color:{muted(theme)}; font-size:{max(13, round(20 * s))}px; padding-bottom:"
                                    f"{round(6 * s)}px;")
-        self.stage.setStyleSheet(f"background:{ACCENT}; color:white; font-weight:700;"
+        self.stage.setStyleSheet(f"background:{theme.accent}; color:white; font-weight:700;"
                                  f" font-size:{max(11, round(14 * s))}px; border-radius:{round(6 * s)}px;"
                                  f" padding:{round(2 * s)}px {round(8 * s)}px;")
-        self.hint.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(18 * s))}px;")
-        self.installed.setStyleSheet(f"color:{muted()}; font-size:{max(12, round(16 * s))}px; font-weight:600;")
+        self.hint.setStyleSheet(f"color:{muted(theme)}; font-size:{max(13, round(18 * s))}px;")
+        self.installed.setStyleSheet(f"color:{muted(theme)}; font-size:{max(12, round(16 * s))}px; font-weight:600;")
         self.status.set_scale(s)
-        self.keys.setStyleSheet(f"color:{muted()}; font-size:{max(16, round(24 * s))}px; font-weight:700;")
+        self.keys.setStyleSheet(f"color:{muted(theme)}; font-size:{max(16, round(24 * s))}px; font-weight:700;")
         self.bar.setStyleSheet(
             f"QTabBar::tab {{ font-size:{max(15, round(24 * s))}px; font-weight:700;"
             f" padding:{round(10 * s)}px {round(26 * s)}px; margin-right:6px; background:transparent; border:none;"
             " border-bottom:4px solid transparent; }"
-            f"QTabBar::tab:selected {{ border-bottom:4px solid {OUTLINE}; }}"
+            f"QTabBar::tab:selected {{ border-bottom:4px solid {outline(theme)}; }}"
             "QTabBar::tab:hover { background:rgba(128,128,128,40); }")
         self.settings_heading.setStyleSheet(self.bar.styleSheet())
         for button in (self.update_banner, self.notice, self.outside):
@@ -1126,7 +1137,7 @@ class Intro(QWidget):
         backdrop.setAlphaF(1 - self._phase(p, 0.86, 1.0))
         painter.fillRect(self.rect(), backdrop)
         centre = QPointF(w / 2, h / 2 - h * 0.06)
-        accent = QColor(ACCENT)
+        accent = QColor(current_theme().accent)
 
         # The grid of the floor, rushing toward the viewer.
         floor = self._phase(p, 0.05, 0.4) * (1 - self._phase(p, 0.8, 0.97))

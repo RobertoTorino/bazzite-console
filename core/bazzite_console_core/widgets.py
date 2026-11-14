@@ -337,11 +337,15 @@ class InfoButton(QToolButton):
         self.setToolTip(tooltip)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFixedSize(self.SIZE, self.SIZE)
+        self.restyle()
+        self.clicked.connect(self.show_text)
+
+    def restyle(self) -> None:
+        """The button in the theme the widgets draw with now: again after a change of theme (app.switch_theme)."""
         self.setStyleSheet(
             f"QToolButton {{ border:1px solid {accent()}; border-radius:{self.SIZE // 2}px; color:{accent()}; "
             "background:transparent; font-weight:800; font-family:Georgia, serif; font-style:italic; padding:0; }"
             f"QToolButton:hover, QToolButton:focus {{ background:{accent()}; color:white; }}")
-        self.clicked.connect(self.show_text)
 
     def set_text(self, text: str) -> None:
         self.text_ = text
@@ -432,11 +436,16 @@ class RoundedToolTip(QObject):
         box.setContentsMargins(0, 0, 0, 0)
         self.label = QLabel()
         self.label.setTextFormat(Qt.TextFormat.AutoText)
-        self.label.setStyleSheet(
-            f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {outline()}; "
-            "border-radius:6px; padding:6px 8px; }")
+        self.restyle()
         box.addWidget(self.label)
         self.destroyed.connect(self.popup.deleteLater)
+
+    def restyle(self) -> None:
+        """The tooltip's border in the theme the widgets draw with now: again after a change of theme."""
+        if not sip.isdeleted(self.popup):
+            self.label.setStyleSheet(
+                f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {outline()}; "
+                "border-radius:6px; padding:6px 8px; }")
 
     @classmethod
     def install(cls, app: QApplication) -> RoundedToolTip:

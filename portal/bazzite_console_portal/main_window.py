@@ -88,7 +88,8 @@ from bazzite_console_core.platform import bin_home, expand, launch_in_terminal
 from bazzite_console_core.settings import open_settings
 from bazzite_console_core.theme import BLUE, ORANGE, RED, THEMES, muted, save_theme_name, theme_name
 from bazzite_console_core.updates import ReleaseInfo, UpdateChecker, version_tuple
-from bazzite_console_core.widgets import Pill
+from bazzite_console_core.app import switch_theme
+from bazzite_console_core.widgets import Pill, current_theme
 
 from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, shortcuts, status, sysinfo, wallpaper, weather
 from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
@@ -139,7 +140,7 @@ TOUCH_SPEEDS = (50, 75, 100, 125, 150)    # % of gamepad.TOUCH_SPEED: the Touchp
 # weather)
 SETTING_LINES = ("An icon on the Desktop for every installed app, or only the portal's.",
                  "The intro's sound, and a short one for each action.",
-                 "The look of every app in the suite. The portal starts again to show it.",
+                 "The look of every app in the suite. The portal shows it at once.",
                  "A picture behind the portal, and how much of it shows through.",
                  "12 or 24 hours, the seconds, and the time zone of the clock.",
                  "The weather where you are, beside the symbols, from Open-Meteo.",
@@ -338,7 +339,7 @@ class SysInfoDialog(QDialog):
             row += 1
             for key, value in rows:
                 name = QLabel(key)
-                name.setStyleSheet(f"color:{muted()};")
+                name.setStyleSheet(f"color:{muted(current_theme())};")
                 text = QLabel(value)
                 text.setWordWrap(True)
                 text.setFixedWidth(VALUE_PX)            # a long name wraps, at a height the layout knows
@@ -389,7 +390,7 @@ class PlaceDialog(QDialog):
         self.note = QLabel("The name you search for goes to Open-Meteo, then the place's coordinates every 30 "
                            "minutes while the portal shows. Nothing else about you is sent.")
         self.note.setWordWrap(True)
-        self.note.setStyleSheet(f"color:{muted()};")
+        self.note.setStyleSheet(f"color:{muted(current_theme())};")
         layout.addWidget(self.note)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
         self.use_button = buttons.addButton("Use this place", QDialogButtonBox.ButtonRole.AcceptRole)
@@ -584,8 +585,8 @@ class MainWindow(QMainWindow):
         self.sound_box = TogglePill("Sound", self.sound_tip, self.sounds.enabled)
         self.sound_box.toggled.connect(self._set_sound)
         self.theme_pill = HeaderPill(THEMES[theme_name()].label, "Theme switcher",
-                                     "The look of every app in the suite. Click for the next theme; each app takes "
-                                     "it the next time it starts, the portal too.")
+                                     "The look of every app in the suite. Click for the next theme: the portal "
+                                     "shows it at once, each app the next time it starts.")
         self.theme_pill.clicked.connect(self._next_theme)
         self.wallpaper_pill = HeaderPill("None", "Wallpaper")
         self.wallpaper_pill.clicked.connect(self._wallpaper_menu)
@@ -1102,11 +1103,15 @@ class MainWindow(QMainWindow):
             desktop_icons.remove(self.desktop, self.menu)
 
     def _next_theme(self) -> None:
-        """The theme pill: the next theme, for every app; each takes it the next time it starts. The portal stays
-        open (owner, 14-11-2026: a switch must not close it)."""
+        """The theme pill: the next theme, for every app. The portal shows it at once and stays open (owner,
+        14-11-2026: a click must show the theme, and must not close the portal); an app takes it the next time it
+        starts."""
         names = list(THEMES)
         name = names[(names.index(theme_name()) + 1) % len(names)]
         save_theme_name(name)
+        switch_theme(THEMES[name])
+        self.big.restyle()
+        self.big.sync(self.states)
         self.theme_pill.set_value(THEMES[name].label, self.theme_pill.toolTip())
 
     def _show_wallpaper(self) -> None:
