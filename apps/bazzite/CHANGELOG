@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 13:58:40
+
+Release 1.0.1.
+
 Changelog: 14-11-2026 12:22:49
 
 Fixed. A release of the app records the checksum of its test engine again, so an installed release refuses a

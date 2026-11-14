@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 13:58:40
+
+Release 1.1.0.
+
 Changelog: 14-11-2026 12:36:09
 
 Added. The installer has its test, tools/installer-tests/sftp.sh: an install from the checkout and from a staged

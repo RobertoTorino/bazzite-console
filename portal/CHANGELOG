@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 13:58:40
+
+Release 1.1.0. Pins ps5-bazzite-v1.0.1, ps5-rpcs3-v1.0.1, ps5-remoteplay-v1.0.1, ps5-clb-v1.0.1, ps5-shadps4-v1.0.1, ps5-datstation-v1.0.1, ps5-ppsspp-v1.0.1, ps5-pcsx2-v1.0.1, ps5-vita3k-v1.0.1, ps5-xenia-v1.0.1, ps5-sftp-v1.1.0, ps5-webcam-v1.1.0, ps5-controller-v1.1.0, ps5-ssd-v1.1.0, ps5-overlay-v1.0.1, ps5-fan-v1.0.1, ps5-cec-v1.0.1.
+
 Changelog: 14-11-2026 13:09:26
 
 Fixed. Uninstalling the portal removes its state folder when the portal remembered nothing, so removing the whole
