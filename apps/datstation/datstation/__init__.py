@@ -6,7 +6,7 @@ Bazzite Console Suite builds its apps (bazzite_console_core, the same installer 
 
 APP_NAME = "Bazzite DatStation"
 APP_ID = "ps5-datstation"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from pathlib import Path  # noqa: E402  (constants first, as the suite's apps do)
 

@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 01:10:31
+
+Release 0.2.2. Pins ps5-bazzite-v0.2.2, ps5-rpcs3-v0.2.2, ps5-remoteplay-v0.2.2, ps5-clb-v0.1.2, ps5-shadps4-v0.2.2, ps5-datstation-v0.2.2, ps5-ppsspp-v0.2.2, ps5-pcsx2-v0.2.2, ps5-vita3k-v0.2.2, ps5-xenia-v0.2.2, ps5-sftp-v0.1.2, ps5-webcam-v0.1.2, ps5-controller-v0.1.2, ps5-ssd-v0.1.2, ps5-overlay-v0.1.2, ps5-fan-v0.1.2, ps5-cec-v0.1.2.
+
 Changelog: 14-11-2026 00:36:00
 
 Fixed. A theme switch no longer closes the portal (owner, 14-11-2026). The Theme pill takes the next theme with a

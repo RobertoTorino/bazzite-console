@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 01:10:31
+
+Release 0.2.2.
+
 Changelog: 14-11-2026 00:49:37
 
 Fixed. The GPU Governor test no longer names another board: it warns that a GPU governor "made for another board" is

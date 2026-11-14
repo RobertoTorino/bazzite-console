@@ -4,7 +4,7 @@ RPCS3 and the chosen folders and adds them to Steam, where a game is started."""
 
 APP_NAME = "RPCS3 Manager"
 APP_ID = "ps5-rpcs3-manager"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from pathlib import Path
 
