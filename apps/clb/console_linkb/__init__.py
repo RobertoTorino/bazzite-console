@@ -5,7 +5,7 @@ Greenlight and xal-node (MIT; see the README's License section)."""
 
 APP_NAME = "Xbox Remote Play"
 APP_ID = "ps5-xbox-remoteplay"
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
 from pathlib import Path
 

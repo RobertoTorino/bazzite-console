@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 03:50:37
+
+Version 4.0.0.
+
 Changelog: 14-11-2026 03:28:53
 
 Breaking. Core's Windows code is removed: a PlayStation 5 running Bazzite never used it. Gone are the modules
