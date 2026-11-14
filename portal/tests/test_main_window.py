@@ -42,10 +42,15 @@ class FakeTour:
     def __init__(self, url, sound=True, parent=None):
         self.url, self.sound, self.started, self.on_failed = url, sound, False, []
         self.failed = type("Signal", (), {"connect": lambda _self, slot: self.on_failed.append(slot)})()
+        self.on_finished = []
+        self.finished = type("Signal", (), {"connect": lambda _self, slot: self.on_finished.append(slot)})()
         FakeTour.made.append(self)
 
     def start(self):
         self.started = True
+
+    def isVisible(self):  # noqa: N802 (as the dialog)
+        return self.started
 
 
 def test_the_icon_plays_the_portal_tour_and_the_name_opens_the_wiki(window, monkeypatch):
@@ -60,6 +65,7 @@ def test_the_icon_plays_the_portal_tour_and_the_name_opens_the_wiki(window, monk
     window.big.logo.clicked.emit()
     played = FakeTour.made[0]
     assert played.started and played.url == SUITE_MANUAL_URL + "videos/portal-tour.mp4" and opened == []
+    assert played.on_finished == [window._sync_music]            # the music plays on when the tour closes
     played.on_failed[0]("no connection")
     assert opened == [SUITE_MANUAL_URL + "portal-tour/"]
     window.big.title.clicked.emit()

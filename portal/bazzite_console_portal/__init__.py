@@ -32,8 +32,8 @@ def installed_copy() -> Path | None:
 
 
 def state_dir() -> Path:
-    """Per-user portal state: installed app tags, prepared releases, the wallpaper. Not the installed portal's own
-    folder (portal/), which install.sh replaces at every install."""
+    """Per-user portal state: installed app tags, prepared releases, the wallpaper, the music track. Not the installed
+    portal's own folder (portal/), which install.sh replaces at every install."""
     return data_home() / APP_ID / "state"
 
 

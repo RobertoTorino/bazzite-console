@@ -49,3 +49,38 @@ def desktop(tmp_path, monkeypatch):
     folder.mkdir()
     monkeypatch.setattr(desktop_icons, "desktop_dir", lambda: folder)
     return folder
+
+
+class SilentPlayer:
+    """Stands in for the music's player: it records what the portal asked and plays nothing."""
+
+    def __init__(self):
+        self.path = None
+        self.playing = False
+        self.calls: list[str] = []
+
+    def set_track(self, path) -> None:
+        self.path = path
+        self.calls.append("track")
+
+    def play(self) -> None:
+        self.playing = True
+        self.calls.append("play")
+
+    def pause(self) -> None:
+        self.playing = False
+        self.calls.append("pause")
+
+    def stop(self) -> None:
+        self.playing = False
+        self.calls.append("stop")
+
+
+@pytest.fixture(autouse=True)
+def silent_music(monkeypatch):
+    """No test plays the portal's music on the machine the tests run on: a window's player is a SilentPlayer. A test
+    of the player itself makes one from the class this returns."""
+    from bazzite_console_portal import music
+    real = music.Player
+    monkeypatch.setattr(music, "Player", SilentPlayer)
+    return real

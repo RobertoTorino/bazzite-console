@@ -7,8 +7,8 @@
 # Bazzite Console Suite Portal
 
 The fullscreen portal browses and installs the suite's apps by category, opens installed apps, and offers app and
-portal updates. Its Settings page includes the clock, theme, wallpaper, sound, weather, Desktop icons and controller
-touchpad options. The required Bazzite Test app is installed with the portal.
+portal updates. Its Settings page includes the clock, theme, wallpaper, sound, background music, weather, Desktop
+icons and controller touchpad options. The required Bazzite Test app is installed with the portal.
 
 ## License
 

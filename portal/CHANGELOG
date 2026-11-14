@@ -1,3 +1,14 @@
+Changelog: 14-11-2026 17:13:40
+
+Added. The portal plays background music (owner, 14-11-2026): a track that plays quietly, over and over, while the
+portal is in front. It is the owner's remix of DAT Station's Sea Breeze, made in Audacity. Two new pills on the
+Settings page: Music (Yes or No) switches it, apart from Sound, so either can be off while the other is on; Music
+track chooses a track of your own (an Ogg, Opus, MP3, FLAC, WAV or M4A file, kept as a copy in the portal's state
+folder) or the portal's again. The music waits while the intro or the Portal Tour plays, while the portal is
+minimized and while another window has the focus (a game, an app), and plays on from where it was. Without an audio
+output the portal plays none. The wiki's Portal page says so, and the Portal Tour is recorded again and shows the
+Music pill. The tools that draw the portal (tools/portal_tour.py, tools/portal_screenshot.py) play no music.
+
 Changelog: 14-11-2026 16:48:35
 
 Release 1.3.1.

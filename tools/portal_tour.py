@@ -64,7 +64,7 @@ class Tour(Recorder):
         from PyQt6.QtWidgets import QApplication
 
         from bazzite_console_core.app import create_app
-        from bazzite_console_portal import INFO, LOGO_PATH, MANIFEST, audio, state_dir
+        from bazzite_console_portal import INFO, LOGO_PATH, MANIFEST, audio, music, state_dir
         from bazzite_console_portal.gamepad import Gamepad
         from bazzite_console_portal.manifest import load
         from bazzite_console_portal.sources import Records, Sources
@@ -103,7 +103,7 @@ class Tour(Recorder):
         window = MainWindow(entries, Sources(state_dir() / "releases", checkout=None, download=None),
                             Records(state_dir() / "installed.json"), desktop=home / "Desktop",
                             menu=home / ".local/share/applications", sounds=Silent(),
-                            gamepad=Gamepad(source_factory=no_controller))
+                            gamepad=Gamepad(source_factory=no_controller), music_player=music.Silent())
         window.setWindowTitle(INFO.display_name)
         tour_frames.place(window)
         window.show()
@@ -150,6 +150,7 @@ class Tour(Recorder):
         self.click(w.toggle_settings)
         self.hold(1.4)
         for pill, text in ((w.icons_box, "Icons on Desktop: one icon per app on the Desktop, or only the portal's."),
+                           (w.music_box, "Music: a quiet track while the portal is in front, its own or yours."),
                            (w.theme_pill, "The theme switcher: one look for every app in the suite."),
                            (w.wallpaper_pill, "And a wallpaper of your own behind the portal, seen through the pills.")):
             self.say(text)

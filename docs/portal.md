@@ -212,6 +212,17 @@ nothing in the portal. There are two ways to get every button:
   symbol, a pill, a button, a category or a menu entry. Any controller works, also one Steam turns into keys. A key held down
   sounds once, and typing in a text field stays silent. No switches both off. The portal remembers the choice.
   When the console has no audio output, the pill says No and is disabled, and the portal stays silent.
+- **Music**, on the Settings page (Yes or No; click it to switch): a track plays quietly, over and over, while the
+  portal is in front. It has its own switch, apart from Sound: with Sound off the music plays on, and with Music
+  off the intro and the actions keep their sound. The music waits while the intro or the Portal Tour plays, while
+  the portal is minimized and while another window has the focus (a game, an app), and plays on from where it was
+  when you are back. The portal remembers the choice. When the console has no audio output, the pill says No and
+  is disabled.
+- **Music track**, on the Settings page: which track the music plays. **Built-in** is the portal's own. Click the
+  pill, then **Choose a track…** for one of your own (**Custom**): an Ogg, Opus, MP3, FLAC, WAV or M4A sound file,
+  which plays at once, from its start; the portal refuses another file and says why. **The portal's track** brings
+  the portal's own back. The portal keeps a copy of your track in `~/.local/share/bazzite-console-suite/state/`, so the
+  original may be moved or deleted; the portal's `--purge` removes it.
 - **Theme switcher**, on the Settings page, showing the theme; click it for the next one: the look of every app in the
   suite. **Gunmetal** (dark, cool blue-gray, the default), **Silver** (light) or **Warm** (dark warm gray with a
   bronze accent). It is one choice for all the apps, kept in `~/.config/bazzite-console/theme`: the portal shows it at
