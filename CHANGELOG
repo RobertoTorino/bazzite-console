@@ -1,3 +1,15 @@
+Changelog: 14-11-2026 02:22:44
+
+Added. Dependabot keeps the workflows' actions up to date (.github/dependabot.yml): once a week, one pull request for
+every action with a newer release. The wiki's Development chapter says so.
+
+Changelog: 14-11-2026 02:10:04
+
+Fixed. Publishing a portal release builds the wiki again. The Wiki workflow's run for a published release belongs to the
+release's tag, and the github-pages environment deploys from main only, so its deploy job was rejected ("The deployment
+was rejected or didn't satisfy other protection rules") and the Install page kept naming the release before. That run
+now starts the workflow on main and builds nothing itself. The wiki's Development chapter says so.
+
 Changelog: 14-11-2026 01:05:10
 
 Fixed. The suite no longer names the suite for Windows devices (owner, 14-11-2026). The notes that said a feature

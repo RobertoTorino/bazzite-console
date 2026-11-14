@@ -103,6 +103,16 @@ installed app with that app's next release.
 <https://robertotorino.github.io/bazzite-console/>. The repository's Pages source must be **GitHub Actions**
 (Settings, Pages). `mkdocs serve` shows it locally.
 
+Publishing a portal release builds the wiki again, so the Install page names that release. GitHub Pages deploys from
+`main` only, and a release's run belongs to its tag: that run starts the workflow on `main` and builds nothing itself,
+so the Actions list shows two Wiki runs for a release. By hand: `gh workflow run docs.yml --ref main`.
+
+## Dependabot
+
+`.github/dependabot.yml` has Dependabot open one pull request a week when the actions the workflows use
+(`actions/checkout`, `setup-python`, `upload-pages-artifact`, `deploy-pages`) have a newer release. CI runs on that
+pull request as on any branch; merge it when the checks pass. `gh pr list --author app/dependabot` lists the open ones.
+
 ## Git
 
 After `git add`, `tools/fix-modes.sh` marks every `.sh` executable in the git index, so a script added from Windows

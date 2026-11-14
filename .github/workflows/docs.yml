@@ -4,7 +4,9 @@ name: Wiki
 # Builds the wiki (MkDocs Material) from main and publishes it on GitHub Pages, at
 # https://robertotorino.github.io/bazzite-console/ (Settings -> Pages -> Source: GitHub Actions).
 
-# A published portal release builds it again, so the Install page names that release.
+# A published portal release builds it again, so the Install page names that release. That run belongs to the
+# release's tag, which the github-pages environment does not deploy from (main only), so it starts this workflow on
+# main instead and builds nothing itself.
 
 on:
   push:
@@ -23,7 +25,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  from-main:                            # a release's run: start the workflow on main, where Pages deploys from
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - run: gh workflow run docs.yml --repo "$GITHUB_REPOSITORY" --ref main
+
   build:
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

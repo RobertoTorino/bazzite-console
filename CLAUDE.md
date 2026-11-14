@@ -55,7 +55,7 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
   `categories.toml`, which assigns them to the apps.
 - `.github/workflows/ci.yml`: the checks on every push; `docs.yml`: the wiki, built from `main` and published on
   GitHub Pages; `release.yml`: a release of the suite, started by Nexus Release Tool on the release commit (the apps,
-  the pin commit, the portal as a draft).
+  the pin commit, the portal as a draft). `.github/dependabot.yml`: a weekly pull request for newer actions.
 
 ## Design and naming
 
