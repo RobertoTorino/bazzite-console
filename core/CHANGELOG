@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 01:28:53
+
+Version 3.2.0.
+
 Changelog: 14-11-2026 01:23:54
 
 Added. app.switch_theme(theme) puts another theme on the running app: the widgets draw with it, the application

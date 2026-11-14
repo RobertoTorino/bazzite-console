@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 01:28:53
+
+Release 0.3.0. Pins ps5-bazzite-v0.3.0, ps5-rpcs3-v0.3.0, ps5-remoteplay-v0.3.0, ps5-clb-v0.2.0, ps5-shadps4-v0.3.0, ps5-datstation-v0.3.0, ps5-ppsspp-v0.3.0, ps5-pcsx2-v0.3.0, ps5-vita3k-v0.3.0, ps5-xenia-v0.3.0, ps5-sftp-v0.2.0, ps5-webcam-v0.2.0, ps5-controller-v0.2.0, ps5-ssd-v0.2.0, ps5-overlay-v0.2.0, ps5-fan-v0.2.0, ps5-cec-v0.2.0.
+
 Changelog: 14-11-2026 01:23:54
 
 Fixed. A click on the Theme pill shows the theme (owner, 14-11-2026: a click showed no change). The pill saved the

@@ -4,7 +4,7 @@
 APP_NAME = "Bazzite Console Suite"
 APP_ID = "bazzite-console-suite"
 CHECKOUT_FILE = "suite-checkout"
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 STAGE = ""
 STAGE_NOTE = ""
 

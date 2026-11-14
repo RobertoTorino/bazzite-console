@@ -5,7 +5,7 @@ Bazzite ships."""
 
 APP_NAME = "HDMI CEC Manager"
 APP_ID = "ps5-hdmi-cec"
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 from pathlib import Path
 
