@@ -1,3 +1,9 @@
+Changelog: 14-11-2026 13:51:12
+
+Fixed. The release test (tools/check-release.sh) removes what a test's portal remembered (its state folder: the
+installed apps, downloads, the wallpaper) with the test's install, so a test on a machine without the suite leaves no
+bazzite-console-suite folder behind. The machine's own install keeps it on remove, as before, until --purge.
+
 Changelog: 14-11-2026 12:36:09
 
 Added. SFTP Tools, Webcam and Controller have installer tests (tools/installer-tests/sftp.sh, webcam.sh,

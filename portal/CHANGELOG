@@ -1,3 +1,9 @@
+Changelog: 14-11-2026 13:09:26
+
+Fixed. Uninstalling the portal removes its state folder when the portal remembered nothing, so removing the whole
+suite leaves no empty bazzite-console-suite folder behind. A state folder with something in it stays, as before,
+until --purge.
+
 Changelog: 14-11-2026 12:36:09
 
 Fixed. An app that changes how the console runs is marked "changes the board", the name its chapter of the wiki

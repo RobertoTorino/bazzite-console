@@ -25,6 +25,7 @@ GH_REPO_NAME=RobertoTorino/bazzite-console
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/bazzite-console-release-check"
 PORTAL="$HOME/.local/bin/bazzite-console-suite"
 PORTAL_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/portal"
+STATE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/state"    # what the portal remembers
 MARK="$PORTAL_DIR/TEST-INSTALL"        # install.sh empties the folder: an install by hand ends the mark
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
@@ -66,8 +67,11 @@ status() {
 
 # Every installed app with its own uninstaller, then the portal, then Bazzite Test (the suite's venv goes with the
 # last of them). Arguments: --purge, or none. The list is read on 3, so an uninstaller's sudo keeps the terminal.
+# A test's install leaves nothing: what its portal remembered (the state folder, which the portal's uninstaller keeps
+# without --purge) goes too. The mark is read first: it goes with the portal.
 remove_suite() {
-    local key name launcher failed=0
+    local key name launcher failed=0 test_install=0
+    [ ! -f "$MARK" ] || test_install=1
     while IFS=$'\t' read -r key name launcher <&3; do
         [ "$key" != bazzite ] && [ -n "$launcher" ] && [ -e "$launcher" ] || continue
         info "Removing $name"
@@ -82,6 +86,7 @@ remove_suite() {
         bash "$REPO/apps/bazzite/install.sh" --uninstall "$@" ||
             { failed=1; echo "Bazzite Test could not be removed." >&2; }
     fi
+    [ "$test_install" -eq 0 ] || rm -rf "${STATE_DIR:?}"
     rmdir "$(dirname "$PORTAL_DIR")" 2>/dev/null || true
     [ "$failed" -eq 0 ] || die "Not everything could be removed: see above, and check-release.sh status."
     info "The suite is removed."

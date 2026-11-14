@@ -33,7 +33,8 @@ The release planner's **Remove suite** button runs `remove` in a terminal.
 
 ## The development apps
 
-Open `dev/dash/run.sh` for the developer dashboard. It launches the release planner (`dev/nrt/run.sh`), dependency
+Open `dev/dash/run.sh` for the developer dashboard. Starting it while it is open closes the open window and opens a new
+one, with the checkout's code as it is now. It launches the release planner (`dev/nrt/run.sh`), dependency
 checker (`dev/deps/run.sh`), installer-test runner, OBS demo recorder, and sound lab. The release planner's
 `--list` mode is safe for a terminal overview; its release actions are user-driven. The video-tour scripts are
 `tools/record-tour.sh` and `tools/record-app-tour.sh`; the dashboard provides their UI.

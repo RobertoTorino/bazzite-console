@@ -58,6 +58,8 @@ if $UNINSTALL; then
     rm -f "$VENV_USERS/$APP_ID-portal"
     if $PURGE; then
         rm -rf "${CONFIG_DIR:?}/$APP_ID" "${STATE_DIR:?}"
+    else
+        rmdir "$STATE_DIR" 2>/dev/null || true      # nothing remembered: nothing to keep
     fi
     info "Bazzite Test stays installed; remove it with its own installer."
     exit 0

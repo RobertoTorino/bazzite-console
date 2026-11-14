@@ -11,6 +11,7 @@ check() { if eval "$2"; then echo "  ok   $1"; else echo "  FAIL $1"; fail=1; fi
 CHECK="$SUITE/tools/check-release.sh"
 BIN=$HOME/.local/bin
 MARK=$XDG_DATA_HOME/bazzite-console-suite/portal/TEST-INSTALL
+STATE=$XDG_DATA_HOME/bazzite-console-suite/state
 run() { "$CHECK" "$@" > "$T/out.log" 2>&1; }
 
 echo "== 1. a test on a machine without the suite"
@@ -26,11 +27,12 @@ check "status lists Bazzite Test" "grep -q 'Bazzite Test (bazzite)' $T/out.log"
 echo "== 2. remove"
 bash "$SUITE/apps/fan/install.sh" --no-desktop-shortcut > "$T/fan.log" 2>&1
 check "an app is installed beside it" "[ -x $BIN/ps5-fan-control ]"
+echo '{}' > "$STATE/installed.json"                       # what a portal that was opened remembers
 run remove; rc=$?
 check "remove succeeds" "[ $rc -eq 0 ]"
 check "the portal, Bazzite Test and the app are gone" \
     "[ ! -e $BIN/bazzite-console-suite ] && [ ! -e $BIN/bazzite-test ] && [ ! -e $BIN/ps5-fan-control ]"
-check "the suite's folder is gone" "[ ! -e $XDG_DATA_HOME/bazzite-console-suite ]"
+check "the suite's folder is gone, with what the test's portal remembered" "[ ! -e $XDG_DATA_HOME/bazzite-console-suite ]"
 check "Bazzite Test left /opt" "[ ! -e $T/opt/bazzite-test ]"
 
 echo "== 3. the machine's own install stays"
@@ -45,8 +47,14 @@ check "status says it is the machine's own" "grep -q \"the machine's own install
 echo "== 4. options"
 run local --purge
 check "--purge only goes with remove" "grep -q 'only goes with remove' $T/out.log"
+echo '{}' > "$STATE/installed.json"
+run remove; rc=$?
+check "remove keeps what the machine's own portal remembered" \
+    "[ $rc -eq 0 ] && [ ! -e $BIN/bazzite-console-suite ] && [ -f $STATE/installed.json ]"
+run local --no-start --keep
 run remove --purge; rc=$?
 check "remove --purge succeeds" "[ $rc -eq 0 ] && [ ! -e $BIN/bazzite-console-suite ]"
+check "and leaves no suite folder" "[ ! -e $XDG_DATA_HOME/bazzite-console-suite ]"
 
 [ $fail -eq 0 ] && echo "ALL OK" || { cat "$T/out.log"; exit 1; }
 exit "$fail"
