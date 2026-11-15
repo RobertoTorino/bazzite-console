@@ -390,3 +390,13 @@ def test_the_release_tool_icons_have_the_expected_sizes():
         with Image.open(path) as icon:
             assert icon.size == (size, size), path.name
 
+
+
+def test_remove_suite_runs_check_release_remove(window):
+    """Remove suite: check-release.sh remove in a terminal, on a tab of its own since 15-11-2026."""
+    w, _app = window
+    launched = []
+    w.launch = launched.append
+    w.remove_page.remove_button.click()
+    assert launched and launched[0].endswith("tools/check-release.sh remove")
+    assert "Board Test asks for the sudo password" in w.remove_page.output.toPlainText()

@@ -126,7 +126,7 @@ def test_about_popup_describes_the_purpose(qapp):
         card = window.cards["paramiko"]
         card.about_button.click()
         assert card.about_box is not None and card.about_box.isVisible()
-        assert "SSH" in card.about_box.text() and "<b>SFTP Tools</b>" in card.about_box.text()
+        assert "SSH" in card.about_box.text() and "<b>PS5 SFTP Tools</b>" in card.about_box.text()
         card.about_box.close()
     finally:
         window.close()
@@ -179,7 +179,7 @@ def test_missing_tools_advise_what_they_are_needed_for(qapp):
         assert "Install paplay to be able to use <a href=" in window.tool_cards["paplay"].advice.text()
         assert "Play connection and transfer sounds." in window.tool_cards["paplay"].advice.text()
         assert window.tool_cards["pkexec"].advice.isHidden()
-        assert f"Fix installs pygame-ce in {SFTP}, which SFTP Tools needs" in \
+        assert f"Fix installs pygame-ce in {SFTP}, which PS5 SFTP Tools needs" in \
             window.cards["pygame-ce"].advice.text()
     finally:
         window.close()

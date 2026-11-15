@@ -1,3 +1,8 @@
+Changelog: 15-11-2026 06:25:22
+
+Fixed. The catalog names Board Test by its new key, board, as apps.toml does: it said bazzite, so every check
+stopped on "PyQt6 names board, which has no [app.board]".
+
 Changelog: 15-11-2026 04:16:24
 
 Fixed. Names the suite's renamed apps by their names, ids and keys where it mentions them (owner, 15-11-2026): PS5

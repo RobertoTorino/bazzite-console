@@ -5,7 +5,7 @@
 name = "Bazzite Console Suite"
 launchers = ["~/.local/bin/bazzite-console-suite"]
 
-[app.bazzite]
+[app.board]
 name = "PS5 Board Test"
 launchers = ["~/.local/bin/ps5-board-test"]
 

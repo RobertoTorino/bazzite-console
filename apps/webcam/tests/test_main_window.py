@@ -507,7 +507,7 @@ def test_full_screen_screenshot_and_recording(make, tmp_path):
     frame.fill(QColor("green"))
     window.preview.frame.emit(frame)
     full.screenshot_button.click()
-    shots = list((tmp_path / "Pictures" / "Webcam").glob("Webcam *.png"))
+    shots = list((tmp_path / "Pictures" / "Webcam").glob("PS5 Webcam *.png"))
     assert len(shots) == 1 and QImage(str(shots[0])).width() == 1920
     assert full.status.text() == f"Screenshot saved: {shots[0]}"            # ~ for a path in the home folder
     full.record_button.click()

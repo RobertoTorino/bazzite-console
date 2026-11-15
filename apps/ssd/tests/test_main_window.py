@@ -212,10 +212,10 @@ def test_screenshot_saves_the_window_as_a_png_beside_the_drive_list(qapp, tmp_pa
     w.shot_button.click()
     w.shot_button.click()                                                   # a second in the same second: (2)
     files = sorted((tmp_path / "shots").iterdir())
-    assert len(files) == 2 and all(f.suffix == ".png" and f.name.startswith("SSD Check ") for f in files)
+    assert len(files) == 2 and all(f.suffix == ".png" and f.name.startswith("PS5 SSD Check ") for f in files)
     image = QImage(str(files[0]))
     assert not image.isNull() and image.width() == w.width()
-    assert w.shot_note.text().startswith("Saved: SSD Check ") and w.serial_pill.value.text() == HIDDEN
+    assert w.shot_note.text().startswith("Saved: PS5 SSD Check ") and w.serial_pill.value.text() == HIDDEN
     w.close()
 
 
@@ -233,6 +233,6 @@ def test_screenshot_names_never_overwrite(tmp_path):
     from ssd_check.main_window import screenshot_path
     now = datetime.datetime(2026, 11, 5, 18, 4, 9)
     first = screenshot_path(tmp_path, now)
-    assert first.name == "SSD Check 2026-11-05 18-04-09.png"
+    assert first.name == "PS5 SSD Check 2026-11-05 18-04-09.png"
     first.write_bytes(b"")
-    assert screenshot_path(tmp_path, now).name == "SSD Check 2026-11-05 18-04-09 (2).png"
+    assert screenshot_path(tmp_path, now).name == "PS5 SSD Check 2026-11-05 18-04-09 (2).png"

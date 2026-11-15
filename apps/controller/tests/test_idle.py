@@ -148,7 +148,7 @@ def test_the_notification_goes_through_notify_send():
     assert idle.notify("Edge switched off", "Not used.", run=lambda args, timeout: calls.append(args),
                        which=lambda name: "/usr/bin/notify-send")
     assert calls[0][0] == "/usr/bin/notify-send" and calls[0][-2:] == ["Edge switched off", "Not used."]
-    assert "--app-name" in calls[0] and "Controller" in calls[0]
+    assert "--app-name" in calls[0] and "PS5 Controller" in calls[0]
     assert not idle.notify("x", "y", which=lambda name: None)                 # not installed: nothing sent
 
 
