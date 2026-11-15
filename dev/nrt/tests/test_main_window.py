@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import QApplication, QLabel, QWidget
 def window():
     app = QApplication.instance() or QApplication([])
     from nexus_release_tool.main_window import ReleaseWindow
-    w = ReleaseWindow(runs_source=lambda etag, head="", tags=(): ([], ""), launch=lambda line: None, notify=lambda s, b: True,
+    w = ReleaseWindow(runs_source=lambda etag, head="": ([], ""), launch=lambda line: None, notify=lambda s, b: True,
                       status_source=None)
     w.build.checker.stop(2000)
     yield w, app
@@ -93,17 +93,24 @@ def test_selection_is_a_teal_outline(window):
     from PyQt6.QtGui import QColor
     from nexus_release_tool.style import NEXUS
     ACCENT = NEXUS.accent
+    from PyQt6.QtWidgets import QTableWidgetItem
     w, app = window
     w.show()
-    table = w.apps_page.table
+    w.tabs.setCurrentWidget(w.release_page.contents)
+    table = w.release_page.table
+    table.setRowCount(2)
+    notes = table.columnCount() - 1                                 # the stretched column: room right of the text
+    for row, text in enumerate(("core", "ace")):
+        table.removeCellWidget(row, notes)
+        table.setItem(row, notes, QTableWidgetItem(text))
     table.setFocus()
-    table.setCurrentCell(1, 1)
+    table.setCurrentCell(1, notes)
     app.processEvents()
-    rect = table.visualRect(table.model().index(1, 1))
+    rect = table.visualRect(table.model().index(1, notes))
     image = table.viewport().grab().toImage()
     blank = rect.right() - 8                                        # right of "ace": background only
     inside = QColor(image.pixel(blank, rect.center().y()))
-    other = QColor(image.pixel(blank, table.visualRect(table.model().index(0, 1)).center().y()))   # "core"
+    other = QColor(image.pixel(blank, table.visualRect(table.model().index(0, notes)).center().y()))   # "core"
     edge = QColor(image.pixel(rect.center().x(), rect.top() + 1))
     assert inside.name() == other.name()                            # no solid highlight behind the text
     assert edge.name() == QColor(ACCENT).name()
@@ -157,28 +164,28 @@ def test_own_settings_are_never_replaced(tmp_path):
 def test_one_output_tab(window, monkeypatch):
     """Commands, the command line with its output, is the one output tab after the steps (owner, 01-11-2026: the Logs
     tab was mostly empty): what a step writes shows there under a line that names the step, and Commands opens when
-    the step that wrote is the tab open (not for Test on this board, whose lines come while you click). A finished
-    command reads the checkout again only when it changed something (a commit, a push)."""
+    the step that wrote is the tab open (not for Remove suite, whose lines come while you click). The release by
+    hand (Release apps, Pin and release Portal, Test on this board) went on 15-11-2026. A finished command reads the checkout again only when it changed something (a
+    commit, a push)."""
     w, _app = window
-    pages = (w.release_page, w.apps_page, w.portal_page, w.withdraw_page, w.run_page)
+    pages = (w.release_page, w.withdraw_page, w.remove_page)
     assert [w.tabs.tabText(i) for i in range(w.tabs.count())] == \
-        ["Nexus release", "Contents", "1. Release apps", "2. Pin and release Portal", "3. Retract app",
-         "Test on this board", "Commands"]
+        ["Nexus release", "Contents", "Retract app", "Remove suite", "Commands"]
     assert w.tabs.widget(w.commands_tab) is w.commands and w.tabs.widget(1) is w.release_page.contents
     assert not any(p.isAncestorOf(p.output) for p in pages)             # a step's log is no widget of its page
-    w.tabs.setCurrentWidget(w.portal_page)
-    w.portal_page.output.set_text("Tags fetched.")                      # the open step wrote: Commands opens
+    w.tabs.setCurrentWidget(w.withdraw_page)
+    w.withdraw_page.output.set_text("Withdrawn.")                       # the open step wrote: Commands opens
     assert w.tabs.currentIndex() == w.commands_tab
-    assert w.commands.output.toPlainText().endswith("── Pin and release Portal\nTags fetched.\n")
-    w.tabs.setCurrentWidget(w.apps_page)
-    w.portal_page.output.set_text("later")                              # another step's log: shown, no switch
-    assert w.tabs.currentWidget() is w.apps_page
-    assert "── Pin and release Portal\nlater\n" in w.commands.output.toPlainText()
-    w.tabs.setCurrentWidget(w.run_page)
-    w.run_page.output.appendPlainText("alpha started")                  # Test on this board never switches
-    assert w.tabs.currentWidget() is w.run_page
-    assert "── Test on this board\nalpha started\n" in w.commands.output.toPlainText()
-    assert w.portal_page.output.toPlainText() == "later"                # the page keeps its own log
+    assert w.commands.output.toPlainText().endswith("── Retract app\nWithdrawn.\n")
+    w.tabs.setCurrentWidget(w.release_page.contents)
+    w.withdraw_page.output.set_text("later")                            # another tab open: shown, no switch
+    assert w.tabs.currentWidget() is w.release_page.contents
+    assert "── Retract app\nlater\n" in w.commands.output.toPlainText()
+    w.tabs.setCurrentWidget(w.remove_page)
+    w.remove_page.output.appendPlainText("listing")                     # Remove suite never switches
+    assert w.tabs.currentWidget() is w.remove_page
+    assert "── Remove suite\nlisting\n" in w.commands.output.toPlainText()
+    assert w.withdraw_page.output.toPlainText() == "later"              # the page keeps its own log
     w.tabs.setCurrentIndex(0)
     assert w.commands.root == w.root
     refreshed = []
@@ -195,8 +202,8 @@ def test_one_output_tab(window, monkeypatch):
 def test_a_step_offers_its_commands(window):
     from nexus_release_tool import plan as rp
     w, _app = window
-    w.commands.offer(rp.app_commands(["alpha-v0.1.1"]))
-    assert w.commands.offered[-1] == f"{rp.TAG_SCRIPT} alpha-v0.1.1" and w.commands.commands_button.isEnabled()
+    w.commands.offer(rp.withdraw_commands("alpha-v0.1.1", "broken"))
+    assert w.commands.offered[0].startswith("gh release edit alpha-v0.1.1") and w.commands.commands_button.isEnabled()
 
 
 SUMMARY_DOWN = {   # githubstatus.com's summary.json during the incident of 19-10-2026, shortened
@@ -359,7 +366,6 @@ def test_the_window_has_nexus_design(window):
     assert f"stop:0 {MAIN}, stop:1 {INK}" in w.build.rate.styleSheet() and f"color:{SILVER}" in w.build.rate.styleSheet()
     assert f"border:1px solid {EDGE}" in w.refresh_pill.styleSheet()
     assert f"border-color:{TEAL}" in w.refresh_pill.styleSheet()
-    assert f"border-color:{TEAL}" in w.apps_page.apply_button.styleSheet()          # a pill: the accent on focus
     assert LOGO_PATH.name == "nexus-release-tool.webp" and LOGO_PATH.is_file()
     assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
     # The checkboxes: a teal box with its teal checkmark (owner, 28-10-2026), and Portals drawn as a selected tab.
@@ -384,13 +390,3 @@ def test_the_release_tool_icons_have_the_expected_sizes():
         with Image.open(path) as icon:
             assert icon.size == (size, size), path.name
 
-
-def test_the_portal_version_field_shows_a_whole_version(window):
-    """The field on step 2 is wide enough for a version like 10.1.0 (owner, 26-10-2026: it cut the text off)."""
-    from nexus_release_tool.main_window import VERSION_FIELD_PX
-    w, _app = window
-    w.show()
-    field = w.portal_page.portal_version
-    assert field.minimumWidth() == VERSION_FIELD_PX >= 120
-    assert field.width() >= VERSION_FIELD_PX
-    assert field.fontMetrics().horizontalAdvance("10.1.0") + 40 < field.width()     # the text and the arrow fit

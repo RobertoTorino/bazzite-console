@@ -1,3 +1,9 @@
+Changelog: 15-11-2026 03:22:26
+
+Fixed. The uninstall on a computer where the app is not installed says so ("… is not installed: nothing to remove.")
+and stops, without asking for the sudo password; it listed its removal steps for what was never there (owner,
+15-11-2026). With anything of the app there, it uninstalls as before.
+
 Changelog: 14-11-2026 13:58:40
 
 Release 1.0.1.

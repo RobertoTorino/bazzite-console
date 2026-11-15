@@ -6,17 +6,17 @@
 
 # Bazzite Console Suite
 
-Control your PlayStation 5 running Bazzite. The portal installs and opens the suite's apps. Bazzite Test is always installed and listed first; it is the only required app.
+Control your PlayStation 5 running Bazzite. The portal installs and opens the suite's apps. Board Test is always installed and listed first; it is the only required app.
 
 **Sustainable**: system and device information, and what keeps the console cool.
 
-- <img src="portal/images/apps/bazzite.webp" width="20" height="20" alt=""/> **[Bazzite Test](apps/bazzite)**: Read-only system details for PlayStation 5 hardware running Bazzite.
-- <img src="portal/images/apps/overlay.webp" width="20" height="20" alt=""/> **[System Overlay](apps/overlay)**: A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values.
-- <img src="portal/images/apps/fan.webp" width="20" height="20" alt=""/> **[Fan Control](apps/fan)**: The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature.
+- <img src="portal/images/apps/board.webp" width="20" height="20" alt=""/> **[PS5 Board Test](apps/board)**: Read-only system details for PlayStation 5 hardware running Bazzite.
+- <img src="portal/images/apps/overlay.webp" width="20" height="20" alt=""/> **[PS5 System Overlay](apps/overlay)**: A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values.
+- <img src="portal/images/apps/fan.webp" width="20" height="20" alt=""/> **[PS5 Fan Controller](apps/fan)**: The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature.
 
 **Graphics**: Graphics features and tools for games.
 
-- <img src="portal/images/apps/upscaler.webp" width="20" height="20" alt=""/> **[Upscaler Manager](apps/upscaler)**: Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games.
+- <img src="portal/images/apps/upscaler.webp" width="20" height="20" alt=""/> **[PS5 Upscaler Manager](apps/upscaler)**: Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games.
 
 **Gaming**: Emulators and console tools for games.
 
@@ -24,7 +24,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/remoteplay.webp" width="20" height="20" alt=""/> **[Remote Play](apps/remoteplay)**: Find, wake, and register PS4 and PS5 consoles on the network, and stream Remote Play.
 - <img src="portal/images/apps/clb.webp" width="20" height="20" alt=""/> **[XBOX Remote Play](apps/clb)**: Stream XBOX consoles or XBOX Cloud Gaming after signing in with a Microsoft account.
 - <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode.
-- <img src="portal/images/apps/datstation.webp" width="20" height="20" alt=""/> **[Bazzite DatStation](apps/datstation)**: Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news.
+- <img src="portal/images/apps/datstation.webp" width="20" height="20" alt=""/> **[PS5 DatStation](apps/datstation)**: Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news.
 - <img src="portal/images/apps/ppsspp.webp" width="20" height="20" alt=""/> **[PPSSPP Manager](apps/ppsspp)**: Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode.
 - <img src="portal/images/apps/pcsx2.webp" width="20" height="20" alt=""/> **[PCSX2 Manager](apps/pcsx2)**: Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode.
 - <img src="portal/images/apps/vita3k.webp" width="20" height="20" alt=""/> **[Vita3K Manager](apps/vita3k)**: Install Vita3K for PS Vita games and add installed titles to Game Mode.
@@ -32,12 +32,12 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 
 **Utilities**: Tools for files, peripherals, and storage.
 
-- <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[SFTP Tools](apps/sftp)**: Transfer files over SFTP and manage SSH servers on Bazzite hosts.
-- <img src="portal/images/apps/webcam.webp" width="20" height="20" alt=""/> **[Webcam](apps/webcam)**: Use a compatible PlayStation camera as a webcam.
-- <img src="portal/images/apps/controller.webp" width="20" height="20" alt=""/> **[Controller](apps/controller)**: Manage DualSense and DualSense Edge controllers.
-- <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: Inspect storage health and drive information when supported.
-- <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC.
-- <img src="portal/images/apps/btpair.webp" width="20" height="20" alt=""/> **[Bluetooth Pairing](apps/btpair)**: Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed.
+- <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[PS5 SFTP Tools](apps/sftp)**: Transfer files over SFTP and manage SSH servers on Bazzite hosts.
+- <img src="portal/images/apps/webcam.webp" width="20" height="20" alt=""/> **[PS5 Webcam](apps/webcam)**: Use a compatible PlayStation camera as a webcam.
+- <img src="portal/images/apps/controller.webp" width="20" height="20" alt=""/> **[PS5 Controller](apps/controller)**: Manage DualSense and DualSense Edge controllers.
+- <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[PS5 SSD Check](apps/ssd)**: Inspect storage health and drive information when supported.
+- <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[PS5 CEC Manager](apps/cec)**: Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC.
+- <img src="portal/images/apps/bluetooth.webp" width="20" height="20" alt=""/> **[PS5 Bluetooth](apps/bluetooth)**: Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed.
 
 ## Install
 

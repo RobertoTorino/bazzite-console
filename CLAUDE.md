@@ -28,7 +28,7 @@ time. The tooling began as a copy of Nexus's and is this repository's own now: a
 ## What this is
 
 The suite's system is `bazzite` (`SYSTEM`) and its tags start with `ps5-` (`TAG_PREFIX`). The portal's `apps.toml`
-lists the suite's apps. **Bazzite Test** (`apps/bazzite/`, package `bazzite_test`) is the first tile, always
+lists the suite's apps. **Board Test** (`apps/board/`, package `board_test`) is the first tile, always
 installed and the only required app. App keys, release tags, installer tests and wiki chapters use the same short
 folder name.
 
@@ -48,9 +48,14 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
 - `tools/`: the release and check tools (`build_release.py`, `stage_app.py`, `check_versions.py`,
   `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `check-release.sh`,
   `suites.py`, `fix-modes.sh`, `sync_icons.py`, `ci_state.py` and
-  `release_commit.py` for the release workflow), the CHANGELOG merge driver and check, the tours, `portal_screenshot.py` (the portal's picture on the wiki's home page), `mkdocs/` (the wiki's hooks and overrides),
+  `release_commit.py` for the release workflow), the tours, `portal_screenshot.py` (the portal's picture on the
+  wiki's home page), `ci-local.sh` (the local checks), `mkdocs/` (the wiki's hooks and overrides),
   `tools/tests/` and `tools/installer-tests/` (one per app, the portal, a release and the release test).
 - `dev/`: the development apps, run from the checkout and never released.
+- `test.sh`: runs every folder with `tests/` (tools, `dev/*`, the portal and each app), offscreen, with the venv for
+  this system.
+- `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/` (bug report, idea, the security link) and
+  `.github/PULL_REQUEST_TEMPLATE.md`: for contributors.
 - `docs/` and `mkdocs.yml`: the wiki, robertotorino.github.io/bazzite-console/; `icons/`: the category icons and
   `categories.toml`, which assigns them to the apps.
 - `.github/workflows/ci.yml`: the checks on every push; `docs.yml`: the wiki, built from `main` and published on
@@ -60,18 +65,21 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
 ## Design and naming
 
 This is a Bazzite suite and follows the Bazzite design: purple for the wiki and the shared Bazzite app theme.
-The portal, wiki and category icons use artwork made for this suite. The Bazzite Test app's Python package is
-`bazzite_test`; its app folder and manifest key are `bazzite`.
+The portal, wiki and category icons use artwork made for this suite. The Board Test app's Python package is
+`board_test`; its app folder and manifest key are `bazzite`.
 
 ## Checks
 
-From the repository root, as `.github/workflows/ci.yml` runs them (a venv with the folders' `requirements-dev.txt`):
+From the repository root. `./test.sh` runs every folder's tests in `.venv-linux/` (made from the root's
+`requirements-dev.txt`; extra arguments go to pytest), and `tools/ci-local.sh` the versions, the manifest, the icons'
+copies and the tests of `tools/` and `dev/`. CI (`.github/workflows/ci.yml`) runs them so:
 
 ```bash
-(cd <folder> && python -m pytest tests)                     # portal, tools and each apps/<name>
+./test.sh                                                   # every folder with tests/
+(cd <folder> && python -m pytest tests)                     # one folder: portal, tools or apps/<name>
 python3 tools/check_manifest.py
 python3 tools/sync_icons.py --check
-find apps portal tools -name '*.sh' -print0 | xargs -0 -n1 bash -n
+find apps portal tools test.sh -name '*.sh' -print0 | xargs -0 -n1 bash -n
 for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done   # needs fakeroot
 mkdocs build --strict
 ```

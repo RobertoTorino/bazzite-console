@@ -28,10 +28,10 @@ CPU's and the GPU's load and temperature (**CPU 12% 54°C | GPU 3% 61°C**), the
 8°C Partly cloudy**, after its symbol). The line at the bottom says what the keys and the controller's buttons
 do.
 
-**Bazzite Test** is always installed with the portal; every other app is optional. Below the header is a strip
+**Board Test** is always installed with the portal; every other app is optional. Below the header is a strip
 with a name for each [category](apps/categories.md): Sustainable, Gaming and Utilities (Graphics joins them once it has an app), and beside it
 the notice of updates. Each app is a large tile under its category, left to right in the order of `apps.toml`
-and as many to a row as the screen fits; Bazzite Test is always the first tile on Sustainable. The tile with the
+and as many to a row as the screen fits; Board Test is always the first tile on Sustainable. The tile with the
 focus is framed in silver; move it with the arrow keys, the d-pad or the stick, or point at a tile with the
 mouse:
 
@@ -48,7 +48,7 @@ mouse:
 - **The tile's menu** (the Menu key or M; on the controller the left button of the four, X on an XBOX controller
   and Square on a PlayStation one) holds every action: **Open**, **Install** (an arrow into a tray; **Update**, in red, when an update is waiting;
   **Reinstall** for an installed app, in red with a circular arrow when its version is unknown) and
-  **Uninstall** (a bin). What cannot be done now is grayed out. Bazzite Test has no Uninstall: it is removed
+  **Uninstall** (a bin). What cannot be done now is grayed out. Board Test has no Uninstall: it is removed
   together with the portal.
 - **A red dot** in the icon and **Update** under the name: an update is available.
 - **A red circular arrow** in the icon and **Reinstall needed** under the name: reinstall the app. It is
@@ -127,7 +127,7 @@ nothing in the portal. There are two ways to get every button:
   because installers may ask for the sudo password and print what they do. The portal watches for the result and
   refreshes. A terminal whose installer ended well closes by itself; one that failed stays open with what happened
   until you press Enter.
-- Apps that change how the console's system runs (Fan Control's thermal guard, Webcam's camera rule, the SSH server
+- Apps that change how the console's system runs (Fan Controller's thermal guard, Webcam's camera rule, the SSH server
   of SFTP Tools) are marked **changes the board**. The portal warns before installing or opening them,
   and the tile's popup says what each one changes and how that is undone.
 - Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/bazzite-console/blob/main/portal/apps.toml). The portal downloads
@@ -145,7 +145,7 @@ nothing in the portal. There are two ways to get every button:
 - **Portal updates:** newer app versions come with a newer portal release. At start the portal looks for one on
   GitHub; when there is one, an orange **PORTAL UPDATE AVAILABLE** shows under the name on the intro, and an
   orange **UPDATE AVAILABLE, PRESS Y TO UPDATE** beside the category strip. Its tooltip says what the release
-  brings, for example **Portal 1.0.1: updates Fan Control and Remote Play**, with each app's old and new
+  brings, for example **Portal 1.0.1: updates Fan Controller and Remote Play**, with each app's old and new
   version. Press Y, right-click a tile, or click the banner (Enter or A with the focus on it) to update: the portal
   downloads the release, checks it against the release's `SHA256SUMS`, and runs its `install.sh` in a terminal,
   as your own user. The banner says **DOWNLOADING THE UPDATE…** and then
@@ -278,14 +278,21 @@ What it installs:
 |---|---|---|
 | The portal, its `apps.toml` and the shared code it was tested with | `~/.local/share/bazzite-console-suite/portal` | In your home folder: the portal needs no root |
 | What the portal remembers: the apps it installed and their releases, the wallpaper, a downloaded portal update | `~/.local/share/bazzite-console-suite/state` | Apart from the program, so an update of the portal keeps it |
-| Bazzite Test (bundled in the portal release) | `/opt/bazzite-test`, through its own installer, which asks for the sudo password | Its tests run as root, so its test files are root-owned |
+| Board Test (bundled in the portal release) | `/opt/ps5-board-test`, through its own installer, which asks for the sudo password | Its tests run as root, so its test files are root-owned |
 | The suite's shared venv with PyQt6 | `~/.local/share/bazzite-console-suite/venv` | One copy of the ~100 MB of Qt for all suite apps |
 | Launcher, menu entry, Desktop icon | `~/.local/bin/bazzite-console-suite`, `~/.local/share/applications/`, the Desktop | The portal's icon is the one way in; the apps' own icons are optional (**Icons on Desktop**) |
 
-Uninstall: remove the apps first, each from its tile's menu, then
-`~/.local/share/bazzite-console-suite/portal/install.sh --uninstall`. This removes the portal and keeps its
-settings and what it remembers; add `--purge` to remove those too. Bazzite Test stays until you remove it with its own installer:
-`~/.local/share/bazzite-test/app/install.sh --uninstall`.
+Uninstall: `~/.local/share/bazzite-console-suite/portal/install.sh --uninstall`. This removes the portal and
+Board Test and keeps settings and the wallpaper; add `--purge` to remove those too. First it asks about each other
+suite app that is installed: `y` uninstalls it, `s` skips it (it stays installed), `c` cancels the whole uninstall
+before anything is removed. The list has every app this portal lists and the apps an earlier portal installed that
+this one no longer lists, each removed with its own uninstaller. Those apps keep their own settings, also with
+`--purge`. Of what the portal remembers, only the records of the apps you kept stay, with the release each one's
+uninstaller needs. To remove the whole suite at once, `--uninstall --all` asks one question instead of one per app,
+after a warning that names every app it will remove; with `--purge` the apps' own settings and results go as well.
+
+When nothing of the suite is installed, the uninstall says so and removes nothing, without asking for a password.
+Each app's own `install.sh --uninstall` does the same when the app is not installed.
 
 ### What stays after an uninstall
 
@@ -296,7 +303,7 @@ app before you uninstall it, and **your settings and results**, which `--purge` 
 |---|---|---|
 | SFTP Tools | An SSH server you started: `sshd` enabled at boot, and the firewall's rule for SSH | Stop the server in the app; review the firewall's rule yourself |
 
-Fan Control's uninstall removes its thermal guard, and Webcam's removes its camera rule.
+Fan Controller's uninstall removes its thermal guard, and Webcam's removes its camera rule.
 
 Settings live in `~/.config/<app>`, data and logs in `~/.local/share/<app>`. Each app's
 `install.sh --uninstall --purge` removes them.

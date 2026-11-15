@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Controller](../assets/controller/ps5-controller.webp){ .app-logo }
+![PS5 Controller](../assets/controller/ps5-controller.webp){ .app-logo }
 
-# Controller
+# PS5 Controller
 
 The **DualSense** and **DualSense Edge** controllers on **Bazzite**: their battery, their firmware and the Edge's
 profiles. The app gets the controllers' firmware from Sony's update server and sends it over a USB cable. It

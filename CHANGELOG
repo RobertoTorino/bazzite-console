@@ -1,3 +1,47 @@
+Changelog: 15-11-2026 04:16:24
+
+Breaking. Eleven apps have new names (owner, 15-11-2026): PS5 Board Test, PS5 Bluetooth, PS5 CEC Manager, PS5 Fan
+Controller, PS5 DatStation, PS5 SFTP Tools, PS5 Webcam, PS5 SSD Check, PS5 System Overlay, PS5 Controller and PS5
+Upscaler Manager. PS5 Board Test (key board, id ps5-board-test, script test-board.sh) and PS5 Bluetooth (key
+bluetooth, id ps5-bluetooth) are new apps, PS5 CEC Manager (ps5-cec-manager) and PS5 Fan Controller
+(ps5-fan-controller) have new ids, the others only new names. The wiki (its chapters apps/board and apps/bluetooth),
+the README, the icons, the workflows and the tools name them so. A copy installed before under another id is not
+taken over: uninstall it first.
+
+Changelog: 15-11-2026 03:22:26
+
+Added. tools/installer-tests/not-installed.sh runs every app's and the portal's install.sh --uninstall, and with
+--purge, on a computer where nothing is installed: each says so in one line, exits 0, writes nothing and asks for no
+sudo password (owner, 15-11-2026). tools/installer-tests/portal.sh tests the portal's new uninstall: the question
+per app, Bazzite Test, --all and the state it keeps. tools/installer-tests/release-check.sh checks that a remove
+keeps the wallpaper, as the portal's uninstall now drops the records of apps that are gone.
+
+Changelog: 15-11-2026 02:59:45
+
+Added. The wiki's Bluetooth Pairing chapter has a section on a USB 3 device beside the Bluetooth receiver: it can
+heavily interfere with it, and a USB extension cable that keeps the two as far apart as possible helps.
+
+Changelog: 15-11-2026 02:18:04
+
+Fixed. The root requirements-dev.txt lists Bluetooth Pairing's and Upscaler Manager's test requirements too
+(apps/btpair, apps/upscaler), so one venv made from it runs every app's tests.
+
+Changelog: 15-11-2026 01:45:12
+
+Added. CONTRIBUTING.md for contributors (owner, 15-11-2026): the security policy, the licenses of the folders
+(Remote Play is AGPL-3.0-or-later), the icons, the CHANGELOG entry, and that versions and portal/apps.toml are the
+maintainer's. The issue forms (.github/ISSUE_TEMPLATE/: a bug report with the app list, an idea, and the link for a
+security problem) and the pull request template (.github/PULL_REQUEST_TEMPLATE.md) are new too.
+
+Added. test.sh at the root runs every folder with tests/ (tools, dev/, the portal and each app) offscreen, with the
+venv for this system; extra arguments go to pytest. CI's shell syntax check covers it. CLAUDE.md and the wiki's
+Development page name it.
+
+Breaking. The CHANGELOG merge driver and its check are removed (owner, 15-11-2026): tools/merge_changelog.py,
+tools/check_changelogs.py, their tests, tools/git-setup.sh, which only registered the driver, and the line in
+.gitattributes. A checkout that ran git-setup.sh keeps the merge.changelog settings in its .git/config; with the
+.gitattributes line gone git no longer uses them. CLAUDE.md and the wiki's Development page no longer name them.
+
 Changelog: 14-11-2026 16:15:37
 
 Added. Two apps join the suite (owner, 14-11-2026): Upscaler Manager (apps/upscaler, Graphics: HelixSR and

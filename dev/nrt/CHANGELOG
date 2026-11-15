@@ -1,3 +1,32 @@
+Changelog: 15-11-2026 06:09:24
+
+Fixed. A part whose only changes since its last tag are its version, its version copies and a "Release x.y.z."
+entry (or Retract's "Withdrawn:" entry) needs no release any more: Start new release left it out. A portal bump
+with nothing else in it was released as a second portal of the same apps, waiting for a device test of its own, and
+a withdrawn app was released again with its withdrawal (owner, 15-11-2026).
+
+Changelog: 15-11-2026 06:09:24
+
+Breaking. The release by hand is gone (owner, 15-11-2026): the tabs 1. Release apps (with the header's Apply),
+2. Pin and release Portal (Pin, Bump portal, Fetch tags), their Publish buttons, the tab Test on this board and the
+release tab's mode for a repository without a release workflow, which pointed to those tabs. Their Bump wrote a
+portal release while the release tab's draft waited for its device test, which then went out as a second release.
+The release tab's Start new release writes everything a release needs, and its Device test tests the draft. Test
+withdrawal is on the tab Retract app now (no longer numbered), whose last step is a release from the release tab;
+Remove suite has a tab of its own. tools/tag-release.sh still builds and publishes a single release from a
+terminal.
+
+Changelog: 15-11-2026 04:16:24
+
+Fixed. Names the suite's renamed apps by their names, ids and keys where it mentions them (owner, 15-11-2026): PS5
+Board Test, PS5 Bluetooth, PS5 CEC Manager, PS5 Fan Controller, PS5 DatStation, PS5 SFTP Tools, PS5 Webcam, PS5 SSD
+Check, PS5 System Overlay, PS5 Controller and PS5 Upscaler Manager.
+
+Changelog: 15-11-2026 01:45:12
+
+Fixed. The git pull button, and the pull before a push, run git pull --rebase --autostash alone: tools/git-setup.sh,
+which registered the CHANGELOG merge driver, is gone.
+
 Changelog: 14-11-2026 12:11:51
 
 Fixed. The window's text says the console where it said the board, and an app that changes the system is

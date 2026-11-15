@@ -150,7 +150,7 @@ def test_window_lists_the_suites_tests_and_remembers_the_suite(checkout: Path) -
 
 def test_window_on_the_real_checkout_lists_the_suites_installer_tests() -> None:
     window = MainWindow()
-    assert window.suite == "bazzite-console" and "bazzite.sh" in window._items and "shims.sh" not in window._items
+    assert window.suite == "bazzite-console" and "board.sh" in window._items and "shims.sh" not in window._items
     window.close()
 
 

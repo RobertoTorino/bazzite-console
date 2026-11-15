@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![SSD Check](../assets/ssd/ps5-ssd-check.webp){ .app-logo }
+![PS5 SSD Check](../assets/ssd/ps5-ssd-check.webp){ .app-logo }
 
-# SSD Check
+# PS5 SSD Check
 
 How a drive is doing: its **health**, **power cycles** and **power-on hours**, the drive's specs, and whether the
 port it is in lets it run at its full speed. SSD Check is an optional utility for a PlayStation 5 running Bazzite.

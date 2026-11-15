@@ -8,7 +8,7 @@
 
 The icons are WebP in the repository already and are served as they are. For a PNG or JPG a page names (a
 screenshot), the wiki gets a WebP copy made while it is built, and its pages point at that copy; the chapters
-themselves keep naming the PNG, which Bazzite Test also shows from its own images/ folder. Without Pillow the wiki
+themselves keep naming the PNG, which Board Test also shows from its own images/ folder. Without Pillow the wiki
 simply shows the PNGs.
 
 The wiki's own icon is a real file in docs/: images/wiki-icon.webp in the header and footer, images/wiki-icon.png as

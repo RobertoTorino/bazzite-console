@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import CURVE, FAN, fan, set_temps, write
 
-from fan_control import guard
+from fan_controller import guard
 
 
 class Clock:
@@ -256,7 +256,7 @@ def test_install_and_uninstall(paths):
     assert paths.script.read_bytes() == Path(guard.__file__).read_bytes()
     assert json.loads(paths.config.read_text()) == {"warn_c": 80, "cool_c": 88, "shutdown_c": 93, "hold_s": 15}
     unit = paths.unit.read_text()
-    assert "ExecStart=/usr/bin/python3 -I /etc/ps5-fan-control/guard.py run" in unit
+    assert "ExecStart=/usr/bin/python3 -I /etc/ps5-fan-controller/guard.py run" in unit
     assert "Restart=always" in unit and "WantedBy=multi-user.target" in unit
     assert ["systemctl", "enable", guard.UNIT] in run.calls and ["systemctl", "restart", guard.UNIT] in run.calls
     assert guard.installed(paths) == guard.Limits(80, 88, 93, 15)

@@ -18,10 +18,10 @@ SHARED = "/home/test/.local/share/bazzite-console-suite/venv"
 SFTP = "/home/test/.local/share/ps5-sftp-tools/venv"               # an app with a venv of its own
 # Tools of the kinds this suite's catalog has none of: one that works only as root, one of two commands, and a
 # flashrom that must have the internal programmer.
-ROOTED = ExternalTool("umr", ("umr",), (ToolSource("bazzite", "Reads the GPU's registers."),),
+ROOTED = ExternalTool("umr", ("umr",), (ToolSource("board", "Reads the GPU's registers."),),
                       description="AMD's register debugger.", root=True)
-SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("bazzite", "Internet speed test."),))
-FLASHROM = ExternalTool("flashrom", ("flashrom",), (ToolSource("bazzite", "Reads the firmware."),),
+SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("board", "Internet speed test."),))
+FLASHROM = ExternalTool("flashrom", ("flashrom",), (ToolSource("board", "Reads the firmware."),),
                         probe="flashrom-internal")
 
 
@@ -56,7 +56,7 @@ def _catalog():
 def test_window_displays_package_and_tool_results(qapp):
     dependencies, tools = _catalog()
     result = CheckResult(
-        [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal", "bazzite"), "6.11.0"),
+        [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal", "board"), "6.11.0"),
                                                   EnvironmentVersion(SFTP, ("sftp",), "6.11.0")), "6.12.0"),
          DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "5.1.0"),),
                           "5.1.0"),
@@ -65,14 +65,14 @@ def test_window_displays_package_and_tool_results(qapp):
          ToolStatus(tools["notify-send"], "/home/test/.local/bin/notify-send"),
          ToolStatus(tools["paplay"]),
          ToolStatus(tools["cec-ctl"])],
-        frozenset({"portal", "bazzite", "sftp", "cec"}),
+        frozenset({"portal", "board", "sftp", "cec"}),
     )
     window = _window(result)
     try:
         pyqt = window.cards["PyQt6"]
         assert pyqt.status.text() == "Update available"
         assert pyqt.latest.text() == "Latest on PyPI: 6.12.0"
-        assert "Bazzite Test" in pyqt.installed.text() and "SFTP Tools" in pyqt.installed.text()
+        assert "Board Test" in pyqt.installed.text() and "SFTP Tools" in pyqt.installed.text()
         assert window.cards["paramiko"].status.text() == "Up to date"
         assert window.cards["pygame-ce"].status.text() == "Not needed"
         assert window.tool_cards["pkexec"].status.text() == "Available"
@@ -119,7 +119,7 @@ def test_about_popup_describes_the_purpose(qapp):
     _dependencies, tools = _catalog()
     apps = load_apps(CATALOG)
     text = about_text(tools["cec-ctl"], apps)
-    assert "HDMI-CEC" in text and "HDMI CEC Manager" in text and "(required)" in text
+    assert "HDMI-CEC" in text and "PS5 CEC Manager" in text and "(required)" in text
     assert "Needs root." in about_text(ROOTED, apps) and "Needs root." not in text
     window = _window(CheckResult([], [], frozenset()))
     try:
@@ -163,15 +163,15 @@ def test_cve_marks(qapp):
 
 def test_missing_tools_advise_what_they_are_needed_for(qapp):
     dependencies, tools = _catalog()
-    installed = frozenset({"fan", "bazzite", "webcam"})
+    installed = frozenset({"fan", "board", "webcam"})
     advice = tool_advice(tools["pkexec"], installed, load_apps(CATALOG))       # two of its three apps are installed
     assert advice.startswith("<b>Advice:</b> Install pkexec to be able to use:") and "SFTP Tools" not in advice
     assert "Webcam</a>: Install or remove the camera udev rule. <b>(required)</b></li>" in advice
-    assert "Fan Control</a>: Turn the thermal guard on and off, and change it. <b>(required)</b></li>" in advice
+    assert "Fan Controller</a>: Turn the thermal guard on and off, and change it. <b>(required)</b></li>" in advice
     assert "Install speedtest or speedtest-cli" in tool_advice(SPEEDTEST, installed, load_apps(CATALOG))
     assert "Install a flashrom that has it" in tool_advice(FLASHROM, installed, load_apps(CATALOG),
                                                            "No internal programmer found.")
-    assert tool_advice(tools["cec-ctl"], installed, load_apps(CATALOG)) == ""  # HDMI CEC Manager is not installed
+    assert tool_advice(tools["cec-ctl"], installed, load_apps(CATALOG)) == ""  # PS5 CEC Manager is not installed
     window = _window(CheckResult(
         [DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), ""),), "2.5.8")],
         [ToolStatus(tools["paplay"]), ToolStatus(tools["pkexec"], "/usr/bin/pkexec")], installed | {"sftp"}))

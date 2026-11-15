@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-from hdmi_cec import tvinfo
+from cec_manager import tvinfo
 
 TV_ANSWERS = json.loads((Path(__file__).parent / "tv_answers.json").read_text())  # the owner's TV, 11-10-2026, CEC 1.4
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Fan Control as a desktop app, from a clone or the extracted release tarball:
+# Installs PS5 Fan Controller as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -10,18 +10,18 @@
 # Run it as your own user; installing needs no root. The app reads the temperatures and the fan without root; it turns
 # the thermal guard on, changes it and turns it off only when you ask, through a password prompt (pkexec) and the
 # system python3.
-#  * ~/.local/share/ps5-fan-control/app: the app, with the bazzite_console_core it was tested with (bundled in the
+#  * ~/.local/share/ps5-fan-controller/app: the app, with the bazzite_console_core it was tested with (bundled in the
 #    release; taken from the suite checkout when run from there).
 #  * ~/.local/share/bazzite-console-suite/venv, the Bazzite Console Suite's shared venv with PyQt6 (the wheels bundle
 #    Qt; nothing is layered). It is removed with the last suite app that uses it.
-#  * /etc/ps5-fan-control (guard.py, guard.json) and /etc/systemd/system/ps5-fan-control-guard.service: the
+#  * /etc/ps5-fan-controller (guard.py, guard.json) and /etc/systemd/system/ps5-fan-controller-guard.service: the
 #    thermal guard, only while it is turned on in the app. Uninstalling removes it (sudo); an update says when the
 #    installed copy is from another version.
-#  * ~/.local/bin/ps5-fan-control to start it from a terminal, plus an app menu entry and a Desktop icon.
+#  * ~/.local/bin/ps5-fan-controller to start it from a terminal, plus an app menu entry and a Desktop icon.
 set -euo pipefail
 
-APP_ID="ps5-fan-control"
-APP_NAME="Fan Control"
+APP_ID="ps5-fan-controller"
+APP_NAME="PS5 Fan Controller"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 APP_DIR="$DATA_DIR/$APP_ID/app"
@@ -34,12 +34,12 @@ DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 DESKTOP_ICON="$DESKTOP_DIR/$APP_ID.desktop"
 
 SYSTEM_ROOT="${PS5_SYSTEM_ROOT:-}"         # override only for testing
-GUARD_UNIT="ps5-fan-control-guard.service"
+GUARD_UNIT="ps5-fan-controller-guard.service"
 GUARD_DIR="$SYSTEM_ROOT/etc/$APP_ID"
 GUARD_FILES=("$SYSTEM_ROOT/etc/systemd/system/$GUARD_UNIT" "$GUARD_DIR")
 
 SRC=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
-# bazzite_console_core: bundled next to fan_control in a release; in the suite checkout it lives in core/.
+# bazzite_console_core: bundled next to fan_controller in a release; in the suite checkout it lives in core/.
 if [ -d "$SRC/bazzite_console_core" ]; then CORE_SRC="$SRC/bazzite_console_core"; else CORE_SRC="$SRC/../../core/bazzite_console_core"; fi
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
@@ -67,7 +67,25 @@ $PURGE && ! $UNINSTALL && die "--purge only goes with --uninstall."
 
 [ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo: the app, the venv and the launcher belong in your home folder."
 
+# Whether anything the uninstall removes is on this computer (paths and globs): without, it removes nothing, asks
+# for no password and says the app is not installed.
+installed_here() {
+    local path
+    for path in "$@"; do
+        compgen -G "$path" >/dev/null && return 0
+    done
+    return 1
+}
+
 if $UNINSTALL; then
+    found=false
+    installed_here "${GUARD_FILES[@]}" "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON" "${DATA_DIR:?}/${APP_ID:?}/app" \
+        "${VENV_USERS:?}/${APP_ID:?}" && found=true
+    $PURGE && installed_here "${CONFIG_DIR:?}/${APP_ID:?}" && found=true
+    if ! $found; then
+        info "$APP_NAME is not installed: nothing to remove."
+        exit 0
+    fi
     if [ -e "${GUARD_FILES[0]}" ] || [ -e "$GUARD_DIR" ]; then
         # Stopping the guard puts the fan back as it was.
         info "Stopping and removing the thermal guard $GUARD_UNIT (sudo)"
@@ -98,7 +116,7 @@ fi
 
 # --- Checks ------------------------------------------------------------------------------------
 [ "$(uname -s)" = Linux ] || die "This app runs on Linux (Bazzite) only."
-for f in requirements.txt VERSION fan_control/__main__.py "images/$APP_ID.webp" "images/$APP_ID-128.png"; do
+for f in requirements.txt VERSION fan_controller/__main__.py "images/$APP_ID.webp" "images/$APP_ID-128.png"; do
     [ -f "$SRC/$f" ] || die "$f is missing: run install.sh from a clone or the extracted release folder."
 done
 [ -f "$CORE_SRC/__init__.py" ] || die "bazzite_console_core is missing: run install.sh from a clone or the extracted release folder."
@@ -145,9 +163,9 @@ mkdir -p "$(dirname "$LAUNCHER")"
 cat >"$LAUNCHER" <<EOF
 #!/usr/bin/env bash
 # $APP_NAME launcher, written by install.sh. Starts from the app folder, so python -m never picks up a
-# fan_control folder from the current directory, and imports the bazzite_console_core bundled there.
+# fan_controller folder from the current directory, and imports the bazzite_console_core bundled there.
 cd "$APP_DIR" || { echo "$APP_NAME is not installed in $APP_DIR; run install.sh again." >&2; exit 1; }
-exec "$VENV/bin/python" -m fan_control "\$@"
+exec "$VENV/bin/python" -m fan_controller "\$@"
 EOF
 chmod 755 "$LAUNCHER"
 
@@ -181,7 +199,7 @@ elif ! $DESKTOP_SHORTCUT; then
     rm -f "$DESKTOP_ICON"
 fi
 
-if [ -f "$GUARD_DIR/guard.py" ] && ! cmp -s "$GUARD_DIR/guard.py" "$APP_DIR/fan_control/guard.py"; then
+if [ -f "$GUARD_DIR/guard.py" ] && ! cmp -s "$GUARD_DIR/guard.py" "$APP_DIR/fan_controller/guard.py"; then
     info "The thermal guard is from another version: press Apply in the app (it asks for your password)"
 fi
 

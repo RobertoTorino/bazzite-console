@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Bazzite SFTP Tools](../assets/sftp/ps5-sftp-tools.webp){ .app-logo }
+![PS5 SFTP Tools](../assets/sftp/ps5-sftp-tools.webp){ .app-logo }
 
-# Bazzite SFTP Tools
+# PS5 SFTP Tools
 
 !!! warning "Changes the board"
     Starting or configuring an SSH server changes the local or remote Bazzite host. Starting the local server enables it at boot and may open the firewall for SSH. Review access and firewall rules before enabling it.

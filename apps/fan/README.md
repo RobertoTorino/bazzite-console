@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-# Fan Control
+# PS5 Fan Controller
 
 Shows the **PlayStation 5**'s temperatures and its fan on **Bazzite**, and runs a thermal guard: a system service
 that watches the SoC, the CPU and (kernel 7.3.1 and later) the GPU, also when no app is open, and warns, turns the

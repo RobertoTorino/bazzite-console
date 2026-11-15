@@ -43,7 +43,7 @@ sys.path.insert(0, str(SUITE / "tools"))            # tour_frames.py, the Nexus 
 import tour_frames  # noqa: E402
 from tour_frames import SCALE, Recorder  # noqa: E402
 
-INSTALLED = ("bazzite", "rpcs3", "remoteplay", "shadps4", "datstation")
+INSTALLED = ("board", "rpcs3", "remoteplay", "shadps4", "datstation")
 BEHIND = "shadps4"
 MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine_remix.ogg"    # the portal tour's own: longer than the tour
 FADE = 2.0                                          # the music fades out over the video's last seconds
@@ -164,8 +164,8 @@ class Tour(Recorder):
         self.say("An app with a newer release gets a red dot, and the notice beside the categories counts it.")
         self.move(self.at(w.big.notice))
         self.hold(3.5)
-        first = w.big.tiles["bazzite"]
-        self.say("Bazzite Test checks the console. It is always installed, as the first tile on Sustainable.")
+        first = w.big.tiles["board"]
+        self.say("Board Test checks the console. It is always installed, as the first tile on Sustainable.")
         self.move(self.at(first, 0.5, 0.3))
         self.hold(3.5)
         self.say("A press on a tile opens its app; its menu installs, updates and uninstalls it, in a terminal.")

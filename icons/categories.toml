@@ -2,10 +2,10 @@
 # Each app's icons are copies of its category's icon in icons/<category>/: tools/sync_icons.py writes them, and
 # tools/sync_icons.py --check (CI) says when one differs. The category is the app's in portal/apps.toml.
 
-[bazzite]
+[board]
 category = "sustainable"
-icons = ["apps/bazzite/images/bazzite-test"]
-tile = "portal/images/apps/bazzite.webp"
+icons = ["apps/board/images/ps5-board-test"]
+tile = "portal/images/apps/board.webp"
 
 [rpcs3]
 category = "gaming"
@@ -79,12 +79,12 @@ tile = "portal/images/apps/overlay.webp"
 
 [fan]
 category = "sustainable"
-icons = ["apps/fan/images/ps5-fan-control"]
+icons = ["apps/fan/images/ps5-fan-controller"]
 tile = "portal/images/apps/fan.webp"
 
 [cec]
 category = "utilities"
-icons = ["apps/cec/images/ps5-hdmi-cec"]
+icons = ["apps/cec/images/ps5-cec-manager"]
 tile = "portal/images/apps/cec.webp"
 
 [upscaler]
@@ -92,7 +92,7 @@ category = "graphics"
 icons = ["apps/upscaler/images/ps5-upscaler"]
 tile = "portal/images/apps/upscaler.webp"
 
-[btpair]
+[bluetooth]
 category = "utilities"
-icons = ["apps/btpair/images/ps5-bluetooth-pairing"]
-tile = "portal/images/apps/btpair.webp"
+icons = ["apps/bluetooth/images/ps5-bluetooth"]
+tile = "portal/images/apps/bluetooth.webp"

@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         directory:
-          - apps/bazzite
-          - apps/btpair
+          - apps/board
+          - apps/bluetooth
           - apps/cec
           - apps/fan
           - apps/overlay
@@ -76,7 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Check shell syntax
-        run: find apps portal tools -name '*.sh' -print0 | xargs -0 -n1 bash -n
+        run: find apps portal tools test.sh -name '*.sh' -print0 | xargs -0 -n1 bash -n
 
   installers:
     runs-on: ubuntu-latest

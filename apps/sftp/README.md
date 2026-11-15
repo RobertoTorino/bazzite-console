@@ -4,7 +4,7 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Bazzite SFTP Tools
+# PS5 SFTP Tools
 
 An optional SFTP client and SSH server manager for PlayStation 5 hardware running Bazzite. It can transfer files
 and manage the SSH server on the Bazzite host or a reachable remote Bazzite host. Server changes require consent.

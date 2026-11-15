@@ -24,8 +24,8 @@ TOOLS = {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "papla
          "bluetoothctl", "dbus-python", "PyGObject", "kwriteconfig6"}
 # Tools of the kinds this suite's catalog has none of, for the checks every catalog may ask for: one of two commands,
 # and a flashrom that must have the internal programmer.
-SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("bazzite", "Internet speed test."),))
-FLASHROM = ExternalTool("flashrom", ("flashrom",), (ToolSource("bazzite", "Reads the firmware."),),
+SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("board", "Internet speed test."),))
+FLASHROM = ExternalTool("flashrom", ("flashrom",), (ToolSource("board", "Reads the firmware."),),
                         ("~/flashrom/usr/bin/flashrom",), "flashrom-internal")
 
 
@@ -79,7 +79,7 @@ def test_catalog_lists_python_and_external_dependencies():
         "PyQt6", "PyQt6-Charts", "pygame-ce", "aiortc", "cryptography", "paramiko",
     }
     pyqt = next(dependency for dependency in dependencies if dependency.name == "PyQt6")
-    assert {source.owner for source in pyqt.sources} >= {"portal", "bazzite"}
+    assert {source.owner for source in pyqt.sources} >= {"portal", "board"}
     assert "package" not in {source.owner for source in pyqt.sources}   # Nexus Deps runs in the checkout's venv
     assert {tool.name for tool in tools} == TOOLS
     assert next(tool for tool in tools if tool.name == "pkexec").executables == ("pkexec",)
@@ -229,7 +229,7 @@ def test_packages_are_checked_in_each_app_environment(tmp_path):
     dependencies = {dependency.name: dependency for dependency in load_catalog(CATALOG)}
     shared = _venv(tmp_path / "shared", {"PyQt6": "6.11.0", "PyQt6-Charts": "6.11.0"})
     demo = _venv(tmp_path / "demo", {"PyQt6": "6.11.0", "paramiko": "5.1.0"})
-    environments = {"portal": (shared,), "bazzite": (shared,), "sftp": (demo,)}
+    environments = {"portal": (shared,), "board": (shared,), "sftp": (demo,)}
 
     results = {result.dependency.name: result for result in check_dependencies(
         list(dependencies.values()), "test-agent", environments, get_latest=lambda name, _agent: {
@@ -239,7 +239,7 @@ def test_packages_are_checked_in_each_app_environment(tmp_path):
 
     pyqt = results["PyQt6"]
     assert [(Path(env.environment), env.owners, env.version) for env in pyqt.environments] == [
-        (shared, ("portal", "bazzite"), "6.11.0"), (demo, ("sftp",), "6.11.0")]
+        (shared, ("portal", "board"), "6.11.0"), (demo, ("sftp",), "6.11.0")]
     assert pyqt.update_available and not pyqt.missing
     assert results["PyQt6-Charts"].needed and not results["PyQt6-Charts"].update_available
     assert results["paramiko"].environments[0].version == "5.1.0" and not results["paramiko"].missing
@@ -248,7 +248,7 @@ def test_packages_are_checked_in_each_app_environment(tmp_path):
 
 def test_packages_of_apps_that_are_not_installed_are_not_needed():
     dependency = next(dependency for dependency in load_catalog(CATALOG) if dependency.name == "paramiko")
-    result = check_dependencies([dependency], "agent", {"bazzite": (Path("/x"),)},
+    result = check_dependencies([dependency], "agent", {"board": (Path("/x"),)},
                                 get_versions=lambda _venv: {}, get_latest=lambda *_args: "5.1.0",
                                 get_vulnerabilities=NO_CVES)[0]
     assert not result.needed and not result.missing and not result.update_available

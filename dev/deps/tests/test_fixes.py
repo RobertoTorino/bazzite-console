@@ -38,13 +38,13 @@ def no_brew(name):
     return None if name == "brew" else which_all(name)
 
 
-def result(packages=(), tool_results=(), installed=("bazzite", "cec", "sftp", "portal")):
+def result(packages=(), tool_results=(), installed=("board", "cec", "sftp", "portal")):
     return CheckResult(list(packages), list(tool_results), frozenset(installed))
 
 
 def test_nothing_broken_needs_no_fix():
     pyqt = dependencies()["PyQt6"]
-    fine = DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "bazzite"), "6.11.0"),))
+    fine = DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "board"), "6.11.0"),))
     found = ToolStatus(tools()["cec-ctl"], "/usr/bin/cec-ctl")
     assert not plan(result([fine], [found]), which_all)
     assert problems(result([fine], [found])) == []
@@ -56,7 +56,7 @@ def test_missing_and_outdated_packages_go_into_their_own_venv():
     pyqt = deps["PyQt6"]
     vuln = Vulnerability("CVE-1", fixed="5.0.1")
     statuses = [
-        DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "bazzite"), ""),)),         # missing
+        DependencyStatus(pyqt, (EnvironmentVersion(VENV, ("portal", "board"), ""),)),         # missing
         DependencyStatus(paramiko, (EnvironmentVersion(OWN, ("sftp",), "5.0.0", vulnerabilities=(vuln,)),)),
     ]
     steps = plan(result(statuses), which_all).steps
@@ -70,7 +70,7 @@ def test_missing_and_outdated_packages_go_into_their_own_venv():
 
 
 def test_a_missing_required_tool_comes_from_homebrew_first_then_rpm_ostree():
-    missing = [ToolStatus(BREWED), ToolStatus(tools()["cec-ctl"])]              # both required by HDMI CEC Manager
+    missing = [ToolStatus(BREWED), ToolStatus(tools()["cec-ctl"])]              # both required by PS5 CEC Manager
     steps = plan(result(tool_results=missing), which_all).steps
     assert [(s.kind, s.command) for s in steps] == [
         ("brew", ("/usr/bin/brew", "install", "stress-ng")),

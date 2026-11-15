@@ -52,14 +52,15 @@ a red dot marks each tile with an update, and **Install all updates** installs t
 
 ## Uninstall
 
-Remove the apps first, each from its tile's menu (**Uninstall**). Then remove the portal in Konsole:
+Remove the portal in Konsole:
 
 ```bash
 ~/.local/share/bazzite-console-suite/portal/install.sh --uninstall
 ```
 
-Add `--purge` to remove the portal's settings too. Bazzite Test stays until you remove it with its own installer:
-`~/.local/share/bazzite-test/app/install.sh --uninstall`.
+It removes the portal and Board Test, and first asks about each other app that is installed: `y` uninstalls it,
+`s` keeps it, `c` cancels. Add `--purge` to remove the portal's and Board Test's settings too, or `--all` to remove
+every app after one question. More in [Portal](portal.md).
 
 ## After a Bazzite update to a new Python
 

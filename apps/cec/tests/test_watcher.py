@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-from hdmi_cec import cec, media, watcher
-from hdmi_cec.runner import Result
+from cec_manager import cec, media, watcher
+from cec_manager.runner import Result
 from conftest import INFO, NACK, POWER_ON, UNCONFIGURED
 
 STANDBY = POWER_ON.replace("pwr-state: on (0x00)", "pwr-state: standby (0x01)")
@@ -95,7 +95,7 @@ def test_find_adapter_takes_the_one_with_a_display_and_the_users_name(tmp_path):
                       UNCONFIGURED.replace("ps5-cec", "cec-usb"))
     config = tmp_path / "config"
     (config / "cecd/config.d").mkdir(parents=True)
-    (config / "cecd/config.d/99-ps5-hdmi-cec.toml").write_text('osd_name = "Lounge PC"\n')
+    (config / "cecd/config.d/99-ps5-cec-manager.toml").write_text('osd_name = "Lounge PC"\n')
     w = watcher.Watcher(run=run, sleep=lambda s: None, config_dir=config)
     adapter = w.find_adapter(dev)
     assert adapter.device == str(dev / "cec1") and adapter.configured

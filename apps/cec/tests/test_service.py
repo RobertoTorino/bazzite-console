@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from pathlib import Path
 
-from hdmi_cec import service
-from hdmi_cec.runner import Result
+from cec_manager import service
+from cec_manager.runner import Result
 
 
 class Systemctl:
@@ -22,8 +22,8 @@ class Systemctl:
 
 def test_unit():
     text = service.unit_text("/venv/bin/python", Path("/app"), [service.PAUSE])
-    assert "WorkingDirectory=/app" in text and service.UNIT == "ps5-hdmi-cec-watch.service"
-    assert "ExecStart=/venv/bin/python -m hdmi_cec.watcher --pause-media" in text
+    assert "WorkingDirectory=/app" in text and service.UNIT == "ps5-cec-manager-watch.service"
+    assert "ExecStart=/venv/bin/python -m cec_manager.watcher --pause-media" in text
     assert "WantedBy=graphical-session.target" in text and "PartOf=graphical-session.target" in text
 
 

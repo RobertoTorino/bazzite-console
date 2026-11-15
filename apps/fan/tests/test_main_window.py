@@ -8,8 +8,8 @@ import pytest
 from conftest import FAN, set_temps, write
 from PyQt6.QtWidgets import QMessageBox
 
-from fan_control import guard
-from fan_control.main_window import MainWindow
+from fan_controller import guard
+from fan_controller.main_window import MainWindow
 
 
 class Helper:

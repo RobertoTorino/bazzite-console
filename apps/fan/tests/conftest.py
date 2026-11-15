@@ -85,5 +85,5 @@ def sys_root(tmp_path) -> Path:
 
 @pytest.fixture
 def paths(tmp_path):
-    from fan_control import guard
+    from fan_controller import guard
     return guard.Paths(tmp_path / "etc", tmp_path / "run")

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-from hdmi_cec import cec
+from cec_manager import cec
 from conftest import ACK, EDID, INFO, NACK, POWER_ON, TOPOLOGY, TOPOLOGY_TV, UNCONFIGURED
 
 

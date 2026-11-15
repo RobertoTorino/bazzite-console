@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![HDMI CEC Manager](../assets/cec/ps5-hdmi-cec.webp){ .app-logo }
+![PS5 CEC Manager](../assets/cec/ps5-cec-manager.webp){ .app-logo }
 
-# HDMI CEC Manager
+# PS5 CEC Manager
 
 HDMI-CEC lets the console and the TV talk over the HDMI cable. With it you can turn the TV on and off from a
 **PlayStation 5** running **Bazzite**, switch the TV to the PS5's input, set the volume, and use the TV remote on
@@ -27,7 +27,7 @@ also turns the TV on and switches it to the PS5 at boot (`hdmi.one_touch_play`).
 CEC differs per TV.
 
 - **The adapter is there from boot,** on the console's own HDMI port. When the app finds none, the kernel is not a
-  ps5-linux one or its CEC module did not load. [Bazzite Test](bazzite.md) shows the kernel and checks HDMI-CEC.
+  ps5-linux one or its CEC module did not load. [PS5 Board Test](board.md) shows the kernel and checks HDMI-CEC.
 - **The TV answers** only when CEC is switched on in the TV. TVs give CEC a brand name in their settings: Anynet+
   (Samsung), SimpLink (LG), Bravia Sync (Sony), HDMI control or HDMI CEC (others). Plug the HDMI cable straight
   into the TV: some AV receivers and switches do not pass CEC.
@@ -100,7 +100,7 @@ terminal; it asks for your password. Press **Check again** when it is done. The 
 native mode; in another mode they only show the daemon's settings.
 
 The four switches are the daemon's settings for your account. The app writes them to
-`~/.config/cecd/config.d/99-ps5-hdmi-cec.toml` and tells the daemon to read them again. They win over Bazzite's
+`~/.config/cecd/config.d/99-ps5-cec-manager.toml` and tells the daemon to read them again. They win over Bazzite's
 defaults (`98-bazzite-cec-mode.toml`). Where SteamOS Manager runs, its own settings (`99-steamos-manager.toml`) win
 over the app's.
 
@@ -121,13 +121,13 @@ list keeps the last 12. The TV sends the keys only while it shows the PS5's inpu
 
 ## Files
 
-- `~/.config/ps5-hdmi-cec/ps5-hdmi-cec.ini`: the window size.
-- `~/.config/cecd/config.d/99-ps5-hdmi-cec.toml`: the daemon settings, the name on the TV and the remote's
+- `~/.config/ps5-cec-manager/ps5-cec-manager.ini`: the window size.
+- `~/.config/cecd/config.d/99-ps5-cec-manager.toml`: the daemon settings, the name on the TV and the remote's
   buttons, once you change one. Uninstalling keeps it, so the TV keeps behaving the same;
   `install.sh --uninstall --purge` removes it.
-- `~/.config/systemd/user/ps5-hdmi-cec-watch.service`: the background service of **Pause videos and music**, only
+- `~/.config/systemd/user/ps5-cec-manager-watch.service`: the background service of **Pause videos and music**, only
   while it is on. Uninstalling removes it. It writes a line to the journal each time it pauses or continues:
-  `journalctl --user -u ps5-hdmi-cec-watch`.
+  `journalctl --user -u ps5-cec-manager-watch`.
 
 ## Install and remove
 
@@ -143,9 +143,9 @@ folder, as your own user and without root:
 
 It installs:
 
-- the app in `~/.local/share/ps5-hdmi-cec/app`;
+- the app in `~/.local/share/ps5-cec-manager/app`;
 - PyQt6 in the suite's shared venv `~/.local/share/bazzite-console-suite/venv`;
-- the launcher `~/.local/bin/ps5-hdmi-cec`, an app menu entry and a Desktop icon.
+- the launcher `~/.local/bin/ps5-cec-manager`, an app menu entry and a Desktop icon.
 
 ## License
 

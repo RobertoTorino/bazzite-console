@@ -1,3 +1,26 @@
+Changelog: 15-11-2026 04:26:22
+
+Breaking. Version 2.0.0 (owner, 15-11-2026). apps.toml pins the first releases of the new apps, ps5-board-v0.1.0 and
+ps5-bluetooth-v0.1.0, without a checksum until they are released. The other renamed apps keep their versions and
+pins.
+
+Changelog: 15-11-2026 04:16:24
+
+Breaking. apps.toml lists PS5 Board Test (board) and PS5 Bluetooth (bluetooth) as new apps, pinned to their first
+releases ps5-board-v0.1.0 and ps5-bluetooth-v0.1.0 without a checksum until they are released, and the other renamed
+apps under their names: PS5 CEC Manager and PS5 Fan Controller with their new launchers, PS5 DatStation, PS5 SFTP
+Tools, PS5 Webcam, PS5 SSD Check, PS5 System Overlay, PS5 Controller and PS5 Upscaler Manager (owner, 15-11-2026). A
+tile shows an app's name without PS5. The installer installs PS5 Board Test, and its uninstall removes it.
+
+Changelog: 15-11-2026 03:22:26
+
+Added. install.sh --uninstall removes the whole suite (owner, 15-11-2026): it asks about each other installed app (y
+uninstalls it, s keeps it, c cancels before anything is removed), removes Bazzite Test with its own installer (with
+--purge, its settings too) and the suite's venv when no app uses it any more. --uninstall --all removes every app
+after one confirmation, with --purge their settings as well. Without --purge only the records and releases of the
+apps that stay are kept, with the wallpaper. Before, the portal alone went and Bazzite Test and the apps stayed. On
+a computer where nothing of the suite is installed it says so and stops.
+
 Changelog: 14-11-2026 18:22:54
 
 Release 1.4.0.

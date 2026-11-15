@@ -1,44 +1,5 @@
-Changelog: 14-11-2026 13:58:40
+Changelog: 15-11-2026 04:15:58
 
-Release 1.0.1.
-
-Changelog: 14-11-2026 12:12:59
-
-Fixed. The Fan box's tooltip says the Board temperature is the warmest of the three mainboard sensors.
-
-Changelog: 14-11-2026 03:50:36
-
-Release 1.0.0.
-
-Changelog: 14-11-2026 03:06:38
-
-Release 0.2.1.
-
-Changelog: 14-11-2026 02:59:10
-
-Fixed. The app's icon is the Sustainable category's new picture.
-
-Changelog: 14-11-2026 01:28:53
-
-Release 0.2.0.
-
-Changelog: 14-11-2026 01:10:31
-
-Release 0.1.2.
-
-Changelog: 13-11-2026 23:35:42
-
-Release 0.1.1.
-
-Changelog: 13-11-2026 22:48:09
-
-Fixed. The app's icon is its category's current picture.
-
-Changelog: 11-11-2026
-
-Release 0.1.0. First PS5 version. Watches the SoC
-(ps5_fan MainSoC), the CPU (k10temp Tctl) and, on kernel 7.3.1 and later, the GPU (amdgpu ps5_sensors). The guard's
-cool step uses ps5_fan's full mode (pwm1_enable 0) and turns the CPU boost off with ps5-linux-tools' ps5_control
-instead of SuperIO channels and a GPU governor; no stopped-fan check, the PS5's fan reports no RPM.
-Defaults follow the kernel: warn at 85 °C (ps5_gpufreq temp_limit), cool at 88 °C (after the curve's full duty at
-87 °C, before ps5_fan's emergency at 90 °C), shut down at 95 °C held for 10 s.
+Breaking. PS5 Fan Controller has its own id, ps5-fan-controller, for the launcher, the menu entry, the settings, the
+data folders and its services (owner, 15-11-2026). It does not take over a copy installed before: uninstall that one
+first.

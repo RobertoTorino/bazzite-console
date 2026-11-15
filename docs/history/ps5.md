@@ -13,9 +13,9 @@ power.
 ## Linux on the PlayStation 5
 
 Running Linux is the work of the [ps5-linux](https://github.com/ps5-linux) project: a Linux kernel with drivers for
-the console's hardware. [Bazzite](bazzite.md) runs on that kernel.
+the console's hardware. [Bazzite](board.md) runs on that kernel.
 
 ## The controller and the camera
 
-The console's accessories work on Bazzite too: [Controller](../apps/controller.md) is for the DualSense and the
-DualSense Edge, and [Webcam](../apps/webcam.md) for the PS5 HD Camera and the PS4 Camera.
+The console's accessories work on Bazzite too: [PS5 Controller](../apps/controller.md) is for the DualSense and the
+DualSense Edge, and [PS5 Webcam](../apps/webcam.md) for the PS5 HD Camera and the PS4 Camera.

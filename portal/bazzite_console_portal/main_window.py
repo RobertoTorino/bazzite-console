@@ -188,7 +188,7 @@ def shell_line(folder: PurePath, commands: tuple[str, ...]) -> str:
 
 def short_name(name: str) -> str:
     """The name on a tile: the suite's name is understood in the portal."""
-    return name.removeprefix("Bazzite Console ")
+    return name.removeprefix("PS5 ")
 
 
 class AppState:
@@ -1123,7 +1123,7 @@ class MainWindow(QMainWindow):
 
     def settle_icons(self) -> None:
         """At start: ask the first time, when app icons are on the Desktop, whether to keep them; then, when they are
-        switched off, remove the ones installers added since (an update of the portal puts Bazzite Test's back)."""
+        switched off, remove the ones installers added since (an update of the portal puts Board Test's back)."""
         if not self.settings.contains(DESKTOP_ICONS_KEY):
             show = bool(desktop_icons.on_desktop(self.desktop, self.menu)) and QMessageBox.question(
                 self, APP_NAME, "Keep the app icons on the Desktop?\n\nThe portal starts every app, so its own icon "

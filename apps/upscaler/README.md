@@ -4,7 +4,7 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Upscaler Manager
+# PS5 Upscaler Manager
 
 PyQt6 front-end that deploys **[HelixSR](https://github.com/lonewolf0622/HelixSR)** – the FSR 3.1 drop-in
 upscaler with DLSS-style neural networks – into games on a **PlayStation 5** running **Bazzite**

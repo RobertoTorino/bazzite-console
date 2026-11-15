@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 import tomllib
 
-from hdmi_cec import bazzite
-from hdmi_cec.runner import Result
+from cec_manager import bazzite
+from cec_manager.runner import Result
 
 
 def systemctl(enabled: set[str], active: set[str] = frozenset()):
@@ -57,7 +57,7 @@ def test_settings_follow_cecd_load_order(tmp_path, etc_root, usr_root):
 def test_written_fragment(tmp_path):
     path = bazzite.write_settings(tmp_path, {"wake_tv": True, "suspend_tv": False, "allow_standby": False,
                                              "uinput": True})
-    assert path == tmp_path / "cecd/config.d/99-ps5-hdmi-cec.toml"
+    assert path == tmp_path / "cecd/config.d/99-ps5-cec-manager.toml"
     assert tomllib.loads(path.read_text()) == {"wake_tv": True, "suspend_tv": False, "allow_standby": False,
                                                "uinput": True}
 

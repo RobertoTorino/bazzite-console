@@ -4,7 +4,7 @@
 The org/app pair comes from AppInfo (settings_org/settings_app, default app_id), so moving an app onto core does
 not move its settings file:
   governor, upscaler     QSettings(APP_ID, APP_ID)                          ~/.config/<id>/<id>.conf
-  bazzite-test           QSettings(IniFormat, UserScope, APP_ID, APP_ID)    ~/.config/<id>/<id>.ini
+  ps5-board-test           QSettings(IniFormat, UserScope, APP_ID, APP_ID)    ~/.config/<id>/<id>.ini
   bisect/unlock GUIs     bare QSettings() with org/app set on the app       ~/.config/<org>/<app>.conf"""
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ def save_geometry(widget: QWidget, settings: QSettings, key: str = GEOMETRY_KEY)
 
 
 class SettingsStore(QObject):
-    """Typed preferences with defaults, as bazzite-test's AppSettings: subclasses list DEFAULTS, get() returns a
+    """Typed preferences with defaults, as ps5-board-test's AppSettings: subclasses list DEFAULTS, get() returns a
     value of the default's type, set() writes, syncs and emits changed(key) only when the value really changes."""
 
     changed = pyqtSignal(str)       # key

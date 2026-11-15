@@ -62,7 +62,7 @@ check "a later install without the option keeps the service" "[ -f $U/$APP-idle.
 
 echo "== 5. uninstall while another suite app still uses the venv"
 mkdir -p "$D/$APP/firmware" && touch "$D/$APP/firmware/fw.bin"
-touch "$D/bazzite-console-suite/venv-users/bazzite-test"
+touch "$D/bazzite-console-suite/venv-users/ps5-board-test"
 bash "$T/stage/install.sh" --uninstall > "$T/log5" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "service disabled and gone" "grep -qx -- '--user disable --now $APP-idle.service' $T/systemctl.log && [ ! -e $U/$APP-idle.service ]"
@@ -71,7 +71,7 @@ check "venv kept, own marker gone" "[ -x $D/bazzite-console-suite/venv/bin/pytho
 check "launcher and menu entry gone" "[ ! -e $HOME/.local/bin/$APP ] && [ ! -e $D/applications/$APP.desktop ]"
 
 echo "== 6. reinstall, then uninstall --purge as the last venv user"
-rm "$D/bazzite-console-suite/venv-users/bazzite-test"
+rm "$D/bazzite-console-suite/venv-users/ps5-board-test"
 mkdir -p "$XDG_CONFIG_HOME/$APP" && touch "$XDG_CONFIG_HOME/$APP/$APP.ini"
 bash "$T/stage/install.sh" > "$T/log6" 2>&1 && bash "$T/stage/install.sh" --uninstall --purge >> "$T/log6" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"

@@ -146,7 +146,6 @@ def test_a_suites_tags_carry_its_prefix(two_suites):
 
 def test_a_second_suites_pin_and_portal_bump(two_suites):
     test = next(u for u in rp.load_units(two_suites, "ws") if u.key == "test")
-    assert rp.follow_unreleased_pin(two_suites, test, suite="ws") is False     # ws-test-v0.1.0 is tagged
     rp.pin(two_suites, test, "AB" * 32, suite="ws")
     assert 'tag = "ws-test-v0.2.0"\nsha256 = "' + "ab" * 32 + '"' in (two_suites / "ws/portal/apps.toml").read_text()
     assert rp.changed_pins(two_suites, "HEAD", suite="ws") == ["ws-test-v0.2.0"]
@@ -236,9 +235,8 @@ def test_applying_a_release_again_keeps_one_entry(repo):
 
 
 def test_a_pushed_release_entry_stays(repo):
-    """The portal release replaced the "Release 3.2.0. Pins ..." entry its app release had pushed, and the push
-    failed check_changelogs.py (owner, 29-10-2026): an entry the last push has is history, so the same release is
-    added on top of it."""
+    """The portal release replaced the "Release 3.2.0. Pins ..." entry its app release had pushed (owner,
+    29-10-2026): an entry the last push has is history, so the same release is added on top of it."""
     beta = unit(repo, "beta")
     first = datetime.datetime(2026, 10, 10, 18, 0, tzinfo=datetime.timezone.utc)
     again = datetime.datetime(2026, 10, 10, 18, 5, tzinfo=datetime.timezone.utc)
@@ -250,49 +248,19 @@ def test_a_pushed_release_entry_stays(repo):
         "Release 0.1.0.", "Release 0.1.0. Pins alpha-v0.2.0.", "First."]
 
 
-def test_unreleased_pin_follows_the_version(repo):
-    beta = unit(repo, "beta")                                 # pinned beta-v0.1.0, never tagged
-    rp.set_version(repo, beta, "0.2.0")
-    assert rp.follow_unreleased_pin(repo, beta)
-    assert 'tag = "beta-v0.2.0"' in (repo / "portal/apps.toml").read_text()
-    alpha = unit(repo, "alpha")                               # its pinned tag exists: the pin stays
-    rp.set_version(repo, alpha, "0.2.0")
-    assert not rp.follow_unreleased_pin(repo, alpha)
-    assert 'tag = "alpha-v0.1.0"' in (repo / "portal/apps.toml").read_text()
-    assert rp.portal_minimum(repo, "pushed", "0.1.0") == ("0.2.0", "beta 0.1.0 -> 0.2.0")
-
-
 def test_pin_and_portal(repo):
-    # alpha tagged, no sha256 yet; beta pinned at a version never tagged: shown too, to pin once built
-    assert [u.key for u in rp.pin_candidates(rp.load_units(repo))] == ["alpha", "beta"]
     assert rp.portal_minimum(repo, "pushed", "0.1.0") == ("", "")
     alpha = unit(repo, "alpha")
     rp.set_version(repo, alpha, "0.1.1")
     sh(repo, "tag", "alpha-v0.1.1")
     alpha = unit(repo, "alpha")
-    assert rp.pin_candidates(rp.load_units(repo)) and alpha.released
+    assert alpha.released
     rp.pin(repo, alpha, SHA.upper())
     text = (repo / "portal/apps.toml").read_text()
     assert f'tag = "alpha-v0.1.1"\nsha256 = "{SHA}"' in text and text.startswith("# the pins\n")
-    assert [u.key for u in rp.pin_candidates(rp.load_units(repo))] == ["beta"]
     assert rp.changed_pins(repo, "pushed") == ["alpha-v0.1.1"]
     assert rp.portal_minimum(repo, "pushed", "0.1.0") == ("0.1.1", "apps.toml changed")
     assert rp.portal_minimum(repo, "pushed", "0.2.0")[0] == "0.2.0"     # already bumped far enough
-
-
-def test_commands():
-    text = rp.app_commands(["alpha-v0.2.0", "beta-v0.1.0"])
-    assert "tools/tag-release.sh alpha-v0.2.0 beta-v0.1.0" in text and "git push\n" in text
-    assert text.index("git commit") < text.index("git push\n") < text.index("tag-release.sh")
-    assert " && tools/ci-local.sh && git push\n" in rp.app_commands(["alpha-v0.2.0"], linux=True)  # CI's jobs first
-    text = rp.portal_commands("portal-v0.2.0")
-    assert "\ntools/tag-release.sh portal-v0.2.0\n" in text
-    assert " && tools/ci-local.sh && git push\n" in rp.portal_commands("portal-v0.2.0", linux=True)
-    assert f"\n{rp.pull_command()} && git push\n" in rp.portal_commands("portal-v0.2.0", linux=False)
-    assert text.endswith(f"{rp.CHECK_SCRIPT} release portal-v0.2.0   # verifies and installs the published portal release")
-    order = [text.index(s) for s in ("git commit", "check-release.sh local", "git push\n", "tag-release.sh",
-                                     "check-release.sh release")]
-    assert order == sorted(order)                             # commit, test, push and tag, then check the release
 
 
 def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
@@ -307,7 +275,7 @@ def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
-    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="", tags=(): (None, etag),
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="": (None, etag),
                                   notify=lambda *a: None, claude_source=None, jobs_source=None, suite="bc")
     runs = [run("CI WS", status="in_progress", n=4), run("CI Nexus", n=3), run(n=2),
             run("Release", "portal-v3.0.1", status="in_progress", n=1)]
@@ -331,7 +299,7 @@ def test_a_pushed_head_without_a_run_is_looked_at_again_soon(two_suites, tmp_pat
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
-    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="", tags=(): (None, etag),
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="": (None, etag),
                                   notify=lambda *a: None, claude_source=None, jobs_source=None, suite="bc")
     head = (rp.git(two_suites, "rev-parse", "HEAD") or "").strip()
     w.build.head = head
@@ -357,7 +325,7 @@ def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
     notes = []
-    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="", tags=(): (None, etag),
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="": (None, etag),
                                   notify=lambda *a: notes.append(a), claude_source=None, jobs_source=None, suite="bc")
 
     def runs(status, conclusion="success"):
@@ -372,22 +340,6 @@ def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
     assert "Nexus index on main" in notes[-1][1] and "CI on main" in notes[-1][1]
     assert "WS" not in notes[-1][1]
     w.close()
-
-
-def test_app_commands_put_the_portal_bump_first_when_the_push_needs_it():
-    text = rp.app_commands(["alpha-v0.2.0"], linux=True, portal="1.9.0")
-    first, second = text.splitlines()[:2]
-    assert first.startswith("# First: step 2's Bump portal (portal 1.9.0)") and second.startswith("git add -A")
-    assert command_lines(text) == command_lines(rp.app_commands(["alpha-v0.2.0"], linux=True))   # a comment only
-    assert not rp.app_commands(["alpha-v0.2.0"]).startswith("#")
-
-
-def test_app_commands_amend_the_unpushed_release_commit():
-    text = rp.app_commands(["alpha-v0.2.0"], linux=True, amend=True)
-    assert "git commit --amend --no-edit" in text and "git commit -m" not in text
-    assert text.index("git add -A") < text.index("--amend") < text.index("ci-local.sh && git push") \
-        < text.index("tag-release.sh alpha-v0.2.0")
-    assert not text.startswith("#")
 
 
 def test_git_button_commands():
@@ -414,49 +366,6 @@ def test_git_state(repo):
     sh(repo, "add", "-A")
     assert rp.git_state(repo, "pushed") == (False, True, 1)
     assert rp.git_state(repo, "main")[2] == 0
-
-
-def test_untagged_releases_and_the_unpushed_release_commit(repo):
-    assert rp.untagged_releases(rp.load_units(repo)) == ["beta-v0.1.0"]          # never tagged; alpha-v0.1.0 is
-    rp.set_version(repo, unit(repo, "alpha"), "0.1.1")
-    assert rp.untagged_releases(rp.load_units(repo)) == ["alpha-v0.1.1", "beta-v0.1.0"]
-    sh(repo, "tag", "alpha-v0.1.1")
-    sh(repo, "tag", "beta-v0.1.0")
-    assert rp.untagged_releases(rp.load_units(repo)) == []
-    assert rp.unpushed_release_commit(repo, "pushed") == ""                      # HEAD "work": not a release
-    sh(repo, "add", "-A")
-    sh(repo, "commit", "-q", "-m", "Release alpha-v0.1.1")
-    assert rp.unpushed_release_commit(repo, "pushed") == "Release alpha-v0.1.1"
-    sh(repo, "branch", "-f", "pushed", "HEAD")                                   # pushed: nothing to amend
-    assert rp.unpushed_release_commit(repo, "pushed") == ""
-
-
-def test_window_bump_before_the_push_gives_step_ones_commands(window, repo):
-    """The owner's case of 17-10-2026: step 1 said the push needs a portal bump (apps.toml gained an app), but the
-    release was committed first. Bump portal then shows step 1's commands with the bump amended in, not the portal
-    release's; the plain commit when the release is not committed yet."""
-    _, tick, combo, notes = row(window, "alpha")
-    tick.setChecked(True)
-    window.apps_page.apply()                                  # alpha 0.1.1, beta 0.1.0 wait for their tags
-    page = window.portal_page
-    page.portal_version.setEditText("0.2.0")
-    page.bump()
-    out = page.output.toPlainText()
-    assert "step 1's releases are not tagged yet: alpha-v0.1.1, beta-v0.1.0" in out
-    assert 'git commit -m "Release alpha-v0.1.1, beta-v0.1.0"' in out and "--amend" not in out
-    assert "tools/tag-release.sh alpha-v0.1.1 beta-v0.1.0" in out and "portal-v0.2.0" not in out
-    assert window.commands.offered == command_lines(
-        rp.app_commands(["alpha-v0.1.1", "beta-v0.1.0"]))
-
-    sh(repo, "add", "-A")
-    sh(repo, "commit", "-q", "-m", "Release alpha-v0.1.1, beta-v0.1.0")
-    (repo / "portal/VERSION").write_text("0.1.0\n")             # as if the bump had not been made before the commit
-    window.reload()
-    page.portal_version.setEditText("0.2.0")
-    page.bump()
-    out = page.output.toPlainText()
-    assert "git commit --amend --no-edit" in out and "tools/tag-release.sh alpha-v0.1.1 beta-v0.1.0" in out
-    assert "portal-v0.2.0" not in out
 
 
 def test_window_get_up_to_date_counts_what_the_remote_has(window, repo, monkeypatch):
@@ -487,73 +396,13 @@ def test_window_get_up_to_date_counts_what_the_remote_has(window, repo, monkeypa
     assert page.pull_button.isEnabled() and "1 commit on GitHub" in page.details["pull"].text()
 
 
-def test_window_tag_buttons_on_steps_1_and_2(window, repo, monkeypatch):
-    """git tag after the push (owner, 20-10-2026): a button of step 1, for its untagged app releases, and of step 2,
-    for the portal's release (owner, 01-11-2026: the git row went); only once HEAD is pushed and something has no
-    tag yet, never with something staged. It asks first, and warns about a token that reaches every repository
-    (owner, 21-10-2026)."""
-    from PyQt6.QtWidgets import QMessageBox
-    ran = []
-    monkeypatch.setattr(window.commands, "run_now", lambda command: ran.append(command) or True)
-    tag = window.apps_page.tag_button
-    assert window.tags_to_push(window.apps_page) == ["beta-v0.1.0"]      # beta was never tagged
-    assert not tag.isEnabled() and "Push first" in tag.toolTip()         # "work" is not pushed
-    window.portal_page.base_edit.setText("main")
-    window.reload()
-    assert tag.isEnabled() and tag.toolTip().startswith("tools/tag-release.sh beta-v0.1.0\n")
-    write(repo / "staged.txt", "x")                                      # git add, no commit (owner, 29-10-2026)
-    sh(repo, "add", "staged.txt")
-    window.reload()
-    assert not tag.isEnabled() and "Commit first" in tag.toolTip()
-    sh(repo, "rm", "-q", "--cached", "staged.txt")
-    (repo / "staged.txt").unlink()
-    window.reload()
-    assert tag.isEnabled()
-    monkeypatch.setattr(rp, "_token", "gho_login")                       # a gh login reaches every repository
-    with mock_question(QMessageBox.StandardButton.No) as asked:
-        tag.click()
-    assert not ran and "beta-v0.1.0" in asked.call_args.args[2] and "every repository" in asked.call_args.args[2]
-    with mock_question(QMessageBox.StandardButton.Yes):
-        tag.click()
-    assert ran[-1] == "tools/tag-release.sh beta-v0.1.0" and window.tabs.currentIndex() == window.commands_tab
-    portal = window.portal_page.portal_unit
-    assert window.tags_to_push(window.portal_page) == ([] if portal.released else [portal.tag])
-    assert window.portal_page.tag_button.isEnabled() == (not portal.released)
-    sh(repo, "tag", "beta-v0.1.0")
-    window.reload()
-    assert window.tags_to_push(window.apps_page) == [] and not tag.isEnabled() and "Nothing to publish" in tag.toolTip()
-
-
-def test_window_apply_bumps_the_portal_when_the_push_needs_it(window, repo):
-    """The owner's case of 17-10-2026, second time: step 1 only said that the push needs a portal bump, the release
-    was committed without it and ci-local failed. Apply now makes that bump itself (the lowest version CI accepts,
-    with the portal's CHANGELOG entry), so the commands it lists pass CI; the portal release stays step 2."""
-    row(window, "alpha")[1].setChecked(False)                 # ticked by default: it needs a release
-    _, tick, combo, _ = row(window, "beta")
-    tick.setChecked(True)
-    combo.setEditText("0.2.0")                                # beta's never-released pin moves: apps.toml changes
-    window.apps_page.apply()
-    out = window.apps_page.output.toPlainText()
-    assert (repo / "portal/VERSION").read_text() == "0.2.0\n"
-    assert (repo / "portal/nexus_portal/__init__.py").read_text() == '__version__ = "0.2.0"\n'
-    assert (repo / "portal/CHANGELOG").read_text().split("\n\n")[1] == "Release 0.2.0. Pins beta-v0.2.0."
-    assert "portal: 0.2.0 in portal/VERSION, portal/nexus_portal/__init__.py and CHANGELOG entry" in out
-    assert "apps.toml changed since pushed (beta 0.1.0 -> 0.2.0)" in out and "step 2" in out
-    assert "needs at least a minor bump" not in out           # check_manifest passes against the last push
-    assert window.commands.offered == command_lines(rp.app_commands(["beta-v0.2.0"]))
-    assert not window.commands.offered[0].startswith("#")
-    window.apps_page.apply()                                  # again: the bump is there, nothing more to do
-    assert "portal: 0.2.0 in" not in window.apps_page.output.toPlainText()
-    assert (repo / "portal/CHANGELOG").read_text().count("Release 0.2.0.") == 1
-
-
 def test_the_minimum_needs_no_second_bump_for_the_pins(repo):
     """The owner's case of 17-10-2026: the push with the apps' releases carried the portal bump; the next push, with
     their checksums pinned, was offered 1.13.1 (a patch over the last push). Against the last portal release the
-    bump already made covers it, so the minimum stays the version in the tree and Apply makes no second bump."""
+    bump already made covers it, so the minimum stays the version in the tree and no second bump is made."""
     sh(repo, "tag", "portal-v0.1.0")
     rp.set_version(repo, unit(repo, "beta"), "0.2.0")
-    assert rp.follow_unreleased_pin(repo, unit(repo, "beta"))
+    rp.pin(repo, unit(repo, "beta"), "")                                      # the new tag, as Start writes it
     rp.set_version(repo, unit(repo, "portal"), "0.2.0")
     sh(repo, "commit", "-qam", "Release beta-v0.2.0")
     sh(repo, "branch", "-f", "pushed")                                        # pushed with the bump in it
@@ -608,59 +457,12 @@ def window(repo, tmp_path):
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
-    w = main_window.ReleaseWindow(repo, sha256_source=lambda tag: SHA, launch=launched.append, runs_source=None,
+    w = main_window.ReleaseWindow(repo, launch=launched.append, runs_source=None,
                                   status_source=None)
-    w.portal_page.base_edit.setText("pushed")
+    w.base_ref = "pushed"
     w.reload()
     yield w
     w.close()
-
-
-def row(w, key):
-    return next(r for r in w.apps_page.rows if r[0].key == key)
-
-
-def test_window_release_then_portal(window, repo):
-    keys = [r[0].key for r in window.apps_page.rows]
-    assert keys == ["core", "alpha", "beta", "standalone"]   # standalone apps release independently
-    _, tick, combo, notes = row(window, "alpha")
-    assert combo.currentText() == "0.1.1"                     # alpha 0.1.0 is tagged: a bump first
-    _, btick, bcombo, _ = row(window, "beta")
-    assert bcombo.currentText() == "0.1.0"                    # never tagged: as it is
-    tick.setChecked(True)
-    notes.setText("Fixes.")
-    window.apps_page.apply()
-    out = window.apps_page.output.toPlainText()
-    assert (repo / "apps/alpha/VERSION").read_text() == "0.1.1\n"
-    assert "Release 0.1.1. Fixes." in (repo / "apps/alpha/CHANGELOG").read_text()
-    assert "tools/tag-release.sh alpha-v0.1.1" in out
-    assert "check_versions.py" in out
-
-    sh(repo, "tag", "alpha-v0.1.1")                           # the owner tagged it; GitHub built it
-    window.reload()
-    page = window.portal_page
-    assert [u.tag for u, _ in page.candidates] == ["alpha-v0.1.1", "beta-v0.1.0"]
-    page.pin()
-    assert f'sha256 = "{SHA}"' in (repo / "portal/apps.toml").read_text()
-    assert "at least 0.1.1" in page.minimum.text() and page.portal_version.currentText() == "0.1.1"
-    sh(repo, "tag", "beta-v0.1.0")                            # every pinned tag exists: a portal release can follow
-    page.bump()
-    assert (repo / "portal/VERSION").read_text() == "0.1.1\n"
-    assert '__version__ = "0.1.1"' in (repo / "portal/nexus_portal/__init__.py").read_text()
-    assert "Release 0.1.1. Pins alpha-v0.1.1." in (repo / "portal/CHANGELOG").read_text()
-    assert "tools/tag-release.sh portal-v0.1.1" in page.output.toPlainText()
-
-
-def test_window_refuses_a_tagged_version(window, repo, monkeypatch):
-    from PyQt6.QtWidgets import QMessageBox
-    warnings = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warnings.append(text))
-    _, tick, combo, _ = row(window, "alpha")
-    tick.setChecked(True)
-    combo.setEditText("0.1.0")
-    window.apps_page.apply()
-    assert "already tagged" in warnings[0]
-    assert (repo / "apps/alpha/CHANGELOG").read_text().startswith("Changelog: 01-01-2026")
 
 
 def test_nexus_has_a_version_of_its_own(repo):
@@ -687,94 +489,6 @@ def test_nexus_has_a_version_of_its_own(repo):
     choices, why = rp.version_choices(repo, nexus)
     assert choices[0] == "0.2.0" and why == "minor: 1 Added, 1 Fixed since Release 0.1.0"
     assert rp.last_release("Changelog: x\n\nRelease 2.0.0. Notes.\n\nChangelog: y\n\nRelease 1.0.0.\n") == "2.0.0"
-    commands = rp.nexus_commands("0.2.0", linux=False)
-    assert commands.splitlines()[:3] == ["git add -A && tools/fix-modes.sh", 'git commit -m "Release nexus-v0.2.0"',
-                                         f"{rp.pull_command()} && git push"]
-    assert "nexus-v0.2.0" in commands.splitlines()[-1] and rp.TAG_SCRIPT not in commands
-
-
-def test_window_releases_nexus(window, repo):
-    write(repo / "VERSION", "0.1.0\n")
-    write(repo / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
-    rp.add_changelog_entry(repo, unit(repo, rp.NEXUS), "Added. The ticker.")
-    window.reload()
-    for unit_, tick, _, _ in window.apps_page.rows:
-        tick.setChecked(unit_.kind == rp.NEXUS)
-    nexus_row = row(window, rp.NEXUS)
-    assert nexus_row[2].currentText() == "0.2.0"
-    assert window.apps_page.table.item(window.apps_page.rows.index(nexus_row), 3).text() == "nexus-v0.1.0"
-    window.apps_page.apply()
-    out = window.apps_page.output.toPlainText()
-    assert (repo / "VERSION").read_text() == "0.2.0\n"
-    assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.2.0."
-    assert 'git commit -m "Release nexus-v0.2.0"' in out and rp.TAG_SCRIPT not in out
-    assert 'git commit -m "Release nexus-v0.2.0"' in window.commands.offered
-
-
-def test_window_reads_new_tags_when_step_2_opens(window, repo):
-    _, tick, combo, _ = row(window, "alpha")
-    tick.setChecked(True)                                     # typed in step 1: kept
-    assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.0", "beta-v0.1.0"]
-    rp.set_version(repo, unit(repo, "alpha"), "0.1.1")
-    sh(repo, "tag", "alpha-v0.1.1")                           # tagged in a terminal while the window is open
-    window.tabs.setCurrentWidget(window.portal_page)
-    assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.1", "beta-v0.1.0"]
-    assert window.portal_page.empty_note.isHidden()
-    assert row(window, "alpha")[1].isChecked()
-
-
-def test_window_refresh_reads_changes_and_keeps_what_was_typed(window, repo):
-    _, tick, combo, notes = row(window, "alpha")
-    row(window, "beta")[1].setChecked(False)                  # ticked by fill(); unticked: it waits
-    combo.setEditText("0.2.0")
-    notes.setText("Fixes.")
-    window.portal_page.portal_notes.setText("Pins.")
-    assert not window.git_state[0]                            # nothing changed yet
-    rp.set_version(repo, unit(repo, "beta"), "0.1.1")         # changed in a terminal while the window is open
-    window.refresh()
-    assert window.git_state[0]                                # read again: the working tree changed
-    _, tick, combo, notes = row(window, "alpha")
-    assert (tick.isChecked(), combo.currentText(), notes.text()) == (True, "0.2.0", "Fixes.")
-    _, btick, bcombo, _ = row(window, "beta")
-    assert not btick.isChecked() and bcombo.currentText() == "0.1.1"   # the untick kept; the version offered now
-    assert window.portal_page.portal_notes.text() == "Pins."
-
-
-def test_window_pins_a_new_app_listed_without_a_sha256_line(window, repo, monkeypatch):
-    """A new app's entry has a tag but no sha256 line until its first release (apps.toml allows it): Pin adds the
-    line. And when pin_app refuses an entry, the window says so and pins the others, instead of exiting."""
-    toml = repo / "portal/apps.toml"
-    text = toml.read_text()
-    toml.write_text(text.replace('tag = "beta-v0.1.0"\nsha256 = ""\n', 'tag = "beta-v0.1.0"\n'))
-    sh(repo, "tag", "beta-v0.1.0")                            # released; alpha-v0.1.0 is tagged in the fixture
-    window.reload()
-    page = window.portal_page
-    assert [u.tag for u, _ in page.candidates] == ["alpha-v0.1.0", "beta-v0.1.0"]
-    page.pin()
-    assert f'tag = "beta-v0.1.0"\nsha256 = "{SHA}"\nrequired = false' in toml.read_text()
-    assert "beta-v0.1.0: pinned" in page.output.toPlainText()
-    assert page.candidates == []
-
-    rp.set_version(repo, unit(repo, "alpha"), "0.1.1")
-    sh(repo, "tag", "alpha-v0.1.1")
-    window.reload()
-    monkeypatch.setattr(rp, "pin", lambda root, unit, sha, suite=None: (_ for _ in ()).throw(SystemExit("no [apps.alpha]")))
-    page.pin()                                                # the window stays; the log says why
-    assert "alpha-v0.1.1: not pinned (no [apps.alpha])." in page.output.toPlainText()
-
-
-def test_window_explains_an_empty_pin_list(window, repo):
-    rp.pin(repo, unit(repo, "alpha"), SHA)
-    rp.pin(repo, unit(repo, "beta"), SHA)
-    window.reload()
-    assert window.portal_page.candidates == []
-    assert not window.portal_page.empty_note.isHidden()
-    assert "Fetch tags" in window.portal_page.empty_note.text()
-    portal = window.portal_page.portal_unit                   # nothing to pin never holds an untagged portal back
-    assert not portal.released and f"{portal.tag} is not tagged yet" in window.portal_page.empty_note.text()
-    sh(repo, "tag", portal.tag)
-    window.reload()
-    assert "is not tagged yet" not in window.portal_page.empty_note.text()
 
 
 def needs(root):
@@ -829,43 +543,6 @@ def test_core_bumped_with_its_change_needs_no_new_version(repo):
     assert not unit(repo, "core").current                                         # a change after the bump
 
 
-def test_window_offers_a_current_core_as_it_is(window, repo):
-    sh(repo, "tag", "alpha-v0.1.1")
-    write(repo / "core/bazzite_console_core/widgets.py", "class StatusText: pass\n")
-    rp.set_version(repo, unit(repo, "core"), "0.1.1")
-    window.reload()
-    core, tick, combo, _ = window.apps_page.rows[0]
-    assert core.key == "core" and combo.itemText(0) == "0.1.1" and not tick.isEnabled()
-    write(repo / "core/VERSION", "0.1.0\n")                                      # changed, not bumped
-    sh(repo, "checkout", "-q", "--", "core")
-    write(repo / "core/bazzite_console_core/widgets.py", "class StatusText: pass\n")
-    window.reload()
-    core, tick, combo, _ = window.apps_page.rows[0]
-    assert combo.itemText(0) == "0.1.1" and tick.isEnabled()                      # the next version, to tick
-
-
-def test_window_ticks_what_needs_a_release_from_the_start(window, repo):
-    ticked = lambda: [u.key for u, tick, _, _ in window.apps_page.rows if tick.isChecked()]   # noqa: E731
-    assert ticked() == ["alpha", "beta"]                      # no click needed
-    row(window, "alpha")[1].setChecked(False)
-    write(repo / "apps/standalone/extra.py", "x = 1\n")      # needs a release only since the window filled
-    window.refresh()
-    assert ticked() == ["beta", "standalone"]                 # the untick kept, the new one ticked
-    window.reload()
-    assert ticked() == ["alpha", "beta", "standalone"]        # a reload without restore: what needs a release
-
-
-def test_window_ticks_what_needs_a_release(window, repo):
-    for _, tick, _, _ in window.apps_page.rows:
-        tick.setChecked(False)
-    window.apps_page.tick_needed()
-    ticked = [u.key for u, tick, _, _ in window.apps_page.rows if tick.isChecked()]
-    assert ticked == ["alpha", "beta"]
-    item = window.apps_page.table.item(1, 4)
-    assert item.text() == "yes: 1 file" and "apps/alpha/alpha/extra.py" in item.toolTip()
-    assert "needs a release" in window.portal_page.portal_needs.text()
-
-
 def test_a_tag_before_the_bump_is_reported(repo):
     rp.set_version(repo, unit(repo, "beta"), "0.2.0")
     sh(repo, "tag", "beta-v0.2.0")                            # tagged, but the bump is not committed
@@ -883,27 +560,6 @@ def test_window_warns_about_a_bad_tag(window, repo):
     window.reload()
     text = window.bad_tags.text()
     assert not window.bad_tags.isHidden() and "git tag -d beta-v0.2.0" in text and "tag-release.sh beta-v0.2.0" in text
-
-
-@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="the checks run on the console: Linux only")
-def test_window_check_buttons(window, repo):
-    """The console checks are on the Test on this board tab (owner, 20-10-2026), not on the steps."""
-    page = window.run_page
-    launched.clear()
-    page.local_button.click()                                    # the suite has no check-release.sh yet
-    assert launched == [] and f"no {rp.CHECK_SCRIPT}" in page.output.toPlainText()
-    write(repo / rp.CHECK_SCRIPT, "#!/bin/sh\n")
-    page.local_button.click()
-    page.release_button.click()
-    page.withdraw_button.click()
-    page.remove_button.click()
-    script = str(repo / rp.CHECK_SCRIPT)
-    assert launched == [f"{script} local", f"{script} release", f"{script} local", f"{script} remove"]
-    log = page.output.toPlainText()
-    assert "published portal-v0.1.0 release" in log and "App not available" in log
-    assert "portal-v0.1.0" in page.release_button.toolTip()
-    assert not hasattr(window.portal_page, "local_button") and not hasattr(window.withdraw_page, "test_button")
-
 
 
 def mock_question(answer):
@@ -1001,8 +657,8 @@ def test_window_ticker_shows_the_jobs_of_the_runs(repo, tmp_path):
         return (rp.parse_jobs({"jobs": [job("pytest (core)", "in_progress",
                                             steps=[("Run tests", "in_progress", None)])]}), "j1", None)
 
-    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
-                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: None, claude_source=None,
+    w = main_window.ReleaseWindow(repo, status_source=None, launch=launched.append,
+                                  runs_source=lambda etag, head="": (None, etag), notify=lambda *a: None, claude_source=None,
                                   jobs_source=jobs_source)
     ticker = w.ticker
     assert ticker.isHidden()                                                   # no runs seen yet
@@ -1044,8 +700,8 @@ def test_window_ticker_runs_a_failed_run_again(repo, tmp_path):
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import flow, main_window
-    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
-                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: None,
+    w = main_window.ReleaseWindow(repo, status_source=None, launch=launched.append,
+                                  runs_source=lambda etag, head="": (None, etag), notify=lambda *a: None,
                                   claude_source=None, jobs_source=None)
     ticker, ran = w.ticker, []
     ticker.on_rerun = ran.append
@@ -1059,35 +715,6 @@ def test_window_ticker_runs_a_failed_run_again(repo, tmp_path):
     ticker.rerun_button.click()
     assert ran == ["gh run rerun 12 --failed"]
     w.close()
-
-def test_release_runs_of_the_tags_waited_for():
-    runs = rp.parse_runs({"workflow_runs": [run("Release", "alpha-v0.1.1", "in_progress", n=4),
-                                            run("Release", "alpha-v0.1.1", conclusion="failure", n=3),
-                                            run("Release", "beta-v0.1.0", n=2), run(n=1)]})
-    assert rp.release_run(runs, "alpha-v0.1.1").url.endswith("/4")           # the newest run on the tag
-    assert rp.release_run(runs, "gamma-v0.1.0") is None
-    assert rp.release_state(runs, "alpha-v0.1.1") == "running"
-    assert rp.release_state(runs, "beta-v0.1.0") == "passed" and rp.release_state(runs, "gamma-v0.1.0") == ""
-    announced: set[str] = set()
-    ready = rp.finished_releases(announced, runs, ["alpha-v0.1.1", "beta-v0.1.0", "gamma-v0.1.0"])
-    assert [r.ref for r in ready] == ["beta-v0.1.0"]                           # finished, whenever that was
-    announced.update(r.url for r in ready)
-    assert rp.finished_releases(announced, runs, ["beta-v0.1.0"]) == []        # told once
-    assert rp.finished_releases(announced, runs, []) == []
-
-
-def test_a_suites_own_release_workflow_counts_too():
-    # A suite's release-<suite>.yml, "Release <suite>" (owner, 28-10-2026: its
-    # GitHub column said no run seen while it had built ws-test-v1.1.1).
-    named = {**run("Release WS", "ws-test-v1.1.1", n=2),
-             "path": ".github/workflows/release-ws.yml"}
-    unnamed = run("Release WS", "ws-portal-v1.0.2", "in_progress", n=1)
-    ci = {**run("CI WS", "ws-test-v1.1.1", n=3), "path": ".github/workflows/ci-ws.yml"}
-    runs = rp.parse_runs({"workflow_runs": [ci, named, unnamed]})
-    assert rp.release_run(runs, "ws-test-v1.1.1").url.endswith("/2")        # not the CI run on the tag
-    assert rp.release_state(runs, "ws-test-v1.1.1") == "passed"
-    assert rp.release_state(runs, "ws-portal-v1.0.2") == "running"
-
 
 def test_fetch_runs_sends_the_etag(monkeypatch):
     import io
@@ -1132,9 +759,8 @@ def test_fetch_runs_follows_a_full_page_with_the_rest_of_heads_runs(monkeypatch)
     sent: list[tuple[str, str | None]] = []
     page = [run("Release", f"app{n}-v1.0.0", n=100 + n, sha="head") for n in range(rp.RUNS_PAGE)]
     head = [*page, run(n=2, sha="head"), run("CI Nexus", n=1, sha="head")]
-    old_release = [run("Release", "gpu-v0.4.2", n=7, sha="old")]
-    answers = {"": page, "head": head, "gpu-v0.4.2": old_release, "oc-v0.3.2": []}
-    etags = {"": 'W/"page"', "head": 'W/"head"', "gpu-v0.4.2": 'W/"gpu"', "oc-v0.3.2": 'W/"oc"'}
+    answers = {"": page, "head": head}
+    etags = {"": 'W/"page"', "head": 'W/"head"'}
 
     class Response(io.BytesIO):
         def __init__(self, body: bytes, etag: str):
@@ -1149,7 +775,7 @@ def test_fetch_runs_follows_a_full_page_with_the_rest_of_heads_runs(monkeypatch)
 
     def urlopen(request, timeout):
         query = urllib.parse.parse_qs(urllib.parse.urlparse(request.full_url).query)
-        sha = query.get("head_sha", query.get("branch", [""]))[0]
+        sha = query.get("head_sha", [""])[0]
         sent.append((sha, request.get_header("If-none-match")))
         if sent[-1][1] == etags[sha]:
             raise urllib.error.HTTPError(request.full_url, 304, "Not Modified", {}, None)
@@ -1175,12 +801,6 @@ def test_fetch_runs_follows_a_full_page_with_the_rest_of_heads_runs(monkeypatch)
     runs, _etag, _limit = rp.fetch_runs(etag, sha="head")
     assert len(runs) == rp.RUNS_PAGE and sent[-1] == ("", 'W/"page"')
     assert len(rp.fetch_runs()[0]) == rp.RUNS_PAGE
-    # The releases step 2 waits for: a tag whose run is not in the list (published before the page's oldest run,
-    # or not pushed yet) gets its own list, so an old release reads as built and Pin is not held by it.
-    runs, etag, _limit = rp.fetch_runs(sha="head", tags=("gpu-v0.4.2", "oc-v0.3.2", "app1-v1.0.0"))
-    assert rp.release_state(runs, "gpu-v0.4.2") == "passed" and rp.release_state(runs, "oc-v0.3.2") == ""
-    assert [s for s, _etag in sent[-2:]] == ["gpu-v0.4.2", "oc-v0.3.2"]           # app1's run is in the page
-    assert rp.fetch_runs(etag, sha="head", tags=("gpu-v0.4.2", "oc-v0.3.2"))[0] is None   # all 304: unchanged
 
 
 def test_github_token_from_the_environment_or_a_gh_login(monkeypatch):
@@ -1267,8 +887,8 @@ def test_window_build_indicator_notifies_when_a_run_ends(repo, tmp_path):
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
     notes = []
-    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
-                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: notes.append(a))
+    w = main_window.ReleaseWindow(repo, status_source=None, launch=launched.append,
+                                  runs_source=lambda etag, head="": (None, etag), notify=lambda *a: notes.append(a))
     build = w.build
     assert not build.isHidden()
     build.checked((rp.parse_runs({"workflow_runs": [run(n=2), run("Release", "governor-v0.1.1", "in_progress")]}),
@@ -1305,109 +925,6 @@ def test_window_build_indicator_notifies_when_a_run_ends(repo, tmp_path):
     assert "gh auth login" not in build.toolTip() and build.timer.interval() == main_window.BUILD_IDLE_MS
     w.close()
     assert main_window.ReleaseWindow(repo, status_source=None, runs_source=None).build.isHidden()
-
-
-def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path, monkeypatch):
-    pytest.importorskip("PyQt6.QtWidgets")
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PyQt6.QtCore import QSettings
-    from PyQt6.QtWidgets import QApplication
-    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
-    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_release_tool import main_window
-    monkeypatch.setattr(rp, "withdrawable", lambda *_args, **_kwargs: [])
-    monkeypatch.setattr(rp, "portal_minimum", lambda *_args, **_kwargs: ("", ""))
-    monkeypatch.setattr(rp, "portal_suggestion", lambda _root, portal, _suite=None: (portal.version, "test"))
-    tools = fixture_manifest_tools()
-    monkeypatch.setattr(rp, "manifest_tools", lambda *_args, **_kwargs: tools)
-    write(repo / ".github/workflows/release.yml", "name: Release\non:\n  push:\n    tags: [\"*-v*\"]\n")
-    notes, asked = [], []
-
-    def sha256(tag):
-        asked.append(tag)
-        return SHA
-
-    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=sha256, launch=launched.append,
-                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: notes.append(a))
-    w.portal_page.base_edit.setText("pushed")
-    page, build = w.portal_page, w.build
-    assert page.waiting_tags() == ["alpha-v0.1.0"]                            # tagged, no checksum yet
-    assert page.pins.horizontalHeaderItem(3).text() == "Status" and page.pins.item(0, 3).text() == "no run seen"
-    assert "portal-v0.1.0 is not published yet" in page.portal_state.text()   # bumped and committed, no tag
-    assert f"{rp.TAG_SCRIPT} portal-v0.1.0" in page.portal_state.text()
-    # The release workflow runs: Pin waits for it instead of failing on the checksum that is not there yet.
-    build.checked((rp.parse_runs({"workflow_runs": [run(n=2), run("Release", "alpha-v0.1.0", "in_progress")]}),
-                   "e1"))
-    assert page.pins.item(0, 3).text() == "building\u2026" and notes == []
-    page.pin()
-    assert asked == [] and "still building" in page.output.toPlainText()
-    assert 'tag = "alpha-v0.1.0"\nsha256 = ""' in (repo / "portal/apps.toml").read_text()
-    build.checked((None, "e1"))                                               # unchanged: nothing new
-    assert notes == []
-    # It finishes: one notification that the release is ready to pin, not the general "build passed" one.
-    build.checked((rp.parse_runs({"workflow_runs": [run(n=2), run("Release", "alpha-v0.1.0")]}), "e2"))
-    assert notes == [("alpha-v0.1.0 is ready to pin", "GitHub published it. Pin reads its checksum (step 2).")]
-    assert page.pins.item(0, 3).text() == "ready" and build.state == "passed"
-    build.checked((rp.parse_runs({"workflow_runs": [run(n=2), run("Release", "alpha-v0.1.0")]}), "e3"))
-    assert len(notes) == 1                                                    # told once
-    page.pin()
-    assert asked == ["alpha-v0.1.0"] and page.waiting_tags() == []
-    # The portal's tag exists: its release is followed too, and announced when it is built.
-    sh(repo, "tag", "portal-v0.1.0")
-    w.reload()
-    assert "no GitHub Actions release run" in page.portal_state.text()
-    build.checked((rp.parse_runs({"workflow_runs": [run("Release", "portal-v0.1.0", "in_progress", n=3),
-                                                    run(n=2)]}), "e4"))
-    assert "building its release" in page.portal_state.text()
-    assert main_window.ORANGE in page.portal_state.styleSheet()                # the warning color, as the others
-    build.checked((rp.parse_runs({"workflow_runs": [run("Release", "portal-v0.1.0", n=3), run(n=2)]}), "e5"))
-    assert notes[-1] == ("portal-v0.1.0 is ready", "GitHub published it. Test Portal release installs it on this console "
-                                                   "(step 2).")
-    assert "portal-v0.1.0 is released" in page.portal_state.text()
-    w.close()
-    # Finished before the first look (the window opened after GitHub was done): still told, and a failed release
-    # is told too, with Pin saying so.
-    notes.clear()
-    rp.pin(repo, unit(repo, "alpha"), "")
-    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=sha256, launch=launched.append,
-                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: notes.append(a))
-    w.build.checked((rp.parse_runs({"workflow_runs": [run("Release", "alpha-v0.1.0", n=5)]}), "f1"))
-    assert [n[0] for n in notes] == ["alpha-v0.1.0 is ready to pin"]
-    w.build.checked((rp.parse_runs({"workflow_runs": [run("Release", "alpha-v0.1.0", conclusion="failure", n=6)]}),
-                     "f2"))
-    assert notes[-1][0] == "alpha-v0.1.0: release failed" and "failure" in notes[-1][1]
-    assert w.portal_page.pins.item(0, 3).text() == "failed"
-    asked.clear()
-    w.portal_page.pin()
-    assert asked == [] and "nothing to pin" in w.portal_page.output.toPlainText()
-    w.close()
-
-
-def test_manual_publish_allows_pin_without_actions(repo, tmp_path, monkeypatch):
-    pytest.importorskip("PyQt6.QtWidgets")
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PyQt6.QtCore import QSettings
-    from PyQt6.QtWidgets import QApplication
-    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
-    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_release_tool import main_window
-    monkeypatch.setattr(rp, "withdrawable", lambda *_args, **_kwargs: [])
-    tools = fixture_manifest_tools()
-    monkeypatch.setattr(rp, "manifest_tools", lambda *_args, **_kwargs: tools)
-    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda _tag: SHA, launch=launched.append,
-                                  runs_source=lambda etag, head="", tags=(): ([], etag))
-    w.build.checker.stop(2000)
-    page = w.portal_page
-    assert not rp.has_release_workflow(repo)
-    page.candidates[1][1].setChecked(False)
-    page.enable_pin()
-    assert page.pins.item(0, 3).text() == "manual" and page.pin_button.isEnabled(), [
-        (unit.tag, unit.released, tick.isChecked()) for unit, tick in page.candidates
-    ]
-    page.pin()
-    assert "pinned" in page.output.toPlainText()
-    assert f'sha256 = "{SHA}"' in (repo / "portal/apps.toml").read_text()
-    w.close()
 
 
 def test_title_names_the_checkouts_commit_and_date(window, repo, tmp_path):
@@ -1524,7 +1041,7 @@ def test_the_root_copy_of_apps_toml_follows_the_suites(repo, tmp_path):
     assert f'sha256 = "{SHA}"' in suite_toml.read_text() and suite_toml.read_bytes() == copy.read_bytes()
     beta = unit(nexus, "beta")
     rp.set_version(nexus, beta, "0.2.0")
-    assert rp.follow_unreleased_pin(nexus, beta)
+    rp.pin(nexus, beta, "")
     assert 'tag = "beta-v0.2.0"' in copy.read_text() and suite_toml.read_bytes() == copy.read_bytes()
     changed = rp.withdraw(nexus, unit(nexus, "beta"), "Broken.")
     assert [p.relative_to(nexus).as_posix() for p in changed] == [
@@ -1632,7 +1149,6 @@ def test_window_suite_column(repo, tmp_path):
     column.itemClicked.emit(rows[1])                              # a click on the row
     assert w.suite == "zz-suite" and column.current() == "zz-suite" and rows[0].checkState() == Qt.CheckState.Unchecked
     assert w.units[1].path == "zz-suite/portal"
-    assert w.portal_page.portal_unit.path == "zz-suite/portal"
     assert settings.value("suite") == "zz-suite"
     rows[1].setCheckState(Qt.CheckState.Unchecked)                # its box unticked: one stays ticked
     assert column.current() == "zz-suite" and w.suite == "zz-suite"
@@ -1774,96 +1290,10 @@ def test_a_suites_release_moves_nexus(two_suites):
     assert rp.nexus_notes("", nexus.suite_releases) == "Brings the new suite new, portal-v0.1.0."
 
 
-def test_window_an_apps_release_takes_nexus_along(window, repo):
-    write(repo / "VERSION", "0.1.0\n")
-    write(repo / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
-    sh(repo, "add", "-A")
-    sh(repo, "commit", "-q", "-m", "Nexus 0.1.0")
-    window.reload()
-    for _, tick, _, _ in window.apps_page.rows:
-        tick.setChecked(False)
-    _, tick, _, _ = row(window, "alpha")
-    _, nexus_tick, nexus_combo, _ = row(window, rp.NEXUS)
-    tick.setChecked(True)
-    assert nexus_tick.isChecked()                                         # ticked along, visibly
-    nexus_combo.setEditText("0.2.0")
-    window.apps_page.apply()
-    assert (repo / "VERSION").read_text() == "0.2.0\n"
-    assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.2.0. Brings alpha-v0.1.1."
-    sh(repo, "add", "-A")
-    sh(repo, "commit", "-q", "-m", "Release alpha-v0.1.1")
-    sh(repo, "tag", "alpha-v0.1.1")
-    sh(repo, "tag", "beta-v0.1.0")
-    window.reload()
-    page = window.portal_page
-    page.pin()
-    assert not page.nexus_too.isHidden() and page.nexus_too.isChecked()
-    assert page.nexus_version.currentText() == "0.3.0"                    # the portal's release: minor
-    page.bump()
-    assert (repo / "VERSION").read_text() == "0.3.0\n"
-    assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.3.0. Brings portal-v0.1.1."
-    assert "nexus-v0.3.0" in page.output.toPlainText()
-
-
-def test_window_a_second_bump_changes_nothing_and_says_so(window, repo, monkeypatch):
-    """Bump pressed again with nothing new (owner, 03-11-2026: the second press moved the portal entry's time, which
-    left the portal uncommitted for the tag script, and bumped Nexus from 1.35.0 to 1.36.0): a popup says it is
-    bumped already, no file changes, and the commands show again."""
-    from PyQt6.QtWidgets import QMessageBox
-    popups = []
-    monkeypatch.setattr(QMessageBox, "information", lambda _p, _t, text: popups.append(text))
-    test_window_an_apps_release_takes_nexus_along(window, repo)             # the first Bump: 0.1.1, Nexus 0.3.0
-    files = {p: (repo / p).read_text() for p in ("portal/VERSION", "portal/CHANGELOG", "VERSION", "CHANGELOG")}
-    page = window.portal_page
-    window.reload()
-    page.portal_version.setEditText("0.1.1")
-    assert page.nexus_too.isChecked() and page.nexus_version.currentText() == "0.4.0"
-    page.bump()
-    assert len(popups) == 1 and popups[0].startswith("Bumped already: the portal is at 0.1.1")
-    assert "Release 0.1.1. Pins alpha-v0.1.1." in popups[0] and "A second Bump is not needed" in popups[0]
-    assert {p: (repo / p).read_text() for p in files} == files                # not even the entry's time
-    out = page.output.toPlainText()
-    assert "bumped already" in out and "tools/tag-release.sh portal-v0.1.1" in out
-    sh(repo, "add", "-A")
-    sh(repo, "commit", "-q", "-m", "Release portal-v0.1.1")
-    sh(repo, "branch", "-f", "pushed", "HEAD")                               # pushed: the entry is history now
-    window.reload()
-    page.portal_version.setEditText("0.1.1")
-    page.bump()
-    assert len(popups) == 2 and (repo / "portal/CHANGELOG").read_text().count("Release 0.1.1.") == 1
-
-
-def test_window_apply_greys_out_once_applied_and_pin_waits_for_the_builds(window, repo):
-    """Apply is greyed out once it wrote the ticked releases, until another is to be applied; step 2 shows the
-    releases to pin from Apply on, and Pin is greyed out until every ticked one is built (owner, 28-10-2026)."""
-    page = window.apps_page
-    for _, tick, _, _ in page.rows:
-        tick.setChecked(False)
-    assert not page.apply_button.isEnabled()                  # nothing ticked
-    _, tick, combo, _ = row(window, "alpha")
-    tick.setChecked(True)
-    assert page.apply_button.isEnabled() and combo.currentText() == "0.1.1"
-    page.apply()
-    assert rp.applied(repo, unit(repo, "alpha"))
-    _, tick, _, _ = row(window, "alpha")                       # filled again by the reload, not ticked again
-    assert not page.apply_button.isEnabled()                  # applied: greyed out
-    _, btick, _, _ = row(window, "beta")
-    btick.setChecked(True)                                     # another release to apply: Apply works again
-    assert page.apply_button.isEnabled()
-    pins = window.portal_page
-    assert [u.tag for u, _ in pins.candidates] == ["alpha-v0.1.1", "beta-v0.1.0"]
-    assert pins.pins.item(0, 3).text() == "not tagged yet" and not pins.pin_button.isEnabled()
-    sh(repo, "tag", "alpha-v0.1.1")
-    window.reload()
-    assert not window.portal_page.pin_button.isEnabled()      # beta, ticked, is not tagged yet
-    window.portal_page.candidates[1][1].setChecked(False)
-    assert window.portal_page.pin_button.isEnabled()          # alpha alone: tagged (no GitHub runs here)
-
-
 def test_push_brings_in_what_github_has_first():
     """The release's Pin ... commit is on main after every release (owner, 31-10-2026: the pre-push hook refused the
     push): git pull --rebase runs before the push, and before CI's jobs on Linux."""
-    pull = "tools/git-setup.sh && git pull --rebase --autostash"
+    pull = "git pull --rebase --autostash"
     assert rp.push_command(linux=False) == f"{pull} && git push"
     assert rp.push_command(linux=True) == f"{pull} && {rp.CI_LOCAL} && git push"
 

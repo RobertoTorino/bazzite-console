@@ -38,8 +38,8 @@ def test_validate_release_accepts_suite_checkout_and_tool_folder(tmp_path):
         encoding="utf-8",
     )
     tool_folder = tmp_path / "apps" / "fan"
-    (tool_folder / "fan_control").mkdir(parents=True)
-    (tool_folder / "fan_control" / "__main__.py").touch()
+    (tool_folder / "fan_controller").mkdir(parents=True)
+    (tool_folder / "fan_controller" / "__main__.py").touch()
 
     installer, apps = workflow.validate_release(tool_folder)
 

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """PyQt6 front-end that installs HelixSR (the FSR/DLSS hybrid upscaler) into games on a PlayStation 5 running Bazzite."""
 
-APP_NAME = "Upscaler Manager"
+APP_NAME = "PS5 Upscaler Manager"
 APP_ID = "ps5-upscaler"
 __version__ = "0.1.0"
 

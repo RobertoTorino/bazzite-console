@@ -25,7 +25,7 @@ OSV_PAGES = 5
 TIMEOUT = 15
 NEEDS = ("required", "optional")
 PROBES = ("", "flashrom-internal", "path", "console-link-ffmpeg")
-# Where the apps look for tools besides PATH (bazzite-test's find_tool): a launch from the menu or the portal may
+# Where the apps look for tools besides PATH (ps5-board-test's find_tool): a launch from the menu or the portal may
 # not have them on PATH. sbin for tools that live there on other distributions.
 SEARCH_DIRS = ("~/.local/bin", "/home/linuxbrew/.linuxbrew/bin", "/usr/local/sbin", "/usr/sbin")
 _EXEC_PYTHON = re.compile(r"""exec\s+["']?([^"'\s]+/bin/python[0-9.]*)["']?""")

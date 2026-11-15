@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Bazzite DatStation](../assets/datstation/ps5-datstation.webp){ .app-logo }
+![PS5 DatStation](../assets/datstation/ps5-datstation.webp){ .app-logo }
 
-# Bazzite DatStation
+# PS5 DatStation
 
-Bazzite DatStation is the PlayStation knowledge part of the DatStation Android app, on **Bazzite**. A front page
+PS5 DatStation is the PlayStation knowledge part of the DatStation Android app, on **Bazzite**. A front page
 of tiles opens a PlayStation quiz against the clock, the history of every PlayStation console, every system
 software release, the region codes explained, Sony's user guides and the latest PlayStation news, and keeps your
 quiz scores and trophies.
@@ -35,7 +35,7 @@ Run it as your own user, without `sudo`. It installs:
 
 - `~/.local/share/ps5-datstation/app`: the app, and `venv` next to it with PyQt6.
 - `~/.local/bin/ps5-datstation`: the launcher, which starts the window.
-- An app menu entry ("Bazzite DatStation") and an icon on the Desktop.
+- An app menu entry ("PS5 DatStation") and an icon on the Desktop.
 
 Install it again to update.
 

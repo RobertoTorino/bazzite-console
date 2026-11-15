@@ -12,11 +12,11 @@ from bazzite_console_portal.manifest import ManifestError, load, load_cards, par
 def test_required_app_is_first_and_only_required():
     entries = load(ROOT / "apps.toml")
     assert len(entries) == 19
-    assert entries[0].key == "bazzite"
-    assert entries[0].name == "Bazzite Test"
+    assert entries[0].key == "board"
+    assert entries[0].name == "PS5 Board Test"
     assert entries[0].required
-    assert [entry.key for entry in entries if entry.required] == ["bazzite"]
-    assert entries[0].tag.startswith("ps5-bazzite-v")
+    assert [entry.key for entry in entries if entry.required] == ["board"]
+    assert entries[0].tag.startswith("ps5-board-v")
 
 
 def test_invalid_tag_and_missing_required_app_are_rejected():

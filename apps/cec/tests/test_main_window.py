@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 from PyQt6.QtWidgets import QDialog, QMessageBox
 
-from hdmi_cec import main_window
-from hdmi_cec.main_window import MainWindow
-from hdmi_cec.runner import Result
+from cec_manager import main_window
+from cec_manager.main_window import MainWindow
+from cec_manager.runner import Result
 from conftest import ACK, INFO, NACK, POWER_ON, TOPOLOGY_TV, UNCONFIGURED
 
 
@@ -25,7 +25,7 @@ class FakeBoard:
 
     def __call__(self, argv):
         self.calls.append(argv)
-        if argv[0] == "systemctl" and argv[-1] == "ps5-hdmi-cec-watch.service":
+        if argv[0] == "systemctl" and argv[-1] == "ps5-cec-manager-watch.service":
             if "is-enabled" in argv:
                 return Result(0, "enabled\n") if self.watching else Result(1, "disabled\n")
             if "enable" in argv or "disable" in argv:
@@ -185,7 +185,7 @@ def test_native_mode_saves_and_reloads(make, tmp_path):
     w = make(board)
     assert w.native_button.isHidden() and "cecd is running" in w.mode_label.text()
     w.boxes["wake_tv"].setChecked(True)
-    fragment = tmp_path / "config/cecd/config.d/99-ps5-hdmi-cec.toml"
+    fragment = tmp_path / "config/cecd/config.d/99-ps5-cec-manager.toml"
     assert tomllib.loads(fragment.read_text())["wake_tv"] is True
     assert ["systemctl", "--user", "kill", "-s", "HUP", "cecd.service"] in board.calls
     w.refresh()
@@ -237,9 +237,9 @@ def test_pause_option(make, tmp_path):
     board = FakeBoard()
     w = make(board)
     w.pause_box.setChecked(True)
-    unit = tmp_path / "config/systemd/user/ps5-hdmi-cec-watch.service"
-    assert board.watching and "-m hdmi_cec.watcher --pause-media" in unit.read_text()
-    assert ["systemctl", "--user", "restart", "ps5-hdmi-cec-watch.service"] in board.calls
+    unit = tmp_path / "config/systemd/user/ps5-cec-manager-watch.service"
+    assert board.watching and "-m cec_manager.watcher --pause-media" in unit.read_text()
+    assert ["systemctl", "--user", "restart", "ps5-cec-manager-watch.service"] in board.calls
     assert make(board).pause_box.isChecked()                                     # read back from the unit
     w.pause_box.setChecked(False)
     assert not board.watching and not unit.exists()
@@ -253,7 +253,7 @@ def test_name_without_cecd(make, tmp_path):
     w.save_name()
     assert ["cec-ctl", "-d", w.adapter.device, "--playback", "--osd-name", "Gaming PC"] in board.calls
     assert board.sent("name=Gaming PC") and "Gaming PC" in w.result.text()
-    assert 'osd_name = "Gaming PC"' in (tmp_path / "config/cecd/config.d/99-ps5-hdmi-cec.toml").read_text()
+    assert 'osd_name = "Gaming PC"' in (tmp_path / "config/cecd/config.d/99-ps5-cec-manager.toml").read_text()
     w.name_edit.setText("Ünïcode")
     w.save_name()
     assert "plain letters" in w.result.text()
@@ -278,7 +278,7 @@ def test_remote_buttons(make, tmp_path, monkeypatch):
         return QDialog.DialogCode.Accepted
     monkeypatch.setattr(main_window.RemoteDialog, "exec", pick)
     w.edit_remote()
-    table = tomllib.loads((tmp_path / "config/cecd/config.d/99-ps5-hdmi-cec.toml").read_text())["mappings"]
+    table = tomllib.loads((tmp_path / "config/cecd/config.d/99-ps5-cec-manager.toml").read_text())["mappings"]
     assert table["f2"] == 88 and "f3" not in table and table["select"] == 28 and len(table) == 73
     assert ["systemctl", "--user", "try-restart", "cecd.service"] in board.calls
 

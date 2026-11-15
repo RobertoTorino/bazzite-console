@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Controller as a desktop app, from a clone or the extracted release tarball:
+# Installs PS5 Controller as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -23,7 +23,7 @@
 set -euo pipefail
 
 APP_ID="ps5-controller"
-APP_NAME="Controller"
+APP_NAME="PS5 Controller"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 APP_DIR="$DATA_DIR/$APP_ID/app"
@@ -64,7 +64,25 @@ $PURGE && ! $UNINSTALL && die "--purge only goes with --uninstall."
 
 [ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo: the app, the venv and the launcher belong in your home folder."
 
+# Whether anything the uninstall removes is on this computer (paths and globs): without, it removes nothing, asks
+# for no password and says the app is not installed.
+installed_here() {
+    local path
+    for path in "$@"; do
+        compgen -G "$path" >/dev/null && return 0
+    done
+    return 1
+}
+
 if $UNINSTALL; then
+    found=false
+    installed_here "$UNIT_DIR/$IDLE.service" "$UNIT_DIR/default.target.wants/$IDLE.service" "$LAUNCHER" "$MENU_ENTRY" \
+        "$DESKTOP_ICON" "${DATA_DIR:?}/$APP_ID/app" "$VENV_USERS/$APP_ID" && found=true
+    $PURGE && installed_here "${CONFIG_DIR:?}/$APP_ID" "${DATA_DIR:?}/$APP_ID" && found=true
+    if ! $found; then
+        info "$APP_NAME is not installed: nothing to remove."
+        exit 0
+    fi
     if [ -e "$UNIT_DIR/$IDLE.service" ]; then
         info "Removing the service that switches unused controllers off"
         systemctl --user disable --now "$IDLE.service" >/dev/null 2>&1 || true

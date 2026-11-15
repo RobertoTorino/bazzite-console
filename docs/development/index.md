@@ -20,16 +20,16 @@ and starts the portal; `release` and `draft` install a published portal release 
 takes the draft while the release is not published).
 
 A test cleans up after itself. On a machine without the suite, what the test installs is marked as a test's and
-removed again when the portal closes: the apps installed during the test, the portal and Bazzite Test. A machine
+removed again when the portal closes: the apps installed during the test, the portal and Board Test. A machine
 that had the suite installed keeps it, and `--keep` keeps what a test installed.
 
 ```bash
 tools/check-release.sh status            # what of the suite is installed, and whether a test put it there
-tools/check-release.sh remove            # remove every app, the portal and Bazzite Test; settings stay
+tools/check-release.sh remove            # remove every app, the portal and Board Test; settings stay
 tools/check-release.sh remove --purge    # their settings and logs too
 ```
 
-The release planner's **Remove suite** button runs `remove` in a terminal.
+The release planner's **Remove suite** tab runs `remove` in a terminal.
 
 ## The development apps
 
@@ -55,8 +55,12 @@ A change the wiki describes goes into its [Portal](../portal.md) page in the sam
 ## Releases
 
 A release is made from the release planner's first tab, step by step: get up to date, commit, push, wait for CI, then
-**Start new release**. Start writes the versions, the `Release x.y.z.` CHANGELOG entries and the new tags in
-`portal/apps.toml`, commits and pushes that, and starts `.github/workflows/release.yml` on the commit. The run:
+**Start new release**. Start writes the versions, the `Release x.y.z.` CHANGELOG entries, the new tags in
+`portal/apps.toml` and the portal's version, commits and pushes that, and starts `.github/workflows/release.yml` on
+the commit, so there is nothing to apply, pin or bump by hand. Its **Contents** tab lists what the release holds:
+each app that ships something new since its last release, and the portal. A part whose only changes since its last
+tag are its version and its `Release x.y.z.` entry (or a withdrawal's entry) ships nothing new and is left out. The
+run:
 
 1. waits until CI passed on the commit;
 2. builds and publishes every app whose pinned tag has no release yet, side by side;
@@ -70,8 +74,15 @@ again from Commit (apps already out are skipped, the portal is built anew). The 
 A run started again skips what is already published. By hand, without the planner:
 `gh workflow run release.yml --ref main -f commit="$(git rev-parse origin/main)"`.
 
-One release by hand, built on this machine instead, is `tools/tag-release.sh ps5-<app>-v<x.y.z>`, which the tabs
-**1. Release apps** and **2. Pin and release Portal** drive. The workflow does not run on a pushed tag.
+One release by hand, built on this machine instead, is `tools/tag-release.sh ps5-<app>-v<x.y.z>`, run in a terminal.
+The workflow does not run on a pushed tag.
+
+A release that must not be used any more is withdrawn on the planner's **Retract app** tab: **Retract** marks the
+pinned release withdrawn in `portal/apps.toml`, with the reason the consoles show, and **Take back** removes the
+mark. **Test withdrawal**, on a console with the app installed, starts the portal from the checkout: it must say the
+app is not available any more and remove it. Mark the release on GitHub with the command the tab shows, then release
+the portal from the first tab: Commit asks for the portal bump the withdrawal needs, and Start new release releases
+the portal, not the withdrawn app.
 
 The Install page's link to the portal's release and the archive's name are filled in from `portal/VERSION` when the
 wiki is built (`tools/mkdocs/hooks.py`), so they follow each portal release.
@@ -84,16 +95,23 @@ GitHub allows 60 requests an hour, and the cards say "hourly limit is used up" u
 Run the local checks from the suite root:
 
 ```sh
-python3 -m pytest tools/tests
+./test.sh                        # every folder with tests/: tools, dev/, the portal and each app, offscreen
+./test.sh -k profile             # extra arguments go to pytest
+tools/ci-local.sh                # the versions, the manifest, the icons' copies, and the tests of tools/ and dev/
 python3 tools/check_versions.py
-python3 tools/check_changelogs.py --base <commit>
-bash tools/git-setup.sh
 ```
 
-The version check covers core, the portal, developer tools, and apps in this suite. The changelog check accepts the last pushed commit or
-pull-request base and also works when this suite is nested in a larger checkout. To apply a design-panel mock to the
-wiki stylesheet, run `python3 tools/apply_design.py mkdocs.yml`; the Bazzite Console palette samples are in
-`design/colors/`. `git-setup.sh` registers the local CHANGELOG merge driver; it does not install Git hooks.
+`./test.sh` takes the venv for this system (`.venv-linux/`; `$PYTHON` picks another interpreter). The portal and the
+apps are made for Bazzite (`SYSTEM`), so on another system only `tools/` and `dev/` run; `NEXUS_SYSTEM=bazzite
+./test.sh` runs them there too. Create the venv once:
+
+```sh
+python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirements-dev.txt
+```
+
+The version check covers core, the portal, developer tools, and apps in this suite. To apply a design-panel mock to
+the wiki stylesheet, run `python3 tools/apply_design.py mkdocs.yml`; the Bazzite Console palette samples are in
+`design/colors/`.
 
 ## Icons
 

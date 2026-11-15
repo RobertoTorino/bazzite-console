@@ -103,7 +103,7 @@ def test_choose_a_folder_inside_a_suite_loads_the_suite(qapp, monkeypatch, tmp_p
         encoding="utf-8",
     )
     app_folder = tmp_path / "apps" / "fan"
-    (app_folder / "fan_control").mkdir(parents=True)
+    (app_folder / "fan_controller").mkdir(parents=True)
     no_release(monkeypatch, tmp_path)
     monkeypatch.setattr(main_window.QFileDialog, "getExistingDirectory", lambda *args: str(app_folder))
     window = main_window.MainWindow()

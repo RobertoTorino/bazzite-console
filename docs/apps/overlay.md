@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![System Overlay](../assets/overlay/ps5-system-overlay.webp){ .app-logo }
+![PS5 System Overlay](../assets/overlay/ps5-system-overlay.webp){ .app-logo }
 
-# System Overlay
+# PS5 System Overlay
 
 A small window that stays on top of your desktop and shows the live system values of a **PlayStation 5** running
 **Bazzite**. It only reads sensors: nothing on the console changes and it needs no root.

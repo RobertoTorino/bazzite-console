@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Bazzite DatStation: the PlayStation knowledge part of the DatStation Android app, on Bazzite. The quiz, the
+"""PS5 DatStation: the PlayStation knowledge part of the DatStation Android app, on Bazzite. The quiz, the
 PlayStation history, the system version history, the region codes explained, the user guides and the PlayStation
 news, from a front page of tiles. A Python + Qt port of github.com/RobertoTorino/DatStation, built the way the
 Bazzite Console Suite builds its apps (bazzite_console_core, the same installer and launcher)."""
 
-APP_NAME = "Bazzite DatStation"
+APP_NAME = "PS5 DatStation"
 APP_ID = "ps5-datstation"
 __version__ = "1.0.1"
 

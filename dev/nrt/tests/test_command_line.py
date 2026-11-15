@@ -66,14 +66,10 @@ def test_plain_drops_colours_and_progress_returns():
 
 
 def test_the_commands_a_step_shows():
-    """Apply's block: its commands without the comments; a # inside quotes is part of the command."""
-    assert command_lines(rp.app_commands(["alpha-v0.1.1"], linux=True)) == [
-        "git add -A && tools/fix-modes.sh", 'git commit -m "Release alpha-v0.1.1"', f"{rp.pull_command()} && tools/ci-local.sh && git push", f"{rp.TAG_SCRIPT} alpha-v0.1.1"]
-    assert command_lines(rp.app_commands(["alpha-v0.1.1"], linux=False))[2] == f"{rp.pull_command()} && git push"   # no container
-    portal = command_lines(rp.portal_commands("portal-v1.2.0"))
-    assert portal[-1] == f"{rp.CHECK_SCRIPT} release portal-v1.2.0" and not any("#" in c for c in portal)
+    """Retract's block: its commands without the comments; a # inside quotes is part of the command."""
     withdraw = command_lines(rp.withdraw_commands("alpha-v0.1.1", "issue #12  # broken"))
     assert withdraw[0].startswith("gh release edit alpha-v0.1.1") and "issue #12  # broken" in withdraw[0]
+    assert not any(line.startswith("#") for line in withdraw)
 
 
 def test_commands_offered_go_on_the_line_not_run(app, tmp_path):

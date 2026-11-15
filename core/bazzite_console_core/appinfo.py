@@ -24,7 +24,7 @@ class AppInfo:
     tag_prefix: str = ""                # the app's release tag prefix
     settings_org: str = ""              # existing QSettings org/app, so no settings file moves (default: app_id)
     settings_app: str = ""
-    settings_ini: bool = False          # bazzite-test keeps an .ini; the others Qt's native format (.conf)
+    settings_ini: bool = False          # ps5-board-test keeps an .ini; the others Qt's native format (.conf)
 
     @property
     def display_name(self) -> str:

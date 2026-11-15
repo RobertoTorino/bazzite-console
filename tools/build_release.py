@@ -13,8 +13,8 @@ first, built by release.yml; it goes into the tarball, so the portal's checksum 
 a folder with the pinned required-app release (<tag>.tar.gz and SHA256SUMS, as
 published); it is verified against apps.toml and unpacked into bundled/.
 
-Bazzite Test's tarball has its engine's checksum recorded (development/tools/build_info.py writes
-bazzite_test/_build_info.py), which makes it a release build: the app refuses a test engine that was changed.
+Board Test's tarball has its engine's checksum recorded (development/tools/build_info.py writes
+board_test/_build_info.py), which makes it a release build: the app refuses a test engine that was changed.
 
 The tar inside is reproducible and the same on Linux and Windows: sorted entries, root:root, the commit time (or
 SOURCE_DATE_EPOCH) as mtime, and modes set here (755 for folders and scripts, 644 for the rest), not taken from the
@@ -219,7 +219,7 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
             wheel_dest.mkdir(parents=True)
             shutil.copy2(Path(wheel_dir) / wheel, wheel_dest / wheel)
         epoch = source_epoch()
-        if app == "bazzite":                 # its build date is the commit time too: the same tag, the same bytes
+        if app == "board":                 # its build date is the commit time too: the same tag, the same bytes
             subprocess.run([sys.executable, str(stage_dir / "development" / "tools" / "build_info.py")], check=True,
                            stdout=subprocess.DEVNULL, env=dict(os.environ, SOURCE_DATE_EPOCH=str(epoch)))
         if app == "portal":

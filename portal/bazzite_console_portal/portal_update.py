@@ -64,7 +64,7 @@ class PortalUpdate:
 
 
 def short(name: str) -> str:
-    return name.removeprefix("Bazzite Console ")
+    return name.removeprefix("PS5 ")
 
 
 def and_list(names: list[str]) -> str:

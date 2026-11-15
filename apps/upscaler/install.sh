@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Installs Upscaler Manager for the current user: a private venv with PyQt6, the app
+# Installs PS5 Upscaler Manager for the current user: a private venv with PyQt6, the app
 # in ~/.local/share, a launcher in ~/.local/bin and a desktop entry with icon, so it shows up in
 # the application menu like any other app. Nothing is layered with rpm-ostree, no root needed.
 # The imported HelixSR release lives in ~/.local/share/ps5-upscaler/payload and is
@@ -35,7 +35,26 @@ CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 say()  { printf '\033[1;35m==>\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
 
+# Whether anything the uninstall removes is on this computer (paths and globs): without, it removes nothing, asks
+# for no password and says the app is not installed.
+installed_here() {
+    local path
+    for path in "$@"; do
+        compgen -G "$path" >/dev/null && return 0
+    done
+    return 1
+}
+
 uninstall() {
+    found=false
+    installed_here "$APP_DIR" "$BIN_DIR/$APP_ID" \
+        "$APPS_DIR/$APP_ID.desktop" "$ICON_DIR/$APP_ID.png" "$DESKTOP_DIR/$APP_ID.desktop" \
+        "$DATA_HOME/icons/hicolor/512x512/apps/$APP_ID.png" && found=true
+    $PURGE && installed_here "$APP_DIR/payload" "$CONFIG_DIR/$APP_ID/$APP_ID.conf" && found=true
+    if ! $found; then
+        say "$APP_ID is not installed: nothing to remove."
+        exit 0
+    fi
     say "Removing $APP_ID"
     rm -rf "$APP_DIR/venv" "$APP_DIR/upscaler" "$APP_DIR/bazzite_console_core" "$APP_DIR/images"
     rm -f "$APP_DIR/requirements.txt" "$APP_DIR/LICENSE" "$APP_DIR/README.md"
@@ -126,7 +145,7 @@ rm -f "$DATA_HOME/icons/hicolor/512x512/apps/$APP_ID.png"   # the 512 px icon of
 command -v update-desktop-database >/dev/null && update-desktop-database -q "$APPS_DIR" || true
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t "$DATA_HOME/icons/hicolor" 2>/dev/null || true
 
-say "Installed. Find \"Upscaler Manager\" in the application menu$($DESKTOP_SHORTCUT && echo ' or on the Desktop'), or run: $BIN_DIR/$APP_ID"
+say "Installed. Find \"PS5 Upscaler Manager\" in the application menu$($DESKTOP_SHORTCUT && echo ' or on the Desktop'), or run: $BIN_DIR/$APP_ID"
 case ":$PATH:" in
     *":$BIN_DIR:"*) ;;
     *) echo "    (note: $BIN_DIR is not on your PATH in this shell)" ;;

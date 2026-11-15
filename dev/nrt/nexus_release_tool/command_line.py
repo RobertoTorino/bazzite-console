@@ -4,7 +4,7 @@
 Each command is its own `bash -lc`, started in the folder the last `cd` left; only that folder carries over, not
 variables. Nothing can be typed into a running command (its input is closed), so a command that asks something gets
 no answer and stops: git is told not to prompt, opens no editor (commit with -m) and pages nothing. Stop (or
-Ctrl+C) interrupts the command and everything it started. The commands a step shows (Apply, Bump portal, Retract)
+Ctrl+C) interrupts the command and everything it started. The commands a step shows (Retract)
 are offered under Commands, one per line, to put on the line, not to run straight away. The steps' pills run
 theirs here too (run_now), and what a step wrote (its log) shows here under a line that names it (note()). With a *log_dir*, every command, its output and how it ended are also written to
 commands-<date>.log there, so what a release step said can be read afterwards (owner, 28-10-2026)."""
@@ -165,7 +165,7 @@ class CommandLine(QWidget):
         self.commands_button.setEnabled(bool(self.offered))
         self.commands_button.setToolTip(
             "The commands the last step showed: pick one to put it on the line" if self.offered else
-            "Apply, Bump portal and Retract show the commands to run next; they are offered here then")
+            "Retract shows the commands to run next; they are offered here then")
 
     def _fill_menu(self) -> None:
         menu = self.commands_button.menu()

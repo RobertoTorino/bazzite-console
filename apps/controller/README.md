@@ -4,7 +4,7 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Controller
+# PS5 Controller
 
 Controller is an optional utility for Sony DualSense and DualSense Edge controllers. Its code recognizes Sony
 USB product IDs `0x0CE6` and `0x0DF2` when Linux's `hid-playstation` driver exposes them through `hidraw`. It shows

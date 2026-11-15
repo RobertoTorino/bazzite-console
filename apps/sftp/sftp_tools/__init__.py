@@ -2,7 +2,7 @@
 """SFTP tools for the PlayStation 5 Bazzite host: browse and transfer files over SFTP, and manage the OpenSSH server (sshd) of a
 Bazzite host from another computer."""
 
-APP_NAME = "Bazzite SFTP Tools"
+APP_NAME = "PS5 SFTP Tools"
 APP_ID = "ps5-sftp-tools"
 __version__ = "1.1.0"
 

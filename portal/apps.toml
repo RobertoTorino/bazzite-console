@@ -1,21 +1,20 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Each [apps.<name>] table pins one release of a suite app. The required app is always installed and listed first.
 
-[apps.bazzite]
-name = "Bazzite Test"
+[apps.board]
+name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-bazzite-v1.0.1"
-sha256 = "532315a75105676b47682936040279df02100f45c2f41855009cb6dbe46910ec"
+tag = "ps5-board-v0.1.0"
 required = true
 changes_board = false
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/bazzite-test"]
-launch = [["Open", "~/.local/bin/bazzite-test"]]
+detect = ["~/.local/bin/ps5-board-test"]
+launch = [["Open", "~/.local/bin/ps5-board-test"]]
 
 [apps.upscaler]
-name = "Upscaler Manager"
+name = "PS5 Upscaler Manager"
 summary = "Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games."
 tag = "ps5-upscaler-v0.1.0"
 sha256 = "89bf16597e3a967424ba16f4b007200b6ebd386e65188468d7ceb281e46e6f9d"
@@ -80,7 +79,7 @@ detect = ["~/.local/bin/ps5-shadps4-manager"]
 launch = [["Open", "~/.local/bin/ps5-shadps4-manager"]]
 
 [apps.datstation]
-name = "Bazzite DatStation"
+name = "PS5 DatStation"
 summary = "Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news."
 tag = "ps5-datstation-v1.0.1"
 sha256 = "fcf59c232c93b85a5d2b3dd7f43cfbc5eb88d973a7cdbe7d2b8c3cebaa1a5827"
@@ -145,7 +144,7 @@ detect = ["~/.local/bin/ps5-xenia-manager"]
 launch = [["Open", "~/.local/bin/ps5-xenia-manager"]]
 
 [apps.sftp]
-name = "SFTP Tools"
+name = "PS5 SFTP Tools"
 summary = "Transfer files over SFTP and manage SSH servers on Bazzite hosts."
 tag = "ps5-sftp-v1.1.0"
 sha256 = "a53d262a22fa507fb187ccbcc840adf965ca5561ee4d2216d326298d9e1b9143"
@@ -159,7 +158,7 @@ detect = ["~/.local/bin/ps5-sftp-tools"]
 launch = [["Open", "~/.local/bin/ps5-sftp-tools"]]
 
 [apps.webcam]
-name = "Webcam"
+name = "PS5 Webcam"
 summary = "Use supported Sony PlayStation cameras as webcams on Bazzite."
 tag = "ps5-webcam-v1.1.0"
 sha256 = "1a5b1952a37ca5ce57ff1947884a63ea5923ed1f9ea59307d5d25201efe824f3"
@@ -173,7 +172,7 @@ detect = ["~/.local/bin/ps5-webcam"]
 launch = [["Open", "~/.local/bin/ps5-webcam"]]
 
 [apps.controller]
-name = "Controller"
+name = "PS5 Controller"
 summary = "Manage DualSense and DualSense Edge controllers on Bazzite."
 tag = "ps5-controller-v1.1.0"
 sha256 = "a5c8be05f193210129300847b7713b8847e3fe9702dcc433eb88156d2b7daf91"
@@ -186,7 +185,7 @@ detect = ["~/.local/bin/ps5-controller"]
 launch = [["Open", "~/.local/bin/ps5-controller"]]
 
 [apps.ssd]
-name = "SSD Check"
+name = "PS5 SSD Check"
 summary = "Inspect drive health and information exposed by Bazzite; run an optional filesystem speed test."
 tag = "ps5-ssd-v1.1.0"
 sha256 = "eaa52eaf8356e32619316cbbaca9841fb1dad4588e6a6617c85832df358fbcfe"
@@ -199,7 +198,7 @@ detect = ["~/.local/bin/ps5-ssd-check"]
 launch = [["Open", "~/.local/bin/ps5-ssd-check"]]
 
 [apps.overlay]
-name = "System Overlay"
+name = "PS5 System Overlay"
 summary = "A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values."
 tag = "ps5-overlay-v1.0.1"
 sha256 = "e7584197fac4f9d0ddc849cd993e348ff567978af3af9046aa774df4dd830249"
@@ -212,14 +211,14 @@ detect = ["~/.local/bin/ps5-system-overlay"]
 launch = [["Open", "~/.local/bin/ps5-system-overlay"]]
 
 [apps.fan]
-name = "Fan Control"
+name = "PS5 Fan Controller"
 summary = "The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature."
 tag = "ps5-fan-v1.0.1"
 sha256 = "63b4f3b8ebf8b7ef942a92a4da99db88dcca45302b4cff7fb70280749dc68972"
 required = false
 changes_board = true
 board_change = """
-The thermal guard is a root system service, ps5-fan-control-guard.service with its files in /etc/ps5-fan-control,
+The thermal guard is a root system service, ps5-fan-controller-guard.service with its files in /etc/ps5-fan-controller,
 that reads the temperatures every two seconds. At the cool limit it sets the fan to full speed in sysfs (ps5_fan's
 full mode) and turns the CPU boost off (ps5_control --boost off); at the shutdown limit, held for the set number of
 seconds, it powers the PS5 off cleanly with systemctl poweroff. The service stays enabled across reboots and power
@@ -231,11 +230,11 @@ again or reboot.
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/ps5-fan-control"]
-launch = [["Open", "~/.local/bin/ps5-fan-control"]]
+detect = ["~/.local/bin/ps5-fan-controller"]
+launch = [["Open", "~/.local/bin/ps5-fan-controller"]]
 
 [apps.cec]
-name = "HDMI CEC Manager"
+name = "PS5 CEC Manager"
 summary = "Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC."
 tag = "ps5-cec-v1.0.1"
 sha256 = "c94839370a6d79b43b795d9bb64564495b02b5d1f2c30f7415edd9980e4fab4e"
@@ -244,18 +243,17 @@ changes_board = false
 category = "utilities"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/ps5-hdmi-cec"]
-launch = [["Open", "~/.local/bin/ps5-hdmi-cec"]]
+detect = ["~/.local/bin/ps5-cec-manager"]
+launch = [["Open", "~/.local/bin/ps5-cec-manager"]]
 
-[apps.btpair]
-name = "Bluetooth Pairing"
+[apps.bluetooth]
+name = "PS5 Bluetooth"
 summary = "Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed."
-tag = "ps5-btpair-v0.1.0"
-sha256 = "86cda44347c310e59799481adf60fe0bd744e995e31f06d81bfe28a52671d743"
+tag = "ps5-bluetooth-v0.1.0"
 required = false
 changes_board = false
 category = "utilities"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/ps5-bluetooth-pairing"]
-launch = [["Open", "~/.local/bin/ps5-bluetooth-pairing"]]
+detect = ["~/.local/bin/ps5-bluetooth"]
+launch = [["Open", "~/.local/bin/ps5-bluetooth"]]

@@ -45,7 +45,7 @@ fakeroot -- bash "$T/stage/install.sh" > "$T/log3" 2>&1; rc=$?
 check "exit non-zero" "[ $rc -ne 0 ] && grep -q 'not with sudo' $T/log3"
 
 echo "== 4. uninstall while another suite app still uses the venv"
-touch "$D/bazzite-console-suite/venv-users/bazzite-test"
+touch "$D/bazzite-console-suite/venv-users/ps5-board-test"
 bash "$T/stage/install.sh" --uninstall > "$T/log4" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "app gone" "[ ! -e $D/$APP ]"
@@ -54,7 +54,7 @@ check "own marker gone" "[ ! -e $D/bazzite-console-suite/venv-users/$APP ]"
 check "launcher and menu entry gone" "[ ! -e $HOME/.local/bin/$APP ] && [ ! -e $D/applications/$APP.desktop ]"
 
 echo "== 5. reinstall, then uninstall --purge as the last venv user"
-rm "$D/bazzite-console-suite/venv-users/bazzite-test"
+rm "$D/bazzite-console-suite/venv-users/ps5-board-test"
 mkdir -p "$XDG_CONFIG_HOME/$APP" && touch "$XDG_CONFIG_HOME/$APP/$APP.ini"
 bash "$T/stage/install.sh" > "$T/log5" 2>&1 && bash "$T/stage/install.sh" --uninstall --purge >> "$T/log5" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"

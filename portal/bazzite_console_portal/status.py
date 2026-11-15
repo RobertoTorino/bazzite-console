@@ -4,7 +4,7 @@ then the date and the time, as in "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/
 on the Settings page (ClockStyle, owner 05-11-2026): a 12- or 24-hour clock, with or without the seconds, in the
 system's own time zone, Central European Time (CET, CEST in summer) or UTC.
 
-Read as Bazzite Test's status bar reads them, so it costs next to nothing: plain file reads from /proc and sysfs, no
+Read as Board Test's status bar reads them, so it costs next to nothing: plain file reads from /proc and sysfs, no
 helper programs, a sample every 2 s (the window skips them while it is minimized). The load is the change since the
 sample before, so the first sample has none.
 

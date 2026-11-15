@@ -9,10 +9,10 @@
 #   ... --no-start                     # install only, do not start the portal
 #   ... --keep                         # keep what the test installed: it is the machine's own install from then on
 #   check-release.sh status            # what of the suite is installed here, and whether a test put it there
-#   check-release.sh remove [--purge]  # remove the suite: every app, the portal and Bazzite Test, each with its own
+#   check-release.sh remove [--purge]  # remove the suite: every app, the portal and Board Test, each with its own
 #                                      # uninstaller; --purge also removes their settings and logs
 #
-# A test on a machine without the suite removes everything again when the portal closes: the portal, Bazzite Test
+# A test on a machine without the suite removes everything again when the portal closes: the portal, Board Test
 # and the apps installed during the test. It marks its install (TEST-INSTALL in the portal's folder), which status
 # shows. A machine that had the suite installed already keeps it: the test replaces the portal there and removes
 # nothing. PS5_RELEASE_URL overrides the download address (tests).
@@ -65,7 +65,7 @@ status() {
     [ "$found" -eq 1 ] || echo "Nothing of the suite is installed."
 }
 
-# Every installed app with its own uninstaller, then the portal, then Bazzite Test (the suite's venv goes with the
+# Every installed app with its own uninstaller, then the portal, then Board Test (the suite's venv goes with the
 # last of them). Arguments: --purge, or none. The list is read on 3, so an uninstaller's sudo keeps the terminal.
 # A test's install leaves nothing: what its portal remembered (the state folder, which the portal's uninstaller keeps
 # without --purge) goes too. The mark is read first: it goes with the portal.
@@ -73,7 +73,7 @@ remove_suite() {
     local key name launcher failed=0 test_install=0
     [ ! -f "$MARK" ] || test_install=1
     while IFS=$'\t' read -r key name launcher <&3; do
-        [ "$key" != bazzite ] && [ -n "$launcher" ] && [ -e "$launcher" ] || continue
+        [ "$key" != board ] && [ -n "$launcher" ] && [ -e "$launcher" ] || continue
         info "Removing $name"
         bash "$REPO/apps/$key/install.sh" --uninstall "$@" || { failed=1; echo "$name could not be removed." >&2; }
     done 3< <(apps)
@@ -81,10 +81,10 @@ remove_suite() {
         info "Removing the portal"
         bash "$REPO/portal/install.sh" --uninstall "$@" >/dev/null || failed=1
     fi
-    if [ -e "$HOME/.local/bin/bazzite-test" ]; then
-        info "Removing Bazzite Test (it is in /opt: sudo asks for the password)"
-        bash "$REPO/apps/bazzite/install.sh" --uninstall "$@" ||
-            { failed=1; echo "Bazzite Test could not be removed." >&2; }
+    if [ -e "$HOME/.local/bin/ps5-board-test" ]; then
+        info "Removing Board Test (it is in /opt: sudo asks for the password)"
+        bash "$REPO/apps/board/install.sh" --uninstall "$@" ||
+            { failed=1; echo "Board Test could not be removed." >&2; }
     fi
     [ "$test_install" -eq 0 ] || rm -rf "${STATE_DIR:?}"
     rmdir "$(dirname "$PORTAL_DIR")" 2>/dev/null || true

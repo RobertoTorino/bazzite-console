@@ -25,7 +25,7 @@ The servers see your IP address, as any website you open does.
 - The shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K and Xenia Managers ask for the emulator's newest release when their
   window opens, and download the release you install.
 
-**Sony** (`fwupdater.dl.playstation.net`): [Controller](apps/controller.md) asks Sony's update server for the
+**Sony** (`fwupdater.dl.playstation.net`): [PS5 Controller](apps/controller.md) asks Sony's update server for the
 controllers' latest firmware (at most once a day), and downloads the firmware when you update a controller.
 
 **PyPI**: installing an app downloads its Python packages from PyPI.
@@ -41,14 +41,14 @@ controllers' latest firmware (at most once a day), and downloads the firmware wh
   and network addresses.
 - [shadPS4 Manager](apps/shadps4.md): shadPS4 signs in to the shadNet server you set, with the account you set.
   shadPS4 keeps the password as it is and shadNet sends it unencrypted: use one you use nowhere else.
-- [SFTP Tools](apps/sftp.md) connects only to the host you enter.
-- [Bazzite DatStation](apps/datstation.md) loads the PlayStation Blog's feed on its news page.
-- [Bazzite Test](apps/bazzite.md): its network tests resolve and ping `google.com` and ask `www.example.com` for a
+- [PS5 SFTP Tools](apps/sftp.md) connects only to the host you enter.
+- [PS5 DatStation](apps/datstation.md) loads the PlayStation Blog's feed on its news page.
+- [PS5 Board Test](apps/board.md): its network tests resolve and ping `google.com` and ask `www.example.com` for a
   page header; the optional speed test uses Ookla's servers.
 - The [portal](portal.md) shows the weather in its header only for a place you choose in its Settings: the name
   you search for, then that place's coordinates every 30 minutes, go to Open-Meteo
   (`geocoding-api.open-meteo.com`, `api.open-meteo.com`), which needs no account.
-- [Webcam](apps/webcam.md) downloads a camera's firmware from GitHub (`raw.githubusercontent.com`) only when you
+- [PS5 Webcam](apps/webcam.md) downloads a camera's firmware from GitHub (`raw.githubusercontent.com`) only when you
   ask it to.
 - The managers' **Steam artwork…** takes the covers of your games from SteamGridDB, with the API key you enter.
 
@@ -61,7 +61,7 @@ Each app keeps its settings in `~/.config/<app>` and its data and logs in `~/.lo
 uploaded. Uninstalling with `--purge` removes the settings and logs too.
 
 Some of it can identify you: host and user names, serial numbers, MAC and IP addresses, account IDs. Where an app
-shows or saves such details, it masks them: [Bazzite Test](apps/bazzite.md) in saved logs (**Settings › Privacy**),
+shows or saves such details, it masks them: [PS5 Board Test](apps/board.md) in saved logs (**Settings › Privacy**),
 [Remote Play](apps/remoteplay.md) in its window and log, and [XBOX Remote Play](apps/clb.md) in its log. Before
 you share a log or a screenshot, for example in an issue, look it over for anything you would rather keep to
 yourself.

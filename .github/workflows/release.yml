@@ -16,7 +16,7 @@ name: Release
 #
 # The assets are <tag>.tar.gz and SHA256SUMS, built by tools/build_release.py, as tools/tag-release.sh builds them
 # on the development machine (one release by hand; this workflow does not run on a tag). The portal release bundles
-# the release of the required app (Bazzite Test) that apps.toml pins. Remote Play ships the wheel of its native core
+# the release of the required app (Board Test) that apps.toml pins. Remote Play ships the wheel of its native core
 # in its tarball: built here, with FFmpeg from its pinned sources (apps/remoteplay/native/ffmpeg/build.sh).
 #
 # By hand: gh workflow run release.yml --ref main -f commit="$(git rev-parse origin/main)"

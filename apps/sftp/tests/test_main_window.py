@@ -17,7 +17,7 @@ from sftp_tools.server_tab import ServerManagerTab
 def test_window_has_the_suite_header_and_shows_the_states(qapp) -> None:
     window = MainWindow()
 
-    assert window.windowTitle() == "Bazzite SFTP Tools"
+    assert window.windowTitle() == "PS5 SFTP Tools"
     assert window.sftp_tab.status.text() == "Not connected"
     assert window.sftp_box.value.text() == "Disconnected"
     assert window.server_box.value.text() == "Not checked"

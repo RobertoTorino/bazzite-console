@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Webcam](../assets/webcam/ps5-webcam.webp){ .app-logo }
+![PS5 Webcam](../assets/webcam/ps5-webcam.webp){ .app-logo }
 
-# Webcam
+# PS5 Webcam
 
 !!! warning "Changes the board"
     Allow access installs a system-wide udev rule for supported camera identifiers. A per-user service loads camera firmware when the camera connects. The udev rule is removed when the app is uninstalled.

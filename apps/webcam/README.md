@@ -4,7 +4,7 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Webcam
+# PS5 Webcam
 
 Webcam is an optional desktop utility for Sony USB cameras on Bazzite. Its code recognizes the PS5 HD Camera
 (CFI-ZEY1) and the PS4 Camera (CUH-ZEY1 or CUH-ZEY2) connected through Sony's PlayStation Camera Adapter

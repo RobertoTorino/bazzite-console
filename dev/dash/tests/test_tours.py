@@ -9,7 +9,7 @@ from nexus_dashboard.tours import AppsTourDialog, PortalTourDialog, TourApp
 
 MANIFEST = '''
 [apps.fan]
-name = "Nexus Fan Control"
+name = "Nexus Fan Controller"
 
 [apps.compute]
 name = "Nexus CU Bisect"
@@ -31,7 +31,7 @@ def checkout(tmp_path: Path, body: str = 'touch "$2"') -> Path:
     (root / "portal").mkdir(parents=True)
     (root / "portal" / "apps.toml").write_text(MANIFEST, encoding="utf-8")
     (root / "portal" / "VERSION").write_text("6.4.0\n", encoding="utf-8")
-    for folder, packages, version in (("apps/fan", ["fan_control"], "0.5.1"),
+    for folder, packages, version in (("apps/fan", ["fan_controller"], "0.5.1"),
                                       ("apps/compute", ["cu_unlock", "cu_bisect"], "0.3.0"),
                                       ("apps/gone", [], "1.0.0"),
                                       ("tools/gui", ["installer_tests"], "")):
@@ -66,7 +66,7 @@ def videos(tmp_path, monkeypatch):
 def test_every_program_of_the_manifest_once_in_its_order(tmp_path):
     apps = tours.tour_apps(checkout(tmp_path))
 
-    assert [app.label for app in apps] == ["Nexus Fan Control", "Nexus CU Bisect (cu_bisect)",
+    assert [app.label for app in apps] == ["Nexus Fan Controller", "Nexus CU Bisect (cu_bisect)",
                                            "Nexus CU Bisect (cu_unlock)", "Nexus Installer Tests"]
     assert [app.file_name for app in apps] == ["nexus-fan-tour-v0.5.1.mp4", "nexus-compute-cu_bisect-tour-v0.3.0.mp4",
                                                "nexus-compute-cu_unlock-tour-v0.3.0.mp4",

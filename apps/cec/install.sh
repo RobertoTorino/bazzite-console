@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs HDMI CEC Manager as a desktop app, from a clone or the extracted release tarball:
+# Installs PS5 CEC Manager as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -9,18 +9,18 @@
 #
 # Run it as your own user; installing needs no root. The app talks to the CEC adapter (/dev/cec*, yours through
 # udev) with cec-ctl, and writes the settings of Valve's CEC daemon for your account.
-#  * ~/.local/share/ps5-hdmi-cec/app: the app, with the bazzite_console_core it was tested with (bundled in the
+#  * ~/.local/share/ps5-cec-manager/app: the app, with the bazzite_console_core it was tested with (bundled in the
 #    release; taken from the suite checkout when run from there).
 #  * ~/.local/share/bazzite-console-suite/venv, the Bazzite Console Suite's shared venv with PyQt6 (the wheels bundle
 #    Qt; nothing is layered). It is removed with the last suite app that uses it.
-#  * ~/.config/cecd/config.d/99-ps5-hdmi-cec.toml: the CEC daemon settings, once you change one in the app.
-#  * ~/.config/systemd/user/ps5-hdmi-cec-watch.service: the background part of "Pause videos and music while the
+#  * ~/.config/cecd/config.d/99-ps5-cec-manager.toml: the CEC daemon settings, once you change one in the app.
+#  * ~/.config/systemd/user/ps5-cec-manager-watch.service: the background part of "Pause videos and music while the
 #    TV is off", only while that is chosen in the app. It starts the app's own files, so uninstalling removes it.
-#  * ~/.local/bin/ps5-hdmi-cec to start it from a terminal, plus an app menu entry and a Desktop icon.
+#  * ~/.local/bin/ps5-cec-manager to start it from a terminal, plus an app menu entry and a Desktop icon.
 set -euo pipefail
 
-APP_ID="ps5-hdmi-cec"
-APP_NAME="HDMI CEC Manager"
+APP_ID="ps5-cec-manager"
+APP_NAME="PS5 CEC Manager"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 APP_DIR="$DATA_DIR/$APP_ID/app"
@@ -31,12 +31,12 @@ LAUNCHER="$HOME/.local/bin/$APP_ID"
 MENU_ENTRY="$DATA_DIR/applications/$APP_ID.desktop"
 DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 DESKTOP_ICON="$DESKTOP_DIR/$APP_ID.desktop"
-CECD_FRAGMENT="$CONFIG_DIR/cecd/config.d/99-ps5-hdmi-cec.toml"
-WATCH_UNIT="ps5-hdmi-cec-watch.service"
+CECD_FRAGMENT="$CONFIG_DIR/cecd/config.d/99-ps5-cec-manager.toml"
+WATCH_UNIT="ps5-cec-manager-watch.service"
 WATCH_FILE="$CONFIG_DIR/systemd/user/$WATCH_UNIT"
 
 SRC=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
-# bazzite_console_core: bundled next to hdmi_cec in a release; in the suite checkout it lives in core/.
+# bazzite_console_core: bundled next to cec_manager in a release; in the suite checkout it lives in core/.
 if [ -d "$SRC/bazzite_console_core" ]; then CORE_SRC="$SRC/bazzite_console_core"; else CORE_SRC="$SRC/../../core/bazzite_console_core"; fi
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
@@ -60,7 +60,25 @@ $PURGE && ! $UNINSTALL && die "--purge only goes with --uninstall."
 
 [ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo: the app, the venv and the launcher belong in your home folder."
 
+# Whether anything the uninstall removes is on this computer (paths and globs): without, it removes nothing, asks
+# for no password and says the app is not installed.
+installed_here() {
+    local path
+    for path in "$@"; do
+        compgen -G "$path" >/dev/null && return 0
+    done
+    return 1
+}
+
 if $UNINSTALL; then
+    found=false
+    installed_here "$WATCH_FILE" "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON" "${DATA_DIR:?}/${APP_ID:?}/app" \
+        "${VENV_USERS:?}/${APP_ID:?}" && found=true
+    $PURGE && installed_here "${CONFIG_DIR:?}/${APP_ID:?}" "$CECD_FRAGMENT" && found=true
+    if ! $found; then
+        info "$APP_NAME is not installed: nothing to remove."
+        exit 0
+    fi
     if [ -f "$WATCH_FILE" ]; then
         info "Stopping and removing the background service $WATCH_UNIT"
         systemctl --user disable --now "$WATCH_UNIT" >/dev/null 2>&1 || true
@@ -92,7 +110,7 @@ fi
 
 # --- Checks ------------------------------------------------------------------------------------
 [ "$(uname -s)" = Linux ] || die "This app runs on Linux (Bazzite) only."
-for f in requirements.txt VERSION hdmi_cec/__main__.py "images/$APP_ID.webp" "images/$APP_ID-128.png"; do
+for f in requirements.txt VERSION cec_manager/__main__.py "images/$APP_ID.webp" "images/$APP_ID-128.png"; do
     [ -f "$SRC/$f" ] || die "$f is missing: run install.sh from a clone or the extracted release folder."
 done
 [ -f "$CORE_SRC/__init__.py" ] || die "bazzite_console_core is missing: run install.sh from a clone or the extracted release folder."
@@ -139,9 +157,9 @@ mkdir -p "$(dirname "$LAUNCHER")"
 cat >"$LAUNCHER" <<EOF
 #!/usr/bin/env bash
 # $APP_NAME launcher, written by install.sh. Starts from the app folder, so python -m never picks up a
-# hdmi_cec folder from the current directory, and imports the bazzite_console_core bundled there.
+# cec_manager folder from the current directory, and imports the bazzite_console_core bundled there.
 cd "$APP_DIR" || { echo "$APP_NAME is not installed in $APP_DIR; run install.sh again." >&2; exit 1; }
-exec "$VENV/bin/python" -m hdmi_cec "\$@"
+exec "$VENV/bin/python" -m cec_manager "\$@"
 EOF
 chmod 755 "$LAUNCHER"
 

@@ -1,3 +1,9 @@
+Changelog: 15-11-2026 04:16:24
+
+Fixed. Names the suite's renamed apps by their names, ids and keys where it mentions them (owner, 15-11-2026): PS5
+Board Test, PS5 Bluetooth, PS5 CEC Manager, PS5 Fan Controller, PS5 DatStation, PS5 SFTP Tools, PS5 Webcam, PS5 SSD
+Check, PS5 System Overlay, PS5 Controller and PS5 Upscaler Manager.
+
 Changelog: 14-11-2026 12:11:51
 
 Fixed. The window's text says the console where it said the board, and an app that changes the system is

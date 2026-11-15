@@ -16,8 +16,8 @@ spec.loader.exec_module(suite_release)
 
 
 def test_plans_hand_tagged_app_and_portal_releases():
-    assert suite_release.plan("", "0.1.0", tag="ps5-bazzite-v0.1.0") == {
-        "apps": ["ps5-bazzite-v0.1.0"], "portal": "", "draft": False}
+    assert suite_release.plan("", "0.1.0", tag="ps5-board-v0.1.0") == {
+        "apps": ["ps5-board-v0.1.0"], "portal": "", "draft": False}
     assert suite_release.plan("", "0.1.0", tag="ps5-portal-v0.1.0") == {
         "apps": [], "portal": "ps5-portal-v0.1.0", "draft": False}
 
@@ -34,7 +34,7 @@ def test_console_release_builds_unreleased_apps_and_a_draft_portal():
 
 def test_pin_changes_only_the_matching_apps_checksum():
     text = (SUITE / "portal" / "apps.toml").read_text(encoding="utf-8")
-    tag = tomllib.loads(text)["apps"]["bazzite"]["tag"]
+    tag = tomllib.loads(text)["apps"]["board"]["tag"]
     digest = "a" * 64
     result = suite_release.pin(text, tag, digest)
     assert f'sha256 = "{digest}"' in result
@@ -43,8 +43,8 @@ def test_pin_changes_only_the_matching_apps_checksum():
 
 
 def test_checksum_lookup_requires_the_requested_asset():
-    sums = f'{"c" * 64}  ps5-bazzite-v0.1.0.tar.gz\n'
-    assert suite_release.sha256_of(sums, "ps5-bazzite-v0.1.0.tar.gz") == "c" * 64
+    sums = f'{"c" * 64}  ps5-board-v0.1.0.tar.gz\n'
+    assert suite_release.sha256_of(sums, "ps5-board-v0.1.0.tar.gz") == "c" * 64
     try:
         suite_release.sha256_of(sums, "other.tar.gz")
     except ValueError as exc:

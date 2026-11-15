@@ -240,8 +240,7 @@ class ReleasePage(QWidget):
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
             drafts=[t for t in flow.waiting_portals(root, suite, run.sha) if not flow.published(root, runs, t)]
             if run else [],
-            restart=run is not None and run.sha != head, rejected=self.rejected(run),
-            manual=not flow.release_suites(root))
+            restart=run is not None and run.sha != head, rejected=self.rejected(run))
 
     def rejected(self, run: rp.BuildRun | None) -> list[str]:
         """The drafts of *run* the owner said Not OK to, kept in NRT's settings by the run (a run made again makes its
@@ -274,13 +273,8 @@ class ReleasePage(QWidget):
                                            "font-weight:600;" if states[key] == "done" else f"color:{GREY};")
             self.details[key].setText(self.detail(key, states[key], facts) or what)
         reasons = flow.ready(window.root, window.base()) if self.picks and not facts.unpushed else []
-        waiting = [u.key for u in getattr(window, "units", []) if u.kind in ("app", "portal") and u.needs_release]
-        self.why_not.setText(
-            ("This repository has no release workflow on GitHub, so steps 5 to 9 do not run here. Releases are made "
-             "on the tabs 1. Release apps and 2. Pin and release Portal. "
-             + (f"Changed since its last release: {', '.join(waiting)}." if waiting else
-                "Nothing changed since the last releases.")) if facts.manual and not now else
-            "Nothing to release: no app changed since its last release." if not self.picks and not now else "")
+        self.why_not.setText("Nothing to release: no app changed since its last release." if not self.picks and not now
+                             else "")
         self.why_not.setVisible(bool(self.why_not.text()))
         self.pull_button.setEnabled(idle and now == "pull")
         self.commit_button.setEnabled(idle and now == "commit" and bool(self.commit_message.text().strip()))
@@ -398,8 +392,8 @@ class ReleasePage(QWidget):
 
     def offer_portal_bumps(self) -> bool:
         """A suite whose apps.toml changed since its last portal release needs a portal bump, or the commit's
-        manifest check refuses the commit (owner, 02-11-2026: the step only refused): the bump is offered here, as
-        step 2 would suggest it, and written with its CHANGELOG entry on a yes. False when a no leaves the commit
+        manifest check refuses the commit (owner, 02-11-2026: the step only refused): the bump is offered here
+        (plan.portal_offer), and written with its CHANGELOG entry on a yes. False when a no leaves the commit
         where it is."""
         window = self.release_window
         root, base = window.root, window.base()
@@ -415,7 +409,7 @@ class ReleasePage(QWidget):
                 f"({reason}) and write its CHANGELOG entry, then commit?")
             if answer != QMessageBox.StandardButton.Yes:
                 self.output.set_text(f"Not committed: {name}'s portal needs a bump first (apps.toml changed: {why}). "
-                                     "Bump portal on step 2 writes it, or say yes here.")
+                                     "Say yes here to write it.")
                 return False
             changed, text = rp.write_portal_bump(root, suite, base, version)
             self.output.set_text(f"{name}: portal {version} in " + ", ".join(p.relative_to(root).as_posix()

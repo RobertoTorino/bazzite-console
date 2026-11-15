@@ -93,7 +93,7 @@ class StatusText(QWidget):
 
 
 class MetricBox(QFrame):
-    """One box of a header row: a big value with a caption, centered like the stats boxes of Bazzite Test
+    """One box of a header row: a big value with a caption, centered like the stats boxes of Board Test
     (centered=False: left-aligned). On the theme's surface, *color* as its left edge (GRAY: none)."""
 
     MIN_WIDTH = 120
@@ -235,7 +235,7 @@ class TextDialog(QDialog):
 class AppHeader(QHBoxLayout):
     """The first line of every app window: the app's icon at 96 px on the left, spanning the title row (the name
     with the version, then the app's states and, on the right, its actions) and a second row below it (status
-    boxes or the app's main controls). Bazzite Test's and the Governor Manager's header, shared."""
+    boxes or the app's main controls). Board Test's and the Governor Manager's header, shared."""
 
     LOGO_PX = 96
 

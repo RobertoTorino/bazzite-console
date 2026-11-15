@@ -28,8 +28,8 @@ def window(qapp, home, settings_dir, tmp_path):
 def test_portal_shows_required_app(window):
     assert window.windowTitle().startswith(APP_NAME)
     assert list(window.states) == [entry.key for entry in window.entries]
-    assert [entry.key for entry in window.entries if entry.required] == ["bazzite"]
-    assert window.states["bazzite"].title == "Bazzite Test"
+    assert [entry.key for entry in window.entries if entry.required] == ["board"]
+    assert window.states["board"].title == "Board Test"
     assert [action.text() for action in window.tile_menu(window.entries[0]).actions()][0] == "Open"
     assert window.big.categories == ["sustainable", "graphics", "gaming", "utilities"]
 
@@ -97,7 +97,7 @@ def test_clock_header_shows_date_and_time(window):
 def test_console_release_tags_are_pruned_by_app_key(tmp_path):
     source = Sources(tmp_path / "releases")
     app = load(MANIFEST)[0]
-    old = source.work / "ps5-bazzite-v0.0.9"
+    old = source.work / "ps5-board-v0.0.9"
     current = source.work / app.tag
     other = source.work / "ps5-other-v0.1.0"
     for folder in (old, current, other):
@@ -113,11 +113,11 @@ def test_console_release_tags_are_pruned_by_app_key(tmp_path):
 def test_desktop_icon_toggle_only_manages_console_apps(tmp_path):
     menu = tmp_path / "applications"
     menu.mkdir()
-    (menu / "bazzite-test.desktop").touch()
+    (menu / "ps5-board-test.desktop").touch()
     (menu / "bazzite-console-suite.desktop").touch()
     (menu / "unrelated-app.desktop").touch()
 
-    assert [path.name for path in desktop_icons.launchers(menu)] == ["bazzite-test.desktop"]
+    assert [path.name for path in desktop_icons.launchers(menu)] == ["ps5-board-test.desktop"]
 
 
 @pytest.mark.parametrize("show", [False, True])
@@ -144,7 +144,7 @@ def test_finished_install_respects_desktop_icon_setting(window, tmp_path, deskto
 def test_start_with_icons_off_removes_existing_console_shortcuts(window, tmp_path, desktop):
     menu = tmp_path / "applications"
     menu.mkdir()
-    for name in ("bazzite-test.desktop", "ps5-sftp-tools.desktop", "bazzite-console-suite.desktop"):
+    for name in ("ps5-board-test.desktop", "ps5-sftp-tools.desktop", "bazzite-console-suite.desktop"):
         (menu / name).touch()
         (desktop / name).touch()
     window.menu = menu

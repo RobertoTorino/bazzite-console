@@ -361,7 +361,6 @@ class Facts:
     drafts: list[str] = field(default_factory=list)     # its portals not published yet
     restart: bool = False               # HEAD is not the run's commit: a failed run starts again on HEAD, the fix
     rejected: list[str] = field(default_factory=list)   # its drafts the device test failed (Not OK), still drafts
-    manual: bool = False                # no release workflow on GitHub: steps 5 to 9 are not this repository's
 
 
 def ci_runs(runs: list[rp.BuildRun], sha: str, hidden: set[str] = frozenset()) -> list[rp.BuildRun]:
@@ -472,8 +471,6 @@ def current_step(facts: Facts) -> str:
 def step_states(facts: Facts) -> dict[str, str]:
     """Each step's state: done, now, failed (the step to do now, which went wrong) or later."""
     now = current_step(facts)
-    if not now and facts.manual:            # no release workflow: the release is made on the tabs 1 and 2, so the
-        return {key: "done" if key in ("pull", "commit", "push", "ci") else "later" for key in KEYS}   # rest is no ✓
     if not now:                             # nothing to do: every step of a release done, or none to make
         return {key: "done" for key in KEYS}
     at = KEYS.index(now)

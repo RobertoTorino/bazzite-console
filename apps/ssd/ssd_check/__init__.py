@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The health, power cycles and power-on hours of drives exposed by the Bazzite host."""
 
-APP_NAME = "SSD Check"
+APP_NAME = "PS5 SSD Check"
 APP_ID = "ps5-ssd-check"
 __version__ = "1.1.0"
 

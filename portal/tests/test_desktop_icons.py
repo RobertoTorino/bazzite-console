@@ -10,7 +10,7 @@ APPS = Path(__file__).resolve().parents[2] / "apps"
 def test_add_and_remove_only_console_suite_icons(tmp_path, desktop, monkeypatch):
     menu = tmp_path / "applications"
     menu.mkdir()
-    names = ("bazzite-test.desktop", "ps5-rpcs3-manager.desktop", "bazzite-console-suite.desktop",
+    names = ("ps5-board-test.desktop", "ps5-rpcs3-manager.desktop", "bazzite-console-suite.desktop",
              "bazzite-unrelated.desktop", "ps5-unrelated.desktop")
     for name in names:
         (menu / name).write_text(f"[Desktop Entry]\nName={name}\n")
@@ -19,10 +19,10 @@ def test_add_and_remove_only_console_suite_icons(tmp_path, desktop, monkeypatch)
     (desktop / "ps5-orphan.desktop").write_text("keep")
     monkeypatch.setattr(desktop_icons.shutil, "which", lambda _: None)
 
-    assert desktop_icons.add(desktop, menu) == ["bazzite-test.desktop", "ps5-rpcs3-manager.desktop"]
+    assert desktop_icons.add(desktop, menu) == ["ps5-board-test.desktop", "ps5-rpcs3-manager.desktop"]
     assert (desktop / "ps5-rpcs3-manager.desktop").stat().st_mode & 0o111
     assert desktop_icons.add(desktop, menu) == []
-    assert desktop_icons.remove(desktop, menu) == ["bazzite-test.desktop", "ps5-rpcs3-manager.desktop"]
+    assert desktop_icons.remove(desktop, menu) == ["ps5-board-test.desktop", "ps5-rpcs3-manager.desktop"]
     assert sorted(p.name for p in desktop.iterdir()) == sorted((*names[2:], "ps5-orphan.desktop"))
 
 

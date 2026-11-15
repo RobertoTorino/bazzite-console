@@ -61,7 +61,25 @@ $PURGE && ! $UNINSTALL && die "--purge only goes with --uninstall."
 
 [ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo: the app, the venv and the launcher belong in your home folder."
 
+# Whether anything the uninstall removes is on this computer (paths and globs): without, it removes nothing, asks
+# for no password and says the app is not installed.
+installed_here() {
+    local path
+    for path in "$@"; do
+        compgen -G "$path" >/dev/null && return 0
+    done
+    return 1
+}
+
 if $UNINSTALL; then
+    found=false
+    installed_here "$LAUNCHER" "$RUN" "$MENU_ENTRY" "$DESKTOP_ICON" "$APP_DIR" "$EMULATOR_DIR" "$VENV_USERS/$APP_ID" \
+        && found=true
+    $PURGE && installed_here "${CONFIG_DIR:?}/$APP_ID" "${DATA_DIR:?}/$APP_ID" && found=true
+    if ! $found; then
+        info "$APP_NAME is not installed: nothing to remove."
+        exit 0
+    fi
     info "Removing the launchers, the menu entry, the app and the Xenia it installed"
     rm -f "$LAUNCHER" "$RUN" "$MENU_ENTRY" "$DESKTOP_ICON"
     command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q "$DATA_DIR/applications" || true

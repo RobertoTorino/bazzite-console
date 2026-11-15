@@ -3,7 +3,8 @@
 #   python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirements-dev.txt
 -r portal/requirements-dev.txt
 -r tools/requirements-dev.txt
--r apps/bazzite/requirements-dev.txt
+-r apps/board/requirements-dev.txt
+-r apps/bluetooth/requirements-dev.txt
 -r apps/cec/requirements-dev.txt
 -r apps/clb/requirements-dev.txt
 -r apps/controller/requirements-dev.txt
@@ -17,6 +18,7 @@
 -r apps/sftp/requirements-dev.txt
 -r apps/shadps4/requirements-dev.txt
 -r apps/ssd/requirements-dev.txt
+-r apps/upscaler/requirements-dev.txt
 -r apps/vita3k/requirements-dev.txt
 -r apps/webcam/requirements-dev.txt
 -r apps/xenia/requirements-dev.txt

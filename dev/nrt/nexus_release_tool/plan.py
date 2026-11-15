@@ -4,21 +4,17 @@
 the apps). Nothing here commits, tags or pushes; it prints the git commands for that instead. It needs no PyQt6 and
 no nexus_core, so it also runs with the system python3.
 
-A release has two steps, because an app's checksum only exists once its release assets have been built and published:
-
-1. Release apps: the new VERSION, every copy that tools/check_versions.py checks, and a "Release x.y.z." CHANGELOG entry.
-   The version offered first follows semantic versioning from the CHANGELOG entries since the last tag: one that
-   starts with Breaking. asks for a major release, Added. for a minor one, Fixed. for a patch.
-   Commit and push the versioned app, then run tools/tag-release.sh <app>-v<x.y.z> to build and publish its asset.
-2. Pin and release Portal: pin each released app in portal/apps.toml (tag and sha256, as tools/pin_app.py), bump portal/VERSION at
-   least as much as tools/check_manifest.py asks, and a CHANGELOG entry listing the pins. Commit, test on a console
-   (check-release.sh local), then push and run tools/tag-release.sh portal-v<x.y.z>, and check the published release
-   (check-release.sh release).
+A release is one action of the window, Start new release (flow.py writes it with the edits here): each part's new
+VERSION, every copy tools/check_versions.py checks and a "Release x.y.z." CHANGELOG entry, the new tags in
+portal/apps.toml (their sha256 is the release workflow's) and the portal's version, at least what
+tools/check_manifest.py asks. The version offered first follows semantic versioning from the CHANGELOG entries
+since the last tag: one that starts with Breaking. asks for a major release, Added. for a minor one, Fixed. for a
+patch. A part whose only changes since its tag are those edits (release_only) needs no release.
 
 A withdrawal (owner's decisions, 13-10-2026): an app release that must not be used any more (privacy, security, any
 reason) is marked withdrawn in portal/apps.toml with the reason, and on GitHub (a pre-release titled "Withdrawn: ...",
 so no update check offers it; the release itself stays). The next portal release shows the app as not available and
-removes it from the consoles that have it. Test it on a console with Test withdrawal before that portal is pushed."""
+removes it from the consoles that have it. Test it on a console with Test withdrawal before that portal is released."""
 
 from __future__ import annotations
 
@@ -204,7 +200,7 @@ def git_run(root: Path, *args: str) -> subprocess.CompletedProcess:
     """git *args in *root*, finished: its exit code, what it printed and what it said (stderr), for a caller that
     shows git's own words when it failed. git() is the same with only the output."""
     # UTF-8, as git writes it: Windows' own encoding (cp1252) garbled every é and × of a CHANGELOG read at a tag, so
-    # its entries no longer matched and step 1 counted them all as new. No optional locks: the build pill's poll runs
+    # its entries no longer matched and the release counted them all as new. No optional locks: the build pill's poll runs
     # git status here, which otherwise takes .git/index.lock to refresh the index, and a poll that came while the
     # Commands tab ran git add -A or git commit made that fail ("Unable to create .git/index.lock: File exists").
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8",
@@ -532,7 +528,9 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
         paths = sources[unit.key]
         new = [f for f in new_files if _under(f, paths)]
         changed = differing[unit.last_tag] | {f for f in history.uncommitted if _under(f, paths)} | set(new)
-        unit.changed = sorted(f for f in changed if f and is_shipped(f))
+        shipped = sorted(f for f in changed if f and is_shipped(f))
+        written = release_only(root, unit, shipped)
+        unit.changed = [f for f in shipped if f not in written]
     for unit in units:
         if unit.kind != NEXUS and not unit.last_tag:
             unit.commits = commits_since(root, None, unit.path)
@@ -550,6 +548,37 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
             unit.changed = [b.split("\n", 1)[0] for b in new_entries(root, unit)] if unit.released_as else []
             unit.suite_releases = suite_releases(root) if unit.released_as else []
     return units
+
+
+def release_only(root: Path, unit: Unit, files: list[str]) -> set[str]:
+    """Of *files* (changed since the unit's last tag), those that hold only what the release tools write: VERSION and
+    its copies (check_versions.py's) whose only change is the version, and the CHANGELOG when its entries since the
+    tag are all tool entries ("Release x.y.z.", "Withdrawn: ..."). They ship nothing new, so they need no release
+    (owner, 15-11-2026: a portal bump with nothing else in it was released as a second portal of the same apps)."""
+    if not unit.last_tag:
+        return set()
+    tagged = unit.last_tag[len(unit.tag_head):]
+    found = set()
+    for name in files:
+        path = root / name
+        if not path.is_file():
+            continue
+        if path.name == "CHANGELOG" and Path(name).parent.as_posix() == Path(unit.path).as_posix():
+            old = set(changelog_entries(git(root, "show", f"{unit.last_tag}:{name}") or ""))
+            new = [entry_body(e) for e in changelog_entries(path.read_text(encoding="utf-8")) if e not in old]
+            if all(b.startswith(TOOL_ENTRIES) for b in new if b):
+                found.add(name)
+            continue
+        if unit.version == tagged or not (path.name == "VERSION" or check_versions.version_pattern(path)):
+            continue
+        old_text = git(root, "show", f"{unit.last_tag}:{name}")
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        if old_text is not None and text.replace(unit.version, tagged) == old_text:
+            found.add(name)
+    return found
 
 
 NEW_SUITE = "new suite "
@@ -653,8 +682,8 @@ def add_changelog_entry(root: Path, unit: Unit, text: str, now: datetime.datetim
     """Puts "Changelog: <time>", a blank line and *text* on top of the unit's CHANGELOG. A release entry ("Release
     x.y.z.") replaces the newest entry when that is the same release already, so applying a release again (after a
     check stopped the commit) leaves one entry, with the latest notes (owner, 28-10-2026: "Release 1.3.0." twice).
-    Never one *base* (the last push) has: that is history, which check_changelogs.py keeps (owner, 29-10-2026: the
-    portal release replaced the "Release 3.2.0. Pins ..." entry its app release had pushed, and the push failed)."""
+    Never one *base* (the last push) has: that is history (owner, 29-10-2026: the portal release replaced the
+    "Release 3.2.0. Pins ..." entry its app release had pushed)."""
     path = root / unit.path / "CHANGELOG"
     stamp = amsterdam_now(now).strftime("%d-%m-%Y %H:%M:%S")
     old = path.read_text(encoding="utf-8") if path.is_file() else ""
@@ -685,7 +714,7 @@ def nexus_notes(notes: str, releases: list[str]) -> str:
 
 
 def bump_nexus(root: Path, version: str, notes: str = "", base: str = "origin/main") -> str:
-    """Nexus's version and its release entry, as step 1's Apply of the nexus row writes them; the entry's text."""
+    """Nexus's version and its release entry, as Start new release writes them; the entry's text."""
     nexus = next(u for u in load_units(root) if u.kind == NEXUS)
     text = release_text(version, nexus_notes(notes, suite_releases(root)))
     if version != nexus.version:
@@ -712,27 +741,6 @@ def changelog_entries(text: str) -> list[str]:
 
 def entry_body(entry: str) -> str:
     return entry.split("\n", 1)[1].strip() if "\n" in entry else ""
-
-
-def newest_entry(root: Path, unit: Unit) -> str:
-    """The text of the newest entry of the unit's CHANGELOG (without its Changelog: line); "" without one."""
-    path = root / unit.path / "CHANGELOG"
-    entries = changelog_entries(path.read_text(encoding="utf-8")) if path.is_file() else []
-    return entry_body(entries[0]) if entries else ""
-
-
-def release_version(body: str) -> str:
-    """The version of a release entry ("Release x.y.z. ..."); "" for any other entry."""
-    found = _RELEASE.match(body.strip())
-    return found[1] if found else ""
-
-
-def newest_entry_pushed(root: Path, unit: Unit, base: str = "origin/main") -> bool:
-    """Whether the newest entry of the unit's CHANGELOG is in *base* (the last push) already: history."""
-    path = root / unit.path / "CHANGELOG"
-    entries = changelog_entries(path.read_text(encoding="utf-8")) if path.is_file() else []
-    pushed = git(root, "show", f"{base}:{Path(unit.path).as_posix()}/CHANGELOG") if entries else None
-    return bool(entries) and entries[0] in changelog_entries(pushed or "")
 
 
 def change_word(body: str) -> str:
@@ -806,7 +814,7 @@ def _tagged_version(unit: Unit) -> str:
 
 
 def version_choices(root: Path, unit: Unit, blobs: dict[str, str | None] | None = None) -> tuple[list[str], str]:
-    """The versions step 1 offers for the unit, the one semantic versioning gives first, and why. Breaking. ->
+    """The versions the release offers for the unit, the one semantic versioning gives first, and why. Breaking. ->
     major, Added. -> minor, otherwise patch, counted from the last tag. A VERSION bumped further already, never
     tagged, comes first; a first release is offered as it is."""
     nexts = list(next_versions(unit.version).values())
@@ -843,7 +851,7 @@ def nexus_level(level: str, why: str, releases: list[str]) -> tuple[str, str]:
 def portal_suggestion(root: Path, portal: Unit, suite: str | None = None) -> tuple[str, str]:
     """The portal's next version by semantic versioning since its last tag, and why: its own CHANGELOG entries, and
     what changed in apps.toml since that tag (an app added or removed: minor; the largest app bump it pins), as
-    tools/check_manifest.py counts it. A portal never tagged is offered as it is, as step 1 offers a first release
+    tools/check_manifest.py counts it. A portal never tagged is offered as it is, as an app's first release is
     (owner, 28-10-2026)."""
     if portal.last_tag is None:
         return portal.version, "the first release"
@@ -862,7 +870,7 @@ def portal_suggestion(root: Path, portal: Unit, suite: str | None = None) -> tup
 
 def write_portal_bump(root: Path, suite: str | None, base: str, version: str) -> tuple[list[Path], str]:
     """The portal's version written with its CHANGELOG entry (the pins and the withdrawals that changed since
-    *base*): step 1's Apply writes the least CI accepts this way, the Commit step's offer the version it offers.
+    *base*): the Commit step's offer writes the version it offers this way.
     The paths changed and the entry's text."""
     portal = next(u for u in load_units(root, suite) if u.kind == "portal")
     changed = set_version(root, portal, version)
@@ -873,8 +881,8 @@ def write_portal_bump(root: Path, suite: str | None, base: str, version: str) ->
 
 def portal_offer(root: Path, base: str, suite: str | None = None) -> tuple[str, str, str] | None:
     """What the Commit step offers when its manifest check would refuse the commit (owner, 02-11-2026: it only
-    refused, and the bump was step 1's or step 2's): the portal version to write, why that one, and what changed
-    in apps.toml. The version is step 2's suggestion (the portal's CHANGELOG entries count: a Breaking entry makes
+    refused): the portal version to write, why that one, and what changed
+    in apps.toml. The version is portal_suggestion's (the portal's CHANGELOG entries count: a Breaking entry makes
     it major) or the least the check accepts, whichever is higher. None when no bump is needed."""
     version = (suite_dir(root, suite) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
     minimum, why = portal_minimum(root, base, version, suite)
@@ -917,7 +925,7 @@ def set_withdrawn(text: str, key: str, reason: str) -> str:
 
 
 def withdrawable(root: Path, units: list[Unit], suite: str | None = None) -> list[Unit]:
-    """The apps a portal pins that can be withdrawn: never the required one (Bazzite Test, always installed)."""
+    """The apps a portal pins that can be withdrawn: never the required one (Board Test, always installed)."""
     required = {e.key for e in manifest_tools(root, suite).manifest.load(manifest_path(root, suite)) if e.required}
     return [u for u in units if u.kind == "app" and not u.standalone and u.pinned_tag and u.key not in required]
 
@@ -957,64 +965,21 @@ def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = Non
         f"gh release edit {tag} --prerelease --title {shlex.quote('Withdrawn: ' + tag)} "
         f"--notes {shlex.quote(notes)}",
         "",
-        "# 2. Test it on the target platform with the app installed: Test withdrawal, tab Test on this board (check-release.sh",
-        "#    local). The portal must show the app as \"App not available\" and remove it. Take back undoes the",
-        "#    mark after a test.",
+        "# 2. Test it on a console with the app installed: Test withdrawal on this tab (check-release.sh local).",
+        "#    The portal must show the app as \"App not available\" and remove it. Take back undoes the mark after",
+        "#    a test.",
         "",
-        "# 3. Then a portal release (2. Pin and release Portal: Bump portal, at least a minor version): it lists the",
-        "#    withdrawal in its CHANGELOG entry; commit, push and tag it as usual.",
+        "# 3. Then a portal release (the release tab, from Commit your changes: its Commit bumps the portal): it lists",
+        "#    the withdrawal in its CHANGELOG entry.",
     ])
 
 
-# --- Step 2: pins and the portal -------------------------------------------------------------------------------
-
-def pin_candidates(units: list[Unit]) -> list[Unit]:
-    """Apps whose current VERSION is not pinned with a checksum yet: tagged ones and ones still to be tagged or built,
-    so step 2 shows them from Apply on and Pin waits for their builds (owner, 28-10-2026)."""
-    return [u for u in units if u.kind == "app" and not u.standalone
-            and (u.pinned_tag != u.tag or not u.pinned_sha)]
-
-
-def applied(root: Path, unit: Unit) -> bool:
-    """Whether step 1's Apply already wrote this unit's release: its newest CHANGELOG entry is "Release <VERSION>."
-    ("Version <VERSION>." for core) and that version is not tagged yet. Apply then has nothing new for it."""
-    if unit.released:
-        return False
-    try:
-        entries = changelog_entries((root / unit.path / "CHANGELOG").read_text(encoding="utf-8"))
-    except OSError:
-        return False
-    if not entries:
-        return False
-    body = entry_body(entries[0])
-    return body.startswith(f"Release {unit.version}.") or body.startswith(f"Version {unit.version}.")
-
+# --- The pins and the portal -----------------------------------------------------------------------------------
 
 def pin(root: Path, unit: Unit, sha256: str, suite: str | None = None) -> None:
     text = manifest_path(root, suite).read_text(encoding="utf-8")
     write_manifest(root, pin_app.pin(text, unit.key, unit.tag, sha256.lower()), suite)
     unit.pinned_tag, unit.pinned_sha = unit.tag, sha256.lower()
-
-
-def follow_unreleased_pin(root: Path, unit: Unit, suite: str | None = None) -> bool:
-    """When apps.toml pins a tag of this app that was never released, CI only accepts it while it matches VERSION:
-    move the pin to the new version (sha256 empty). True when apps.toml changed; that push then needs a portal bump."""
-    if unit.kind != "app" or not unit.pinned_tag or unit.pinned_tag == unit.tag \
-            or unit.pinned_tag in tags_of(root, unit.key, unit.prefix):
-        return False
-    text = manifest_path(root, suite).read_text(encoding="utf-8")
-    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, ""), suite)
-    unit.pinned_tag, unit.pinned_sha = unit.tag, ""
-    return True
-
-
-def release_asset(tag: str) -> str:
-    """What a release tag's portal downloads: <tag>.tar.gz (tools/build_release.py)."""
-    return f"{tag}.tar.gz"
-
-
-def fetch_sha256(tag: str) -> str:
-    return pin_app.fetch_sha256(tag, release_asset(tag))
 
 
 def changed_pins(root: Path, base: str, suite: str | None = None) -> list[str]:
@@ -1091,7 +1056,6 @@ def suite_icon(root: Path, suite: str | None = None) -> Path | None:
 RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?per_page={page}"
 RUNS_PAGE = 30
 HEAD_RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?head_sha={sha}&per_page=100"
-TAG_RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?branch={tag}&per_page=5"   # a tag's runs: its release
 ACTIONS_URL = "{repo_url}/actions"
 OK_CONCLUSIONS = ("success", "skipped", "neutral")
 
@@ -1262,29 +1226,20 @@ def runs_at(url: str, etag: str) -> tuple[list[BuildRun], str, bool, RateInfo | 
     return runs, etag, data is not None, rate
 
 
-def fetch_runs(etag: str = "", sha: str = "", tags: tuple[str, ...] = ()) -> tuple[list[BuildRun] | None, str,
-                                                                                    RateInfo | None]:
+def fetch_runs(etag: str = "", sha: str = "") -> tuple[list[BuildRun] | None, str, RateInfo | None]:
     """The newest workflow runs (newest first), the ETag to send next time and GitHub's hourly limit as it stands;
     runs None when nothing changed since *etag* (github_get). With *sha*, the checkout's HEAD: when the page is
     full and ends on a run of that commit, its older runs are under the page, so they come from GitHub's list of
-    that commit's runs too (one more request, with an ETag of its own). With *tags*, the releases step 2 waits for:
-    a tag whose release run is not among those runs gets its own list (the runs on that ref), so a release
-    published before the page's oldest run still reads as built. A release of 26 apps started 26 Release runs and
-    as many Nexus index runs after the CI runs on its commit, which filled the page, so the CI passes step saw no
-    CI run and never lit, and Pin stayed gray for five releases of the morning that were never pinned (owner,
-    04-11-2026)."""
+    that commit's runs too (one more request, with an ETag of its own). A release of 26 apps started 26 Release runs
+    and as many Nexus index runs after the CI runs on its commit, which filled the page, so the CI passes step saw no
+    CI run and never lit (owner, 04-11-2026)."""
     repo = repo_slug()
     runs, etag, changed, rate = runs_at(RUNS_URL.format(repo=repo, page=RUNS_PAGE), etag)
     more: list[BuildRun] = []
     if sha and len(runs) >= RUNS_PAGE and runs[-1].sha == sha:
         url = HEAD_RUNS_URL.format(repo=repo, sha=sha)
-        found, _etag, found_changed, rate = runs_at(url, _pages.get(url, ("", []))[0])
-        more, changed = more + found, changed or found_changed
-    for tag in tags:
-        if release_run(runs + more, tag) is None:
-            url = TAG_RUNS_URL.format(repo=repo, tag=tag)
-            found, _etag, found_changed, rate = runs_at(url, _pages.get(url, ("", []))[0])
-            more, changed = more + found, changed or found_changed
+        more, _etag, found_changed, rate = runs_at(url, _pages.get(url, ("", []))[0])
+        changed = changed or found_changed
     if not changed:
         return None, etag, rate
     seen = {r.url for r in runs}
@@ -1320,40 +1275,6 @@ def build_state(runs: list[BuildRun]) -> str:
 def just_finished(before: dict[str, BuildRun], runs: list[BuildRun]) -> list[BuildRun]:
     """The runs that were running at the last look (*before*, by url) and have finished now."""
     return [r for r in runs if r.done and r.url in before and not before[r.url].done]
-
-
-def is_release(run: BuildRun) -> bool:
-    """A suite's release workflow: release.yml ("Release"), or release-<suite>.yml for a suite with a tag prefix
-    ("Release <suite>"); by its name when GitHub gives no file."""
-    if run.file:
-        return run.file == "release.yml" or (run.file.startswith("release-") and run.file.endswith(".yml"))
-    return run.workflow == "Release" or run.workflow.startswith("Release ")
-
-
-def release_run(runs: list[BuildRun], tag: str) -> BuildRun | None:
-    """The newest release run on *tag* (release.yml or the suite's release-<suite>.yml, which builds and publishes
-    its release); None while GitHub shows none: the tag is not pushed yet, or the run is not among the newest ones
-    any more."""
-    return next((r for r in runs if is_release(r) and r.ref == tag), None)
-
-
-def release_state(runs: list[BuildRun], tag: str) -> str:
-    """"running" while release.yml builds *tag*, "passed" once its tarball is published, "failed" when it did not
-    build it, "" while GitHub shows no run on the tag."""
-    run = release_run(runs, tag)
-    return build_state([run]) if run else ""
-
-
-def finished_releases(announced: set[str], runs: list[BuildRun], tags: list[str]) -> list[BuildRun]:
-    """The Release runs of *tags* (the releases the window waits for) that have finished and were not announced
-    yet (*announced*: their urls). Seen running before or not: a run that starts and ends between two looks, or
-    before the first, counts too, so a release that is ready to pin is announced once, whenever it is seen."""
-    found = []
-    for tag in tags:
-        run = release_run(runs, tag)
-        if run and run.done and run.url not in announced:
-            found.append(run)
-    return found
 
 
 # --- GitHub Actions: the jobs of a run and the step each is at, for the ticker -----------------------------------
@@ -1655,11 +1576,8 @@ def push_command(linux: bool | None = None) -> str:
 
 def pull_command() -> str:
     """The git pull button: what was pushed from the other machine, with this checkout's own commits put on top of
-    it (--rebase: no merge commit) and its changes not committed yet kept as they are (--autostash). The checkout's
-    git settings come first (tools/git-setup.sh: the hook and the CHANGELOGs' merge driver, which lets an entry
-    written here and one pushed from the other machine merge; owner, 01-11-2026: the pull ended in that conflict
-    every time)."""
-    return "tools/git-setup.sh && git pull --rebase --autostash"
+    it (--rebase: no merge commit) and its changes not committed yet kept as they are (--autostash)."""
+    return "git pull --rebase --autostash"
 
 
 def behind(root: Path, base: str) -> int:
@@ -1672,11 +1590,6 @@ def behind(root: Path, base: str) -> int:
 def add_command() -> str:
     """The Commit step's git add: everything, the exec bits CI checks, and what is staged now."""
     return "git add -A && tools/fix-modes.sh && git status --short"
-
-
-def tag_command(tags: list[str]) -> str:
-    """The release command: build the assets from a pushed HEAD and publish each release with gh."""
-    return f"{TAG_SCRIPT} {' '.join(tags)}"
 
 
 def commit_command(message: str, base: str, amend: bool = False, python: str = "python3",
@@ -1700,69 +1613,6 @@ def git_state(root: Path, base: str) -> tuple[bool, bool, int]:
     staged = any(line[0] not in " ?" for line in lines)
     ahead = (git(root, "rev-list", "--count", f"{base}..HEAD") or "0").strip()
     return unstaged, staged, int(ahead) if ahead.isdigit() else 0
-
-
-def app_commands(tags: list[str], linux: bool | None = None, portal: str = "", amend: bool = False) -> str:
-    """The commands after step 1's Apply. *portal*: the portal version this push also needs (apps.toml changed since
-    the last portal release), which comes first: committed without it, the push fails CI. *amend*: HEAD is the release commit
-    of these tags and is not pushed yet (the bump came after the commit), so the bump joins it."""
-    lines = [f"# First: step 2's Bump portal (portal {portal}), or CI fails on this push; then:"] if portal else []
-    lines += ["git add -A && tools/fix-modes.sh"]
-    lines += ["git commit --amend --no-edit     # HEAD is the release commit, not pushed yet: the bump joins it"] \
-        if amend else [f'git commit -m "Release {", ".join(tags)}"']
-    lines += [push_command(linux)]
-    lines += [f"{TAG_SCRIPT} {' '.join(tags)}     # refuses until the bump is committed and pushed"]
-    lines += ["# once the releases are published: step 2 (pin and portal)"]
-    return "\n".join(lines)
-
-
-NEXUS_INDEX_NOTE = ("# Nexus {version}: once this push is on main, GitHub's Latest release becomes nexus-v{version} "
-                    "(nexus-index.yml); nothing to tag")
-
-
-def nexus_commands(version: str, linux: bool | None = None) -> str:
-    """The commands after step 1's Apply of Nexus's version alone: commit and push; the index workflow publishes
-    the Latest release as nexus-v<version> when the push changes VERSION."""
-    return "\n".join(["git add -A && tools/fix-modes.sh", f'git commit -m "Release {NEXUS}-v{version}"',
-                      push_command(linux), NEXUS_INDEX_NOTE.format(version=version)])
-
-
-def untagged_releases(units: list[Unit]) -> list[str]:
-    """The tags step 1 still has to push: every portal app whose VERSION has no tag. While there is one, the portal
-    cannot be released (release.yml checks every pinned tag), so a portal bump made now goes into step 1's push."""
-    return [u.tag for u in units if u.kind == "app" and not u.standalone and not u.released]
-
-
-def unpushed_release_commit(root: Path, base: str) -> str:
-    """HEAD's subject when it is a release commit ("Release ...") that *base* does not have yet: the commit step 1's
-    bump can still be amended into. "" otherwise."""
-    if git(root, "merge-base", "--is-ancestor", "HEAD", base) is not None:
-        return ""
-    subject = (git(root, "log", "-1", "--format=%s") or "").strip()
-    return subject if subject.startswith("Release ") else ""
-
-
-def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRIPT) -> str:
-    """Commit, test on a console, and only then push and tag: the tag is what reaches the users' portals. *check*:
-    the suite's check-release.sh, relative to the checkout (check_script())."""
-    return "\n".join([
-        "# 1. Commit (no push yet):",
-        "git add -A && tools/fix-modes.sh",
-        f'git commit -m "Release {tag}"',
-        "",
-        "# 2. Test on the target platform (docs/portal.md, Testing a portal release before its tag): Test updates, or",
-        f"{check} local     # ./install.sh, then start suite --source release",
-        "#    The apps whose pin changed show Update: update them, open each one, check that it works.",
-        "#    Something wrong? Fix the app and release a new patch version (step 1), then pin again.",
-        "",
-        "# 3. All good: push, then tag the portal. The tag goes on the commit of step 1, so commit before you tag:",
-        "#    the script refuses while HEAD does not hold the bump.",
-        push_command(linux),
-        f"{TAG_SCRIPT} {tag}",
-        "",
-        "# 4. Once tag-release.sh has published it: Test release, or",
-        f"{check} release {tag}   # verifies and installs the published portal release",
-    ])
 
 
 def main() -> int:

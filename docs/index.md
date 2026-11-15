@@ -26,20 +26,20 @@ hide:
 <div class="home-card" markdown>
 #### :material-stethoscope: Diagnostics
 
-[Bazzite Test](apps/bazzite.md) checks the console with about sixty tests,
-[System Overlay](apps/overlay.md) keeps CPU, GPU, memory, fan and temperatures on top, and
-[SSD Check](apps/ssd.md) shows the drives' health and information.
+[PS5 Board Test](apps/board.md) checks the console with about sixty tests,
+[PS5 System Overlay](apps/overlay.md) keeps CPU, GPU, memory, fan and temperatures on top, and
+[PS5 SSD Check](apps/ssd.md) shows the drives' health and information.
 </div>
 <div class="home-card" markdown>
 #### :material-fan: Cooling
 
-[Fan Control](apps/fan.md) shows the temperatures and the fan, and its thermal guard warns, cools and shuts the
+[PS5 Fan Controller](apps/fan.md) shows the temperatures and the fan, and its thermal guard warns, cools and shuts the
 console down cleanly at a critical temperature.
 </div>
 <div class="home-card" markdown>
 #### :material-expansion-card: Graphics
 
-[Upscaler Manager](apps/upscaler.md) puts HelixSR, an FSR 3.1 drop-in upscaler with DLSS-style networks, into
+[PS5 Upscaler Manager](apps/upscaler.md) puts HelixSR, an FSR 3.1 drop-in upscaler with DLSS-style networks, into
 games, and takes it out again.
 </div>
 <div class="home-card" markdown>
@@ -48,7 +48,7 @@ games, and takes it out again.
 [shadPS4 Manager](apps/shadps4.md) plays PS4 games, [RPCS3 Manager](apps/rpcs3.md) PS3 games,
 [PCSX2 Manager](apps/pcsx2.md) PS2 games, [PPSSPP Manager](apps/ppsspp.md) PSP games,
 [Vita3K Manager](apps/vita3k.md) PS Vita games and [Xenia Manager](apps/xenia.md) XBOX 360 games, each with its
-emulator, and [Bazzite DatStation](apps/datstation.md) has a PlayStation quiz and console history.
+emulator, and [PS5 DatStation](apps/datstation.md) has a PlayStation quiz and console history.
 </div>
 <div class="home-card" markdown>
 #### :material-television-play: Streaming
@@ -59,10 +59,10 @@ emulator, and [Bazzite DatStation](apps/datstation.md) has a PlayStation quiz an
 <div class="home-card" markdown>
 #### :material-television: Living room
 
-[HDMI CEC Manager](apps/cec.md) turns the TV on and off with the PS5, [SFTP Tools](apps/sftp.md) moves files
-between computers, [Webcam](apps/webcam.md) makes a PlayStation camera a webcam,
-[Controller](apps/controller.md) manages DualSense controllers and updates their firmware, and
-[Bluetooth Pairing](apps/btpair.md) pairs your keyboard, mouse and controllers at boot.
+[PS5 CEC Manager](apps/cec.md) turns the TV on and off with the PS5, [PS5 SFTP Tools](apps/sftp.md) moves files
+between computers, [PS5 Webcam](apps/webcam.md) makes a PlayStation camera a webcam,
+[PS5 Controller](apps/controller.md) manages DualSense controllers and updates their firmware, and
+[PS5 Bluetooth](apps/bluetooth.md) pairs your keyboard, mouse and controllers at boot.
 </div>
 </div>
 
@@ -90,7 +90,7 @@ Apps that **change the board** are marked, and the portal asks before it install
 ## Get started
 
 Ready to set up your PlayStation 5? One download installs the **portal**: a fullscreen app library for the
-controller, the keyboard and the mouse. It installs Bazzite Test with it, and from it you install, open, update and
+controller, the keyboard and the mouse. It installs Board Test with it, and from it you install, open, update and
 remove every other app of the suite. You never download an app yourself.
 
 [:material-download: Install the portal](install.md){ .md-button .md-button--primary }
@@ -104,16 +104,16 @@ remove every other app of the suite. You never download an app yourself.
 
 ### Do the apps change my console?
 
-Only the apps marked **changes the board**: Fan Control's thermal guard, Webcam's camera access and the SSH server
+Only the apps marked **changes the board**: Fan Controller's thermal guard, Webcam's camera access and the SSH server
 that SFTP Tools starts. They are software-only and can be undone, and the portal says what the app changes and asks
 before it installs or opens it. Each of their chapters opens with a **Changes the board** box with the same text:
-what the app touches, what stays after a reboot and how the change is undone. Bazzite Test only reads.
+what the app touches, what stays after a reboot and how the change is undone. Board Test only reads.
 
 ### How do I undo a change?
 
-In the app that made it: turn the thermal guard off in [Fan Control](apps/fan.md), and stop the SSH server in
-[SFTP Tools](apps/sftp.md#manage-ssh-servers), which leaves the firewall's rule for you to review. Uninstalling
-[Webcam](apps/webcam.md) removes its camera rule, and uninstalling Fan Control removes the guard.
+In the app that made it: turn the thermal guard off in [PS5 Fan Controller](apps/fan.md), and stop the SSH server in
+[PS5 SFTP Tools](apps/sftp.md#manage-ssh-servers), which leaves the firewall's rule for you to review. Uninstalling
+[PS5 Webcam](apps/webcam.md) removes its camera rule, and uninstalling Fan Controller removes the guard.
 
 ### Do the apps change the console's own driver?
 

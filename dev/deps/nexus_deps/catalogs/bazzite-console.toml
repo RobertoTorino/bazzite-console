@@ -6,8 +6,8 @@ name = "Bazzite Console Suite"
 launchers = ["~/.local/bin/bazzite-console-suite"]
 
 [app.bazzite]
-name = "Bazzite Test"
-launchers = ["~/.local/bin/bazzite-test"]
+name = "PS5 Board Test"
+launchers = ["~/.local/bin/ps5-board-test"]
 
 [app.rpcs3]
 name = "RPCS3 Manager"
@@ -26,7 +26,7 @@ name = "shadPS4 Manager"
 launchers = ["~/.local/bin/ps5-shadps4-manager"]
 
 [app.datstation]
-name = "Bazzite DatStation"
+name = "PS5 DatStation"
 launchers = ["~/.local/bin/ps5-datstation"]
 
 [app.ppsspp]
@@ -46,40 +46,40 @@ name = "Xenia Manager"
 launchers = ["~/.local/bin/ps5-xenia-manager"]
 
 [app.sftp]
-name = "SFTP Tools"
+name = "PS5 SFTP Tools"
 launchers = ["~/.local/bin/ps5-sftp-tools"]
 
 [app.webcam]
-name = "Webcam"
+name = "PS5 Webcam"
 launchers = ["~/.local/bin/ps5-webcam"]
 
 [app.controller]
-name = "Controller"
+name = "PS5 Controller"
 launchers = ["~/.local/bin/ps5-controller"]
 
 [app.ssd]
-name = "SSD Check"
+name = "PS5 SSD Check"
 launchers = ["~/.local/bin/ps5-ssd-check"]
 
 [app.overlay]
-name = "System Overlay"
+name = "PS5 System Overlay"
 launchers = ["~/.local/bin/ps5-system-overlay"]
 
 [app.fan]
-name = "Fan Control"
-launchers = ["~/.local/bin/ps5-fan-control"]
+name = "PS5 Fan Controller"
+launchers = ["~/.local/bin/ps5-fan-controller"]
 
 [app.cec]
-name = "HDMI CEC Manager"
-launchers = ["~/.local/bin/ps5-hdmi-cec"]
+name = "PS5 CEC Manager"
+launchers = ["~/.local/bin/ps5-cec-manager"]
 
 [app.upscaler]
-name = "Upscaler Manager"
+name = "PS5 Upscaler Manager"
 launchers = ["~/.local/bin/ps5-upscaler"]
 
-[app.btpair]
-name = "Bluetooth Pairing"
-launchers = ["~/.local/bin/ps5-bluetooth-pairing"]
+[app.bluetooth]
+name = "PS5 Bluetooth"
+launchers = ["~/.local/bin/ps5-bluetooth"]
 
 [[dependency]]
 name = "PyQt6"
@@ -90,7 +90,7 @@ owner = "portal"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
-owner = "bazzite"
+owner = "board"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
@@ -162,15 +162,15 @@ owner = "upscaler"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
-owner = "btpair"
+owner = "bluetooth"
 specifier = ">=6.11,<7"
 
 [[dependency]]
 name = "PyQt6-Charts"
-description = "The Qt charts used for Bazzite Test's graphs."
+description = "The Qt charts used for Board Test's graphs."
 
 [[dependency.source]]
-owner = "bazzite"
+owner = "board"
 specifier = ">=6.11,<7"
 
 [[dependency]]
@@ -262,7 +262,7 @@ usage = "Turn the thermal guard on and off, and change it."
 need = "required"
 
 [[tool.source]]
-owner = "btpair"
+owner = "bluetooth"
 usage = "Password prompt for installing, changing and removing the search after boot and the battery service."
 need = "required"
 
@@ -356,44 +356,44 @@ need = "required"
 
 [[tool]]
 name = "bluetoothctl"
-description = "BlueZ's command line for Bluetooth. Bluetooth Pairing searches for, pairs and connects the listed devices with it. Part of Bazzite."
+description = "BlueZ's command line for Bluetooth. PS5 Bluetooth searches for, pairs and connects the listed devices with it. Part of Bazzite."
 executables = ["bluetoothctl"]
 
 [[tool.source]]
-owner = "btpair"
+owner = "bluetooth"
 usage = "The search after boot pairs, trusts and connects the listed devices; the window lists the devices Bluetooth knows and searches for nearby ones."
 need = "required"
 
 [[tool]]
 name = "dbus-python"
-description = "D-Bus for the system's own Python (part of Bazzite). Bluetooth Pairing's battery service runs on the system's Python as root and offers BlueZ the controllers' battery levels with it. Checked by its license file."
+description = "D-Bus for the system's own Python (part of Bazzite). PS5 Bluetooth's battery service runs on the system's Python as root and offers BlueZ the controllers' battery levels with it. Checked by its license file."
 executables = []
 locations = ["/usr/share/licenses/python3-dbus/COPYING"]
 probe = "path"
 
 [[tool.source]]
-owner = "btpair"
+owner = "bluetooth"
 usage = "The battery service: PlayStation controller batteries in the Bluetooth icon."
 need = "optional"
 
 [[tool]]
 name = "PyGObject"
-description = "GLib for the system's own Python (part of Bazzite): the event loop of Bluetooth Pairing's battery service. Checked by its license file."
+description = "GLib for the system's own Python (part of Bazzite): the event loop of PS5 Bluetooth's battery service. Checked by its license file."
 executables = []
 locations = ["/usr/share/licenses/python3-gobject-base/COPYING"]
 probe = "path"
 
 [[tool.source]]
-owner = "btpair"
+owner = "bluetooth"
 usage = "The battery service: PlayStation controller batteries in the Bluetooth icon."
 need = "optional"
 
 [[tool]]
 name = "kwriteconfig6"
-description = "Reads and writes KDE's settings files (with kreadconfig6). Bluetooth Pairing sets Plasma's Bluetooth to switch on at every login with it."
+description = "Reads and writes KDE's settings files (with kreadconfig6). PS5 Bluetooth sets Plasma's Bluetooth to switch on at every login with it."
 executables = ["kwriteconfig6"]
 
 [[tool.source]]
-owner = "btpair"
+owner = "bluetooth"
 usage = "Bluetooth on at every login (Plasma only)."
 need = "optional"

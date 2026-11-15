@@ -1,37 +1,5 @@
-Changelog: 14-11-2026 13:58:40
+Changelog: 15-11-2026 04:15:58
 
-Release 1.0.1.
-
-Changelog: 14-11-2026 12:12:59
-
-Fixed. A comment in the code called the PS5 "the board"; it says the console now. The app is unchanged.
-
-Changelog: 14-11-2026 03:50:36
-
-Release 1.0.0.
-
-Changelog: 14-11-2026 01:28:53
-
-Release 0.2.0.
-
-Changelog: 14-11-2026 01:10:31
-
-Release 0.1.2.
-
-Changelog: 13-11-2026 23:35:42
-
-Release 0.1.1.
-
-Changelog: 13-11-2026 22:48:09
-
-Fixed. The app's icon is its category's current picture.
-
-Changelog: 11-11-2026
-
-Release 0.1.0. First PS5 version, for the PS5 kernel's
-own CEC adapter (ps5-cec, /dev/cec0): the TV buttons (on, switch to the PS5, standby, check, volume), TV info, the
-devices on the bus, the name on the TV (default "PS5"), pausing media while the TV is off, Valve's CEC daemon (cecd)
-settings and the remote's buttons, and the key tester. Left out: DP-to-HDMI picture workarounds
-(8 bits per color, restarting the picture; the PS5 has its own HDMI port) and the boot service (the PS5 kernel turns
-the TV on and switches it at boot, hdmi.one_touch_play). The TV's name comes from the connected connector's EDID,
-since ps5-cec is not named after a connector.
+Breaking. PS5 CEC Manager has its own id, ps5-cec-manager, for the launcher, the menu entry, the settings, the data
+folders and its services (owner, 15-11-2026). It does not take over a copy installed before: uninstall that one
+first.

@@ -8,13 +8,13 @@
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 REPO=$SUITE
-T=/tmp/ps5-fan-control-test
+T=/tmp/ps5-fan-controller-test
 # shellcheck source=tools/installer-tests/shims.sh
 source "$(dirname "${BASH_SOURCE[0]}")/shims.sh" "$T"; set +e
 fail=0
 check() { if eval "$2"; then echo "  ok   $1"; else echo "  FAIL $1"; fail=1; fi; }
 D=$XDG_DATA_HOME
-APP=ps5-fan-control
+APP=ps5-fan-controller
 A=$D/$APP/app
 export PS5_SYSTEM_ROOT=$T/system                  # the guard's /etc
 GUARD=$PS5_SYSTEM_ROOT/etc
@@ -28,13 +28,13 @@ echo "== 1. install from the suite checkout"
 bash "$SUITE/apps/fan/install.sh" > "$T/log1" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "no sudo used" "! grep -q 'sudo called' $T/log1 && [ -z \"\$(ls -A $T/opt)\" ]"
-check "app copied" "[ -f $A/fan_control/main_window.py ] && [ -f $A/images/$APP.webp ] && [ -f $A/images/$APP-128.png ]"
-check "guard helper copied" "[ -f $A/fan_control/guard.py ]"
+check "app copied" "[ -f $A/fan_controller/main_window.py ] && [ -f $A/images/$APP.webp ] && [ -f $A/images/$APP-128.png ]"
+check "guard helper copied" "[ -f $A/fan_controller/guard.py ]"
 check "core bundled from checkout" "[ -f $A/bazzite_console_core/theme.py ]"
 check "no tests or caches copied" "[ ! -d $A/tests ] && ! find $A -name __pycache__ | grep -q ."
 check "shared venv" "[ -x $D/bazzite-console-suite/venv/bin/python ]"
 check "venv user marker" "[ -f $D/bazzite-console-suite/venv-users/$APP ]"
-check "launcher uses shared venv" "grep -qF 'bazzite-console-suite/venv/bin/python\" -m fan_control' $HOME/.local/bin/$APP"
+check "launcher uses shared venv" "grep -qF 'bazzite-console-suite/venv/bin/python\" -m fan_controller' $HOME/.local/bin/$APP"
 check "launcher cds into the app" "grep -qF 'cd \"$A\"' $HOME/.local/bin/$APP"
 check "menu entry" "grep -qx 'Exec=$HOME/.local/bin/$APP' $D/applications/$APP.desktop"
 check "desktop icon, executable" "[ -x $HOME/Desktop/$APP.desktop ]"
@@ -47,14 +47,14 @@ echo "# release marker" >> "$T/stage/bazzite_console_core/__init__.py"
 mkdir -p "$GUARD/$APP" "$GUARD/systemd/system"
 echo "# an older version" > "$GUARD/$APP/guard.py"
 echo '{"warn_c": 85, "cool_c": 90, "shutdown_c": 95, "hold_s": 10}' > "$GUARD/$APP/guard.json"
-echo "[Unit]" > "$GUARD/systemd/system/ps5-fan-control-guard.service"
+echo "[Unit]" > "$GUARD/systemd/system/ps5-fan-controller-guard.service"
 bash "$T/stage/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "the release's own core used" "grep -q 'release marker' $A/bazzite_console_core/__init__.py"
 check "desktop icon removed" "[ ! -e $HOME/Desktop/$APP.desktop ]"
 check "an older guard is reported, without sudo" "grep -q 'guard is from another version' $T/log2 && ! grep -q 'sudo called' $T/log2"
 check "the guard is left as it is" "grep -q 'an older version' $GUARD/$APP/guard.py"
-cp "$A/fan_control/guard.py" "$GUARD/$APP/guard.py"
+cp "$A/fan_controller/guard.py" "$GUARD/$APP/guard.py"
 bash "$T/stage/install.sh" --no-desktop-shortcut > "$T/log2b" 2>&1
 check "the same version is not reported" "! grep -q 'another version' $T/log2b"
 
@@ -63,21 +63,21 @@ fakeroot -- bash "$T/stage/install.sh" > "$T/log3" 2>&1; rc=$?
 check "exit non-zero" "[ $rc -ne 0 ] && grep -q 'not with sudo' $T/log3"
 
 echo "== 4. uninstall while another suite app still uses the venv; the guard goes with the app"
-touch "$D/bazzite-console-suite/venv-users/bazzite-test"
+touch "$D/bazzite-console-suite/venv-users/ps5-board-test"
 echo "[Unit]" > "$GUARD/systemd/system/other.service"
 cp "$T/shims/sudo" "$T/sudo-failing" && cp "$T/sudo-fakeroot" "$T/shims/sudo"
 bash "$T/stage/install.sh" --uninstall > "$T/log4" 2>&1; rc=$?
 cp "$T/sudo-failing" "$T/shims/sudo"
 check "exit 0" "[ $rc -eq 0 ]"
 check "app gone" "[ ! -e $A ]"
-check "guard stopped and removed" "[ ! -e $GUARD/$APP ] && [ ! -e $GUARD/systemd/system/ps5-fan-control-guard.service ] && grep -qx 'disable --now ps5-fan-control-guard.service' $T/systemctl.log"
+check "guard stopped and removed" "[ ! -e $GUARD/$APP ] && [ ! -e $GUARD/systemd/system/ps5-fan-controller-guard.service ] && grep -qx 'disable --now ps5-fan-controller-guard.service' $T/systemctl.log"
 check "systemd reloaded, other units kept" "grep -qx 'daemon-reload' $T/systemctl.log && [ -f $GUARD/systemd/system/other.service ]"
 check "venv kept" "[ -x $D/bazzite-console-suite/venv/bin/python ]"
 check "own marker gone" "[ ! -e $D/bazzite-console-suite/venv-users/$APP ]"
 check "launcher and menu entry gone" "[ ! -e $HOME/.local/bin/$APP ] && [ ! -e $D/applications/$APP.desktop ]"
 
 echo "== 5. reinstall, then uninstall --purge as the last venv user"
-rm "$D/bazzite-console-suite/venv-users/bazzite-test"
+rm "$D/bazzite-console-suite/venv-users/ps5-board-test"
 mkdir -p "$XDG_CONFIG_HOME/$APP" && touch "$XDG_CONFIG_HOME/$APP/$APP.ini"
 bash "$T/stage/install.sh" > "$T/log5" 2>&1 && bash "$T/stage/install.sh" --uninstall --purge >> "$T/log5" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"

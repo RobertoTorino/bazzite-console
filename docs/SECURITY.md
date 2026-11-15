@@ -18,7 +18,7 @@ before they unpack it. To check a download yourself, in the folder with both fil
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-The portal checks each app it downloads the same way before it unpacks it. Bazzite Test also checks its own test
+The portal checks each app it downloads the same way before it unpacks it. Board Test also checks its own test
 files before every run and refuses to run tests when they were changed.
 
 ## Dependencies and known vulnerabilities
@@ -51,7 +51,7 @@ app through an app release that requires that version. If no release does yet, r
 
 - The apps run as your own user, and their installers refuse to run with sudo. Only the steps that need root ask
   for your password, through sudo in a terminal or pkexec in a desktop dialog.
-- Bazzite Test runs its tests as root, because they read the kernel log and the drives' health data. Its test files
+- Board Test runs its tests as root, because they read the kernel log and the drives' health data. Its test files
   are installed root-owned under `/opt`, so a normal user cannot change code that sudo runs.
-- The portal asks before it installs or opens an app that changes the board (Fan Control's thermal guard, Webcam's
+- The portal asks before it installs or opens an app that changes the board (Fan Controller's thermal guard, Webcam's
   camera rule, the SSH server of SFTP Tools). All of them are software-only and can be undone.

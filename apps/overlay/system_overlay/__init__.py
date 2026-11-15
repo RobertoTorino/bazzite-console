@@ -2,7 +2,7 @@
 """A small always-on-top window with the PlayStation 5's live system values: CPU, GPU, memory, fan and
 temperatures."""
 
-APP_NAME = "System Overlay"
+APP_NAME = "PS5 System Overlay"
 APP_ID = "ps5-system-overlay"
 __version__ = "1.0.1"
 

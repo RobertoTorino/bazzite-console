@@ -18,22 +18,22 @@ echo "== 1. a test on a machine without the suite"
 run status
 check "nothing is installed" "grep -q 'Nothing of the suite is installed' $T/out.log"
 run local --no-start; rc=$?
-check "the test installs the portal and Bazzite Test" "[ $rc -eq 0 ] && [ -x $BIN/bazzite-console-suite ] && [ -x $BIN/bazzite-test ]"
+check "the test installs the portal and Board Test" "[ $rc -eq 0 ] && [ -x $BIN/bazzite-console-suite ] && [ -x $BIN/ps5-board-test ]"
 check "the install is marked as a test's" "grep -q '^the checkout, ' $MARK"
 run status
 check "status says it is a test install" "grep -q 'Portal .*: a test install (the checkout, ' $T/out.log"
-check "status lists Bazzite Test" "grep -q 'Bazzite Test (bazzite)' $T/out.log"
+check "status lists Board Test" "grep -q 'PS5 Board Test (board)' $T/out.log"
 
 echo "== 2. remove"
 bash "$SUITE/apps/fan/install.sh" --no-desktop-shortcut > "$T/fan.log" 2>&1
-check "an app is installed beside it" "[ -x $BIN/ps5-fan-control ]"
+check "an app is installed beside it" "[ -x $BIN/ps5-fan-controller ]"
 echo '{}' > "$STATE/installed.json"                       # what a portal that was opened remembers
 run remove; rc=$?
 check "remove succeeds" "[ $rc -eq 0 ]"
-check "the portal, Bazzite Test and the app are gone" \
-    "[ ! -e $BIN/bazzite-console-suite ] && [ ! -e $BIN/bazzite-test ] && [ ! -e $BIN/ps5-fan-control ]"
+check "the portal, Board Test and the app are gone" \
+    "[ ! -e $BIN/bazzite-console-suite ] && [ ! -e $BIN/ps5-board-test ] && [ ! -e $BIN/ps5-fan-controller ]"
 check "the suite's folder is gone, with what the test's portal remembered" "[ ! -e $XDG_DATA_HOME/bazzite-console-suite ]"
-check "Bazzite Test left /opt" "[ ! -e $T/opt/bazzite-test ]"
+check "Board Test left /opt" "[ ! -e $T/opt/ps5-board-test ]"
 
 echo "== 3. the machine's own install stays"
 run local --no-start --keep
@@ -47,10 +47,10 @@ check "status says it is the machine's own" "grep -q \"the machine's own install
 echo "== 4. options"
 run local --purge
 check "--purge only goes with remove" "grep -q 'only goes with remove' $T/out.log"
-echo '{}' > "$STATE/installed.json"
+echo picture > "$STATE/wallpaper.png"
 run remove; rc=$?
 check "remove keeps what the machine's own portal remembered" \
-    "[ $rc -eq 0 ] && [ ! -e $BIN/bazzite-console-suite ] && [ -f $STATE/installed.json ]"
+    "[ $rc -eq 0 ] && [ ! -e $BIN/bazzite-console-suite ] && [ -f $STATE/wallpaper.png ]"
 run local --no-start --keep
 run remove --purge; rc=$?
 check "remove --purge succeeds" "[ $rc -eq 0 ] && [ ! -e $BIN/bazzite-console-suite ]"

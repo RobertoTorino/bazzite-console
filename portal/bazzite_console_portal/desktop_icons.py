@@ -16,7 +16,7 @@ from pathlib import Path
 from bazzite_console_core.platform import data_home
 
 APP_LAUNCHERS = frozenset(f"{app_id}.desktop" for app_id in (
-    "bazzite-test",
+    "ps5-board-test",
     "ps5-remoteplay",
     "ps5-datstation",
     "ps5-pcsx2-manager",
@@ -31,10 +31,10 @@ APP_LAUNCHERS = frozenset(f"{app_id}.desktop" for app_id in (
     "ps5-xenia-manager",
     "ps5-xbox-remoteplay",
     "ps5-system-overlay",
-    "ps5-fan-control",
-    "ps5-hdmi-cec",
+    "ps5-fan-controller",
+    "ps5-cec-manager",
     "ps5-upscaler",
-    "ps5-bluetooth-pairing",
+    "ps5-bluetooth",
 ))
 
 

@@ -6,21 +6,21 @@
 
 | App | What it does |
 |---|---|
-| ![](../assets/apps/bazzite.webp){ .app-icon } [Bazzite Test](bazzite.md) | Read-only system details for PlayStation 5 hardware running Bazzite. |
-| ![](../assets/apps/fan.webp){ .app-icon } [Fan Control](fan.md) | The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature. |
-| ![](../assets/apps/overlay.webp){ .app-icon } [System Overlay](overlay.md) | A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values. |
+| ![](../assets/apps/board.webp){ .app-icon } [PS5 Board Test](board.md) | Read-only system details for PlayStation 5 hardware running Bazzite. |
+| ![](../assets/apps/fan.webp){ .app-icon } [PS5 Fan Controller](fan.md) | The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature. |
+| ![](../assets/apps/overlay.webp){ .app-icon } [PS5 System Overlay](overlay.md) | A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values. |
 
 **Graphics**: Graphics features and tools for games.
 
 | App | What it does |
 |---|---|
-| ![](../assets/apps/upscaler.webp){ .app-icon } [Upscaler Manager](upscaler.md) | Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games. |
+| ![](../assets/apps/upscaler.webp){ .app-icon } [PS5 Upscaler Manager](upscaler.md) | Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games. |
 
 **Gaming**: Emulators and console tools for games.
 
 | App | What it does |
 |---|---|
-| ![](../assets/apps/datstation.webp){ .app-icon } [Bazzite DatStation](datstation.md) | Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news. |
+| ![](../assets/apps/datstation.webp){ .app-icon } [PS5 DatStation](datstation.md) | Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news. |
 | ![](../assets/apps/pcsx2.webp){ .app-icon } [PCSX2 Manager](pcsx2.md) | Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode. |
 | ![](../assets/apps/ppsspp.webp){ .app-icon } [PPSSPP Manager](ppsspp.md) | Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode. |
 | ![](../assets/apps/remoteplay.webp){ .app-icon } [Remote Play](remoteplay.md) | Find, wake, and register PS4 and PS5 consoles on the network, and stream Remote Play. |
@@ -34,11 +34,11 @@
 
 | App | What it does |
 |---|---|
-| ![](../assets/apps/btpair.webp){ .app-icon } [Bluetooth Pairing](btpair.md) | Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed. |
-| ![](../assets/apps/controller.webp){ .app-icon } [Controller](controller.md) | Manage DualSense and DualSense Edge controllers. |
-| ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC. |
-| ![](../assets/apps/sftp.webp){ .app-icon } [SFTP Tools](sftp.md) | Transfer files over SFTP and manage SSH servers on Bazzite hosts. |
-| ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | Inspect storage health and drive information when supported. |
-| ![](../assets/apps/webcam.webp){ .app-icon } [Webcam](webcam.md) | Use a compatible PlayStation camera as a webcam. |
+| ![](../assets/apps/bluetooth.webp){ .app-icon } [PS5 Bluetooth](bluetooth.md) | Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed. |
+| ![](../assets/apps/controller.webp){ .app-icon } [PS5 Controller](controller.md) | Manage DualSense and DualSense Edge controllers. |
+| ![](../assets/apps/cec.webp){ .app-icon } [PS5 CEC Manager](cec.md) | Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC. |
+| ![](../assets/apps/sftp.webp){ .app-icon } [PS5 SFTP Tools](sftp.md) | Transfer files over SFTP and manage SSH servers on Bazzite hosts. |
+| ![](../assets/apps/ssd.webp){ .app-icon } [PS5 SSD Check](ssd.md) | Inspect storage health and drive information when supported. |
+| ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Use a compatible PlayStation camera as a webcam. |
 
 Apps that change the board must explain their changes and ask before applying them.

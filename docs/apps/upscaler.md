@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Upscaler Manager](../assets/upscaler/ps5-upscaler.webp){ .app-logo }
+![PS5 Upscaler Manager](../assets/upscaler/ps5-upscaler.webp){ .app-logo }
 
-# Upscaler Manager
+# PS5 Upscaler Manager
 
 PyQt6 front-end that deploys **[HelixSR](https://github.com/lonewolf0622/HelixSR)** – the FSR 3.1 drop-in
 upscaler with DLSS-style neural networks – into games on a **PlayStation 5** running **Bazzite**

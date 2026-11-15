@@ -26,7 +26,7 @@ fail=0
 check() { if eval "$2"; then echo "  ok   $1"; else echo "  FAIL $1"; fail=1; fi; }
 D=$XDG_DATA_HOME
 if [[ "$MODE" == local ]]; then
-    APP="ps5-bazzite-v$(tr -d '[:space:]' < "$SUITE/apps/bazzite/VERSION")"
+    APP="ps5-board-v$(tr -d '[:space:]' < "$SUITE/apps/board/VERSION")"
     PORTAL="ps5-portal-v$(tr -d '[:space:]' < "$SUITE/portal/VERSION")"
     export SOURCE_DATE_EPOCH=1790000000
     mkdir -p "$T/suite" "$T/build-app"
@@ -68,15 +68,15 @@ else
     mkdir -p "$T/unpacked"
     tar -xzf "$T/download/$PORTAL.tar.gz" -C "$T/unpacked"
     PORTAL_DIR="$T/unpacked/$PORTAL"
-    APP=$(find "$PORTAL_DIR/bundled" -mindepth 1 -maxdepth 1 -type d -name 'ps5-bazzite-v*' -printf '%f\n' | head -n 1)
-    [[ -n "$APP" ]] || { echo "$PORTAL has no bundled Bazzite Test release." >&2; exit 1; }
+    APP=$(find "$PORTAL_DIR/bundled" -mindepth 1 -maxdepth 1 -type d -name 'ps5-board-v*' -printf '%f\n' | head -n 1)
+    [[ -n "$APP" ]] || { echo "$PORTAL has no bundled Board Test release." >&2; exit 1; }
 fi
 
 check "portal and bundled app installers are executable" \
     "[ -x $PORTAL_DIR/install.sh ] && [ -x $PORTAL_DIR/bundled/$APP/install.sh ]"
 (cd /tmp && "$PORTAL_DIR/install.sh" > "$T/install.log" 2>&1); rc=$?
 check "portal install succeeds" "[ $rc -eq 0 ]"
-check "required app was installed" "[ -f $T/opt/bazzite-test/bazzite_test/main_window.py ]"
+check "required app was installed" "[ -f $T/opt/ps5-board-test/board_test/main_window.py ]"
 check "portal launcher was installed" "[ -x $HOME/.local/bin/bazzite-console-suite ]"
 
 [ $fail -eq 0 ] && echo "ALL OK" || { cat "$T/install.log"; exit 1; }

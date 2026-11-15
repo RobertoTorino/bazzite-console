@@ -1,13 +1,13 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Fan Control](../assets/fan/ps5-fan-control.webp){ .app-logo }
+![PS5 Fan Controller](../assets/fan/ps5-fan-controller.webp){ .app-logo }
 
-# Fan Control
+# PS5 Fan Controller
 
 !!! warning "Changes the board"
-    The thermal guard is a root system service, ps5-fan-control-guard.service with its files in /etc/ps5-fan-control, that reads the temperatures every two seconds. At the cool limit it sets the fan to full speed in sysfs (ps5_fan's full mode) and turns the CPU boost off (ps5_control --boost off); at the shutdown limit, held for the set number of seconds, it powers the PS5 off cleanly with systemctl poweroff. The service stays enabled across reboots and power offs. The fan setting is written in memory only, and the guard puts the saved mode back when it re-arms or stops. Nothing is written to the firmware or the kernel's arguments. Turn off disables the service and removes its files; the fan is back on its previous mode, and the boost, once the guard turned it off, stays off until you turn it on again or reboot.
+    The thermal guard is a root system service, ps5-fan-controller-guard.service with its files in /etc/ps5-fan-controller, that reads the temperatures every two seconds. At the cool limit it sets the fan to full speed in sysfs (ps5_fan's full mode) and turns the CPU boost off (ps5_control --boost off); at the shutdown limit, held for the set number of seconds, it powers the PS5 off cleanly with systemctl poweroff. The service stays enabled across reboots and power offs. The fan setting is written in memory only, and the guard puts the saved mode back when it re-arms or stops. Nothing is written to the firmware or the kernel's arguments. Turn off disables the service and removes its files; the fan is back on its previous mode, and the boost, once the guard turned it off, stays off until you turn it on again or reboot.
 
-Fan Control shows the temperatures and the fan of a **PlayStation 5** running **Bazzite**. It can also turn on a
+Fan Controller shows the temperatures and the fan of a **PlayStation 5** running **Bazzite**. It can also turn on a
 **thermal guard**, a background service that protects the console from overheating. The guard keeps watching when
 no app is open. When the console gets too hot it warns you. If it gets hotter still, it runs the fan at full speed
 and turns the CPU boost off. As a last resort it shuts the console down cleanly.
@@ -85,16 +85,16 @@ The kernel's `ps5_fan` driver drives the PS5's fan, by default on a curve that f
 reports no speed in RPM. What the app shows is its **duty**: the share of full speed the kernel asks for.
 
 When the app finds no fan, the driver is not loaded: the ps5-linux kernel has it.
-[Bazzite Test](bazzite.md) shows the kernel and the sensors.
+[PS5 Board Test](board.md) shows the kernel and the sensors.
 
 ## Files
 
-- `/etc/ps5-fan-control/guard.py` and `guard.json`: the guard and its limits, while it is on.
-- `/etc/systemd/system/ps5-fan-control-guard.service`: the service that starts the guard when the console starts.
-- `/run/ps5-fan-control/state.json`: what the guard last read and recently did. The app shows it.
-- `~/.config/ps5-fan-control/ps5-fan-control.ini`: the size and position of the window.
+- `/etc/ps5-fan-controller/guard.py` and `guard.json`: the guard and its limits, while it is on.
+- `/etc/systemd/system/ps5-fan-controller-guard.service`: the service that starts the guard when the console starts.
+- `/run/ps5-fan-controller/state.json`: what the guard last read and recently did. The app shows it.
+- `~/.config/ps5-fan-controller/ps5-fan-controller.ini`: the size and position of the window.
 
-To read the guard's log, run `journalctl -u ps5-fan-control-guard`.
+To read the guard's log, run `journalctl -u ps5-fan-controller-guard`.
 
 ## Install and remove
 
@@ -110,9 +110,9 @@ folder, as your own user:
 
 It installs:
 
-- the app in `~/.local/share/ps5-fan-control/app`;
+- the app in `~/.local/share/ps5-fan-controller/app`;
 - PyQt6 in the suite's shared venv `~/.local/share/bazzite-console-suite/venv`;
-- the launcher `~/.local/bin/ps5-fan-control`, an app menu entry and a Desktop icon.
+- the launcher `~/.local/bin/ps5-fan-controller`, an app menu entry and a Desktop icon.
 
 Turning the guard on and off needs `pkexec` and the system `python3`. Bazzite has both. Uninstalling the app also
 stops and removes the guard, which needs `sudo`.
