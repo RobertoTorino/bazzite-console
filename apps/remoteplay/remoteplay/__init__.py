@@ -9,7 +9,7 @@ steam_env.settle()                      # before Qt loads: started by Steam, the
 
 APP_NAME = "Remote Play"
 APP_ID = "ps5-remoteplay"
-__version__ = "1.0.2"
+__version__ = "1.1.0"
 
 from pathlib import Path
 

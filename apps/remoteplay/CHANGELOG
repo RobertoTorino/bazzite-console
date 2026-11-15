@@ -1,3 +1,7 @@
+Changelog: 15-11-2026 11:26:39
+
+Release 1.1.0.
+
 Changelog: 15-11-2026 10:16:55
 
 Fixed. Escape is core's exit_keys, without the controller (the app's own copy is gone): the controller stays the

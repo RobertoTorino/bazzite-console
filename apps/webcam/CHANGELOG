@@ -1,3 +1,7 @@
+Changelog: 15-11-2026 11:26:39
+
+Release 1.2.0.
+
 Changelog: 15-11-2026 10:47:39
 
 Added. Escape and a controller's B close the window, as in every app of the suite (core's exit_keys): first an open

@@ -1,3 +1,7 @@
+Changelog: 15-11-2026 11:26:39
+
+Version 4.1.0.
+
 Changelog: 15-11-2026 10:20:56
 
 Added. nexus.py gives the development apps their header: header() names the checkout's last commit and its time

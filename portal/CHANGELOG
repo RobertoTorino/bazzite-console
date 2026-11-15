@@ -1,3 +1,7 @@
+Changelog: 15-11-2026 11:26:39
+
+Release 3.0.0. Pins ps5-board-v0.2.0, ps5-upscaler-v0.2.0, ps5-rpcs3-v1.1.0, ps5-remoteplay-v1.1.0, ps5-clb-v1.1.0, ps5-shadps4-v1.1.0, ps5-datstation-v1.1.0, ps5-ppsspp-v1.1.0, ps5-pcsx2-v1.1.0, ps5-vita3k-v1.1.0, ps5-xenia-v1.1.0, ps5-sftp-v1.2.0, ps5-webcam-v1.2.0, ps5-controller-v1.2.0, ps5-ssd-v1.2.0, ps5-overlay-v1.1.0, ps5-fan-v2.1.0, ps5-cec-v2.1.0, ps5-bluetooth-v0.2.0.
+
 Changelog: 15-11-2026 11:08:06
 
 Added. Tests of the portal window with a fake terminal and downloads (test_window.py) and of the fullscreen view, the
