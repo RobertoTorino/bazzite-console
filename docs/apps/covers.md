@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-image-multiple-outline:</span>
+
 # Covers from SteamGridDB
 
 The game managers put your games in Steam, so they start from there, also from Steam's Big Picture Mode and Game

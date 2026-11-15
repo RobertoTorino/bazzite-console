@@ -11,7 +11,9 @@
   portal lists only released apps (owner, 27-10-2026).
 * Every app marked changes_board has a board_change text (what it touches, what stays, what it never touches, how
   it is undone), and its wiki chapter, docs/apps/<key>.md, opens with that text word for word in a box right after
-  its title (``!!! warning "Changes the board"``); an app not so marked has no board_change (owner, 03-11-2026).
+  its title (``!!! warning "Changes the board"``); an app not so marked has no board_change (owner, 03-11-2026). An
+  app made of helpers ([[apps.<key>.helpers]]) does the same per helper: the section of the helper's name
+  (``## <name>``) in its app's chapter opens with the helper's board_change in such a box.
 * Every pinned tag exists. Without --require-tags a tag that does not exist yet is accepted when its version equals
   the app's VERSION: the release that is about to be tagged. The portal release workflow passes --require-tags.
 * With --base REF (the previous commit, or the PR base): when apps.toml differs from the last portal release (the
@@ -103,10 +105,11 @@ BOARD_BOX = '!!! warning "Changes the board"'
 _TITLE = re.compile(r"^# .+$", re.M)
 
 
-def wiki_board_box(text: str) -> str | None:
+def wiki_board_box(text: str, heading: str = "") -> str | None:
     """The text of the "Changes the board" box that opens a wiki chapter: the block right after its title (# ...),
-    with its lines joined; None when the chapter does not open with one."""
-    match = _TITLE.search(text)
+    with its lines joined; None when the chapter does not open with one. With *heading*, the box that opens the
+    section ``## <heading>`` instead (one helper of an app made of helpers)."""
+    match = re.search(rf"^## {re.escape(heading)}\s*$", text, re.M) if heading else _TITLE.search(text)
     if not match:
         return None
     lines = iter(text[match.end():].split("\n"))
@@ -126,9 +129,11 @@ def wiki_board_box(text: str) -> str | None:
 
 
 def check_board_changes(entries) -> list[str]:
-    """Every app that changes the board says what it changes, in apps.toml and at the top of its wiki chapter."""
+    """Every app that changes the board says what it changes, in apps.toml and at the top of its wiki chapter; every
+    helper that does, at the top of its section of its app's chapter."""
     errors = []
     for entry in entries:
+        errors += check_helper_board_changes(entry)
         if not entry.changes_board:
             if entry.board_change:
                 errors.append(f"[apps.{entry.key}] has a board_change but changes_board is false")
@@ -143,6 +148,29 @@ def check_board_changes(entries) -> list[str]:
         elif box != " ".join(entry.board_change.split()):      # the manifest's text may span lines
             errors.append(f"docs/apps/{entry.key}.md: the \"Changes the board\" box differs from "
                           f"[apps.{entry.key}] board_change")
+    return errors
+
+
+def check_helper_board_changes(entry) -> list[str]:
+    errors = []
+    chapter = SUITE / "docs" / "apps" / f"{entry.key}.md"
+    text = chapter.read_text(encoding="utf-8") if chapter.is_file() else ""
+    for helper in entry.helpers:
+        where = f"[[apps.{entry.key}.helpers]] {helper.key}"
+        if not helper.changes_board:
+            if helper.board_change:
+                errors.append(f"{where} has a board_change but changes_board is false")
+            continue
+        if not helper.board_change:
+            errors.append(f"{where} changes the board: it needs a board_change text")
+            continue
+        box = wiki_board_box(text, helper.name)
+        if box is None:
+            errors.append(f"docs/apps/{entry.key}.md: the section \"## {helper.name}\" must open with a {BOARD_BOX} "
+                          "box right after its heading")
+        elif box != helper.board_change:
+            errors.append(f"docs/apps/{entry.key}.md: the \"Changes the board\" box of \"## {helper.name}\" differs "
+                          f"from {where} board_change")
     return errors
 
 

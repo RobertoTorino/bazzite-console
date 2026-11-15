@@ -19,9 +19,9 @@ name: Release
 #   in vain.
 #
 # The assets are <tag>.tar.gz, SHA256SUMS and the notes, all built by tools/build_release.py, so a local build has
-# the same content (the suite's wiki, "Checking a release"). A portal release bundles the release of the required
-# app (Board Test) that portal/apps.toml pins (downloaded from its own release and checked against the pin) and
-# requires every pinned tag to exist. GitHub's "Latest" is the newest portal (publish_release.sh, and Publish for a draft), so
+# the same content (the suite's wiki, "Checking a release"). A portal release bundles the releases of the required
+# apps (Board Test, board, and Console Helpers, helpers) that portal/apps.toml pins (each downloaded from its own
+# release and checked against the pin) and requires every pinned tag to exist. GitHub's "Latest" is the newest portal (publish_release.sh, and Publish for a draft), so
 # the releases page and the app releases' notes lead there.
 #
 # Remote Play ships the wheel of its native core in the tarball (native/wheel): built here from the tag, with
@@ -258,11 +258,13 @@ jobs:
           python tools/check_versions.py
           python tools/check_manifest.py --require-tags
 
-      - name: The bundled required app
+      - name: The bundled required apps
         run: |
-          required=$(python -c 'import tomllib; apps = tomllib.load(open("portal/apps.toml", "rb"))["apps"]; print(next(a["tag"] for a in apps.values() if a.get("required")))')
-          mkdir -p bundle
-          gh release download "$required" --pattern "$required.tar.gz" --pattern SHA256SUMS --dir bundle
+          # Board Test and Console Helpers: each release in a folder of its own, its SHA256SUMS beside it.
+          for required in $(python -c 'import tomllib; apps = tomllib.load(open("portal/apps.toml", "rb"))["apps"]; print(" ".join(a["tag"] for a in apps.values() if a.get("required")))'); do
+            mkdir -p "bundle/$required"
+            gh release download "$required" --pattern "$required.tar.gz" --pattern SHA256SUMS --dir "bundle/$required"
+          done
 
       - name: Build
         run: |

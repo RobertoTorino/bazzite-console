@@ -728,3 +728,17 @@ def test_a_push_github_has_no_runs_of_yet_shows_no_old_failure(release_window, m
     monkeypatch.setattr(w.build, "awaiting_head", lambda: False)
     w.build.checked(([_run(head, "ci.yml", "CI")], "e2"))
     assert w.build.state == "passed" and w.ticker.local == ""
+
+
+def test_the_portal_video_check(tmp_path):
+    """tools/portal_tour.py --check: "" when the video is current or the suite has none, else why it waits."""
+    import sys
+    from nexus_release_tool import flow
+    assert flow.video_reason(tmp_path) == ""                                   # no tour in this suite
+    script = tmp_path / "tools" / "portal_tour.py"
+    script.parent.mkdir()
+    script.write_text("import sys\nsys.exit(1)\n")
+    assert flow.video_reason(tmp_path, sys.executable) == flow.VIDEO_STALE
+    script.write_text("import sys\nsys.exit(0)\n")
+    assert flow.video_reason(tmp_path, sys.executable) == ""
+    assert "could not run" in flow.video_reason(tmp_path, str(tmp_path / "no-python"))

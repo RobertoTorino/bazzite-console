@@ -35,6 +35,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
 
 SUITE = Path(__file__).resolve().parents[1]
@@ -51,6 +52,7 @@ WIKI_VIDEO = SUITE / "docs" / "videos" / "portal-tour.mp4"
 WIKI_POSTER = SUITE / "docs" / "images" / "portal" / "portal-tour-poster.webp"
 STAMP = SUITE / "tools" / "portal-tour.stamp"       # the fingerprint of the portal the wiki's video was recorded from
 SHOWN = (SUITE / "portal" / "bazzite_console_portal", SUITE / "portal" / "images")    # what the video shows, with this script
+MANIFEST = SUITE / "portal" / "apps.toml"            # its tiles show in the video (tiles())
 
 
 def prepare_home(home: Path) -> None:
@@ -361,9 +363,24 @@ def render_still(theme: str, out: Path) -> None:
         tour.frame().save(str(out))
 
 
+def tiles() -> list:
+    """What the video shows of portal/apps.toml (owner, 15-11-2026: new tiles need a new video): each app's tiles in
+    their order, with their names, categories and marks. Its tags and checksums are left out: a release changes
+    them, and the video does not show them."""
+    try:
+        apps = tomllib.loads(MANIFEST.read_text(encoding="utf-8")).get("apps", {})
+    except (OSError, tomllib.TOMLDecodeError):
+        return []
+    shown = ("name", "short", "category", "required", "changes_board", "withdrawn")
+    return [[key, {field: app.get(field) for field in shown},
+             [[h.get("key"), h.get("name"), h.get("changes_board", False)] for h in app.get("helpers", [])]]
+            for key, app in apps.items() if isinstance(app, dict)]
+
+
 def fingerprint() -> str:
-    """A hash of what the video shows: the portal's code and pictures (SHOWN) and this script. The portal's version
-    is left out: the video does not show it (a release changes only that line, and the video is recorded before it)."""
+    """A hash of what the video shows: the portal's code and pictures (SHOWN), its tiles (tiles()) and this script.
+    The portal's version is left out: the video does not show it (a release changes only that line, and the video
+    is recorded before it)."""
     digest = hashlib.sha256()
     files = [path for folder in SHOWN for path in folder.rglob("*")
              if path.is_file() and "__pycache__" not in path.parts]
@@ -372,6 +389,7 @@ def fingerprint() -> str:
         if path.suffix == ".py":
             data = b"\n".join(line for line in data.split(b"\n") if not line.startswith(b"__version__ = "))
         digest.update(path.relative_to(SUITE).as_posix().encode() + b"\0" + hashlib.sha256(data).digest())
+    digest.update(b"tiles\0" + hashlib.sha256(json.dumps(tiles(), sort_keys=True).encode()).digest())
     return digest.hexdigest()
 
 

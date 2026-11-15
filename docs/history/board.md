@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-linux:</span>
+
 # What is Bazzite?
 
 Bazzite is a Linux operating system based on Fedora, designed for gaming and everyday desktop use. It provides a

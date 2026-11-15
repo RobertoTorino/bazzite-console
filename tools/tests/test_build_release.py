@@ -25,6 +25,7 @@ pin_spec.loader.exec_module(pin_app)
 
 BT_TAG = f"ps5-board-v{(br.SUITE / 'apps' / 'board' / 'VERSION').read_text().strip()}"
 PORTAL_TAG = f"ps5-portal-v{(br.SUITE / 'portal' / 'VERSION').read_text().strip()}"
+HELPERS_TAG = f"ps5-helpers-v{(br.SUITE / 'apps' / 'helpers' / 'VERSION').read_text().strip()}"
 DAT_TAG = f"ps5-datstation-v{(br.SUITE / 'apps' / 'datstation' / 'VERSION').read_text().strip()}"   # an app with no .standalone
 
 
@@ -42,14 +43,24 @@ def bt_release(tmp_path_factory):
     return out
 
 
+@pytest.fixture(scope="module")
+def helpers_release(tmp_path_factory):
+    import os
+    os.environ["SOURCE_DATE_EPOCH"] = "1790000000"
+    out = tmp_path_factory.mktemp("helpers")
+    br.build(HELPERS_TAG, out)
+    return out
+
+
 @pytest.fixture
-def pinned(bt_release, tmp_path, monkeypatch):
-    """apps.toml as shipped, but with board pinned to the local build: the shipped pin is the checksum of
-    the real release, which a local build (another mtime) never matches."""
-    digest = hashlib.sha256((bt_release / f"{BT_TAG}.tar.gz").read_bytes()).hexdigest()
+def pinned(bt_release, helpers_release, tmp_path, monkeypatch):
+    """apps.toml as shipped, but with the required apps (board and helpers) pinned to the local builds: the shipped
+    pin is the checksum of the real release, which a local build (another mtime) never matches."""
     text = (br.MANIFEST).read_text(encoding="utf-8")
+    for key, tag, folder in (("board", BT_TAG, bt_release), ("helpers", HELPERS_TAG, helpers_release)):
+        text = pin_app.pin(text, key, tag, hashlib.sha256((folder / f"{tag}.tar.gz").read_bytes()).hexdigest())
     path = tmp_path / "apps.toml"
-    path.write_text(pin_app.pin(text, "board", BT_TAG, digest), encoding="utf-8")
+    path.write_text(text, encoding="utf-8")
     monkeypatch.setattr(br, "MANIFEST", path)
     return path
 
@@ -175,17 +186,21 @@ def test_checkout_only_app_has_no_release(tmp_path, monkeypatch):
         br.build("x-v0.1.0", tmp_path)                          # a suite without a prefix
 
 
-def test_portal_needs_and_verifies_bundle(bt_release, pinned, tmp_path):
+def test_portal_needs_and_verifies_bundle(bt_release, helpers_release, pinned, tmp_path):
     with pytest.raises(SystemExit, match="needs --bundle"):
         br.build(PORTAL_TAG, tmp_path / "a")
-    br.build(PORTAL_TAG, tmp_path / "b", bundle=bt_release)
+    with pytest.raises(SystemExit, match=f"has no {HELPERS_TAG}.tar.gz"):
+        br.build(PORTAL_TAG, tmp_path / "a", bundle=bt_release)         # every required app is bundled
+    br.build(PORTAL_TAG, tmp_path / "b", bundle=[bt_release, helpers_release])
     archive = tmp_path / "b" / f"{PORTAL_TAG}.tar.gz"
     names = members(archive)
     assert f"{PORTAL_TAG}/bundled/{BT_TAG}/install.sh" in names
     assert f"{PORTAL_TAG}/bundled/{BT_TAG}/board_test/_build_info.py" in names
+    assert f"{PORTAL_TAG}/bundled/{HELPERS_TAG}/install.sh" in names
+    assert f"{PORTAL_TAG}/bundled/{HELPERS_TAG}/helpers/system.py" in names
     assert f"{PORTAL_TAG}/bazzite_console_core/platform.py" in names and f"{PORTAL_TAG}/apps.toml" in names
     notes = (tmp_path / "b" / "notes.md").read_text()
-    assert BT_TAG in notes and "use the portal, not this file" not in notes
+    assert f"`{BT_TAG}` and `{HELPERS_TAG}` are included" in notes and "use the portal, not this file" not in notes
     version = PORTAL_TAG.split("-v")[1]
     assert (tmp_path / "b" / "title.txt").read_text() == f"Bazzite Console Suite: Portal {version}\n"
     stage, note = br.portal_stage()
@@ -197,21 +212,38 @@ def test_only_a_portal_release_says_the_stage(bt_release):
     assert stage == "" or f"**{stage}:**" not in (bt_release / "notes.md").read_text()
 
 
-def test_wrong_pin_refused(bt_release, pinned, tmp_path):
-    pinned.write_text(pin_app.pin(pinned.read_text(encoding="utf-8"), "board", BT_TAG, "ab" * 32),
+def test_wrong_pin_refused(bt_release, helpers_release, pinned, tmp_path):
+    pinned.write_text(pin_app.pin(pinned.read_text(encoding="utf-8"), "helpers", HELPERS_TAG, "ab" * 32),
                       encoding="utf-8")
-    with pytest.raises(SystemExit, match="does not match"):
-        br.build(PORTAL_TAG, tmp_path / "out", bundle=bt_release)
+    with pytest.raises(SystemExit, match=f"{HELPERS_TAG}.tar.gz does not match"):
+        br.build(PORTAL_TAG, tmp_path / "out", bundle=[bt_release, helpers_release])
 
 
-def test_tampered_bundle_refused(bt_release, pinned, tmp_path):
+def test_tampered_bundle_refused(bt_release, helpers_release, pinned, tmp_path):
     bundle = tmp_path / "bundle"
     shutil.copytree(bt_release, bundle)
     data = bytearray((bundle / f"{BT_TAG}.tar.gz").read_bytes())
     data[-10] ^= 0xFF
     (bundle / f"{BT_TAG}.tar.gz").write_bytes(bytes(data))
     with pytest.raises(SystemExit, match="does not match"):
-        br.build(PORTAL_TAG, tmp_path / "out", bundle=bundle)
+        br.build(PORTAL_TAG, tmp_path / "out", bundle=[bundle, helpers_release])
+
+
+def test_the_bundle_as_release_yml_downloads_it(bt_release, helpers_release, tmp_path, monkeypatch):
+    """release.yml downloads each required release into a folder named after its tag, its SHA256SUMS beside it:
+    with no checksum pinned yet (a release about to be made), each is checked against its own SHA256SUMS."""
+    bundle = tmp_path / "bundle"
+    for tag, folder in ((BT_TAG, bt_release), (HELPERS_TAG, helpers_release)):
+        shutil.copytree(folder, bundle / tag)
+    text = (br.MANIFEST).read_text(encoding="utf-8")
+    for key, tag in (("board", BT_TAG), ("helpers", HELPERS_TAG)):
+        text = pin_app.pin(text, key, tag, "")
+    path = tmp_path / "apps.toml"
+    path.write_text(text, encoding="utf-8")
+    monkeypatch.setattr(br, "MANIFEST", path)
+    br.build(PORTAL_TAG, tmp_path / "out", bundle=bundle)
+    names = members(tmp_path / "out" / f"{PORTAL_TAG}.tar.gz")
+    assert f"{PORTAL_TAG}/bundled/{HELPERS_TAG}/install.sh" in names
 
 
 def test_latest_changes(tmp_path):

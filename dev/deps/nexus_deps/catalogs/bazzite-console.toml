@@ -173,6 +173,10 @@ specifier = ">=6.11,<7"
 owner = "bluetooth"
 specifier = ">=6.11,<7"
 
+[[dependency.source]]
+owner = "helpers"
+specifier = ">=6.11,<7"
+
 [[dependency]]
 name = "PyQt6-Charts"
 description = "The Qt charts used for Board Test's graphs."
@@ -249,6 +253,10 @@ description = "SSH and SFTP support used by SFTP Tools."
 owner = "sftp"
 specifier = ">=3.4,<5"
 
+[app.helpers]
+name = "Console Helpers"
+launchers = ["~/.local/bin/ps5-helpers"]
+
 [[tool]]
 name = "pkexec"
 description = "Opens a privileged prompt for system-wide actions."
@@ -273,6 +281,11 @@ need = "required"
 owner = "bluetooth"
 usage = "Password prompt for installing, changing and removing the search after boot and the battery service."
 need = "required"
+
+[[tool.source]]
+owner = "helpers"
+need = "required"
+usage = "Password prompt for every change of the helpers that change the board: the memory map, the journal and the boot command line (reading and saving cmdline.txt)."
 
 [[tool]]
 name = "udevadm"

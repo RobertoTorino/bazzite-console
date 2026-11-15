@@ -50,3 +50,17 @@ def test_every_app_chapter_shows_its_icon():
     chapters = [p for folder in ("apps",) for p in (docs / folder).glob("*.md") if p.name not in ("index.md", "categories.md", "covers.md")]
     missing = [p.relative_to(docs).as_posix() for p in sorted(chapters) if "{ .app-logo }" not in p.read_text("utf-8")]
     assert not missing, f"no icon beside the heading: {', '.join(missing)}"
+
+
+def test_every_wiki_page_starts_with_an_icon_or_a_symbol():
+    """Every page of the wiki starts with an app's icon or a symbol (a page-icon) above its heading (owner,
+    15-11-2026); the Home page starts with its pictures."""
+    docs = SUITE / "docs"
+    missing = []
+    for page in sorted(docs.rglob("*.md")):
+        if page == docs / "index.md":
+            continue
+        head = page.read_text("utf-8").split("\n# ", 1)[0]
+        if "{ .app-logo }" not in head and 'class="page-icon"' not in head:
+            missing.append(page.relative_to(docs).as_posix())
+    assert not missing, f"no icon or symbol above the heading: {', '.join(missing)}"

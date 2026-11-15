@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-shape-outline:</span>
+
 # App categories
 
 Every app in the suite belongs to one of four categories, and every app in a category has the same icon. The icon
@@ -52,3 +54,4 @@ Every app with its icon and its category.
 | ![](../assets/apps/sftp.webp){ .app-icon } [PS5 SFTP Tools](sftp.md) | Utilities |
 | ![](../assets/apps/ssd.webp){ .app-icon } [PS5 SSD Check](ssd.md) | Utilities |
 | ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Utilities |
+| ![](../assets/apps/helpers.webp){ .app-icon } [Console Helpers](helpers.md) | Utilities |

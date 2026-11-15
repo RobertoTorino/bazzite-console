@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Build the release assets of one tag:
 
-    python3 tools/build_release.py ps5-<app>-v<x.y.z> <out-dir> [--bundle DIR]
+    python3 tools/build_release.py ps5-<app>-v<x.y.z> <out-dir> [--bundle DIR ...]
 
 The tag starts with the suite's TAG_PREFIX (tools/suites.py) and names an app or the portal of this repository.
 
@@ -11,8 +11,9 @@ tag's version must equal the app's VERSION. An app in NATIVE_WHEELS needs the wh
 release.yml: in the folder PS5_NATIVE_WHEEL_DIR names (release.yml's, outside the checkout), else in the app's
 folder NATIVE_WHEELS gives; it goes into the tarball, so the portal's checksum covers it. An app with
 development/tools/build_info.py (Board Test) gets its engine checksum recorded, which makes it a release build that
-refuses a changed engine. A portal tag needs --bundle: a folder with the pinned release of the required app
-(<tag>.tar.gz and SHA256SUMS, as published); it is verified against apps.toml and unpacked into bundled/.
+refuses a changed engine. A portal tag needs --bundle: the folders with the pinned releases of the required apps
+(Board Test and Console Helpers; each <tag>.tar.gz with its SHA256SUMS, as published, in the folder or in a <tag>/
+folder in it; --bundle again for each folder); each is verified against apps.toml and unpacked into bundled/.
 
 The tar inside is reproducible and the same on Linux and Windows: sorted entries, root:root, the commit time (or
 SOURCE_DATE_EPOCH) as mtime, and modes set here (755 for folders and scripts, 644 for the rest), not taken from the
@@ -150,30 +151,35 @@ def latest_changes(changelog: Path) -> str:
     return "\n".join(lines[starts[0]:end]).strip()
 
 
-def bundle_required_app(stage_dir: Path, bundle: Path) -> str:
-    """Verify the required app's release in *bundle* and unpack it into stage_dir/bundled/. Returns its tag."""
-    entry = next(e for e in manifest.load(MANIFEST) if e.required)
-    archive = bundle / entry.asset
-    if not archive.is_file():
-        raise SystemExit(f"--bundle {bundle} has no {entry.asset} (the tag apps.toml pins)")
-    want = entry.sha256
-    if not want:
-        sums = (bundle / "SHA256SUMS").read_text(encoding="utf-8") if (bundle / "SHA256SUMS").is_file() else ""
-        want = next((p[0].lower() for p in (line.split() for line in sums.splitlines())
-                     if len(p) == 2 and p[1].lstrip("*") == entry.asset), "")
-    if not want or sha256_of(archive) != want:
-        raise SystemExit(f"{entry.asset} does not match the checksum pinned in apps.toml or its SHA256SUMS")
+def bundle_required_apps(stage_dir: Path, bundles: list[Path]) -> list[str]:
+    """Verify the release of every required app in *bundles* and unpack it into stage_dir/bundled/. Returns their
+    tags."""
     target = stage_dir / "bundled"
     target.mkdir()
-    with tarfile.open(archive, "r:gz") as tar:
-        for member in tar.getmembers():
-            name = Path(member.name)
-            if name.is_absolute() or ".." in name.parts or not (member.isfile() or member.isdir()):
-                raise SystemExit(f"{entry.asset}: unexpected entry {member.name}")
-        tar.extractall(target, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
-    if not (target / entry.tag / "install.sh").is_file():
-        raise SystemExit(f"{entry.asset} has no {entry.tag}/install.sh")
-    return entry.tag
+    tags = []
+    for entry in (e for e in manifest.load(MANIFEST) if e.required):
+        folders = [f for bundle in bundles for f in (bundle / entry.tag, bundle)]
+        archive = next((f / entry.asset for f in folders if (f / entry.asset).is_file()), None)
+        if archive is None:
+            raise SystemExit(f"--bundle {' '.join(map(str, bundles))} has no {entry.asset} (the tag apps.toml pins)")
+        want = entry.sha256
+        if not want:
+            sums_file = archive.parent / "SHA256SUMS"
+            sums = sums_file.read_text(encoding="utf-8") if sums_file.is_file() else ""
+            want = next((p[0].lower() for p in (line.split() for line in sums.splitlines())
+                         if len(p) == 2 and p[1].lstrip("*") == entry.asset), "")
+        if not want or sha256_of(archive) != want:
+            raise SystemExit(f"{entry.asset} does not match the checksum pinned in apps.toml or its SHA256SUMS")
+        with tarfile.open(archive, "r:gz") as tar:
+            for member in tar.getmembers():
+                name = Path(member.name)
+                if name.is_absolute() or ".." in name.parts or not (member.isfile() or member.isdir()):
+                    raise SystemExit(f"{entry.asset}: unexpected entry {member.name}")
+            tar.extractall(target, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
+        if not (target / entry.tag / "install.sh").is_file():
+            raise SystemExit(f"{entry.asset} has no {entry.tag}/install.sh")
+        tags.append(entry.tag)
+    return tags
 
 
 def native_wheel(app: str, src: Path, version: str) -> str | None:
@@ -190,7 +196,7 @@ def native_wheel(app: str, src: Path, version: str) -> str | None:
     return wheels[0].name
 
 
-def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
+def build(tag: str, out: Path, bundle: Path | list[Path] | None = None) -> Path:
     prefix = suites.tag_prefix(SUITE)
     match = _TAG.match(tag.removeprefix(prefix)) if tag.startswith(prefix) else None
     if not match:
@@ -225,12 +231,13 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
             subprocess.run([sys.executable, str(build_info)], check=True, stdout=subprocess.DEVNULL,
                            env=dict(os.environ, SOURCE_DATE_EPOCH=str(epoch)))
         if app == "portal":
-            if bundle is None:
-                raise SystemExit("a portal release needs --bundle with its required app release")
-            bundled = bundle_required_app(stage_dir, bundle)
+            if not bundle:
+                raise SystemExit("a portal release needs --bundle with the releases of its required apps")
+            bundled = bundle_required_apps(stage_dir, [bundle] if isinstance(bundle, Path) else list(bundle))
             pins = "\n".join(f"- `{e.tag}`" for e in manifest.load(MANIFEST))
+            names = " and ".join(f"`{t}`" for t in bundled)
             notes += ["This portal release installs and pins these app releases:", "", pins, "",
-                      f"`{bundled}` is included and installed with the portal.", ""]
+                      f"{names} {'is' if len(bundled) == 1 else 'are'} included and installed with the portal.", ""]
         if wheel is not None:
             notes += [f"Includes its native core as `{wheel}`, built for Linux x86-64 with FFmpeg linked in "
                       "(LGPL, from its own sources).", ""]
@@ -255,7 +262,8 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("tag")
     parser.add_argument("out", type=Path)
-    parser.add_argument("--bundle", type=Path, help="folder with the pinned release of the required app (portal tags)")
+    parser.add_argument("--bundle", type=Path, action="append",
+                        help="a folder with pinned releases of the required apps (portal tags); again for each folder")
     args = parser.parse_args(argv)
     archive = build(args.tag, args.out, args.bundle)
     print(f"{archive} {sha256_of(archive)}")

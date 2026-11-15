@@ -282,7 +282,7 @@ class AppState:
                         + f"<p style='color:gray;'>{escape(detail)}<br>{escape(source)}"
                         + (f"<br>{escape(how)}" if installed else "") + "</p>")
         self.action = "Update" if update else "Reinstall" if (reinstall or installed) else "Install"
-        self.action_tip = (f"{self.action} {entry.name}" + (f" v{entry.version}" if entry.tag else "")
+        self.action_tip = (f"{self.action} {entry.release_name}" + (f" v{entry.version}" if entry.tag else "")
                            if not entry.withdrawn else f"App not available: {entry.withdrawn}")
         return "update" if update else "reinstall" if reinstall else ""
 
@@ -533,8 +533,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(INFO.display_name)
         self.resize(1600, 900)                          # the portal runs fullscreen; this when it is not
 
-        self.states: dict[str, AppState] = {entry.key: AppState(entry) for entry in entries}
-        self.big = BigPicture(entries, CATEGORIES, CATEGORY_HINTS, __version__, STAGE, STAGE_NOTE)
+        # A tile each: an app's, or one per helper of an app made of helpers (AppEntry.tiles); its state by its key.
+        self.tile_entries = [tile for entry in entries for tile in entry.tiles()]
+        self.by_key = {entry.key: entry for entry in entries}
+        self.states: dict[str, AppState] = {tile.tile: AppState(tile) for tile in self.tile_entries}
+        self.big = BigPicture(self.tile_entries, CATEGORIES, CATEGORY_HINTS, __version__, STAGE, STAGE_NOTE)
         self.big.set_veil(self.transparency())
         self.big.open_requested.connect(self._open_tile)
         self.big.menu_requested.connect(self._tile_menu)
@@ -760,8 +763,9 @@ class MainWindow(QMainWindow):
                 busy = f"Downloading…{self.downloaded_text(entry)}" if not self.sources.local else "Preparing…"
             elif self.pending and self.pending.entry is entry:
                 busy = "Installing…" if self.pending.action == "install" else "Removing…"
-            state = self.states[entry.key].show_state(is_installed(entry), self.records.get(entry.key), busy,
-                                                      from_checkout=self.sources.local)
+            shown = [tile.show_state(is_installed(entry), self.records.get(entry.key), busy,
+                                     from_checkout=self.sources.local) for tile in self.tile_states(entry)]
+            state = shown[0] if shown else ""
             if state:
                 marked.append((entry, state))
         self.marked = marked
@@ -769,6 +773,18 @@ class MainWindow(QMainWindow):
         self.show_counts()
         self.check_installed()
         self.show_update_banner()
+
+    def tile_states(self, entry: AppEntry) -> list[AppState]:
+        """The states of an app's tiles: its own, or one per helper."""
+        return [self.states[tile.tile] for tile in entry.tiles() if tile.tile in self.states]
+
+    def state_of(self, entry: AppEntry) -> AppState:
+        """The state of the tile *entry* is (an app's, or one helper's); for an app made of helpers, its first."""
+        return self.states.get(entry.tile) or self.tile_states(entry)[0]
+
+    def app_of(self, entry: AppEntry) -> AppEntry:
+        """The app a tile belongs to: what is installed, updated and recorded."""
+        return self.by_key.get(entry.key, entry)
 
     def downloaded_text(self, entry: AppEntry) -> str:
         """How much of the release has come in: " 40 MB", or "" before the first bytes (the part file the download
@@ -879,7 +895,8 @@ class MainWindow(QMainWindow):
             where = f" ({CATEGORIES[entry.category]})" if entry.category in CATEGORIES else ""
             self.outside_lines.append((entry.key, f"{entry.short or short_name(entry.name)}{where}: "
                                        f"{update.name} {update.latest} is out{when}{had}. {update.action}"))
-            self.states[entry.key].outside = f"{update.name} {update.latest} is out"
+            for tile in self.tile_states(entry):
+                tile.outside = f"{update.name} {update.latest} is out"
         n = len(self.outside_lines)
         self.big.outside.set_notice(f"● {n} outside the suite" if n else "", (
             "Outside the suite: a newer release of a program an app installs in its newest version (not one it "
@@ -1637,7 +1654,7 @@ class MainWindow(QMainWindow):
     def _open_tile(self, entry: AppEntry) -> None:
         """A tile pressed: open the app (one with two windows asks which one), or offer to install one that is not
         installed."""
-        state = self.states[entry.key]
+        state = self.state_of(entry)
         if entry.withdrawn or state.busy:
             return
         if not state.installed:
@@ -1650,9 +1667,9 @@ class MainWindow(QMainWindow):
             return
         menu = QMenu(self)
         for label, command in entry.launch:
-            menu.addAction(state.launch_icon(label), label).setData(("open", entry.key, command))
+            menu.addAction(state.launch_icon(label), label).setData(("open", entry.tile, command))
         menu.triggered.connect(self._menu_action)
-        tile = self.big.tiles[entry.key]
+        tile = self.big.tiles[entry.tile]
         menu.exec(tile.mapToGlobal(tile.rect().bottomLeft()))
         menu.deleteLater()
 
@@ -1661,6 +1678,7 @@ class MainWindow(QMainWindow):
         the board warning is that question."""
         if self.busy() or entry.withdrawn:
             return
+        entry = self.app_of(entry)
         if entry.changes_board:
             self.install(entry)
             return
@@ -1676,23 +1694,23 @@ class MainWindow(QMainWindow):
         Reinstall) and, for every app but check, Uninstall. What cannot be done now is grayed out."""
         # The actions carry what to do as data and one bound method does it (_menu_action): a lambda over self in
         # a menu that is the window's child would keep the window in a reference cycle.
-        state = self.states[entry.key]
+        state = self.state_of(entry)
         ink = self.palette().color(QPalette.ColorRole.WindowText).name()
         menu = QMenu(self)
         if entry.launch:
             for label, command in entry.launch:
                 action = menu.addAction(state.launch_icon(label), label if len(entry.launch) > 1 else "Open")
-                action.setData(("open", entry.key, command))
+                action.setData(("open", entry.tile, command))
                 action.setEnabled(state.opens)
             menu.addSeparator()
         install = menu.addAction(glyphs.reinstall(RED) if state.reinstall else
                                  glyphs.install(RED if state.update else ink), state.action)
-        install.setData(("install", entry.key, ""))
+        install.setData(("install", entry.tile, ""))
         install.setToolTip(state.action_tip)
         install.setEnabled(not self.busy() and not entry.withdrawn)
-        if not entry.required:                          # check goes with the portal (install.sh --uninstall)
+        if not entry.required:                          # Board Test and the helpers go with the portal (install.sh)
             uninstall = menu.addAction(glyphs.uninstall(ink), "Uninstall")
-            uninstall.setData(("uninstall", entry.key, ""))
+            uninstall.setData(("uninstall", entry.tile, ""))
             uninstall.setEnabled(state.installed and not self.busy())
         menu.setToolTipsVisible(True)
         menu.triggered.connect(self._menu_action)
@@ -1701,6 +1719,9 @@ class MainWindow(QMainWindow):
     def _menu_action(self, action) -> None:
         """What an entry of a tile's menu, the launch menu or a notice's menu does, from the entry's data."""
         kind, key, command = action.data()
+        if kind == "show":                              # a notice's line: the app's key
+            self.show_app(key)
+            return
         entry = self.states[key].entry
         if kind == "open":
             self.open_app(entry, command)
@@ -1708,8 +1729,6 @@ class MainWindow(QMainWindow):
             self.install(entry)
         elif kind == "uninstall":
             self.uninstall(entry)
-        elif kind == "show":
-            self.show_app(key)
 
     def update_action(self, entry: AppEntry | None) -> bool:
         """Y, or a right click on a tile: the portal's own update while a newer portal is out, else the app's update
@@ -1718,7 +1737,7 @@ class MainWindow(QMainWindow):
         if self.update_available():
             self.portal_update_action()
             return True
-        state = self.states[entry.key] if entry is not None else None
+        state = self.state_of(entry) if entry is not None else None
         if state is None or not (state.update or state.reinstall) or entry.withdrawn:
             return False
         if not state.busy:
@@ -1731,7 +1750,7 @@ class MainWindow(QMainWindow):
             self._tile_menu(entry)
 
     def _tile_menu(self, entry: AppEntry) -> None:
-        tile = self.big.tiles[entry.key]
+        tile = self.big.tiles[entry.tile]
         menu = self.tile_menu(entry)
         menu.exec(tile.mapToGlobal(tile.rect().bottomLeft()))
         menu.deleteLater()
@@ -1822,11 +1841,13 @@ class MainWindow(QMainWindow):
                 return
 
     def install(self, entry: AppEntry) -> None:
+        entry = self.app_of(entry)                      # a helper's tile installs its app
         if self.busy() or not self._confirm_board_change(entry, f"Install {entry.name}"):
             return
         self._start(entry, "install")
 
     def uninstall(self, entry: AppEntry) -> None:
+        entry = self.app_of(entry)
         if self.busy():
             return
         answer = QMessageBox.question(self, APP_NAME, f"Uninstall {entry.name}? Its own uninstaller runs in a "

@@ -1,3 +1,13 @@
+Changelog: 15-11-2026 20:10:01
+
+Fixed. development/tools/install-requirements.sh, run without an option, says before each question what the group
+installs and which tests use each tool (stress-ng, lm_sensors, vkmark, nvme-cli, fio, memtest_vulkan, vkpeak, the
+Ookla speedtest CLI, sqlite). The manual points at Console Helpers where it gives the steps by hand: the optional
+tools, MangoHud's FPS log, the IOMMU (test 23, whose row now says to leave the IOMMU off by default and to turn it
+off again when it is on and the system is unstable), the CPU mitigations (test 24), vm.max_map_count (test 37) and
+the journal kept on the disk (test 34). Test 23's description in the app and its line in the log say the same: by
+default leave the IOMMU off, and if it is on and the system is unstable, turn it off again.
+
 Changelog: 15-11-2026 11:26:39
 
 Release 0.2.0.

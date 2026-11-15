@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-video-wireless-outline:</span>
+
 # Remote Play: the stream's threads
 
 How Remote Play keeps picture, sound and controller in step during a stream, why Python's global

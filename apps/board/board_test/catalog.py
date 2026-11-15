@@ -103,7 +103,8 @@ CATEGORIES: list[Category] = [
     ]),
     Category("cpu", "CPU and firmware", [
         TestDef("23", "IOMMU",
-                "Counts IOMMU groups. Information only: on the PS5 the IOMMU may stay on."),
+                "Counts IOMMU groups. By default leave the IOMMU off. If it is on and you experience an unstable "
+                "system, turn it off again."),
         TestDef("24", "CPU Mitigations",
                 "Whether mitigations=off is set (the ps5-linux cmdline does, for speed) and what the CPU reports."),
         TestDef("25", "CPU Core and Thread Count",

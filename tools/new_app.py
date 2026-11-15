@@ -9,7 +9,8 @@ It writes apps/<name>/ (the package with __main__.py and a window on AppHeader, 
 the requirements, VERSION 0.1.0, CHANGELOG, LICENSE, .gitignore and README.md), the installer test
 tools/installer-tests/<name>.sh and the wiki chapter docs/apps/<name>.md, and lists the app wherever
 the suite lists its apps: portal/apps.toml, icons/categories.toml (with the
-icon copies, tools/sync_icons.py), mkdocs.yml, docs/apps/index.md and categories.md, the suite README and the Dependency
+icon copies, tools/sync_icons.py), mkdocs.yml, docs/apps/index.md and categories.md, the home page (docs/index.md),
+the suite README, the bug report's App dropdown, the development venv's requirements-dev.txt and the Dependency
 Checker's catalog.
 The suite's CI needs no edit: its matrices come from the folders (tools/ci_matrix.py), its installer tests from
 tools/installer-tests/ and its shellcheck from the installers' and wrappers' names.
@@ -341,7 +342,25 @@ $PURGE && ! $UNINSTALL && die "--purge only goes with --uninstall."
 
 [ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo: the app, the venv and the launcher belong in your home folder."
 
+# Whether anything the uninstall removes is on this computer (paths and globs): without, it removes nothing and says
+# the app is not installed.
+installed_here() {
+    local path
+    for path in "$@"; do
+        compgen -G "$path" >/dev/null && return 0
+    done
+    return 1
+}
+
 if $UNINSTALL; then
+    found=false
+    installed_here "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON" "${DATA_DIR:?}/${APP_ID:?}" "${VENV_USERS:?}/${APP_ID:?}" \\
+        && found=true
+    $PURGE && installed_here "${CONFIG_DIR:?}/${APP_ID:?}" && found=true
+    if ! $found; then
+        info "$APP_NAME is not installed: nothing to remove."
+        exit 0
+    fi
     info "Removing the launcher, the menu entry and the app"
     rm -f "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON"
     command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q "$DATA_DIR/applications" || true
@@ -598,6 +617,7 @@ specifier = ">=6.11,<7"
 
 INDEX_ROW = "| ![](../assets/apps/@NAME@.webp){ .app-icon } [@APP_NAME@](@NAME@.md) | @SUMMARY@ |\n"
 CATEGORIES_ROW = "| ![](../assets/apps/@NAME@.webp){ .app-icon } [@APP_NAME@](@NAME@.md) | @CATEGORY_TITLE@ |\n"
+HOME_LINK = "\n\n[@APP_NAME@](apps/@NAME@.md): @SUMMARY@"
 README_ROW = ('- <img src="portal/images/apps/@NAME@.webp" width="20" height="20" alt=""/> '
               '**[@APP_NAME@](apps/@NAME@)**: @SUMMARY@\n')
 
@@ -689,6 +709,32 @@ def insert_after_rows(text: str, ending: str, row: str, where: str) -> str:
     return "".join(lines)
 
 
+def insert_option(text: str, dropdown: str, option: str, where: str) -> str:
+    """*option* as the last of the options of the dropdown with id *dropdown* (an issue template)."""
+    start = text.find(f"id: {dropdown}\n")
+    options = text.find("options:\n", start) if start >= 0 else -1
+    end = text.find("validations:", options) if options >= 0 else -1
+    lines = text[options:end].splitlines(keepends=True) if end >= 0 else []
+    items = [i for i, line in enumerate(lines) if line.lstrip().startswith("- ")]
+    if not items:
+        raise SystemExit(f"{where}: no {dropdown!r} dropdown with options")
+    last = lines[items[-1]]
+    lines.insert(items[-1] + 1, f"{last[:len(last) - len(last.lstrip())]}- {option}\n")
+    return text[:options] + "".join(lines) + text[end:]
+
+
+def insert_requirement(text: str, name: str, where: str) -> str:
+    """The app's requirements-dev.txt among the apps' in the root's, in the order of the folders' names."""
+    line = f"-r apps/{name}/requirements-dev.txt\n"
+    lines = text.splitlines(keepends=True)
+    apps = [i for i, existing in enumerate(lines) if existing.startswith("-r apps/")]
+    if not apps:
+        raise SystemExit(f"{where}: no -r apps/... line")
+    at = next((i for i in apps if lines[i].split("/")[1] > name), apps[-1] + 1)
+    lines.insert(at, line)
+    return "".join(lines)
+
+
 def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     """Writes the app and lists it, from the suite's template; returns the files written or changed, relative to
     *root*."""
@@ -754,6 +800,17 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     readme = suite.folder / "README.md"
     change(readme, insert_after_list(readme.read_text(encoding="utf-8"), f"**{app.category_title}**",
                                      fill(README_ROW, app, suite), "README.md"))
+    # The home page: a line of its own at the end of the last card, to work into the cards' text.
+    home = suite.folder / "docs" / "index.md"
+    change(home, insert_before(home.read_text(encoding="utf-8"), "\n</div>\n</div>\n\n[All the apps]",
+                               fill(HOME_LINK, app, suite), "docs/index.md"))
+    # The bug report's App dropdown, in the manifest's order: the app is its last.
+    template = root / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml"
+    change(template, insert_option(template.read_text(encoding="utf-8"), "app", app.name,
+                                   ".github/ISSUE_TEMPLATE/bug_report.yml"))
+    # The development venv (./test.sh, the wiki) takes in every app's requirements-dev.txt.
+    requirements = suite.folder / "requirements-dev.txt"
+    change(requirements, insert_requirement(requirements.read_text(encoding="utf-8"), app.name, "requirements-dev.txt"))
     # Nexus Deps' catalog of the suite (dev/deps): the app with its launcher, and PyQt6 as one of its packages.
     catalogs = sorted((root / "dev" / "deps" / "nexus_deps" / "catalogs").glob("*.toml"))
     catalog = catalogs[0] if len(catalogs) == 1 else None
@@ -842,7 +899,8 @@ def main(argv: list[str] | None = None) -> int:
         if not passed:
             failed = True
             print("       " + output.replace("\n", "\n       "))
-    print("Next: the window and its tests, the chapter, the app's CHANGELOG entries, Nexus Deps' catalog "
+    print("Next: the window and its tests, the chapter, the app's sentence on the home page (docs/index.md: its "
+          "line at the end of the last card), the app's CHANGELOG entries, Nexus Deps' catalog "
           "for a package or tool beyond PyQt6, and the portal bump the new entry asks for (check_manifest.py --base; "
           "the release stays the owner's).")
     return 1 if failed else 0

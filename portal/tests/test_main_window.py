@@ -27,8 +27,8 @@ def window(qapp, home, settings_dir, tmp_path):
 
 def test_portal_shows_required_app(window):
     assert window.windowTitle().startswith(APP_NAME)
-    assert list(window.states) == [entry.key for entry in window.entries]
-    assert [entry.key for entry in window.entries if entry.required] == ["board"]
+    assert list(window.states) == [tile.tile for entry in window.entries for tile in entry.tiles()]  # a tile per helper
+    assert [entry.key for entry in window.entries if entry.required] == ["board", "helpers"]
     assert window.states["board"].title == "Board Test"
     assert [action.text() for action in window.tile_menu(window.entries[0]).actions()][0] == "Open"
     assert window.big.categories == ["sustainable", "graphics", "gaming", "utilities"]

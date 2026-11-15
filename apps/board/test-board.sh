@@ -1297,7 +1297,7 @@ echo
 fi  # TEST 22
 if want 23; then
 log_result "[TEST 23] IOMMU Test"
-log_result "Report whether the IOMMU is active; on the PS5 it may stay on (nothing breaks)"
+log_result "Report whether the IOMMU is active. By default leave the IOMMU off; if it is on and you experience an unstable system, turn it off again"
 IOMMU_GROUPS=$(find /sys/kernel/iommu_groups -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
 if [ "${IOMMU_GROUPS:-0}" -gt 0 ]; then
     log_result "INFO: IOMMU is active ($IOMMU_GROUPS IOMMU groups)."

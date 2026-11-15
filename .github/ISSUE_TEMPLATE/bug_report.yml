@@ -28,6 +28,7 @@ body:
         - fan
         - cec
         - bluetooth
+        - helpers
     validations:
       required: true
   - type: textarea

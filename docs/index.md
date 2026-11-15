@@ -26,7 +26,9 @@ hide:
 <div class="home-card" markdown>
 #### :material-stethoscope: Diagnostics
 
-[PS5 Board Test](apps/board.md) checks the console with about sixty tests,
+[PS5 Board Test](apps/board.md) checks the console with about sixty tests, with
+[Helpers](apps/helpers.md) for its extras, MangoHud's FPS log, the memory map, the journal and
+the boot command line,
 [PS5 System Overlay](apps/overlay.md) keeps CPU, GPU, memory, fan and temperatures on top, and
 [PS5 SSD Check](apps/ssd.md) shows the drives' health and information.
 </div>

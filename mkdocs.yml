@@ -60,6 +60,7 @@ nav:
   - Install: install.md
   - Portal: portal.md
   - Portal Tour: portal-tour.md
+  - PS5 Linux boot partition: boot-partition.md
   - Apps:
       - apps/index.md
       - App categories: apps/categories.md
@@ -81,6 +82,7 @@ nav:
           - XBOX Remote Play: apps/clb.md
           - Xenia Manager: apps/xenia.md
       - Utilities:
+          - Console Helpers: apps/helpers.md
           - PS5 Bluetooth: apps/bluetooth.md
           - PS5 CEC Manager: apps/cec.md
           - PS5 Controller: apps/controller.md

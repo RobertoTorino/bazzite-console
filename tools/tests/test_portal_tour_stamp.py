@@ -36,3 +36,21 @@ def test_the_fingerprint_follows_the_portal_but_not_its_version(tmp_path, monkey
     assert not portal_tour.stale()                          # a release: only the version
     (package / "__init__.py").write_text('__version__ = "1.1.0"\nNAME = "The Portal"\n', encoding="utf-8")
     assert portal_tour.stale()
+
+
+def test_the_fingerprint_follows_the_tiles_but_not_the_pins(tmp_path, monkeypatch):
+    """New tiles need a new video (owner, 15-11-2026); a release, which only moves tags and checksums, does not."""
+    manifest = tmp_path / "apps.toml"
+    app = '[apps.a]\nname = "A"\ntag = "x-a-v1.0.0"\nsha256 = ""\ncategory = "utilities"\n'
+    manifest.write_text(app, encoding="utf-8")
+    monkeypatch.setattr(portal_tour, "MANIFEST", manifest)
+    monkeypatch.setattr(portal_tour, "STAMP", tmp_path / "portal-tour.stamp")
+    portal_tour.write_stamp()
+    manifest.write_text(app.replace("v1.0.0", "v1.1.0").replace('""', '"' + "ab" * 32 + '"'), encoding="utf-8")
+    assert not portal_tour.stale()                          # a release
+    manifest.write_text(app + '\n[[apps.a.helpers]]\nkey = "one"\nname = "One"\n', encoding="utf-8")
+    assert portal_tour.stale()                              # a tile more
+    portal_tour.write_stamp()
+    manifest.write_text(app.replace('name = "A"', 'name = "B"') + '\n[[apps.a.helpers]]\nkey = "one"\nname = "One"\n',
+                        encoding="utf-8")
+    assert portal_tour.stale()                              # a tile's name

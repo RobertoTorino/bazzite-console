@@ -86,6 +86,52 @@ nav:
       - development/index.md
 '''
 
+HOME = '''# The suite
+
+<div class="home-grid" markdown>
+<div class="home-card" markdown>
+#### Diagnostics
+
+[Alpha](apps/alpha.md) checks the board.
+</div>
+<div class="home-card" markdown>
+#### Living room
+
+[Beta](apps/beta.md) helps.
+</div>
+</div>
+
+[All the apps](apps/index.md){ .md-button }
+'''
+
+BUG_REPORT = '''name: Bug report
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      options:
+        - portal
+        - alpha
+    validations:
+      required: true
+  - type: dropdown
+    id: system
+    attributes:
+      options:
+        - Bazzite
+    validations:
+      required: true
+'''
+
+REQUIREMENTS_DEV = '''# The development venv.
+-r core/requirements-dev.txt
+-r portal/requirements-dev.txt
+-r apps/alpha/requirements-dev.txt
+-r apps/zeta/requirements-dev.txt       # a comment stays
+-r dev/deps/requirements-dev.txt
+'''
+
 CATALOG = '''# Runtime dependencies. [[tool]] a tool; [[dependency]] a Python package.
 
 [app.portal]
@@ -167,6 +213,9 @@ def checkout(tmp_path) -> Path:
     write(suite / "docs" / "apps" / "index.md", INDEX)
     write(suite / "docs" / "apps" / "categories.md", CATEGORIES_MD)
     write(suite / "README.md", README)
+    write(suite / "docs" / "index.md", HOME)
+    write(suite / "requirements-dev.txt", REQUIREMENTS_DEV)
+    write(root / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml", BUG_REPORT)
     write(suite / "icons" / "categories.toml", "# the apps' icons\n")
     (suite / "icons" / "utilities").mkdir(parents=True)
     for size, kind in ((1024, "webp"), (512, "webp"), (256, "webp"), (128, "png")):   # real pictures: sync_icons reads them
@@ -252,6 +301,16 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     readme = (suite / "README.md").read_text()
     assert ("**[Beta](apps/beta)**: t\n- <img src=\"portal/images/apps/fan2.webp\" width=\"20\" height=\"20\" alt=\"\"/> "
             "**[PS5 Fan Two](apps/fan2)**: A second fan.\n\nHow to install") in readme
+    # The home page (a line at the end of the last card), the bug report's dropdown, the development venv.
+    assert "[Beta](apps/beta.md) helps.\n\n[PS5 Fan Two](apps/fan2.md): A second fan.\n</div>\n</div>" in \
+        (suite / "docs" / "index.md").read_text()
+    assert (checkout / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml").read_text() == BUG_REPORT.replace(
+        "        - alpha\n", "        - alpha\n        - fan2\n")
+    assert (suite / "requirements-dev.txt").read_text() == REQUIREMENTS_DEV.replace(
+        "-r apps/zeta", "-r apps/fan2/requirements-dev.txt\n-r apps/zeta")
+    # The installer says when there is nothing to remove.
+    assert 'info "$APP_NAME is not installed: nothing to remove."' in installer
+    assert '"${VENV_USERS:?}/${APP_ID:?}" \\\n        && found=true' in installer
     # Nexus Deps' catalog of the suite: the app before the tools, PyQt6 with the app as a source.
     catalog = (checkout / "dev" / "deps" / "nexus_deps" / "catalogs" / f"{suite.name}.toml").read_text()
     assert ('launchers = ["~/.local/bin/ps5-alpha"]\n\n[app.fan2]\nname = "PS5 Fan Two"\n'

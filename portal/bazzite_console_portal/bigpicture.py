@@ -564,7 +564,7 @@ class BigPicture(Backdrop):
         super().__init__()
         self.setAutoFillBackground(True)
         self.setMinimumSize(640, 360)               # the layout's own minimum is for a big screen: it scales down
-        self.entries = {entry.key: entry for entry in entries}
+        self.entries = {entry.tile: entry for entry in entries}       # by its tile's key (AppEntry.tile)
         self.columns: dict[str, int] = {}                # per category: the columns its tiles are laid out in
         self.scale = 1.0
         self._art: dict[tuple[str, bool], QPixmap] = {}
@@ -679,7 +679,7 @@ class BigPicture(Backdrop):
         self.grids: dict[str, QGridLayout] = {}
         self.tiles: dict[str, BigTile] = {}
         for category, label in categories.items():
-            keys = [entry.key for entry in entries if entry.category == category]
+            keys = [entry.tile for entry in entries if entry.category == category]
             if not keys:
                 continue
             self.categories.append(category)
@@ -854,10 +854,12 @@ class BigPicture(Backdrop):
         if not self.categories:
             return []
         category = self.categories[self.bar.currentIndex()]
-        return [self.tiles[e.key] for e in self.entries.values() if e.category == category]
+        return [self.tiles[key] for key, e in self.entries.items() if e.category == category]
 
     def show_app(self, key: str) -> None:
-        """Open the category of the app and put the focus on its tile: a line of the notice."""
+        """Open the category of the app and put the focus on its tile (an app made of helpers: its first helper's):
+        a line of the notice."""
+        key = next((k for k, e in self.entries.items() if k == key or e.key == key), key)
         entry = self.entries.get(key)
         if entry is None or entry.category not in self.categories:
             return

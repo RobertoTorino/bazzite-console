@@ -96,3 +96,8 @@ tile = "portal/images/apps/upscaler.webp"
 category = "utilities"
 icons = ["apps/bluetooth/images/ps5-bluetooth"]
 tile = "portal/images/apps/bluetooth.webp"
+
+[helpers]
+category = "utilities"
+icons = ["apps/helpers/images/ps5-helpers"]
+tile = "portal/images/apps/helpers.webp"

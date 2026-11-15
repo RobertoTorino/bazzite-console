@@ -129,10 +129,28 @@ case "$MODE" in
     --dev)       install_dev ;;
     --all)       install_rpms; install_vkpeak; install_memtest_vulkan; install_speedtest ;;
     interactive)
-        ask "Layer RPM packages (${RPMS[*]})? Needs a reboot afterwards" && install_rpms
-        ask "Install vkpeak and memtest_vulkan into $BIN_DIR?" && { install_vkpeak; install_memtest_vulkan; }
-        ask "Install the Ookla speedtest CLI into $BIN_DIR?" && install_speedtest
-        ask "Development extras (sqlite, to inspect the GUI history DB)?" && install_dev
+        echo
+        say "RPM packages: ${RPMS[*]}"
+        echo "    stress-ng: CPU load in test 41, CPU score in test 42, memory bandwidth in test 49"
+        echo "    lm_sensors: temperatures and fans in test 22"
+        echo "    vkmark: GPU load in test 41 when memtest_vulkan and vkpeak are missing"
+        echo "    nvme-cli: SMART health in test 10"
+        echo "    fio: random 4K read in test 43"
+        echo "    Layered with rpm-ostree; active after a reboot."
+        ask "Layer the RPM packages?" && install_rpms
+        echo
+        say "Binaries: vkpeak and memtest_vulkan, the latest GitHub releases, into $BIN_DIR"
+        echo "    memtest_vulkan: GPU load and a VRAM error check in test 41"
+        echo "    vkpeak: GPU score in test 42, GPU load in test 41 when memtest_vulkan is missing"
+        ask "Install vkpeak and memtest_vulkan?" && { install_vkpeak; install_memtest_vulkan; }
+        echo
+        say "Speed test: the Ookla speedtest CLI ${SPEEDTEST_VERSION}, into $BIN_DIR"
+        echo "    speedtest: test 44 (Internet Speed); running it accepts Ookla's license and GDPR terms"
+        ask "Install the Ookla speedtest CLI?" && install_speedtest
+        echo
+        say "Development extras: sqlite"
+        echo "    sqlite3: look into the GUI's history database (no test uses it); layered, active after a reboot"
+        ask "Install the development extras?" && install_dev
         ;;
     *) die "Unknown option: $MODE (use --rpms, --bins, --speedtest, --dev, --all or no option)" ;;
 esac

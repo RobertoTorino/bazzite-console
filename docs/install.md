@@ -28,7 +28,8 @@ with one click. The many other downloads on GitHub are those apps; you never nee
     ```
 
     It downloads the portal, checks that the download is intact, unpacks it and installs it, together with Bazzite
-    Test, the suite's first app. This takes a minute or two. It ends with **Installed.**
+    Test, the suite's first app. This takes a minute or two. It ends with **Installed.** Once installed,
+    `install.sh` removes the downloaded archive and `SHA256SUMS`; the unpacked folder stays.
 
 3. Start **Bazzite Console Suite** from the app menu or from its icon on the Desktop.
 
@@ -58,8 +59,8 @@ Remove the portal in Konsole:
 ~/.local/share/bazzite-console-suite/portal/install.sh --uninstall
 ```
 
-It removes the portal and Board Test, and first asks about each other app that is installed: `y` uninstalls it,
-`s` keeps it, `c` cancels. Add `--purge` to remove the portal's and Board Test's settings too, or `--all` to remove
+It removes the portal, Board Test and Helpers, and first asks about each other app that is installed: `y` uninstalls it,
+`s` keeps it, `c` cancels. Add `--purge` to remove the portal's, Board Test's and Helpers' settings too, or `--all` to remove
 every app after one question. More in [Portal](portal.md).
 
 ## After a Bazzite update to a new Python

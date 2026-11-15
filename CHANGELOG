@@ -1,3 +1,40 @@
+Changelog: 15-11-2026 23:16:35
+
+Fixed. Every page of the wiki starts with an icon or a symbol above its heading, as Install and Privacy did: the
+pages without one (Portal Tour, the Apps overview, App categories, Covers, the Development pages and the History
+pages) have a symbol now, and tools/tests/test_mkdocs_hooks.py fails on a page without one. Architecture and
+consistency says so.
+
+Changelog: 15-11-2026 23:08:55
+
+Added. The wiki has a chapter on the PS5 Linux boot partition: the files the loader starts Linux with, every
+argument of the PS5 Linux command lines and what it does, vram.txt, kexec.sh, the fallback lines and backups, and
+the way back after a kernel update. Console Helpers' chapter links it and describes Boot Command Line's new table.
+
+Changelog: 15-11-2026 21:04:48
+
+Added. The Portal Tour's fingerprint (tools/portal-tour.stamp) covers the portal's tiles too: each app's and helper's
+name, category and marks in portal/apps.toml, so new tiles make the wiki's video out of date; a release, which moves
+only tags and checksums, does not. Nexus Release Tool shows it with an orange banner (its CHANGELOG). The
+Development and Releases chapters of the wiki say so.
+
+Changelog: 15-11-2026 20:10:17
+
+Fixed. tools/new_app.py lists a new app in the four places it skipped: the home page (a line at the end of its last
+card), the bug report's App dropdown, the root requirements-dev.txt of the development venv, and its install.sh's
+uninstall, which now says the app is not installed and removes nothing when nothing of it is there. Its test covers
+each; the Architecture chapter names them.
+
+Changelog: 15-11-2026 20:10:01
+
+Added. A portal release bundles every required app (Board Test and Console Helpers): build_release.py takes --bundle
+more than once, or one folder with a <tag>/ folder per release, and release.yml downloads each required release
+into a folder of its own. check_manifest.py checks the "Changes the board" box of every helper that changes the
+board in its app's wiki chapter. The wiki has a chapter for Console Helpers, Board Test's chapter points at its
+helpers where it gives the steps by hand, and the Portal, Install, Releases and Architecture chapters describe
+required apps and helpers. The installer and release tests install the helpers with the portal. Nexus Deps lists
+Console Helpers and what its password prompt is for.
+
 Changelog: 15-11-2026 11:52:08
 
 Fixed. CLAUDE.md says Nexus Release Tool handles the releases (owner, 15-11-2026): it works out each version from

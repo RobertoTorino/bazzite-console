@@ -5,7 +5,9 @@ sequence"): Get up to date, Commit your changes, Push them, CI passes, Start new
 above it), the release on GitHub (Stop or Resume), Device test, Publish (or Not OK) and Bring in the pin commit. Each
 step says where it stands; only the step to do now has its pill lit (owner: "if that means I have to do 3 actions we
 make pills for them that can be clicked"). The logic is flow.py's (current_step, step_states); the window
-(main_window.py) holds the command line the commands run in and the GitHub runs the header reads."""
+(main_window.py) holds the command line the commands run in and the GitHub runs the header reads. Above the steps,
+an orange banner says when the wiki's Portal Tour is older than the portal (flow.video_reason), with Record new video
+now; Start new release waits for it (owner, 15-11-2026: the owner records the video)."""
 
 from __future__ import annotations
 
@@ -83,6 +85,21 @@ class ReleasePage(QWidget):
         self.start_button = accent_button("Start new release", "Write the release, commit it, push it and start the "
                                           "release on GitHub")
         self.start_button.clicked.connect(self.start)
+        # The portal video's banner (owner, 15-11-2026): orange while the wiki's Portal Tour is older than the portal
+        self.video_banner = QFrame()
+        self.video_banner.setStyleSheet(f"QFrame {{ background:{ORANGE}; border-radius:6px; }}")
+        banner = QHBoxLayout(self.video_banner)
+        self.video_note = QLabel()
+        self.video_note.setWordWrap(True)
+        self.video_note.setStyleSheet("color:#1b1b1b; font-weight:700; background:transparent;")
+        self.record_button = QPushButton("Record new video now")
+        self.record_button.setToolTip(f"Record the wiki's Portal Tour from this checkout ({flow.RECORD_VIDEO}): about "
+                                      "a minute, the output on the Commands tab")
+        self.record_button.clicked.connect(self.record_video)
+        banner.addWidget(self.video_note, 1)
+        banner.addWidget(self.record_button)
+        self.video_banner.hide()
+        self.video_reason = ""                  # why the video must be recorded first; read with the checkout
         self.why_not = QLabel()                 # why Start cannot go yet
         self.why_not.setWordWrap(True)
         self.why_not.setStyleSheet(f"color:{ORANGE}; font-weight:600;")
@@ -166,6 +183,7 @@ class ReleasePage(QWidget):
             "test, Publish (or Not OK) and Bring in the pin commit. Only the step to do now has its pill lit and an "
             "orange ▶; a step done has a green ✓, one that failed a red !, and the line beside each says what there "
             "is to do. Only the lit pill does anything, so you never need a command or another tab."))
+        lay.addWidget(self.video_banner)
         lay.addWidget(self.why_not)
         # The steps scroll when the window is lower than they are (owner, 01-11-2026: on a small screen the lines
         # beside the pills were cut off), never sideways: the pills' width is fixed, the lines wrap.
@@ -217,7 +235,7 @@ class ReleasePage(QWidget):
             self.rows.append((pick, combo, notes))
         self.portal_choice.clear()
         self.portal_choice.addItems(flow.waiting_portals(root))
-        self.show_state()
+        self.show_video(flow.video_reason(root))
 
     def chosen(self) -> list[flow.Pick]:
         for pick, combo, notes in self.rows:
@@ -258,9 +276,13 @@ class ReleasePage(QWidget):
             self.show_state()
 
     def command_ended(self) -> None:
-        """A command ended: when it was Push, how (push_failure), kept for this HEAD until it is pushed or changes;
-        the ticker goes back to GitHub's runs."""
+        """A command ended: when it was the recording of the portal video, whether the video is current now; when it
+        was Push, how (push_failure), kept for this HEAD until it is pushed or changes; the ticker goes back to
+        GitHub's runs."""
         commands = self.release_window.commands
+        if commands.last_command == flow.RECORD_VIDEO:      # the video may be current now, the status unchanged
+            self.show_video(flow.video_reason(self.release_window.root))
+            return
         if commands.last_command != rp.push_command():
             return
         head = (rp.git(self.release_window.root, "rev-parse", "HEAD") or "").strip()
@@ -308,7 +330,9 @@ class ReleasePage(QWidget):
         self.push_button.setEnabled(idle and now == "push")
         self.rerun_ci_button.setEnabled(idle and now == "ci" and facts.ci == "failed" and bool(self.rerunnable()))
         self.start_button.setText("Push and start" if facts.unpushed else "Start new release")
-        self.start_button.setEnabled(idle and now == "start" and (bool(facts.unpushed) or not reasons))
+        self.start_button.setEnabled(idle and now == "start" and not self.video_reason
+                                     and (bool(facts.unpushed) or not reasons))
+        self.record_button.setEnabled(idle)
         run = facts.run
         self.stop_button.setEnabled(idle and now == "run" and run is not None and not run.done)
         self.resume_button.setEnabled(idle and now == "run" and run is not None and run.done and not run.passed)
@@ -360,6 +384,8 @@ class ReleasePage(QWidget):
             return ("CI is running on this commit: wait until it passed." if facts.ci == "building" else
                     "GitHub has no CI run on this commit yet: wait a moment.")
         if key == "start":
+            if self.video_reason:
+                return "Record a new portal video first (the orange banner): the release waits for it."
             return (f"The release commit is not pushed yet ({facts.unpushed}): Push and start." if facts.unpushed
                     else "Check the versions on the Contents tab, then Start new release.")
         if key == "run" and facts.run is not None:
@@ -456,8 +482,24 @@ class ReleasePage(QWidget):
             window.reload()
         return True
 
+    def show_video(self, reason: str) -> None:
+        """The portal video's banner: shown with *reason* while the video must be recorded first."""
+        self.video_reason = reason
+        self.video_note.setText(reason)
+        self.video_banner.setVisible(bool(reason))
+        self.show_state()
+
+    def record_video(self) -> None:
+        """Records the wiki's Portal Tour on the Commands tab; when it ends, the checkout is read again and the
+        banner goes."""
+        self.release_window.run_git(flow.RECORD_VIDEO)
+
     def start(self) -> None:
         window = self.release_window
+        self.show_video(flow.video_reason(window.root))        # again, right before: the banner may be minutes old
+        if self.video_reason:
+            QMessageBox.warning(self, "Start new release", self.video_reason)
+            return
         pending = flow.unpushed_release(window.root, window.base())
         if pending:                             # the release commit is made; its push stopped: push and start
             command = flow.push_and_start_command()

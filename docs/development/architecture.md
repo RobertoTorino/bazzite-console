@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-sitemap-outline:</span>
+
 # Architecture and consistency
 
 Every app of the suite is built the same way: the same folders, the same files, the same start-up, the same window
@@ -200,6 +202,11 @@ python3 tools/sync_icons.py --category sustainable --from ~/Pictures/leaf-small.
 `python3 tools/sync_icons.py --check` lists what is not converted or copied yet, and `tools/tests/test_icons.py`
 fails when a copy is out of date or an app icon has no category.
 
+In the wiki, every page starts with an icon above its heading: an app's chapter with the app's icon
+(`![Name](../assets/<app>/<app-id>.webp){ .app-logo }`), every other page with a symbol from Material Design Icons
+(`<span class="page-icon">:material-<name>:</span>`); the Home page starts with its pictures.
+`tools/tests/test_mkdocs_hooks.py` fails on a page without one.
+
 ## Shared code: bazzite_console_core
 
 `core/bazzite_console_core` holds what more than one app needs: theme, widgets, start-up, settings, help, update
@@ -369,7 +376,10 @@ It writes `apps/<name>/` (the package with `__main__.py` and a window on `AppHea
 `tests/`, `install.sh`, the requirements, `VERSION` 0.1.0, `CHANGELOG`, `LICENSE`, `.gitignore`, `README.md`),
 the installer test `tools/installer-tests/<name>.sh` and the chapter `docs/apps/<name>.md`,
 and adds the app to `portal/apps.toml`, `icons/categories.toml` (with the icon copies), `mkdocs.yml`, the apps
-overview and categories tables, the suite README and Nexus Deps' catalog of the suite; CI needs no edit, as its
+overview and categories tables, the home page (a line at the end of its last card, to work into the cards' text),
+the suite README, the bug report's App dropdown, the root `requirements-dev.txt` and Nexus Deps' catalog of the
+suite. Its `install.sh --uninstall` says the app is not installed, and removes nothing, when nothing of it is
+there. CI needs no edit, as its
 pytest matrix, its installer tests and its shellcheck come from the folders. What it does by hand, step by step,
 for an app that does not fit the template (the owner's decision):
 
@@ -380,16 +390,22 @@ for an app that does not fit the template (the owner's decision):
 3. Build the window on `AppHeader` and core's widgets.
 4. Write `install.sh` from the copied one, with the same options and launcher.
 5. Write `tests/` and `requirements-dev.txt`, and `tools/installer-tests/<name>.sh`: CI finds both
-   by itself (every folder with `tests/`, every script in `installer-tests/`), and shellchecks `install.sh`.
+   by itself (every folder with `tests/`, every script in `installer-tests/`), and shellchecks `install.sh`. Add
+   the app's `requirements-dev.txt` to the root's, for the development venv.
 6. Add the app to `portal/apps.toml` (name, summary, `changes_board`, `category` (its icon's: the portal's tab for
    it), install, uninstall, detect, launch). An app that changes the console also gets a `board_change`: what it
    touches, what stays after a reboot or a power off, what it never touches and how it is undone, in a few plain
-   sentences; the tile's popup shows it.
+   sentences; the tile's popup shows it. An app made of small helpers, as Console Helpers, lists each one as an
+   `[[apps.<name>.helpers]]` table instead (key, name, summary, launch, and the same `changes_board` and
+   `board_change` per helper): the portal shows a tile per helper. A new helper of Console Helpers is a window in
+   its `windows.py`, an entry in its `catalog.py` and a table in `apps.toml`, kept the same by its tests.
 7. Add the app to Nexus Deps' catalog of the suite (`[app.<name>]` with its launchers), its Python packages and
    the external tools it runs, with the Homebrew formula (`brew`) or Fedora package (`rpm`) that installs a tool
    (`dev/deps/nexus_deps/catalogs/bazzite-console.toml`).
 8. Write its manual chapter, `docs/apps/<name>.md`, add it to `mkdocs.yml`, and give it a row in the apps overview,
-   `docs/apps/index.md`. An app that changes the console opens its chapter, right after the title, with
+   `docs/apps/index.md`, a link on the home page (`docs/index.md`) and an option in the bug report's App
+   dropdown (`.github/ISSUE_TEMPLATE/bug_report.yml`, in the manifest's order). An app that changes the console
+   opens its chapter, right after the title, with
    a `!!! warning "Changes the board"` box holding its `board_change` text word for word
    (`tools/check_manifest.py` compares the two).
 9. Run the checks from [Development](index.md) and every installer test.

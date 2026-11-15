@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-chip:</span>
+
 # What is the PlayStation 5?
 
 The PlayStation 5 is the current generation's game console, on sale since November 2020. Inside: an AMD processor

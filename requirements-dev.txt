@@ -12,6 +12,7 @@
 -r apps/controller/requirements-dev.txt
 -r apps/datstation/requirements-dev.txt
 -r apps/fan/requirements-dev.txt
+-r apps/helpers/requirements-dev.txt
 -r apps/overlay/requirements-dev.txt
 -r apps/pcsx2/requirements-dev.txt
 -r apps/ppsspp/requirements-dev.txt

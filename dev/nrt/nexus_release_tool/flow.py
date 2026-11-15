@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import re
 import shlex
+import subprocess
+import sys
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -129,6 +131,27 @@ def write(root: Path, chosen: list[Pick], base: str = "origin/main") -> tuple[li
         rp.add_changelog_entry(root, pick.unit, text, base=base)
         log.append(f"core: {new}, \"{text}\"")
     return log, tags
+
+
+# The wiki's Portal Tour keeps up with the portal (owner, 15-11-2026): while the portal's window or tiles changed since
+# it was recorded, an orange banner offers to record it, and the release waits. The owner records it.
+RECORD_VIDEO = "tools/record-tour.sh --wiki"
+VIDEO_STALE = ("The portal changed since the wiki's Portal Tour was recorded (its window or its tiles): record a new "
+               "video before the release.")
+
+
+def video_reason(root: Path, python: str = sys.executable) -> str:
+    """Why the portal video must be recorded first ("" when it is current, or the suite has no tour): what
+    tools/portal_tour.py --check says. A check that cannot run holds the release too."""
+    script = root / "tools" / "portal_tour.py"
+    if not script.is_file():
+        return ""
+    try:
+        done = subprocess.run([python, str(script), "--check"], cwd=root, capture_output=True, text=True,
+                              timeout=60, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return f"The portal video check could not run ({exc}): the release waits until it does."
+    return "" if done.returncode == 0 else VIDEO_STALE
 
 
 def ready(root: Path, base: str = "origin/main") -> list[str]:

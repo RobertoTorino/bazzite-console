@@ -40,6 +40,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[PS5 SSD Check](apps/ssd)**: Inspect storage health and drive information when supported.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[PS5 CEC Manager](apps/cec)**: Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC.
 - <img src="portal/images/apps/bluetooth.webp" width="20" height="20" alt=""/> **[PS5 Bluetooth](apps/bluetooth)**: Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed.
+- <img src="portal/images/apps/helpers.webp" width="20" height="20" alt=""/> **[Console Helpers](apps/helpers)**: Small helpers for one job each: Board Test's extras, MangoHud's config, the memory map, the journal and the boot command line. Always installed.
 
 ## Install
 

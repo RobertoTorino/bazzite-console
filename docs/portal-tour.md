@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-play-circle-outline:</span>
+
 # Portal Tour
 
 Two minutes through the portal: the header and its symbols, the Settings page, the notice of updates, the tiles and

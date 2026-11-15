@@ -16,7 +16,8 @@ S=$D/bazzite-console-suite/state         # what it remembers
 logs=()
 V=$(cat "$SUITE/portal/VERSION")
 NEXT="${V%.*}.$(( ${V##*.} + 1 ))"   # a later portal release, for the update in step 2
-BT="ps5-board-v$(tr -d '[:space:]' < "$SUITE/apps/board/VERSION")"   # the bundled release
+BT="ps5-board-v$(tr -d '[:space:]' < "$SUITE/apps/board/VERSION")"   # the bundled releases
+HB="ps5-helpers-v$(tr -d '[:space:]' < "$SUITE/apps/helpers/VERSION")"
 
 echo "== 1. install from the suite checkout, with the install.sh at its root"
 bash "$SUITE/install.sh" > "$T/log1" 2>&1; rc=$?; logs+=("$T/log1")
@@ -31,28 +32,34 @@ check "the sound is in the copy" "[ -s $P/bazzite_console_portal/sounds/bigpictu
 check "the controller reader is in the requirements" "grep -q '^pygame-ce' $P/requirements.txt"
 check "Board Test installed too" "[ -f $T/opt/ps5-board-test/test-board.sh ] && [ -x $HOME/.local/bin/ps5-board-test ]"
 check "Board Test has its manual" "cmp -s $SUITE/docs/apps/board.md $T/opt/ps5-board-test/MANUAL.md"
-check "both venv users" "[ -f $D/bazzite-console-suite/venv-users/bazzite-console-suite ] && [ -f $D/bazzite-console-suite/venv-users/ps5-board-test ]"
+check "Console Helpers installed too" "[ -f $D/ps5-helpers/app/helpers/__main__.py ] && [ -x $HOME/.local/bin/ps5-helpers ]"
+check "the venv users" "[ -f $D/bazzite-console-suite/venv-users/bazzite-console-suite ] && [ -f $D/bazzite-console-suite/venv-users/ps5-board-test ] && [ -f $D/bazzite-console-suite/venv-users/ps5-helpers ]"
 check "portal launcher" "grep -qF 'm bazzite_console_portal' $HOME/.local/bin/bazzite-console-suite"
 check "desktop icons" "[ -x $HOME/Desktop/bazzite-console-suite.desktop ] && [ -x $HOME/Desktop/ps5-board-test.desktop ]"
-check "record says local" "grep -q '\"board\": \"local\"' $S/installed.json"
+check "records say local" "grep -q '\"board\": \"local\"' $S/installed.json && grep -q '\"helpers\": \"local\"' $S/installed.json"
 check "portal imports its bundled core" "(cd $P && /usr/bin/python3 -c 'import bazzite_console_core, os, sys; sys.exit(0 if os.path.abspath(bazzite_console_core.__file__).startswith(\"$P\") else 1)')"
 check "manifest parses on Linux python" "(cd $P && /usr/bin/python3 -c 'import tomllib; d=tomllib.load(open(\"apps.toml\",\"rb\")); assert list(d[\"apps\"])[0]==\"board\"')"
 
-echo "== 2. release-shaped tree: portal staged + bundled Board Test, no desktop icons"
+echo "== 2. release-shaped tree: portal staged + bundled Board Test and Console Helpers, no desktop icons"
 R="$T/release/ps5-portal-v$NEXT"; rm -rf "$T/release"; mkdir -p "$T/release"
 /usr/bin/python3 "$NEXUS/tools/stage_app.py" portal "$R" > /dev/null
 /usr/bin/python3 "$NEXUS/tools/stage_app.py" board "$R/bundled/$BT" > /dev/null
+/usr/bin/python3 "$NEXUS/tools/stage_app.py" helpers "$R/bundled/$HB" > /dev/null
 sed -i "s/^__version__ = \"$V\"\$/__version__ = \"$NEXT\"/" "$R/bazzite_console_portal/__init__.py"
 (cd "$T/release" && tar -czf "ps5-portal-v$NEXT.tar.gz" "ps5-portal-v$NEXT")      # the tarball beside it, as a download leaves it
+(cd "$T/release" && sha256sum "ps5-portal-v$NEXT.tar.gz" > SHA256SUMS)
+SUM=$(sha256sum "$T/release/ps5-portal-v$NEXT.tar.gz" | cut -c1-64)
 bash "$R/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?; logs+=("$T/log2")
 check "exit 0" "[ $rc -eq 0 ]"
-check "the tarball's sha256 is kept beside the program" "[ \"\$(cut -c1-64 $P/build.sha256)\" = \"\$(sha256sum $T/release/ps5-portal-v$NEXT.tar.gz | cut -c1-64)\" ]"
+check "the tarball's sha256 is kept beside the program" "[ \"\$(cut -c1-64 $P/build.sha256)\" = $SUM ]"
+check "the tarball and its SHA256SUMS are removed" "[ ! -e $T/release/ps5-portal-v$NEXT.tar.gz ] && [ ! -e $T/release/SHA256SUMS ] && [ -f $R/install.sh ]"
 check "the new portal version replaced the old" "grep -q '^__version__ = \"$NEXT\"' $P/bazzite_console_portal/__init__.py"
 check "the release has the sound" "[ -s $P/bazzite_console_portal/sounds/bigpicture.wav ]"
 check "bundled/ not copied" "[ ! -d $P/bundled ]"
 check "portal installs apps from releases" "[ ! -e $P/suite-checkout ]"
-check "record has the bundled tag" "grep -q '\"board\": \"$BT\"' $S/installed.json"
-check "desktop icons removed" "[ ! -e $HOME/Desktop/bazzite-console-suite.desktop ] && [ ! -e $HOME/Desktop/ps5-board-test.desktop ]"
+check "records have the bundled tags" "grep -q '\"board\": \"$BT\"' $S/installed.json && grep -q '\"helpers\": \"$HB\"' $S/installed.json"
+check "Console Helpers from the bundled release" "[ -f $D/ps5-helpers/app/bazzite_console_core/__init__.py ]"
+check "desktop icons removed" "[ ! -e $HOME/Desktop/bazzite-console-suite.desktop ] && [ ! -e $HOME/Desktop/ps5-board-test.desktop ] && [ ! -e $HOME/Desktop/ps5-helpers.desktop ]"
 
 echo "== 3. the portal's own update: a release unpacked in the state folder, installed from there"
 U="$S/portal-update/ps5-portal-v$NEXT"; mkdir -p "$S/portal-update"; cp -r "$R" "$U"
@@ -60,6 +67,11 @@ echo picture > "$S/wallpaper.png"
 (cd "$U" && ./install.sh --no-desktop-shortcut) > "$T/log2b" 2>&1; rc=$?; logs+=("$T/log2b")
 check "exit 0" "[ $rc -eq 0 ]"
 check "the portal is installed, the state untouched" "[ -f $P/bazzite_console_portal/__main__.py ] && grep -q '\"board\": \"$BT\"' $S/installed.json && [ -f $S/wallpaper.png ]"
+check "run again without its tarball: the build is still recorded" "[ \"\$(cut -c1-64 $P/build.sha256)\" = $SUM ]"
+# A tarball beside a SHA256SUMS of another download: the tarball goes, that SHA256SUMS stays.
+(cd "$S/portal-update" && tar -czf "ps5-portal-v$NEXT.tar.gz" "ps5-portal-v$NEXT" && echo "$SUM  other.tar.gz" > SHA256SUMS)
+(cd "$U" && ./install.sh --no-desktop-shortcut) > "$T/log2d" 2>&1; rc=$?; logs+=("$T/log2d")
+check "another download's SHA256SUMS is kept" "[ $rc -eq 0 ] && [ ! -e $S/portal-update/ps5-portal-v$NEXT.tar.gz ] && grep -q other.tar.gz $S/portal-update/SHA256SUMS"
 # An earlier portal kept its downloads in what is the portal's own folder now: the copy replaces the folder the
 # update runs from, after Board Test is installed from it.
 U="$P/portal-update/ps5-portal-v$NEXT"; mkdir -p "$P/portal-update"; cp -r "$R" "$U"
@@ -72,7 +84,7 @@ mkdir -p "$S/releases/fan-v0.0.1" "$S/releases/local-ssd"
 bash "$P/install.sh" --uninstall > "$T/log3" 2>&1; rc=$?; logs+=("$T/log3")
 check "exit 0" "[ $rc -eq 0 ]"
 check "portal gone, Board Test gone from /opt" "[ ! -e $P ] && [ -z \"\$(ls $T/opt)\" ]"
-check "launchers gone" "[ ! -e $HOME/.local/bin/bazzite-console-suite ] && [ ! -e $HOME/.local/bin/ps5-board-test ]"
+check "launchers gone" "[ ! -e $HOME/.local/bin/bazzite-console-suite ] && [ ! -e $HOME/.local/bin/ps5-board-test ] && [ ! -e $HOME/.local/bin/ps5-helpers ] && [ ! -e $D/ps5-helpers ]"
 check "venv kept, only Fan Controller left" "[ -x $D/bazzite-console-suite/venv/bin/python ] && [ \"\$(ls $D/bazzite-console-suite/venv-users)\" = ps5-fan-controller ]"
 check "mentions what is left" "grep -q 'Still installed: ps5-fan-controller' $T/log3"
 check "the wallpaper kept, the records and releases of the apps that are gone dropped" "[ -f $S/wallpaper.png ] && [ ! -e $S/installed.json ] && [ ! -e $S/releases ]"
@@ -130,7 +142,7 @@ check "dropped app without a record gone" "! installed ps5-datstation && [ ! -e 
 check "record drops the chosen app" "! grep -q ssd $S/installed.json && grep -q overlay $S/installed.json"
 check "record and folder of Board Test gone" "! grep -q board $S/installed.json && [ ! -e $S/releases/local-board ]"
 check "older release of the skipped app gone" "[ ! -e $S/releases/overlay-v0.0.1 ]"
-check "portal and Board Test gone" "! installed bazzite-console-suite && ! installed ps5-board-test"
+check "portal, Board Test and Console Helpers gone" "! installed bazzite-console-suite && ! installed ps5-board-test && ! installed ps5-helpers"
 check "mentions what is left" "grep -q 'Still installed: ps5-system-overlay' $T/log5"
 (cd "$S/releases/local-overlay" && bash install.sh --uninstall) >> "$T/log5" 2>&1
 bash "$NEXUS/dev/itests/install.sh" --uninstall >> "$T/log5" 2>&1
@@ -156,7 +168,7 @@ bash "$SUITE/install.sh" --uninstall --all < /dev/null >> "$T/log7" 2>&1; rc=$?
 check "without a terminal: refused, nothing removed" "[ $rc -ne 0 ] && grep -q 'needs a terminal' $T/log7 && installed ps5-system-overlay && installed bazzite-console-suite"
 printf 'n\n' | BAZZITE_CONSOLE_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall --all >> "$T/log7" 2>&1; rc=$?
 check "no: canceled, nothing removed" "[ $rc -eq 1 ] && grep -q 'Canceled: nothing was uninstalled.' $T/log7 && installed ps5-system-overlay && installed ps5-ssd-check && installed bazzite-console-suite"
-check "the warning names every app" "grep -q 'WARNING: --all removes the whole suite from this computer: PS5 SSD Check, PS5 System Overlay, with the portal and Board Test.' $T/log7"
+check "the warning names every app" "grep -q 'WARNING: --all removes the whole suite from this computer: PS5 SSD Check, PS5 System Overlay, with the portal, Board Test and Helpers.' $T/log7"
 check "asks once, not per app" "grep -q 'Are you sure you want to delete everything permanently?' $T/log7 && ! grep -q 'Uninstall PS5 System Overlay?' $T/log7"
 printf 'y\n' | BAZZITE_CONSOLE_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall --all --purge >> "$T/log7" 2>&1; rc=$?
 check "yes: exit 0" "[ $rc -eq 0 ]"

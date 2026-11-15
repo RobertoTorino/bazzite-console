@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-view-grid-outline:</span>
+
 # Apps
 
 **Closing an app.** In every app's window **Escape** closes the window, as its close button does, and so does **B** on a
@@ -48,5 +50,6 @@ says, by default Escape for B.
 | ![](../assets/apps/sftp.webp){ .app-icon } [PS5 SFTP Tools](sftp.md) | Transfer files over SFTP and manage SSH servers on Bazzite hosts. |
 | ![](../assets/apps/ssd.webp){ .app-icon } [PS5 SSD Check](ssd.md) | Inspect storage health and drive information when supported. |
 | ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Use a compatible PlayStation camera as a webcam. |
+| ![](../assets/apps/helpers.webp){ .app-icon } [Console Helpers](helpers.md) | Small helpers for one job each: Board Test's extras, MangoHud's config, the memory map, the journal and the boot command line. Always installed. |
 
 Apps that change the board must explain their changes and ask before applying them.

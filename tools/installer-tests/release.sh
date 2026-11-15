@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# End to end from release tarballs: build the Board Test, SSD Check and portal releases with build_release.py,
-# install the portal from its tarball (which installs the bundled Board Test release build), and let the
+# End to end from release tarballs: build the Board Test, Console Helpers, SSD Check and portal releases with
+# build_release.py, install the portal from its tarball (which installs the bundled Board Test and Console Helpers
+# release builds), and let the
 # portal's release code fetch and verify the SSD Check release the way it would from GitHub. Last, the suite's
 # check-release.sh installs that portal tarball as if downloaded from GitHub, and the portal from the checkout copy.
-# It works on a copy of the checkout in which apps.toml pins Board Test and SSD Check to these local builds: the
+# It works on a copy of the checkout in which apps.toml pins Board Test, Console Helpers and SSD Check to these local
+# builds: the
 # checksums pinned in the repository are those of the real releases, which a local build never matches.
 # Runs with the shims from shims.sh (CI).
 #
@@ -20,7 +22,8 @@ fail=0
 check() { if eval "$2"; then echo "  ok   $1"; else echo "  FAIL $1"; fail=1; fi; }
 D=$XDG_DATA_HOME
 ver() { tr -d '[:space:]' < "$SUITE/$1/VERSION"; }
-BT="ps5-board-v$(ver apps/board)"; GOV="ps5-ssd-v$(ver apps/ssd)"; PORTAL="ps5-portal-v$(ver portal)"
+BT="ps5-board-v$(ver apps/board)"; HB="ps5-helpers-v$(ver apps/helpers)"; GOV="ps5-ssd-v$(ver apps/ssd)"
+PORTAL="ps5-portal-v$(ver portal)"
 export SOURCE_DATE_EPOCH=1790000000
 
 if [ "${1:-}" = release ]; then
@@ -33,6 +36,7 @@ if [ "${1:-}" = release ]; then
     tar -xzf "$T/download/$TAG.tar.gz" -C "$T/unpacked"
     (cd /tmp && "$T/unpacked/$TAG/install.sh" > "$T/install.log" 2>&1); rc=$?
     check "the portal installs, with its bundled Board Test" "[ $rc -eq 0 ] && [ -f $T/opt/ps5-board-test/board_test/main_window.py ] && [ -x $HOME/.local/bin/bazzite-console-suite ]"
+    check "and its bundled Console Helpers" "[ -x $HOME/.local/bin/ps5-helpers ]"
     [ $fail -eq 0 ] && echo "ALL OK" || cat "$T/install.log"
     exit $fail
 fi
@@ -44,25 +48,26 @@ mkdir -p "$T/dist" "$T/suite"
 (cd "$NEXUS" && git ls-files -z --cached --others --exclude-standard |
     while IFS= read -r -d '' f; do [ -e "$f" ] && printf '%s\0' "$f"; done | tar --null -T - -cf -) | tar -xf - -C "$T/suite"
 S=$T/suite                          # the copy of the repository
-for tag in "$BT" "$GOV"; do
+for tag in "$BT" "$HB" "$GOV"; do
     /usr/bin/python3 "$S/tools/build_release.py" "$tag" "$T/build-$tag" > "$T/build.log" 2>&1 || { cat "$T/build.log"; fail=1; }
     cp "$T/build-$tag/$tag.tar.gz" "$T/dist/"
     /usr/bin/python3 "$S/tools/pin_app.py" "$tag" --sha256 "$(cut -d' ' -f1 "$T/build-$tag/SHA256SUMS")" >> "$T/build.log" 2>&1 || fail=1
 done
-/usr/bin/python3 "$S/tools/build_release.py" "$PORTAL" "$T/build-portal" --bundle "$T/build-$BT" > "$T/build.log" 2>&1 || { cat "$T/build.log"; fail=1; }
+/usr/bin/python3 "$S/tools/build_release.py" "$PORTAL" "$T/build-portal" --bundle "$T/build-$BT" --bundle "$T/build-$HB" > "$T/build.log" 2>&1 || { cat "$T/build.log"; fail=1; }
 cat "$T/build-$BT/SHA256SUMS" "$T/build-$GOV/SHA256SUMS" > "$T/dist/SHA256SUMS"
 check "three tarballs" "[ -f $T/dist/$BT.tar.gz ] && [ -f $T/dist/$GOV.tar.gz ] && [ -f $T/build-portal/$PORTAL.tar.gz ]"
 check "sums verify" "(cd $T/dist && sha256sum --check --quiet SHA256SUMS) && (cd $T/build-portal && sha256sum --check --quiet SHA256SUMS)"
 
 echo "== 2. install the portal from its tarball"
 mkdir -p "$T/dl" && tar -xzf "$T/build-portal/$PORTAL.tar.gz" -C "$T/dl"
-check "install.sh executable in the tarball" "[ -x $T/dl/$PORTAL/install.sh ] && [ -x $T/dl/$PORTAL/bundled/$BT/install.sh ]"
+check "install.sh executable in the tarball" "[ -x $T/dl/$PORTAL/install.sh ] && [ -x $T/dl/$PORTAL/bundled/$BT/install.sh ] && [ -x $T/dl/$PORTAL/bundled/$HB/install.sh ]"
 (cd /tmp && "$T/dl/$PORTAL/install.sh" > "$T/install.log" 2>&1); rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "Board Test is a release build" "[ -f $T/opt/ps5-board-test/board_test/_build_info.py ]"
 check "its engine hash matches" "grep -q \"\$(sha256sum < $T/opt/ps5-board-test/test-board.sh | cut -d' ' -f1)\" $T/opt/ps5-board-test/board_test/_build_info.py"
 check "no 'not a release build' note" "! grep -q 'not a release build' $T/install.log"
-check "record has the bundled tag" "grep -q \"\\\"board\\\": \\\"$BT\\\"\" $D/bazzite-console-suite/state/installed.json"
+check "records have the bundled tags" "grep -q \"\\\"board\\\": \\\"$BT\\\"\" $D/bazzite-console-suite/state/installed.json && grep -q \"\\\"helpers\\\": \\\"$HB\\\"\" $D/bazzite-console-suite/state/installed.json"
+check "helpers from its release" "[ -x $HOME/.local/bin/ps5-helpers ] && [ -f $D/ps5-helpers/app/bazzite_console_core/__init__.py ]"
 check "portal from the release" "[ -f $D/bazzite-console-suite/portal/bazzite_console_core/__init__.py ] && [ ! -d $D/bazzite-console-suite/portal/bundled ]"
 
 echo "== 3. the installed portal fetches and verifies the SSD Check release"

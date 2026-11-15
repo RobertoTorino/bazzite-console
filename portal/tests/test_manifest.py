@@ -28,6 +28,68 @@ detect = ["~/.local/bin/bt"]
 """
 
 
+HELPERS = MINIMAL + """
+[apps.helpers]
+name = "Console Helpers"
+summary = "s"
+tag = "ps5-helpers-v0.1.0"
+required = true
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/h"]
+launch = [["Open", "~/.local/bin/h"]]
+
+[[apps.helpers.helpers]]
+key = "one"
+name = "One"
+summary = "the first"
+launch = "~/.local/bin/h one"
+
+[[apps.helpers.helpers]]
+key = "two"
+name = "Two"
+summary = "the second"
+launch = "~/.local/bin/h two"
+changes_board = true
+board_change = \"\"\"
+Writes a file.
+It stays.
+\"\"\"
+"""
+
+
+def test_required_apps_first_board_before_the_others():
+    assert [e.key for e in parse(HELPERS)] == ["check", "helpers", "compute"]
+    # Board Test (board) is the first of the required apps wherever its table is.
+    helpers = HELPERS[len(MINIMAL):]
+    moved = helpers + MINIMAL.replace("[apps.check]", "[apps.board]").replace("ps5-check-v", "ps5-board-v")
+    assert [e.key for e in parse(moved)] == ["board", "helpers", "compute"]
+
+
+def test_an_app_of_helpers_has_a_tile_per_helper():
+    helpers = parse(HELPERS)[1]
+    one, two = helpers.tiles()
+    assert (one.tile, two.tile) == ("helpers/one", "helpers/two")
+    # A helper's tile is its app for installing and the records (key, tag, detect), the helper for the rest.
+    assert one.key == two.key == "helpers" and one.tag == helpers.tag and one.detect == helpers.detect
+    assert (one.name, one.short, one.summary, one.launch) == ("One", "One", "the first", (("Open", "~/.local/bin/h one"),))
+    assert not one.changes_board and two.changes_board and two.board_change == "Writes a file. It stays."
+    assert one.release_name == "Console Helpers" and one.helpers == ()
+    compute = parse(HELPERS)[2]
+    assert compute.tiles() == (compute,) and compute.tile == "compute" and compute.release_name == "CU"
+
+
+@pytest.mark.parametrize("change, message", [
+    (('key = "two"', 'key = "one"'), "two helpers have the same key"),
+    (('key = "two"', 'key = "Two"'), "is not lowercase"),
+    (('launch = "~/.local/bin/h two"', 'launch = ""'), "non-empty launch"),
+    (('name = "Two"\n', ''), "non-empty name"),
+])
+def test_rejects_a_bad_helper(change, message):
+    with pytest.raises(ManifestError, match=message):
+        parse(HELPERS.replace(*change))
+
+
 def test_required_first_then_file_order():
     entries = parse(MINIMAL)
     assert [e.key for e in entries] == ["check", "compute"]
@@ -43,9 +105,7 @@ def test_required_first_then_file_order():
     (('install = ["bash a.sh"]', 'install = []'), "must not be empty"),
     (('install = ["bash a.sh"]', 'install = "bash a.sh"'), "list of non-empty strings"),
     (('launch = [["Bisect", "~/.local/bin/x"], ["Unlock", "~/.local/bin/y"]]', 'launch = [["Bisect"]]'), "pairs"),
-    (("required = true", "required = false"), "exactly one required app"),
-    (('launch = [["Bisect", "~/.local/bin/x"], ["Unlock", "~/.local/bin/y"]]', 'required = true'),
-     "exactly one required app"),
+    (("required = true", "required = false"), "must have a required app"),
     (('name = "CU"', 'name = ""'), "non-empty name"),
 ])
 def test_rejects(change, message):
@@ -116,7 +176,8 @@ def test_bad_sha_and_toml():
 def test_shipped_manifest_lists_every_app_with_bazzite_test_first():
     entries = load(MANIFEST)
     assert entries[0].key == "board" and entries[0].required
-    assert sum(e.required for e in entries) == 1
+    # Board Test and the helpers come with the portal (owner, 15-11-2026); every other app is optional.
+    assert [e.key for e in entries if e.required] == ["board", "helpers"]
     apps = {p.name for p in (SUITE / "apps").iterdir() if p.is_dir() and not (p / ".standalone").is_file()}
     assert {e.key for e in entries} == apps
 

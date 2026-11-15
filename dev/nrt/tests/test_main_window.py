@@ -408,3 +408,23 @@ def test_remove_suite_runs_check_release_remove_on_the_board(window, monkeypatch
     page.remove_button.click()
     assert launched and launched[0].endswith("tools/check-release.sh remove")
     assert "Board Test asks for the sudo password" in page.output.toPlainText()
+
+
+def test_an_old_portal_video_holds_the_release(window, monkeypatch):
+    """An orange banner with Record new video now while the wiki's Portal Tour is older than the portal, and Start
+    new release off until it is recorded (owner, 15-11-2026)."""
+    from nexus_release_tool import flow
+    w, _app = window
+    page = w.release_page
+    monkeypatch.setattr(flow, "video_reason", lambda root, python=None: flow.VIDEO_STALE)
+    page.fill()
+    assert not page.video_banner.isHidden() and page.video_note.text() == flow.VIDEO_STALE
+    assert not page.start_button.isEnabled()
+    ran = []
+    monkeypatch.setattr(w, "run_git", ran.append)
+    page.record_button.click()
+    assert ran == [flow.RECORD_VIDEO]
+    monkeypatch.setattr(flow, "video_reason", lambda root, python=None: "")
+    w.commands.last_command = flow.RECORD_VIDEO
+    page.command_ended()                        # the recording ended: the banner goes
+    assert page.video_banner.isHidden() and page.video_reason == ""

@@ -28,7 +28,7 @@ CPU's and the GPU's load and temperature (**CPU 12% 54°C | GPU 3% 61°C**), the
 8°C Partly cloudy**, after its symbol). The line at the bottom says what the keys and the controller's buttons
 do.
 
-**Board Test** is always installed with the portal; every other app is optional. Below the header is a strip
+**Board Test** and **Helpers** are always installed with the portal; every other app is optional. Below the header is a strip
 with a name for each [category](apps/categories.md): Sustainable, Gaming and Utilities (Graphics joins them once it has an app), and beside it
 the notice of updates. Each app is a large tile under its category, left to right in the order of `apps.toml`
 and as many to a row as the screen fits; Board Test is always the first tile on Sustainable. The tile with the
@@ -48,8 +48,12 @@ mouse:
 - **The tile's menu** (the Menu key or M; on the controller the left button of the four, X on an XBOX controller
   and Square on a PlayStation one) holds every action: **Open**, **Install** (an arrow into a tray; **Update**, in red, when an update is waiting;
   **Reinstall** for an installed app, in red with a circular arrow when its version is unknown) and
-  **Uninstall** (a bin). What cannot be done now is grayed out. Board Test has no Uninstall: it is removed
-  together with the portal.
+  **Uninstall** (a bin). What cannot be done now is grayed out. Board Test and the helpers have no Uninstall:
+  they are removed together with the portal.
+- **A helper**: [Console Helpers](apps/helpers.md) is an app of small helpers for one job each, and each helper is a
+  tile of its own on Utilities (Test Extras, MangoHud Config, Game Memory Map, ...). Pressing one opens that
+  helper's window; a helper that changes the board says so under its name and asks first. Its menu's Reinstall
+  reinstalls the whole app, as every helper's tile shows the app's state.
 - **A red dot** in the icon and **Update** under the name: an update is available.
 - **A red circular arrow** in the icon and **Reinstall needed** under the name: reinstall the app. It is
   installed, but not by this portal (by hand, or under an earlier name of the app), so the portal does not know its
@@ -156,7 +160,7 @@ nothing in the portal. There are two ways to get every button:
   of the tarball it installed from (`build.sha256` beside the program, when the tarball is next to the unpacked
   folder, as the install steps and the portal's own update leave it), and the portal compares it with the newest
   release's. A portal installed from a checkout is not offered the release of its own version (it would replace
-  the checkout's portal); a newer version still is. The download is kept in `~/.local/share/bazzite-console-suite/state/portal-update/` until the next one.
+  the checkout's portal); a newer version still is. The unpacked release is kept in `~/.local/share/bazzite-console-suite/state/portal-update/` until the next one; its tarball and `SHA256SUMS` are removed once it is installed.
 - **Restart: portal x.y.z is installed:** a portal window that is open while you install a newer portal by hand
   (its `install.sh` in a terminal) keeps running the old one, with its old app versions, and starting the portal again only brings that window to the
   front. When you come back to the window, it sees the newer portal and shows this red button: click it to restart
@@ -279,11 +283,12 @@ What it installs:
 | The portal, its `apps.toml` and the shared code it was tested with | `~/.local/share/bazzite-console-suite/portal` | In your home folder: the portal needs no root |
 | What the portal remembers: the apps it installed and their releases, the wallpaper, a downloaded portal update | `~/.local/share/bazzite-console-suite/state` | Apart from the program, so an update of the portal keeps it |
 | Board Test (bundled in the portal release) | `/opt/ps5-board-test`, through its own installer, which asks for the sudo password | Its tests run as root, so its test files are root-owned |
+| Console Helpers (bundled in the portal release) | `~/.local/share/ps5-helpers/app`, through its own installer | An app of your own; a helper asks for your password when it changes the board |
 | The suite's shared venv with PyQt6 | `~/.local/share/bazzite-console-suite/venv` | One copy of the ~100 MB of Qt for all suite apps |
 | Launcher, menu entry, Desktop icon | `~/.local/bin/bazzite-console-suite`, `~/.local/share/applications/`, the Desktop | The portal's icon is the one way in; the apps' own icons are optional (**Icons on Desktop**) |
 
-Uninstall: `~/.local/share/bazzite-console-suite/portal/install.sh --uninstall`. This removes the portal and
-Board Test and keeps settings and the wallpaper; add `--purge` to remove those too. First it asks about each other
+Uninstall: `~/.local/share/bazzite-console-suite/portal/install.sh --uninstall`. This removes the portal,
+Board Test and Helpers and keeps settings and the wallpaper; add `--purge` to remove those too. First it asks about each other
 suite app that is installed: `y` uninstalls it, `s` skips it (it stays installed), `c` cancels the whole uninstall
 before anything is removed. The list has every app this portal lists and the apps an earlier portal installed that
 this one no longer lists, each removed with its own uninstaller. Those apps keep their own settings, also with

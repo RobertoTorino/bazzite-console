@@ -1,3 +1,10 @@
+Changelog: 15-11-2026 21:04:48
+
+Added. An orange banner above the release's steps while the wiki's Portal Tour is older than the portal (its window
+or its tiles; tools/portal_tour.py --check), with Record new video now, which records it on the Commands tab
+(tools/record-tour.sh --wiki). Start new release stays off until the video is recorded, and checks once more before
+it writes the release; a check that cannot run holds the release too.
+
 Changelog: 15-11-2026 10:17:45
 
 Breaking. One suite (owner, 15-11-2026): the code for several suites in one repository is gone (the Portals column,

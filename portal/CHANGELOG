@@ -1,3 +1,27 @@
+Changelog: 16-11-2026 00:14:33
+
+Release 3.1.0. Pins ps5-helpers-v0.1.0.
+
+Changelog: 15-11-2026 23:08:55
+
+Added. Boot Command Line's "Changes the board" text (portal/apps.toml) names the fallback lines it saves too
+(cmdline.txt.m2, cmdline.txt.usb), each with its own dated backup.
+
+Changelog: 15-11-2026 20:10:01
+
+Added. Console Helpers comes with the portal, as Board Test does: the portal installs it with itself (bundled in the
+release, from apps/helpers in a checkout), records it, lists no Uninstall for it and removes it with its own
+uninstall. Each helper is a tile of its own on Utilities, from the new [[apps.<key>.helpers]] tables of apps.toml;
+a helper that changes the board says so on its tile and asks before it opens, and Reinstall or Update on any of
+them installs the app. apps.toml may now mark more than one app required; board stays the first.
+
+Changelog: 15-11-2026 12:45:47
+
+Added. install.sh removes the downloaded portal tarball once it has installed from it, and the SHA256SUMS beside
+it when that file lists the tarball (another download's SHA256SUMS stays); the unpacked folder stays. It keeps
+build.sha256 in that folder too, so running install.sh from it again still records the build. This covers the
+install steps, the portal's own update and check-release.sh. The portal's installer test covers it.
+
 Changelog: 15-11-2026 11:26:39
 
 Release 3.0.0. Pins ps5-board-v0.2.0, ps5-upscaler-v0.2.0, ps5-rpcs3-v1.1.0, ps5-remoteplay-v1.1.0, ps5-clb-v1.1.0, ps5-shadps4-v1.1.0, ps5-datstation-v1.1.0, ps5-ppsspp-v1.1.0, ps5-pcsx2-v1.1.0, ps5-vita3k-v1.1.0, ps5-xenia-v1.1.0, ps5-sftp-v1.2.0, ps5-webcam-v1.2.0, ps5-controller-v1.2.0, ps5-ssd-v1.2.0, ps5-overlay-v1.1.0, ps5-fan-v2.1.0, ps5-cec-v2.1.0, ps5-bluetooth-v0.2.0.

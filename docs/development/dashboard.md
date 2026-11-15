@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+<span class="page-icon">:material-view-dashboard-outline:</span>
+
 # Dashboard
 
 The **Nexus Dashboard** (`dev/dash/` in the repository) is the one door to the tools for working on the suite.

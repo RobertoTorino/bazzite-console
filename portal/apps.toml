@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Each [apps.<name>] table pins one release of a suite app. The required app is always installed and listed first.
+# Each [apps.<name>] table pins one release of a suite app. The required apps are installed with the portal, bundled
+# in its release and never uninstalled on their own: board (Board Test, always the first tile) and helpers (owner,
+# 15-11-2026). An app made of small helpers lists each as an [[apps.<name>.helpers]] table (key, name, summary,
+# launch: one command, and changes_board/board_change): the portal shows a tile per helper in the app's category and
+# none for the app; installing and updating stay the app's.
 
 [apps.board]
 name = "PS5 Board Test"
@@ -259,3 +263,69 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/ps5-bluetooth"]
 launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
+
+[apps.helpers]
+name = "Console Helpers"
+summary = "Small helpers for one job each: Board Test's extras, MangoHud's config, the memory map, the journal and the boot command line. Always installed."
+tag = "ps5-helpers-v0.1.0"
+sha256 = ""
+required = true
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-helpers"]
+launch = [["Open", "~/.local/bin/ps5-helpers"]]
+
+[[apps.helpers.helpers]]
+key = "extras"
+name = "Test Extras"
+summary = "The optional tools Board Test's tests use: which are there, and their installer."
+launch = "~/.local/bin/ps5-helpers extras"
+
+[[apps.helpers.helpers]]
+key = "mangohud"
+name = "MangoHud Config"
+summary = "Open or create MangoHud's config, edit and save it; turn on the FPS log Board Test reads."
+launch = "~/.local/bin/ps5-helpers mangohud"
+
+[[apps.helpers.helpers]]
+key = "mapcount"
+name = "Game Memory Map"
+summary = "Raise vm.max_map_count, the number of memory areas a game may map."
+launch = "~/.local/bin/ps5-helpers mapcount"
+changes_board = true
+board_change = """
+Turn on writes vm.max_map_count = 2147483642 to /etc/sysctl.d/90-ps5-helpers-max-map-count.conf and sets it now:
+the number of memory areas one program may map. The file stays across reboots and power offs. Nothing is written to
+the console's firmware or the kernel's arguments. Turn off removes the file and reads the system's settings again,
+so the value the other settings files give, else the kernel's own, is back.
+"""
+
+[[apps.helpers.helpers]]
+key = "journal"
+name = "Persistent Journal"
+summary = "Keep the system journal on the disk, so the logs of a boot that crashed can be read after it."
+launch = "~/.local/bin/ps5-helpers journal"
+changes_board = true
+board_change = """
+Turn on makes the folder /var/log/journal, with systemd-tmpfiles, and moves the journal there: journald then keeps
+the system's logs on the disk, within its own size limits, instead of in memory only. The folder stays across reboots
+and power offs. Nothing is written to the console's firmware. Turn off works only on a folder this helper made: it
+moves the journal back to memory and removes the folder, with the logs in it.
+"""
+
+[[apps.helpers.helpers]]
+key = "cmdline"
+name = "Boot Command Line"
+summary = "Edit cmdline.txt, the kernel command line the PS5 loader starts Linux with."
+launch = "~/.local/bin/ps5-helpers cmdline"
+changes_board = true
+board_change = """
+Save changes writes the edited line to /boot/efi/cmdline.txt, the kernel command line the PS5 loader starts Linux
+with, or to the fallback line it opened beside it (cmdline.txt.m2 or cmdline.txt.usb), after it asks and after your
+password, and keeps the file it replaces as a dated backup beside it (for example cmdline.txt.bak-YYYYMMDD-HHMMSS). A
+change to cmdline.txt changes the boot settings of PS5 Linux from the next boot: a wrong argument can keep Linux from
+starting. The file stays across reboots and power offs. A line without root=, or of more than one line, is not
+saved. Nothing is written to the console's firmware. To undo it, edit the line back, or copy a backup over the file.
+"""
