@@ -9,7 +9,7 @@
 name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
 tag = "ps5-board-v0.2.1"
-sha256 = ""
+sha256 = "5fce4dd35ad33881ec0570991497f4fb997f565510a14b7cff423045f2834b07"
 required = true
 changes_board = false
 category = "sustainable"
@@ -268,7 +268,7 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 name = "Console Helpers"
 summary = "Small helpers for one job each: Board Test's extras, MangoHud's config, the memory map, the journal and the boot command line. Always installed."
 tag = "ps5-helpers-v0.1.0"
-sha256 = ""
+sha256 = "c1d7123148bc23c06dae9d83f60a7a51e1443b9b0b216a6ae71a2da4de50e345"
 required = true
 changes_board = false
 category = "utilities"
