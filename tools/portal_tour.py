@@ -105,6 +105,7 @@ class Tour(Recorder):
                             menu=home / ".local/share/applications", sounds=Silent(),
                             gamepad=Gamepad(source_factory=no_controller), music_player=music.Silent())
         window.setWindowTitle(INFO.display_name)
+        window.big.version.setText("")              # no version in the video: it stays right through a release
         tour_frames.place(window)
         window.show()
         for _ in range(3):
@@ -114,12 +115,11 @@ class Tour(Recorder):
     # --- the tour -------------------------------------------------------------------------------------------
     def run(self) -> None:
         from bazzite_console_core.appinfo import SUITE_MANUAL_URL
-        from bazzite_console_portal import __version__
         from bazzite_console_portal.main_window import CATEGORY_HINTS
         from bazzite_console_portal.manifest import CATEGORIES
 
         w = self.window
-        title = self.card("Bazzite Console Suite", ["A tour of the portal", f"Portal {__version__}"])
+        title = self.card("Bazzite Console Suite", ["A tour of the portal"])
         self.overlay = title
         self.emit(title, round(3.5 * self.fps))
         self.overlay = None
@@ -363,7 +363,7 @@ def render_still(theme: str, out: Path) -> None:
 
 def fingerprint() -> str:
     """A hash of what the video shows: the portal's code and pictures (SHOWN) and this script. The portal's version
-    is left out (a release changes only that line, and the video is recorded before it)."""
+    is left out: the video does not show it (a release changes only that line, and the video is recorded before it)."""
     digest = hashlib.sha256()
     files = [path for folder in SHOWN for path in folder.rglob("*")
              if path.is_file() and "__pycache__" not in path.parts]

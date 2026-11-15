@@ -23,9 +23,11 @@ run, test or release time. The handover names what changed in each.
 
 - **Never commit, tag or push.** The owner does every git commit, tag and push. Finish work in the working tree and
   say what is ready.
-- **Releases are the owner's**: the version bumps, the tags (`ps5-` first), the release assets, the pins in
-  `portal/apps.toml` and the release entries in the CHANGELOGs. When finished work needs a release, say which app
-  and why.
+- **NRT handles the releases** (owner, 15-11-2026). Nexus Release Tool works out each version from the CHANGELOG
+  entries since the last tag (`Breaking.` major, `Added.` minor, `Fixed.` patch), bumps the `VERSION`s, pins the
+  portal's `apps.toml` and starts the release; the owner runs it. Claude never does the version bumps, the tags
+  (`ps5-` first), the release assets, the pins in `portal/apps.toml` or the release entries in the CHANGELOGs. When
+  finished work needs a release, say which app and why.
 - **CHANGELOG for every change**: the root CHANGELOG for suite-wide changes, the app's, core's or the portal's for
   its own. A `Changelog: DD-MM-YYYY HH:MM:SS` line (Europe/Amsterdam), a blank line, then plain sentences; newest
   first. Every entry starts with its kind: `Breaking.`, `Added.` or `Fixed.`.
@@ -109,8 +111,9 @@ for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; 
 mkdocs build --strict
 ```
 
-A release is the owner's: Nexus Release Tool's Start new release, which runs `release.yml` on GitHub, or one release
-by hand with `tools/tag-release.sh ps5-<app>-v<x.y.z>`, which tags and pushes only a pushed commit that passed CI;
-`release.yml` builds and publishes it on GitHub (owner, 15-11-2026: the same in both twins).
+Nexus Release Tool handles the releases (the versions from the CHANGELOG kinds): its Start new release, which runs
+`release.yml` on GitHub, or one release by hand with `tools/tag-release.sh ps5-<app>-v<x.y.z>`, which tags and pushes
+only a pushed commit that passed CI; `release.yml` builds and publishes it on GitHub (owner, 15-11-2026: the same in
+both twins).
 
 The manual (`docs/`, built with MkDocs) is called **the wiki** in user-facing text.

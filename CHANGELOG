@@ -1,3 +1,15 @@
+Changelog: 15-11-2026 11:52:08
+
+Fixed. CLAUDE.md says Nexus Release Tool handles the releases (owner, 15-11-2026): it works out each version from
+the CHANGELOG entries since the last tag (Breaking. major, Added. minor, Fixed. patch); it no longer says the owner
+chooses the numbers.
+
+Changelog: 15-11-2026 11:43:00
+
+Fixed. The Portal Tour no longer shows the portal's version (the title card and the header): it was
+recorded before each release, so the video always showed the previous one, while its check, which leaves the
+version out, called it current. The wiki's video is recorded again.
+
 Changelog: 15-11-2026 10:55:02
 
 Added. DESIGN.md at the root lists every color of the suite, where it is defined and what it is for (owner, 15-11-2026):

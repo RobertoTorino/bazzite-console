@@ -155,7 +155,8 @@ records the portal's tour, about two minutes, with music under it that fades out
 (`tools/sounds/the_quiet_engine_remix.ogg`, made with generative AI tools; `--no-music` leaves it out).
 `tools/record-tour.sh --wiki` also writes the copy on the [Portal Tour](../portal-tour.md) page,
 `docs/videos/portal-tour.mp4` (1280 × 720) and its poster, and a fingerprint of the portal it was recorded from
-(`tools/portal-tour.stamp`: the portal's code and pictures, and the tour's script). The checks fail when
+(`tools/portal-tour.stamp`: the portal's code and pictures, and the tour's script). The video shows no version
+number, so a release does not make it out of date. The checks fail when
 the portal changed since, until the tour is recorded again with `--wiki`;
 `python3 tools/portal_tour.py --check` says so from a terminal, and `--stamp` marks the video as current
 for a change that does not show in it. A change the wiki describes goes into its [Portal](../portal.md) page in the
