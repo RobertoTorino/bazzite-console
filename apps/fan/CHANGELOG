@@ -1,3 +1,7 @@
+Changelog: 15-11-2026 07:43:14
+
+Release 2.0.0.
+
 Changelog: 15-11-2026 04:15:58
 
 Breaking. PS5 Fan Controller has its own id, ps5-fan-controller, for the launcher, the menu entry, the settings, the

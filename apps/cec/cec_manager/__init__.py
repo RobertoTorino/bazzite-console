@@ -5,7 +5,7 @@ Bazzite ships."""
 
 APP_NAME = "PS5 CEC Manager"
 APP_ID = "ps5-cec-manager"
-__version__ = "1.0.1"
+__version__ = "2.0.0"
 
 from pathlib import Path
 
