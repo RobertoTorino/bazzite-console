@@ -446,7 +446,10 @@ class WorkflowTicker(QFrame):
         self.final: set[str] = set()            # the runs whose jobs were read after they finished
         self.signed_in = False
         self.line = ""
+        self.local = ""                         # CI's jobs here while Push runs them, in place of GitHub's runs
+        self.local_failed = False
         self.on_rerun = None                    # the window's: runs a command in the Commands tab
+        self.rerun_asked: set[tuple[str, int]] = set()  # the window's: the runs Run again was pressed for
         self.setObjectName("ticker")
         self.setStyleSheet(f"#ticker {{ border:1px solid {NEXUS.edge}; border-radius:6px; }}")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -522,7 +525,23 @@ class WorkflowTicker(QFrame):
                 self.final.add(url)
         self.render()
 
+    def show_local(self, line: str, failed: bool = False) -> None:
+        """While Push runs CI's jobs here: where they stand, in place of GitHub's runs, which know nothing of this
+        push yet (owner, 15-11-2026: the line showed the last push as passed while a job here had failed). "" goes
+        back to GitHub's runs."""
+        self.local, self.local_failed = line, failed
+        self.render()
+
     def render(self) -> None:
+        if self.local:
+            self.setVisible(True)
+            self.rerun_button.setVisible(False)
+            self.dot.setStyleSheet(f"color:{RED if self.local_failed else BLUE};")
+            self.line = self.local
+            self.text.setText(self.local)
+            self.setToolTip("tools/ci-local.sh runs CI's jobs here before git push; nothing is on GitHub yet. The "
+                            "output is on the Commands tab.")
+            return
         now = time.time()
         self.setVisible(bool(self.runs))
         state = rp.build_state(self.runs)
@@ -533,7 +552,7 @@ class WorkflowTicker(QFrame):
             self.clock.stop()
         if running and self.wanted() and not self.timer.isActive():
             self.timer.start(JOBS_BUSY_MS)
-        failed = flow.failed_runs(self.runs)
+        failed = flow.not_asked(flow.failed_runs(self.runs), self.rerun_asked)
         self.rerun_button.setVisible(bool(failed))
         if failed:
             self.rerun_button.setToolTip("Start the failed jobs of " + ", ".join(r.label for r in failed) + " again, on "
@@ -548,12 +567,14 @@ class WorkflowTicker(QFrame):
         self.setToolTip(rp.ticker_details(self.runs, self.jobs, now) + sign_in + "\n\nClick to open it on GitHub.")
 
     def target(self) -> str:
-        return rp.ticker_target(self.runs, self.jobs)
+        return "" if self.local else rp.ticker_target(self.runs, self.jobs)
 
     def rerun(self) -> None:
-        failed = flow.failed_runs(self.runs)
+        failed = flow.not_asked(flow.failed_runs(self.runs), self.rerun_asked)
         if failed and self.on_rerun is not None:
+            self.rerun_asked.update((r.url, r.attempt) for r in failed)
             self.on_rerun(flow.rerun_ci_command(failed))
+            self.render()
 
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.button() == Qt.MouseButton.LeftButton and self.target():
@@ -766,6 +787,7 @@ class ReleaseWindow(QMainWindow):
         self.ticker = WorkflowTicker(jobs_source)       # between the pills and the tabs, fed by the build's looks
         self.ticker.hidden = rp.other_suites_workflows(root, self.suite)
         self.ticker.on_rerun = self.run_git
+        self.rerun_asked = self.ticker.rerun_asked      # Run CI again and the ticker's Run again, one memory
         self.github_status = GitHubStatusIndicator(status_source)
         self.claude = ClaudeUsageIndicator(claude_source)
         self.tabs = QTabWidget()
@@ -788,6 +810,7 @@ class ReleaseWindow(QMainWindow):
         self.tabs.addTab(self.remove_page, "Remove suite")
         self.commands = CommandLine(root, settings, finished=self.command_finished,   # a commit or push: read it again
                                     log_dir=COMMAND_LOG_DIR if settings is not None else None, terminal=self.launch)
+        self.commands.output_callback = self.release_page.command_output
         # One output tab (owner, 01-11-2026: Logs was mostly empty): Commands is the command line with its output,
         # where what a step wrote (the release, Retract) shows too, under a line
         # that names the step (step_wrote()).
@@ -877,6 +900,7 @@ class ReleaseWindow(QMainWindow):
     def command_finished(self) -> None:
         """A command ended: the checkout is read again when it changed anything, else only the steps' pills and
         GitHub's state."""
+        self.release_page.command_ended()
         if self.fingerprint() != self.seen:
             self.refresh()
             return

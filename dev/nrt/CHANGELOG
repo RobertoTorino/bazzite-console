@@ -1,3 +1,13 @@
+Changelog: 15-11-2026 07:21:45
+
+Fixed. Push shows where CI's jobs here stand (owner, 15-11-2026: the push seemed to hang, and a job that failed went
+unseen while the line under the pills showed the last push on GitHub as passed): while tools/ci-local.sh runs, the
+step's line and the line under the pills count the jobs done and name a job that failed, and say when the run waits
+for another one. A push that ended badly turns the step red with why (the jobs that failed, where their logs are,
+or a stop), until the commit is pushed or HEAD changes. Run CI again, and the Run again of that line, stay off for
+the runs they were pressed for until GitHub shows them running again: until then GitHub still showed them failed,
+and a second press failed with "This workflow is already running".
+
 Changelog: 15-11-2026 06:09:24
 
 Fixed. A part whose only changes since its last tag are its version, its version copies and a "Release x.y.z."

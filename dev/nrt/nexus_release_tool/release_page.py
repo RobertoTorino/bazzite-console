@@ -57,6 +57,7 @@ class ReleasePage(QWidget):
         super().__init__()
         self.release_window = window
         self.rejected_here: dict[str, list[str]] = {}     # Not OK without settings: by run url
+        self.push_failed: tuple[str, str] = ("", "")       # HEAD and why, when its last Push ended badly
         self.table = QTableWidget(0, len(COLUMNS))
         self.table.setHorizontalHeaderLabels(COLUMNS)
         self.table.verticalHeader().setVisible(False)
@@ -240,7 +241,33 @@ class ReleasePage(QWidget):
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
             drafts=[t for t in flow.waiting_portals(root, suite, run.sha) if not flow.published(root, runs, t)]
             if run else [],
-            restart=run is not None and run.sha != head, rejected=self.rejected(run))
+            restart=run is not None and run.sha != head, rejected=self.rejected(run),
+            push_failed=self.push_failed[1] if ahead and self.push_failed[0] == head else "")
+
+    def pushing(self) -> bool:
+        """Whether the command that runs is the Push step's."""
+        return self.release_window.commands.running == rp.push_command()
+
+    def command_output(self, _data: str) -> None:
+        """A piece of the running command's output: while Push runs, its step and the header's ticker say how far
+        CI's jobs here are."""
+        if not self.pushing():
+            return
+        progress = flow.local_ci(self.release_window.commands.output_of_run)
+        if progress.started:
+            self.release_window.ticker.show_local(progress.line(), failed=bool(progress.failed))
+            self.show_state()
+
+    def command_ended(self) -> None:
+        """A command ended: when it was Push, how (push_failure), kept for this HEAD until it is pushed or changes;
+        the ticker goes back to GitHub's runs."""
+        commands = self.release_window.commands
+        if commands.last_command != rp.push_command():
+            return
+        head = (rp.git(self.release_window.root, "rev-parse", "HEAD") or "").strip()
+        why = flow.push_failure(commands.output_of_run, commands.last_code)
+        self.push_failed = (head, why) if why else ("", "")
+        self.release_window.ticker.show_local("")
 
     def rejected(self, run: rp.BuildRun | None) -> list[str]:
         """The drafts of *run* the owner said Not OK to, kept in NRT's settings by the run (a run made again makes its
@@ -280,7 +307,7 @@ class ReleasePage(QWidget):
         self.commit_button.setEnabled(idle and now == "commit" and bool(self.commit_message.text().strip()))
         self.commit_message.setEnabled(now == "commit")
         self.push_button.setEnabled(idle and now == "push")
-        self.rerun_ci_button.setEnabled(idle and now == "ci" and facts.ci == "failed")
+        self.rerun_ci_button.setEnabled(idle and now == "ci" and facts.ci == "failed" and bool(self.rerunnable()))
         self.start_button.setText("Push and start" if facts.unpushed else "Start new release")
         self.start_button.setEnabled(idle and now == "start" and (bool(facts.unpushed) or not reasons))
         run = facts.run
@@ -302,7 +329,13 @@ class ReleasePage(QWidget):
         """The step's line while it is the one to do or failed: what is there to do, in words; "" for its usual
         line."""
         if state == "running":
+            if key == "push":                   # CI's jobs here, as they end (owner, 15-11-2026: it seemed to hang)
+                progress = flow.local_ci(self.release_window.commands.output_of_run)
+                if progress.started:
+                    return progress.line() + " Then git push; the output is on the Commands tab."
             return RUNNING.get(key, RUNNING_ELSE)
+        if key == "push" and state == "failed" and facts.push_failed:
+            return facts.push_failed
         if key == "test" and state == "later" and facts.drafts and flow.current_step(facts) in (
                 "pull", "commit", "push", "ci", "start"):
             # After Not OK, or after a restart of NRT, which keeps nothing of its own: the draft says it is still there
@@ -319,6 +352,9 @@ class ReleasePage(QWidget):
         if key == "push":
             return f"{facts.ahead} commit{'s' if facts.ahead != 1 else ''} to push."
         if key == "ci":
+            if facts.ci == "failed" and not self.rerunnable():
+                return ("Run CI again asked GitHub to start the failed jobs again: wait until GitHub shows them "
+                        "running. When a test failed, running it again does not help: fix it, then Commit and Push.")
             if facts.ci == "failed":
                 return ("CI failed on this commit. When it was GitHub's own trouble (an error of its servers, a job "
                         "that never started): Run CI again. When a test failed: fix it, then Commit and Push.")
@@ -373,9 +409,16 @@ class ReleasePage(QWidget):
     def rerun_ci(self) -> None:
         window = self.release_window
         head = (rp.git(window.root, "rev-parse", "HEAD") or "").strip()
-        failed = flow.failed_ci(window.build.runs, head, window.ticker.hidden)
+        failed = flow.not_asked(flow.failed_ci(window.build.runs, head, window.ticker.hidden), window.rerun_asked)
         if failed:
+            window.rerun_asked.update((r.url, r.attempt) for r in failed)
             window.run_git(flow.rerun_ci_command(failed))
+
+    def rerunnable(self) -> list[rp.BuildRun]:
+        """The failed CI runs of HEAD that Run CI again has not asked for yet."""
+        window = self.release_window
+        head = (rp.git(window.root, "rev-parse", "HEAD") or "").strip()
+        return flow.not_asked(flow.failed_ci(window.build.runs, head, window.ticker.hidden), window.rerun_asked)
 
     def pull(self) -> None:
         self.release_window.run_git(rp.pull_command())

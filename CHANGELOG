@@ -1,3 +1,12 @@
+Changelog: 15-11-2026 07:21:45
+
+Fixed. tools/ci-local.sh runs every job of ci.yml here, one line per job as it ends: the versions, the manifest and the
+icons' copies, every folder's tests, the shell scripts' syntax, the installer tests and the wiki (mkdocs build
+--strict), where it ran the checks and the tests of tools/ and dev/ only (owner, 15-11-2026: a broken link in the wiki
+passed it and failed CI's docs job). A failed job's output follows at the end, each job's log is in
+~/.cache/bazzite-console-ci-local/logs, and one run goes at a time: a second one waits. The Board Test chapter of the
+wiki shows its picture again (assets/board, after the app's folder moved from apps/bazzite).
+
 Changelog: 15-11-2026 04:16:24
 
 Breaking. Eleven apps have new names (owner, 15-11-2026): PS5 Board Test, PS5 Bluetooth, PS5 CEC Manager, PS5 Fan

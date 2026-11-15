@@ -1073,6 +1073,7 @@ class BuildRun:
     jobs_url: str = ""                  # its jobs on GitHub's API (fetch_jobs)
     started: float = 0.0                # seconds since the epoch; 0 when GitHub does not say
     file: str = ""                      # its workflow's file: "ci.yml", "ci-<suite>.yml"
+    attempt: int = 1                    # GitHub's run_attempt: a rerun is the same run, one attempt on
 
     @property
     def done(self) -> bool:
@@ -1101,7 +1102,8 @@ def parse_runs(data: object) -> list[BuildRun]:
     return [BuildRun(str(r.get("name") or ""), str(r.get("head_branch") or ""), str(r.get("status") or ""),
                      str(r.get("conclusion") or ""), str(r.get("html_url") or ""), str(r.get("head_sha") or ""),
                      str(r.get("display_title") or ""), str(r.get("jobs_url") or ""),
-                     epoch(r.get("run_started_at")), str(r.get("path") or "").split("@")[0].rsplit("/", 1)[-1])
+                     epoch(r.get("run_started_at")), str(r.get("path") or "").split("@")[0].rsplit("/", 1)[-1],
+                     int(r.get("run_attempt") or 1))
             for r in runs if isinstance(r, dict)]
 
 

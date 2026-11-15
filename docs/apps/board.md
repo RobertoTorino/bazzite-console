@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Board Test](../assets/bazzite/ps5-board-test.webp){ .app-logo }
+![Board Test](../assets/board/ps5-board-test.webp){ .app-logo }
 
 # PS5 Board Test
 

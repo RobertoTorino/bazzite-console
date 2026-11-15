@@ -465,6 +465,18 @@ def test_failed_ci_runs_again(release_window, monkeypatch):
     monkeypatch.setattr(w, "run_git", ran.append)
     page.rerun_ci()
     assert ran and ran[0].startswith("gh run rerun ") and ran[0].endswith(" --failed")
+    # Pressed: until GitHub shows the next attempt, the run still reads as failed, and the button stays off
+    # (owner, 15-11-2026: a second press failed with "This workflow is already running")
+    page.show_state()
+    assert not page.rerun_ci_button.isEnabled() and "asked GitHub to start" in page.details["ci"].text()
+    page.rerun_ci()
+    assert len(ran) == 1
+    w.ticker.show_runs(w.build.runs, signed_in=False)
+    assert w.ticker.rerun_button.isHidden()                         # the ticker's Run again: the same memory
+    again = rp.BuildRun(**{**w.build.runs[0].__dict__, "attempt": 2})   # it ran again and failed again
+    monkeypatch.setattr(w.build, "runs", [again])
+    page.show_state()
+    assert page.rerun_ci_button.isEnabled()
 
 
 def test_a_suite_is_on_the_nexus_release_through_its_own_workflow(tmp_path):
@@ -704,3 +716,66 @@ def test_the_step_being_done_says_a_command_runs(release_window, monkeypatch):
     page.show_state()
     assert page.marks[now].text() == "▶"
     assert "Pushing: CI's jobs run here first" in release_page.RUNNING["push"]
+
+
+CI_OUTPUT = ("Current branch main is up to date.\n46 jobs from ci.yml, 6 at a time, on Python 3.12.16\n"
+             "  ok   versions                                         0.3 s\n"
+             "  FAIL pytest/apps/pcsx2                                2.3 s\n"
+             "  ok   pytest/apps/ppsspp                               7.0 s\n")
+
+
+def test_ci_here_is_read_from_its_output():
+    """The Push step's tools/ci-local.sh (owner, 15-11-2026: the push seemed to hang, a failed job went unseen)."""
+    assert not flow.local_ci("Current branch main is up to date.\n").started
+    progress = flow.local_ci(CI_OUTPUT)
+    assert (progress.total, progress.done, progress.failed) == (46, 3, ("pytest/apps/pcsx2",))
+    assert progress.line() == "CI's jobs here, before the push: 3 of 46 done; failed: pytest/apps/pcsx2."
+    waiting = flow.local_ci("==> Another ci-local.sh run is going on this computer: waiting until it ends\n")
+    assert waiting.started and "the push waits until it ends" in waiting.line()
+
+
+def test_a_run_asked_to_run_again_is_not_asked_twice():
+    failed = _run(conclusion="failure")
+    assert flow.not_asked([failed], set()) == [failed]
+    assert flow.not_asked([failed], {(failed.url, 1)}) == []
+    assert flow.not_asked([rp.BuildRun(**{**failed.__dict__, "attempt": 2})], {(failed.url, 1)})
+    assert rp.parse_runs({"workflow_runs": [{"html_url": "u", "run_attempt": 3}]})[0].attempt == 3
+
+
+def test_why_a_push_ended_badly():
+    assert flow.push_failure(CI_OUTPUT, 0) == ""
+    assert flow.push_failure(CI_OUTPUT + "44 of 45 jobs passed\n", 1).startswith(
+        "CI failed here on pytest/apps/pcsx2, so nothing was pushed.")
+    assert flow.push_failure("", None).startswith("The push was stopped")
+    assert "exit code 1" in flow.push_failure("! [rejected] main -> main (fetch first)\n", 1)
+    assert flow.step_states(flow.Facts(ahead=1, push_failed="x"))["push"] == "failed"
+    assert flow.step_states(flow.Facts(ahead=1))["push"] == "now"
+
+
+def test_the_push_shows_ci_here_and_a_failure_stays_on_its_step(release_window):
+    w = release_window
+    page = w.release_page
+    w.base_ref = "HEAD~1"                                           # one commit to push
+    w.reload()
+    commands = w.commands
+    commands.running = rp.push_command()                            # as while Push runs
+    commands.output_of_run = CI_OUTPUT
+    monkey_running = commands.is_running
+    commands.is_running = lambda: True
+    page.command_output("x")
+    assert w.ticker.isVisibleTo(w) and w.ticker.local.startswith("CI's jobs here, before the push: 3 of 46 done")
+    assert w.ticker.target() == ""                                  # nothing on GitHub to open yet
+    assert page.details["push"].text().startswith("CI's jobs here, before the push: 3 of 46 done; failed: ")
+    commands.is_running = monkey_running
+    commands.last_command, commands.running, commands.last_code = rp.push_command(), "", 1
+    w.command_finished()
+    assert w.ticker.local == ""                                     # back to GitHub's runs
+    assert flow.step_states(page.facts)["push"] == "failed" and page.marks["push"].text() == "!"
+    assert page.details["push"].text().startswith("CI failed here on pytest/apps/pcsx2")
+    assert page.push_button.isEnabled()                             # Push again, or a fix first
+    commands.last_command, commands.last_code = "git status", 0     # another command: the failure stays
+    w.command_finished()
+    assert page.details["push"].text().startswith("CI failed here on pytest/apps/pcsx2")
+    sh(w.root, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "fix")
+    w.reload()                                                      # a new commit: its push is still to do
+    assert flow.step_states(page.facts)["push"] == "now"

@@ -361,6 +361,58 @@ class Facts:
     drafts: list[str] = field(default_factory=list)     # its portals not published yet
     restart: bool = False               # HEAD is not the run's commit: a failed run starts again on HEAD, the fix
     rejected: list[str] = field(default_factory=list)   # its drafts the device test failed (Not OK), still drafts
+    push_failed: str = ""               # the last Push of these commits ended badly: why (push_failure)
+
+
+_CI_TOTAL = re.compile(r"^(\d+) jobs? from ci\.yml", re.M)
+_CI_JOB = re.compile(r"^\s+(ok|FAIL|skip)\s+(\S+)", re.M)
+CI_WAITING = "waiting until it ends"    # tools/ci-local.sh: another run goes on; this one waits for it
+CI_LOGS = "~/.cache/bazzite-console-ci-local/logs"
+
+
+@dataclass(frozen=True)
+class LocalCI:
+    """Where tools/ci-local.sh stands, read from its output so far (the Push step runs it before git push; owner,
+    15-11-2026: the push seemed to hang and a failed job went unseen, while the header showed the last push as
+    passed)."""
+    total: int = 0                      # its jobs ("46 jobs from ci.yml"); 0 before it says
+    done: int = 0                       # the jobs that ended: ok, FAIL or skip
+    failed: tuple[str, ...] = ()        # the jobs that failed, by name
+    waiting: bool = False               # another run goes on, this one waits
+
+    @property
+    def started(self) -> bool:
+        return bool(self.total) or self.waiting
+
+    def line(self) -> str:
+        """In words, for the Push step and the header's ticker."""
+        if self.waiting and not self.total:
+            return "Another ci-local.sh run is going on this computer: the push waits until it ends."
+        text = f"CI's jobs here, before the push: {self.done} of {self.total} done"
+        return text + (f"; failed: {', '.join(self.failed)}" if self.failed else "") + "."
+
+
+def local_ci(output: str) -> LocalCI:
+    """tools/ci-local.sh's progress in *output* (the Push command's output so far)."""
+    total = _CI_TOTAL.search(output)
+    jobs = _CI_JOB.findall(output)
+    return LocalCI(total=int(total[1]) if total else 0, done=len(jobs),
+                   failed=tuple(name for state, name in jobs if state == "FAIL"), waiting=CI_WAITING in output)
+
+
+def push_failure(output: str, code: int | None) -> str:
+    """Why the Push command ended badly, for its step; "" when it went well. *code*: its exit code, None when it
+    was stopped."""
+    if code == 0:
+        return ""
+    if code is None or code == 130:
+        return "The push was stopped: nothing was pushed. Push again."
+    failed = local_ci(output).failed
+    if failed:
+        return (f"CI failed here on {', '.join(failed)}, so nothing was pushed. Its output is on the Commands tab, each "
+                f"job's log in {CI_LOGS}. Fix it, Commit and Push; when it was no fault of the code (a crash that "
+                "does not come again), Push again.")
+    return f"The push ended with exit code {code}, so nothing was pushed: the Commands tab says why. Then Push again."
 
 
 def ci_runs(runs: list[rp.BuildRun], sha: str, hidden: set[str] = frozenset()) -> list[rp.BuildRun]:
@@ -391,6 +443,13 @@ def failed_runs(runs: list[rp.BuildRun]) -> list[rp.BuildRun]:
     """The runs of *runs* that ended badly, not counting one canceled for a later run of its workflow: what the
     ticker's Run again starts again (owner, 06-11-2026)."""
     return [r for r in runs if r.done and not r.passed and not rp.superseded(r, runs)]
+
+
+def not_asked(runs: list[rp.BuildRun], asked: set[tuple[str, int]]) -> list[rp.BuildRun]:
+    """The failed *runs* no Run again was pressed for: *asked* holds each run's (url, attempt) when it was pressed.
+    Until GitHub shows the next attempt, the run still reads as failed, and a second press failed with "This workflow
+    is already running" (owner, 15-11-2026); a rerun that fails again is a new attempt, asked anew."""
+    return [r for r in runs if (r.url, r.attempt) not in asked]
 
 
 def rerun_ci_command(runs: list[rp.BuildRun]) -> str:
@@ -475,7 +534,7 @@ def step_states(facts: Facts) -> dict[str, str]:
         return {key: "done" for key in KEYS}
     at = KEYS.index(now)
     states = {key: "done" if i < at else "later" for i, key in enumerate(KEYS)}
-    states[now] = "failed" if (now == "ci" and facts.ci == "failed") or \
+    states[now] = "failed" if (now == "ci" and facts.ci == "failed") or (now == "push" and facts.push_failed) or \
         (now == "run" and facts.run is not None and facts.run.done and not facts.run.passed) else "now"
     if now == "test" and facts.drafts and set(facts.drafts) <= set(facts.rejected):
         states["test"] = "failed"          # Not OK (owner, 30-10-2026: it seemed to do nothing): the fix comes next

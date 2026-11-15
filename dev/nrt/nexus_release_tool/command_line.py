@@ -97,6 +97,9 @@ class CommandLine(QWidget):
         self.settings = settings
         self.bash = bash if bash is not None else find_bash()
         self.finished_callback = finished
+        self.output_callback = None             # called with each piece of the running command's output
+        self.output_of_run = ""                 # the running command's output so far, or the last one's
+        self.last_command = ""                  # the command that ran last, with its exit code in last_code
         self.history: list[str] = []
         if settings is not None:
             stored = settings.value(HISTORY_KEY, [])
@@ -259,6 +262,7 @@ class CommandLine(QWidget):
         self._log(f"\n=== {datetime.datetime.now():%Y-%m-%d %H:%M:%S} in {self.cwd}\n$ {command}\n")
         self._append(f"{self._prompt_text()} {command}\n")
         self.running = command
+        self.output_of_run = ""
         script = 'cd -- "$1" || exit; eval "$2"; rc=$?; printf %s "$PWD" > "$3"; exit $rc'
         args = ["-lc", script, "bash", str(self.cwd), command, str(self.cwd_file)]
         program = self.bash
@@ -318,6 +322,9 @@ class CommandLine(QWidget):
         data = plain(bytes(self.process.readAllStandardOutput()).decode("utf-8", errors="replace"))
         self._append(data)
         self._log(data)
+        self.output_of_run += data
+        if data and self.output_callback:
+            self.output_callback(data)
 
     def _done(self, code: int, status: QProcess.ExitStatus) -> None:
         self.kill_timer.stop()
@@ -338,7 +345,7 @@ class CommandLine(QWidget):
             self._end_line("stopped")
         elif code != 0:
             self._end_line(f"exit code {code}")
-        self.running = ""
+        self.last_command, self.running = self.running, ""
         self._show_state()
         if self.finished_callback:
             self.finished_callback()

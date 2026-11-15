@@ -67,6 +67,12 @@ run:
 3. writes their checksums into `apps.toml` in a commit `Pin ...` on `main`;
 4. builds the portal from that commit as a **draft** release, which no installed portal sees.
 
+**Push** runs `tools/ci-local.sh` first, every job of `ci.yml` here, one at a time (a second run waits for the
+first): the step's line and the line under the header's pills count the jobs done and name a job that failed. When
+one fails, nothing is pushed and the step turns red, with the job's name and where its log is
+(`~/.cache/bazzite-console-ci-local/logs`). When GitHub's CI fails on a pushed commit for GitHub's own trouble, **Run
+CI again** starts its failed jobs again; it stays off for those runs until GitHub shows them running again.
+
 **Device test** then installs the draft on this machine (`tools/check-release.sh draft`). **Publish** makes it the
 portal's release, its tag and GitHub's Latest release; **Not OK** leaves it a draft, and after the fix the steps start
 again from Commit (apps already out are skipped, the portal is built anew). The last step pulls the pin commit.
@@ -97,7 +103,8 @@ Run the local checks from the suite root:
 ```sh
 ./test.sh                        # every folder with tests/: tools, dev/, the portal and each app, offscreen
 ./test.sh -k profile             # extra arguments go to pytest
-tools/ci-local.sh                # the versions, the manifest, the icons' copies, and the tests of tools/ and dev/
+tools/ci-local.sh                # every job of ci.yml here: checks, tests, shell syntax, installer tests, the wiki
+tools/ci-local.sh docs tools     # some jobs, by name
 python3 tools/check_versions.py
 ```
 

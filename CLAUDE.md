@@ -71,8 +71,9 @@ The portal, wiki and category icons use artwork made for this suite. The Board T
 ## Checks
 
 From the repository root. `./test.sh` runs every folder's tests in `.venv-linux/` (made from the root's
-`requirements-dev.txt`; extra arguments go to pytest), and `tools/ci-local.sh` the versions, the manifest, the icons'
-copies and the tests of `tools/` and `dev/`. CI (`.github/workflows/ci.yml`) runs them so:
+`requirements-dev.txt`; extra arguments go to pytest), and `tools/ci-local.sh` every job of ci.yml here (the versions,
+the manifest and the icons' copies, every folder's tests, the shell syntax, the installer tests and the wiki), one
+line per job; run it before saying work is ready. CI (`.github/workflows/ci.yml`) runs them so:
 
 ```bash
 ./test.sh                                                   # every folder with tests/
