@@ -1,3 +1,7 @@
+Changelog: 16-11-2026 00:24:48
+
+Release 0.1.0.
+
 Changelog: 15-11-2026 23:08:55
 
 Added. Boot Command Line shows the kernel command line one argument per row, with what each argument does, and
