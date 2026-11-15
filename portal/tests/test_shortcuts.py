@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+"""The header's shortcuts: what each one starts, from what the machine has."""
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -7,35 +9,48 @@ import pytest
 from bazzite_console_portal import shortcuts
 
 
-def test_files_uses_the_desktop_file_manager():
-    result = shortcuts.files(lambda name: "/usr/bin/xdg-open" if name == "xdg-open" else None, Path("/home/test"))
-
-    assert result.argv == ["xdg-open", "/home/test"]
-    assert result.app_ids == ("org.kde.dolphin", "org.gnome.Nautilus")
+def has(*programs):
+    return lambda name: f"/usr/bin/{name}" if name in programs else None
 
 
-def test_steam_requires_its_launcher():
-    assert shortcuts.steam(lambda _: "/usr/bin/steam").argv == ["steam"]
-    with pytest.raises(shortcuts.Missing, match="Steam is not installed"):
-        shortcuts.steam(lambda _: None)
-
-
-def test_youtube_opens_brave_in_kiosk_mode():
-    calls = []
-
+def flatpak(code=0, error=None):
     def run(argv, **kwargs):
-        calls.append((argv, kwargs))
-        return type("Result", (), {"returncode": 0})()
-
-    result = shortcuts.youtube(run)
-
-    assert result.argv == ["flatpak", "run", shortcuts.BRAVE_ID, "--kiosk", shortcuts.YOUTUBE_URL]
-    assert calls[0][0] == ["flatpak", "info", shortcuts.BRAVE_ID]
-    assert calls[0][1] == {"capture_output": True, "text": True, "timeout": 5}
+        assert argv == ["flatpak", "info", "com.brave.Browser"] and kwargs["timeout"] == 5
+        if error is not None:
+            raise error
+        return subprocess.CompletedProcess(argv, code, "", "")
+    return run
 
 
-def test_settings_choose_the_first_available_desktop_handler():
-    result = shortcuts.settings("network", lambda name: "/usr/bin/kcmshell6" if name == "kcmshell6" else None)
+def test_steam_and_the_file_manager():
+    assert shortcuts.steam(has("steam")).argv == ["steam"]
+    with pytest.raises(shortcuts.Missing, match="Steam is not installed"):
+        shortcuts.steam(has())
+    assert shortcuts.files(has("xdg-open"), Path("/home/someone")).argv == ["xdg-open", "/home/someone"]
+    with pytest.raises(shortcuts.Missing, match="xdg-open"):
+        shortcuts.files(has())
 
-    assert result.argv == ["kcmshell6", "kcm_networkmanagement"]
-    assert result.app_ids == ("kcmshell6",)
+
+def test_youtube_needs_brave_browsers_flatpak():
+    start = shortcuts.youtube(flatpak())
+    assert start.argv == ["flatpak", "run", "com.brave.Browser", "--kiosk", "https://www.youtube.com/"]
+    assert "com.brave.Browser" in start.app_ids
+    with pytest.raises(shortcuts.Missing, match="Brave Browser is required"):
+        shortcuts.youtube(flatpak(1))
+    with pytest.raises(shortcuts.Missing, match="Flatpak is not available"):
+        shortcuts.youtube(flatpak(error=FileNotFoundError()))
+    with pytest.raises(shortcuts.Missing, match="could not be asked"):
+        shortcuts.youtube(flatpak(error=subprocess.TimeoutExpired("flatpak", 5)))
+
+
+@pytest.mark.parametrize("page, kcm, panel", [("bluetooth", "kcm_bluetooth", "bluetooth"),
+                                              ("network", "kcm_networkmanagement", "network"),
+                                              ("sound", "kcm_pulseaudio", "sound"),
+                                              ("display", "kcm_kscreen", "display")])
+def test_the_settings_of_the_desktop_that_is_there(page, kcm, panel):
+    """KDE Plasma's System Settings, else the module alone, else GNOME's Settings (not only the owner's desktop)."""
+    assert shortcuts.settings(page, has("systemsettings", "kcmshell6")).argv == ["systemsettings", kcm]
+    assert shortcuts.settings(page, has("kcmshell6")).argv == ["kcmshell6", kcm]
+    assert shortcuts.settings(page, has("gnome-control-center")).argv == ["gnome-control-center", panel]
+    with pytest.raises(shortcuts.Missing, match="settings of this desktop"):
+        shortcuts.settings(page, has())

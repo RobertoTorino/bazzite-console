@@ -8,9 +8,8 @@ The portal also remembers where the last SAVED_MAX wallpapers came from (owner, 
 HISTORY in its state folder, so one used before can be chosen again from the Wallpaper pill. Only the paths are kept:
 a picture moved or deleted since cannot be chosen again until it is back.
 
-The portal ships an example wallpaper (EXAMPLE, owner, 20-10-2026), and starts with it (owner, 14-11-2026): it is
-the wallpaper until the user chooses a picture of their own or none. NONE in the state folder records the choice of
-no wallpaper."""
+The portal ships an example wallpaper (EXAMPLE, owner, 20-10-2026), and starts with it (owner, 14-11-2026): it is the wallpaper until the user chooses a picture of their own or none. NONE in
+the state folder records the choice of no wallpaper."""
 
 from __future__ import annotations
 

@@ -9,7 +9,9 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtTest import QTest
 from PyQt6.QtWidgets import QDialog, QWidget
 
-from console_linkb import APP_ID, INFO, ROOT, __version__, auth, exit_keys
+from bazzite_console_core import exit_keys
+
+from console_linkb import APP_ID, INFO, ROOT, __version__, auth
 
 
 def test_target_identity_and_account_path(tmp_path):
@@ -20,7 +22,7 @@ def test_target_identity_and_account_path(tmp_path):
 
 
 def test_escape_leaves_stream_and_dialog_to_handle_their_keys(qapp):
-    handler = exit_keys.install(qapp)
+    handler = exit_keys.install(qapp, controller=False)
     window = QWidget()
     window.show()
     QTest.keyClick(window, Qt.Key.Key_Escape)

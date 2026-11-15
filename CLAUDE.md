@@ -3,12 +3,21 @@
 # CLAUDE.md (Bazzite Console Suite)
 
 The rules of the **Bazzite Console Suite**: control your PlayStation 5 running Bazzite. The repository is
-`github.com/RobertoTorino/bazzite-console` (branch `main`).
+`github.com/RobertoTorino/bazzite-console` (branch `main`). The development tools run on Linux only (owner,
+15-11-2026). These rules are the owner's, and the owner may change them when the need is there.
 
 **It is standalone** (owner, 13-11-2026: "it is and stays a standalone repo ... it should run on its own using its
 own tooling"). Everything it needs is in this repository: its tools, its core and its development apps. Nothing here
 depends on a checkout of Nexus or of another suite, and nothing is to be taken from one at run, test or release
 time. The tooling began as a copy of Nexus's and is this repository's own now: a change to it is made here.
+
+**Twin of the BC250 Bazzite Suite** (owner, 15-11-2026: "basically identical, the only difference is that one runs on a
+bc250 board and the other runs on a PlayStation 5 board"). This suite and the BC250 Bazzite Suite
+(`github.com/RobertoTorino/bc250-bazzite`, checked out beside this one) share their release logic (NRT, `tools/`, the
+workflows, CI), design features, category icons and the apps' design: these stay equal. A change to any of them is made
+in both repositories in the same piece of work, with each one's CHANGELOG and wiki; only what the hardware makes
+different differs (names, `TAG_PREFIX`, the board's apps and checks). Standalone still holds: neither reads the other at
+run, test or release time. The handover names what changed in each.
 
 ## Rules from the owner
 
@@ -21,9 +30,16 @@ time. The tooling began as a copy of Nexus's and is this repository's own now: a
   its own. A `Changelog: DD-MM-YYYY HH:MM:SS` line (Europe/Amsterdam), a blank line, then plain sentences; newest
   first. Every entry starts with its kind: `Breaking.`, `Added.` or `Fixed.`.
 - **VERSION is the single source** of each app's version; copies in code must match (`tools/check_versions.py`).
+- **Every folder that was a repository once** (each app, `core/`, `portal/`) keeps LICENSE, .gitignore, VERSION and
+  CHANGELOG; each `dev/` app keeps LICENSE, .gitignore and CHANGELOG, and has no VERSION (owner, 15-11-2026: a
+  development app is never released; its header shows the checkout's commit and its time, as NRT's does).
 - **American English**, plain short sentences, written for the person using the tool. READMEs and the wiki hold no
   status or plans.
 - **Open by default; no personal data** (names, host and user names, serial numbers, MAC and IP addresses, keys).
+- **The twin is not named here** (owner, 15-11-2026): no bc250, bc-250, BC250 or BC-250 anywhere in this repository
+  (code, comments, tests, the wiki, READMEs, CHANGELOGs), in any case. Write "its twin" where a CHANGELOG entry needs
+  it. Three exceptions, which stay: the twin rule in this file, `CROSS-REFERENCE.md` (the table for porting apps)
+  and the stream chapter's line "Test results are from a BC250 board." (`docs/development/remoteplay-stream.md`).
 
 ## What this is
 
@@ -39,53 +55,62 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
 
 ## Layout
 
-- `portal/`: the portal (`bazzite_console_portal`), its pinned app manifest, tests, requirements and installer.
+- `portal/`: the portal (`bazzite_console_portal`), its pinned app manifest, tests, requirements and installer. It
+  installs as a copy in the home folder: the program in `~/.local/share/bazzite-console-suite/portal`, what it
+  remembers in `.../state`. Installed from a checkout, it installs the apps from that checkout.
 - `apps/<name>/`: one app per folder, with its Python package, `images/`, `tests/`, `install.sh`, requirements and
   `VERSION`, `CHANGELOG`, `LICENSE` and `.gitignore`.
-- `core/bazzite_console_core/` with `core/VERSION`: the shared code, bundled per app in a release
-  (`tools/stage_app.py`). It names the suite's folders (`~/.config/bazzite-console/`,
-  `~/.local/share/bazzite-console-suite/`) and addresses.
+- `core/bazzite_console_core/` with `core/VERSION`, LICENSE, README, pyproject, `.gitignore`, `requirements-dev.txt`
+  and `core/tests/`: the shared code, bundled per app in a release (`tools/stage_app.py`). It names the suite's
+  folders (`~/.config/bazzite-console/`, `~/.local/share/bazzite-console-suite/`) and addresses. Its `nexus.py` is the
+  design of the development apps (the theme `NEXUS`) and their header (`header()`: the checkout's commit and its
+  time).
 - `tools/`: the release and check tools (`build_release.py`, `stage_app.py`, `check_versions.py`,
   `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `check-release.sh`,
-  `suites.py`, `fix-modes.sh`, `sync_icons.py`, `ci_state.py` and
-  `release_commit.py` for the release workflow), the tours, `portal_screenshot.py` (the portal's picture on the
-  wiki's home page), `ci-local.sh` (the local checks), `mkdocs/` (the wiki's hooks and overrides),
-  `tools/tests/` and `tools/installer-tests/` (one per app, the portal, a release and the release test).
-- `dev/`: the development apps, run from the checkout and never released.
-- `test.sh`: runs every folder with `tests/` (tools, `dev/*`, the portal and each app), offscreen, with the venv for
-  this system.
+  `suites.py` (this suite only), `fix-modes.sh`, `sync_icons.py`, `ci_state.py`, `ci_matrix.py` and
+  `release_commit.py` for the release workflow), `check_upstream.py`, `new_app.py`, `make_portal_sounds.py`, `nrt.sh`,
+  the tours, `portal_screenshot.py` (the portal's picture on the wiki's home page), `make_design.py` (DESIGN.md and its
+  samples in `design/colors/`), `ci-local.sh` with `ci_local.py` and `ci-local/` (every CI job here, in a podman
+  container), `mkdocs/` (the wiki's hooks and overrides), `tools/tests/` and `tools/installer-tests/`
+  (one per app, per development app, the portal, a release and the release test).
+- `dev/`: the development apps, run from the checkout and never released. They import `bazzite_console_core`
+  directly.
+- `test.sh`: runs every folder with `tests/` (tools, `dev/*`, the portal and each app), offscreen, in `.venv-linux/`.
 - `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/` (bug report, idea, the security link) and
   `.github/PULL_REQUEST_TEMPLATE.md`: for contributors.
 - `docs/` and `mkdocs.yml`: the wiki, robertotorino.github.io/bazzite-console/; `icons/`: the category icons and
   `categories.toml`, which assigns them to the apps.
 - `.github/workflows/ci.yml`: the checks on every push; `docs.yml`: the wiki, built from `main` and published on
   GitHub Pages; `release.yml`: a release of the suite, started by Nexus Release Tool on the release commit (the apps,
-  the pin commit, the portal as a draft). `.github/dependabot.yml`: a weekly pull request for newer actions.
+  the pin commit, the portal as a draft), or a tag pushed by `tools/tag-release.sh`; `upstream.yml`: the weekly
+  upstream check. `.github/dependabot.yml`: a weekly pull request for newer actions.
 
 ## Design and naming
 
 This is a Bazzite suite and follows the Bazzite design: purple for the wiki and the shared Bazzite app theme.
 The portal, wiki and category icons use artwork made for this suite. The Board Test app's Python package is
-`board_test`; its app folder and manifest key are `bazzite`.
+`board_test`; its app folder and manifest key are `board`.
 
 ## Checks
 
 From the repository root. `./test.sh` runs every folder's tests in `.venv-linux/` (made from the root's
-`requirements-dev.txt`; extra arguments go to pytest), and `tools/ci-local.sh` every job of ci.yml here (the versions,
-the manifest and the icons' copies, every folder's tests, the shell syntax, the installer tests and the wiki), one
-line per job; run it before saying work is ready. CI (`.github/workflows/ci.yml`) runs them so:
+`requirements-dev.txt`; extra arguments go to pytest), and `tools/ci-local.sh` every job of ci.yml as GitHub runs it
+(Python 3.12, each job with only its own requirements, in a podman container), one line per job; run it before saying
+work is ready. By hand:
 
 ```bash
 ./test.sh                                                   # every folder with tests/
 (cd <folder> && python -m pytest tests)                     # one folder: portal, tools or apps/<name>
-python3 tools/check_manifest.py
+python3 tools/check_versions.py
+python3 tools/check_manifest.py --base origin/main
 python3 tools/sync_icons.py --check
-find apps portal tools test.sh -name '*.sh' -print0 | xargs -0 -n1 bash -n
+shellcheck -x -S warning tools/*.sh apps/*/install.sh portal/install.sh
 for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done   # needs fakeroot
 mkdocs build --strict
 ```
 
 A release is the owner's: Nexus Release Tool's Start new release, which runs `release.yml` on GitHub, or one release
-by hand with `tools/tag-release.sh ps5-<app>-v<x.y.z>`.
+by hand with `tools/tag-release.sh ps5-<app>-v<x.y.z>`, which tags and pushes only a pushed commit that passed CI;
+`release.yml` builds and publishes it on GitHub (owner, 15-11-2026: the same in both twins).
 
 The manual (`docs/`, built with MkDocs) is called **the wiki** in user-facing text.

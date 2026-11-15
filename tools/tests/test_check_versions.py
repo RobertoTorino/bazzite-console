@@ -1,39 +1,68 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The version check covers the suite's apps and portal, not sibling suites."""
+"""tools/check_versions.py: which version copies it finds, the Rust crate's own entry in Cargo.lock included, and
+that a copy it cannot read is an error rather than skipped."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-TOOLS = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(TOOLS))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import check_versions  # noqa: E402
 
 
-def app(root: Path, folder: str, version: str = "1.2.3") -> Path:
-    unit = root / folder
-    package = unit / "package"
-    package.mkdir(parents=True)
-    (unit / "VERSION").write_text(version + "\n", encoding="utf-8")
-    (package / "__init__.py").write_text(f'__version__ = "{version}"\n', encoding="utf-8")
-    (package / "install.sh").write_text(f'VERSION="{version}"\n', encoding="utf-8")
-    return unit
+def test_cargo_lock_entry_of_the_crate_itself(tmp_path):
+    (tmp_path / "Cargo.toml").write_text('[package]\nname = "my-core"\nversion = "0.2.0"\n')
+    lock = tmp_path / "Cargo.lock"
+    lock.write_text('version = 4\n\n[[package]]\nname = "aes"\nversion = "0.8.4"\n\n'
+                    '[[package]]\nname = "my-core"\nversion = "0.1.0"\n')
+    pattern = check_versions.version_pattern(lock)
+    assert pattern.findall(lock.read_text()) == ["0.1.0"]            # not the lock format's 4, not aes's version
+    assert check_versions.version_pattern(tmp_path / "Cargo.toml").findall('version = "0.2.0"') == ["0.2.0"]
+    (tmp_path / "Cargo.toml").unlink()
+    assert check_versions.version_pattern(lock) is None              # a lock file without its crate: nothing to check
 
 
-def test_matching_app_and_portal_versions_pass(tmp_path: Path):
-    app(tmp_path, "apps/player")
-    app(tmp_path, "portal")
-    assert check_versions.check(tmp_path) == []
+def test_copies_with_a_comment_are_read_and_odd_ones_reported(tmp_path):
+    py, sh = tmp_path / "x.py", tmp_path / "x.sh"
+    text = '__version__ = "0.1.0"   # equal to VERSION\n'
+    assert check_versions.version_pattern(py).findall(text) == ["0.1.0"]
+    assert check_versions.version_pattern(sh).findall('VERSION="1.2.3"  # read by --version\n') == ["1.2.3"]
+    assert check_versions.unreadable(py, text) == []
+    assert check_versions.unreadable(py, "__version__ = '0.1.0'\n__version__  =  \"0.1.0\"\n") == [
+        "__version__ = '0.1.0'", '__version__  =  "0.1.0"']
+    assert check_versions.unreadable(sh, "VERSION='1.2.3'\nVERSION=1.2.3\n") == ["VERSION='1.2.3'", "VERSION=1.2.3"]
+    # read at run time: no copies
+    assert check_versions.unreadable(py, "__version__ = _read_version()\n") == []
+    assert check_versions.unreadable(sh, "VERSION=$(tr -d '[:space:]' <\"$SRC/VERSION\")\n") == []
 
 
-def test_a_mismatched_copy_is_reported(tmp_path: Path):
-    unit = app(tmp_path, "apps/player")
-    (unit / "package" / "__init__.py").write_text('__version__ = "9.0.0"\n', encoding="utf-8")
-    assert check_versions.check(tmp_path) == ["apps/player/package/__init__.py: 9.0.0 != VERSION 1.2.3"]
+def test_the_suite_passes():
+    assert check_versions.main() == 0
 
 
-def test_a_missing_version_file_is_reported(tmp_path: Path):
-    unit = tmp_path / "apps/player"
-    unit.mkdir(parents=True)
-    assert check_versions.check(tmp_path) == ["apps/player: no VERSION file"]
+def test_core_the_portal_and_the_apps_not_dev(capsys, tmp_path, monkeypatch):
+    """The released folders have a VERSION; the development apps in dev/ have none and are not checked."""
+    root = check_versions.ROOT
+    folders = 2 + len([p for p in (root / "apps").iterdir() if p.is_dir()])       # core, the portal, the apps
+    assert len(check_versions.units()) == folders
+    assert not any(unit.parent.name == "dev" for unit in check_versions.units())
+    assert check_versions.main([]) == 0
+    assert f"in {folders} folders" in capsys.readouterr().out
+
+
+def test_venvs_caches_and_tests_hold_no_copies(tmp_path, monkeypatch):
+    for unit in ("core", "portal", "apps/a"):
+        (tmp_path / unit).mkdir(parents=True)
+        (tmp_path / unit / "VERSION").write_text("1.0.0\n")
+    for skipped in (".venv/lib", ".venv-linux/lib", "__pycache__", "tests", "target"):
+        (tmp_path / "apps/a" / skipped).mkdir(parents=True)
+        (tmp_path / "apps/a" / skipped / "x.py").write_text('__version__ = "0.0.1"\n')
+    (tmp_path / "apps/a/a.py").write_text('__version__ = "1.0.0"\n')
+    monkeypatch.setattr(check_versions, "ROOT", tmp_path)
+    assert check_versions.units(tmp_path) == [tmp_path / "core", tmp_path / "portal", tmp_path / "apps/a"]
+    monkeypatch.setattr(check_versions, "units", lambda: [tmp_path / "core", tmp_path / "portal", tmp_path / "apps/a"])
+    assert check_versions.main([]) == 0
+    (tmp_path / "apps/a/a.py").write_text('__version__ = "0.9.0"\n')
+    assert check_versions.main([]) == 1

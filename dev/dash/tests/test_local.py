@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Test local apps: the suite's portal and apps from the checkout, the wikis served with mkdocs serve, and what a
+"""Test local apps: the suite's portal and apps from the checkout, its wiki served with mkdocs serve, and what a
 click on one of them does (moved from Nexus Release Tool's Test on this board, owner 04-11-2026)."""
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from nexus_dashboard import CHECKOUT, local, main_window
 from nexus_dashboard.main_window import MainWindow
 
 
+
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
@@ -27,37 +28,27 @@ def card(key: str, changes_board: bool = False) -> str:
 
 
 @pytest.fixture
-def nexus(tmp_path) -> Path:
-    """A checkout laid out as Nexus: the suite bc with alpha (a window), beta (a window, changes the board), a
-    standalone app whose package is a level deeper, a checkout-only app and a release-only one; the suite ws;
-    the wikis of both and the Nexus page."""
-    root = tmp_path / "nexus"
-    write(root / "tools/suites.py", (CHECKOUT / "tools/suites.py").read_text(encoding="utf-8"))
-    (root / "dev").mkdir()
-    bc = root / "bc"
-    write(bc / "portal/VERSION", "3.0.0\n")
-    write(bc / "portal/apps.toml", card("alpha") + card("beta", changes_board=True))
+def suite(tmp_path) -> Path:
+    """A checkout that is a suite: alpha (a window), beta (a window, changes the board), a standalone app whose package
+    is a level deeper, a checkout-only app and a release-only one, and its wiki."""
+    root = tmp_path / "suite"
+    (root / "dev").mkdir(parents=True)
+    write(root / "portal/VERSION", "3.0.0\n")
+    write(root / "portal/apps.toml", card("alpha") + card("beta", changes_board=True))
     for key in ("alpha", "beta"):
-        write(bc / f"apps/{key}/VERSION", "0.1.0\n")
-        write(bc / f"apps/{key}/{key}/__main__.py", "print('hi')\n")
-    write(bc / "apps/alpha/alpha/__init__.py",
+        write(root / f"apps/{key}/VERSION", "0.1.0\n")
+        write(root / f"apps/{key}/{key}/__main__.py", "print('hi')\n")
+    write(root / "apps/alpha/alpha/__init__.py",
           'APP_NAME = "Alpha App"\nAPP_ID = "alpha-app"\nLOGO = ROOT / "images" / "alpha-logo.png"\n')
     for name in ("01-screenshot.png", "alpha-app.png", "alpha-logo.png"):
-        write(bc / f"apps/alpha/images/{name}", "png")
-    write(bc / "apps/alpha/tests/fake/__main__.py", "")                           # tests are never listed
-    write(bc / "apps/standalone/VERSION", "0.1.0\n")
-    write(bc / "apps/standalone/tool-dir/tool/__main__.py", "")
-    write(bc / "apps/releases/VERSION", "0.1.0\n")
-    write(bc / "apps/releases/.checkout-only", "No releases.\n")
-    write(bc / "apps/releases/rel/__main__.py", "")
-    ws = root / "ws"
-    write(ws / "SYSTEM", "bazzite\n")
-    write(ws / "TAG_PREFIX", "ws-\n")
-    write(ws / "portal/VERSION", "0.1.0\n")
-    write(ws / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "ws-test-v0.1.0"\n')
-    for folder, name in (("bc", "BC"), ("nexus", "Nexus"), ("ws", "WS")):
-        write(root / folder / "mkdocs.yml", f"site_name: {name}\n")
-    write(root / "bc/mkdocs.yml", "site_name: BC\nsite_url: https://example.invalid/bc/\n")
+        write(root / f"apps/alpha/images/{name}", "png")
+    write(root / "apps/alpha/tests/fake/__main__.py", "")                           # tests are never listed
+    write(root / "apps/standalone/VERSION", "0.1.0\n")
+    write(root / "apps/standalone/tool-dir/tool/__main__.py", "")
+    write(root / "apps/releases/VERSION", "0.1.0\n")
+    write(root / "apps/releases/.checkout-only", "No releases.\n")
+    write(root / "apps/releases/rel/__main__.py", "")
+    write(root / "mkdocs.yml", "site_name: BC\nsite_url: https://example.invalid/bc/\n")
     return root
 
 
@@ -69,104 +60,91 @@ class FakeProcess:
         return self.code
 
 
-def test_launch_targets(nexus):
-    targets = {t.module: t for t in local.launch_targets(nexus, "bc")}
+def test_launch_targets(suite):
+    targets = {t.module: t for t in local.launch_targets(suite)}
     assert sorted(targets) == ["alpha", "beta", "tool"]                        # not the checkout-only app, not tests
     alpha, beta, tool = targets["alpha"], targets["beta"], targets["tool"]
-    assert (alpha.name, alpha.label, alpha.folder) == ("Alpha App", "Alpha App 0.1.0", nexus / "bc/apps/alpha")
-    assert alpha.icon == nexus / "bc/apps/alpha/images/alpha-logo.png"        # the one its __init__ names
+    assert (alpha.name, alpha.label, alpha.folder) == ("Alpha App", "Alpha App 0.1.0", suite / "apps/alpha")
+    assert alpha.icon == suite / "apps/alpha/images/alpha-logo.png"           # the one its __init__ names
     assert beta.changes_board and not alpha.changes_board and beta.name == "beta" and beta.icon is None
-    assert tool.key == "standalone" and tool.folder == nexus / "bc/apps/standalone/tool-dir"
-    assert local.launch_targets(nexus, "ws") == []                            # no apps/ yet
-    command, env = local.launch_command(nexus, alpha, python="/venv/python")
+    assert tool.key == "standalone" and tool.folder == suite / "apps/standalone/tool-dir"
+    command, env = local.launch_command(suite, alpha, python="/venv/python")
     assert command == ["/venv/python", "-m", "alpha"]
-    assert env["PYTHONPATH"].split(os.pathsep)[0] == str(nexus / "core")
+    assert env["PYTHONPATH"].split(os.pathsep)[0] == str(suite / "core")
 
 
-def test_changes_board_follows_the_manifest(nexus):
-    assert local.changes_board(nexus, "bc") == {"alpha": False, "beta": True}
-    assert local.changes_board(nexus, "ws") == {"test": False}                # no changes_board: False
-    write(nexus / "bc/portal/apps.toml", "not [toml")
-    assert local.changes_board(nexus, "bc") == {}
+def test_changes_board_follows_the_manifest(suite):
+    assert local.changes_board(suite) == {"alpha": False, "beta": True}
+    write(suite / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "test-v0.1.0"\n')
+    assert local.changes_board(suite) == {"test": False}                      # no changes_board: False
+    write(suite / "portal/apps.toml", "not [toml")
+    assert local.changes_board(suite) == {}
 
 
-def test_portal_target(nexus):
-    assert local.portal_target(nexus, "bc") is None                           # no portal window
-    write(nexus / "bc/portal/nexus_portal/__main__.py", "print('portal')\n")
-    write(nexus / "bc/portal/nexus_portal/__init__.py", 'APP_NAME = "Suite Portal"\nAPP_ID = "suite-portal"\n')
-    write(nexus / "bc/portal/images/bc-suite.webp", "webp")                  # named after the suite's folder
-    portal = local.portal_target(nexus, "bc")
+def test_portal_target(suite):
+    assert local.portal_target(suite) is None                                 # no portal window
+    write(suite / "portal/bazzite_console_portal/__main__.py", "print('portal')\n")
+    write(suite / "portal/bazzite_console_portal/__init__.py", 'APP_NAME = "Suite Portal"\nAPP_ID = "suite-portal"\n')
+    write(suite / "portal/images/bazzite-console-suite.webp", "webp")
+    portal = local.portal_target(suite)
     assert (portal.key, portal.module, portal.folder, portal.label, portal.app_id) == (
-        "portal", "nexus_portal", nexus / "bc/portal", "Suite Portal 3.0.0", "suite-portal")
-    assert portal.icon == nexus / "bc/portal/images/bc-suite.webp" and not portal.changes_board
-    command, env = local.launch_command(nexus, portal, python="/venv/python")
-    assert command == ["/venv/python", "-m", "nexus_portal"]                  # --source auto: from the checkout
-    assert local.portal_target(nexus, "ws") is None
+        "portal", "bazzite_console_portal", suite / "portal", "Suite Portal 3.0.0", "suite-portal")
+    assert portal.icon == suite / "portal/images/bazzite-console-suite.webp" and not portal.changes_board
+    command, env = local.launch_command(suite, portal, python="/venv/python")
+    assert command == ["/venv/python", "-m", "bazzite_console_portal"]                  # --source auto: from the checkout
 
 
-def test_this_checkouts_portals():
-    assert local.portal_target(CHECKOUT, "bazzite-console").module == "bazzite_console_portal"
-    assert local.portal_target(CHECKOUT, "missing-suite") is None
+def test_this_checkouts_portal():
+    assert local.portal_target(CHECKOUT).module == "bazzite_console_portal"
 
 
-def test_docs_targets(nexus):
-    docs = local.docs_targets(nexus, suite="bc")
-    assert [t.label for t in docs] == ["BC wiki (local)", "Nexus wiki (local)"]   # never the other suite's
-    bc, page = docs
-    assert (bc.module, bc.folder) == ("mkdocs", nexus)
-    assert bc.url == f"http://127.0.0.1:{local.DOCS_PORT}/bc/?design"         # site_url's path, the design panel
-    command, _ = local.launch_command(nexus, bc, python="/venv/python")
-    assert command == ["/venv/python", "-m", "mkdocs", "serve", "-f", "bc/mkdocs.yml",
+def test_docs_target(suite, tmp_path):
+    docs = local.docs_target(suite)
+    assert (docs.label, docs.module, docs.folder) == ("BC wiki (local)", "mkdocs", suite)
+    assert docs.url == f"http://127.0.0.1:{local.DOCS_PORT}/bc/?design"       # site_url's path, the design panel
+    command, _ = local.launch_command(suite, docs, python="/venv/python")
+    assert command == ["/venv/python", "-m", "mkdocs", "serve", "-f", "mkdocs.yml",
                        "--dev-addr", f"127.0.0.1:{local.DOCS_PORT}"]
-    assert page.url == f"http://127.0.0.1:{local.DOCS_PORT + 1}/?design" and bc.log_name != page.log_name
-    assert not bc.note
-    everything = {t.label: t.args[-1] for t in local.docs_targets(nexus)}
-    assert list(everything) == ["BC wiki (local)", "Nexus wiki (local)", "WS wiki (local)"]
-    shown = local.docs_targets(nexus, suite="ws")
-    assert [t.label for t in shown] == ["Nexus wiki (local)", "WS wiki (local)"]
-    assert all(everything[t.label] == t.args[-1] for t in shown)              # a wiki keeps its port
+    assert not docs.note
+    assert local.docs_target(tmp_path) is None                                # no wiki
 
 
-def test_docs_targets_on_the_network(nexus):
-    bc = local.docs_targets(nexus, network=True, addresses=["192.0.2.7"], suite="bc")[0]
+def test_docs_target_on_the_network(suite):
+    docs = local.docs_target(suite, network=True, addresses=["192.0.2.7"])
     port = local.NETWORK_PORT                                                 # not the local one: both can run
-    assert bc.label == "BC wiki (network)" and bc.args[-1] == f"0.0.0.0:{port}"
-    assert bc.url == f"http://127.0.0.1:{port}/bc/?design"                    # this computer's browser
-    assert bc.note == f"On the other devices: http://192.0.2.7:{port}/bc/"
-    assert bc.log_name != local.docs_targets(nexus, suite="bc")[0].log_name
-    assert "no network address" in local.docs_targets(nexus, network=True, addresses=[], suite="bc")[0].note
+    assert docs.label == "BC wiki (network)" and docs.args[-1] == f"0.0.0.0:{port}"
+    assert docs.url == f"http://127.0.0.1:{port}/bc/?design"                  # this computer's browser
+    assert docs.note == f"On the other devices: http://192.0.2.7:{port}/bc/"
+    assert docs.log_name != local.docs_target(suite).log_name
+    assert "no network address" in local.docs_target(suite, network=True, addresses=[]).note
 
 
 def test_network_addresses_leave_out_loopback():
     assert all(not a.startswith("127.") for a in local.network_addresses())
 
 
-def window_on(root: Path, suite: str = "bc", **kwargs) -> MainWindow:
-    return MainWindow(root, settings=None, suite=suite, **kwargs)
+def window_on(root: Path, **kwargs) -> MainWindow:
+    return MainWindow(root, **kwargs)
 
 
 def items(window: MainWindow) -> dict:
     return {window.local_apps.item(i).text(): window.local_apps.item(i) for i in range(window.local_apps.count())}
 
 
-def test_the_portal_is_the_first_icon_then_the_apps_then_the_wikis(qapp, nexus):
-    write(nexus / "bc/portal/nexus_portal/__main__.py", "print('portal')\n")
-    write(nexus / "bc/portal/nexus_portal/__init__.py", '__version__ = "3.0.0"\n')
-    window = window_on(nexus)
+def test_the_portal_is_the_first_icon_then_the_apps_then_the_wiki(qapp, suite):
+    write(suite / "portal/bazzite_console_portal/__main__.py", "print('portal')\n")
+    write(suite / "portal/bazzite_console_portal/__init__.py", '__version__ = "3.0.0"\n')
+    window = window_on(suite)
     labels = [window.local_apps.item(i).text() for i in range(window.local_apps.count())]
-    assert labels == ["nexus_portal 3.0.0", "Alpha App 0.1.0", "beta 0.1.0", "tool 0.1.0", "BC wiki (local)",
-                      "Nexus wiki (local)"]
-    window.suite_box.setCurrentIndex(1)                                       # another suite: its own icons
-    assert [window.local_apps.item(i).text() for i in range(window.local_apps.count())] == [
-        "Nexus wiki (local)", "WS wiki (local)"]
+    assert labels == ["bazzite_console_portal 3.0.0", "Alpha App 0.1.0", "beta 0.1.0", "tool 0.1.0", "BC wiki (local)"]
     window.close()
 
 
-def test_a_click_runs_an_app_from_the_checkout(qapp, nexus, tmp_path, monkeypatch):
+def test_a_click_runs_an_app_from_the_checkout(qapp, suite, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QMessageBox
     monkeypatch.setattr(main_window, "LOCAL_LOG_DIR", tmp_path / "logs")
     started = []
-    window = window_on(nexus, start_local=lambda command, env, cwd, log: started.append((command, cwd, log))
+    window = window_on(suite, start_local=lambda command, env, cwd, log: started.append((command, cwd, log))
                        or FakeProcess())
     found = items(window)
     alpha, beta = found["Alpha App 0.1.0"], found["beta 0.1.0"]
@@ -180,7 +158,7 @@ def test_a_click_runs_an_app_from_the_checkout(qapp, nexus, tmp_path, monkeypatc
 
     assert corner(beta) == QColor(main_window.ORANGE).name() != corner(alpha)
     window.local_apps.itemClicked.emit(alpha)
-    assert started == [([sys.executable, "-m", "alpha"], nexus / "bc/apps/alpha", tmp_path / "logs/alpha.log")]
+    assert started == [([sys.executable, "-m", "alpha"], suite / "apps/alpha", tmp_path / "logs/alpha.log")]
     with mock.patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No) as asked:
         window.local_apps.itemClicked.emit(beta)                              # a console app asks first
     assert asked.called and len(started) == 1
@@ -204,15 +182,15 @@ def test_a_click_runs_an_app_from_the_checkout(qapp, nexus, tmp_path, monkeypatc
     window.close()
 
 
-def test_an_open_portal_is_warned_about_and_not_started_again(qapp, nexus, tmp_path, monkeypatch):
+def test_an_open_portal_is_warned_about_and_not_started_again(qapp, suite, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QMessageBox
-    write(nexus / "bc/portal/nexus_portal/__main__.py", "print('portal')\n")
-    write(nexus / "bc/portal/nexus_portal/__init__.py", 'APP_NAME = "Suite Portal"\nAPP_ID = "suite-portal"\n')
+    write(suite / "portal/bazzite_console_portal/__main__.py", "print('portal')\n")
+    write(suite / "portal/bazzite_console_portal/__init__.py", 'APP_NAME = "Suite Portal"\nAPP_ID = "suite-portal"\n')
     monkeypatch.setattr(main_window, "LOCAL_LOG_DIR", tmp_path / "logs")
     started, asked, seen = [], [], []
     monkeypatch.setattr(QMessageBox, "warning", lambda *args: asked.append(args[2]))
     monkeypatch.setattr(main_window, "instance_running", lambda app_id: seen.append(app_id) or True)
-    window = window_on(nexus, start_local=lambda command, env, cwd, log: started.append(command) or FakeProcess())
+    window = window_on(suite, start_local=lambda command, env, cwd, log: started.append(command) or FakeProcess())
     portal = window.local_apps.item(0)
     window.local_apps.itemClicked.emit(portal)
     assert seen == ["suite-portal"] and started == []                          # open: warned, not started
@@ -223,17 +201,17 @@ def test_an_open_portal_is_warned_about_and_not_started_again(qapp, nexus, tmp_p
     window.close()
 
 
-def test_a_wiki_is_served_and_opens_once_it_is_up(qapp, nexus, tmp_path, monkeypatch):
+def test_a_wiki_is_served_and_opens_once_it_is_up(qapp, suite, tmp_path, monkeypatch):
     monkeypatch.setattr(main_window, "LOCAL_LOG_DIR", tmp_path / "logs")
     started, opened, up = [], [], [False]
     monkeypatch.setattr(main_window, "answers", lambda url: up[0])
     monkeypatch.setattr(main_window, "open_url", opened.append)
-    window = window_on(nexus, start_local=lambda command, env, cwd, log: started.append((command, cwd))
+    window = window_on(suite, start_local=lambda command, env, cwd, log: started.append((command, cwd))
                        or FakeProcess())
     docs = items(window)["BC wiki (local)"]
     window.local_apps.itemClicked.emit(docs)
-    assert started == [([sys.executable, "-m", "mkdocs", "serve", "-f", "bc/mkdocs.yml",
-                         "--dev-addr", f"127.0.0.1:{local.DOCS_PORT}"], nexus)]
+    assert started == [([sys.executable, "-m", "mkdocs", "serve", "-f", "mkdocs.yml",
+                         "--dev-addr", f"127.0.0.1:{local.DOCS_PORT}"], suite)]
     window.poll()
     assert opened == []                                                       # not up yet
     up[0] = True
@@ -245,18 +223,18 @@ def test_a_wiki_is_served_and_opens_once_it_is_up(qapp, nexus, tmp_path, monkeyp
     window.close()
 
 
-def test_the_wikis_on_the_network(qapp, nexus, tmp_path, monkeypatch):
+def test_the_wiki_on_the_network(qapp, suite, tmp_path, monkeypatch):
     monkeypatch.setattr(main_window, "LOCAL_LOG_DIR", tmp_path / "logs")
     monkeypatch.setattr(local, "network_addresses", lambda: ["192.0.2.7"])
     monkeypatch.setattr(main_window, "answers", lambda url: False)
     started = []
-    window = window_on(nexus, start_local=lambda command, env, cwd, log: started.append((command, log))
+    window = window_on(suite, start_local=lambda command, env, cwd, log: started.append((command, log))
                        or FakeProcess())
     window.network_box.setChecked(True)                                       # the icons follow
     docs = items(window)["BC wiki (network)"]
     window.local_apps.itemClicked.emit(docs)
     assert started[0][0][-1] == f"0.0.0.0:{local.NETWORK_PORT}"
-    assert started[0][1].name == "mkdocs-bc-network.log"
+    assert started[0][1].name == "mkdocs-root-network.log"
     assert f"http://192.0.2.7:{local.NETWORK_PORT}/bc/" in window.output.toPlainText()
     window.close()
 
@@ -271,7 +249,7 @@ def test_start_local_keeps_the_output_in_a_log(tmp_path):
 
 def test_instance_running_sees_a_listening_app_and_does_not_disturb_it(qapp):
     from PyQt6.QtNetwork import QLocalServer
-    from nexus_core.instance import server_name
+    from bazzite_console_core.instance import server_name
     name = server_name("nexus-dashboard-test-instance")
     QLocalServer.removeServer(name)
     assert not main_window.instance_running("nexus-dashboard-test-instance")
@@ -284,9 +262,9 @@ def test_instance_running_sees_a_listening_app_and_does_not_disturb_it(qapp):
     assert not main_window.instance_running("nexus-dashboard-test-instance")
 
 
-def test_this_checkouts_suite_has_its_apps_and_wikis(qapp):
-    window = MainWindow(settings=None, suite="bazzite-console")
+def test_this_checkouts_suite_has_its_apps_and_wiki(qapp):
+    window = MainWindow()
     labels = list(items(window))
-    assert labels[0].startswith("Bazzite Console Suite ")                     # the portal first
+    assert labels[0].startswith("Bazzite Console Suite ")                        # the portal first
     assert labels[-1:] == ["Bazzite Console Suite wiki (local)"]
     window.close()

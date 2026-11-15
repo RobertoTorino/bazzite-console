@@ -8,7 +8,7 @@ import sys
 
 from bazzite_console_core import __version__ as CORE_VERSION, instance
 from bazzite_console_core.app import create_app, exec_app
-from . import exit_keys
+from bazzite_console_core import exit_keys
 
 from . import APP_NAME, INFO, __version__
 
@@ -19,7 +19,8 @@ def main() -> int:
     _args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args)
-    exit_keys.install(app)  # The controller is the game's while it streams.
+    exit_keys.install(app, controller=False)    # Escape closes the window; not B:
+                                                # the controller is the game's while it streams
     if instance.already_running(INFO.app_id):
         return 0
     from .main_window import MainWindow

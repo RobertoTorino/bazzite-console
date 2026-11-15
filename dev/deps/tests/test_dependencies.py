@@ -125,7 +125,7 @@ def test_catalog_apps_match_the_portal_manifest():
     for key, entry in manifest.items():
         assert apps[key].name == entry["name"], key
         assert apps[key].launchers == tuple(entry["detect"]), key
-    assert set(apps) == set(manifest) | {"portal"}
+    assert set(apps) == set(manifest) | {"portal", "core"}
     assert "bazzite-console-suite" in apps["portal"].launchers[0]
 
 

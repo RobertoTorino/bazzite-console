@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Entry point: python -m bazzite_console_portal [--manifest FILE] [--source auto|release|checkout]."""
+"""Entry point: python -m bazzite_console_portal [--manifest FILE] [--source auto|release|checkout]"""
 
 from __future__ import annotations
 
@@ -37,6 +37,7 @@ def main() -> int:
     args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args)
+    # PyQt6 ends the whole app on an exception in a slot. The portal may be mid-install: show it and carry on.
     sys.excepthook = _show_error
     try:
         entries = load(Path(args.manifest))
@@ -49,16 +50,20 @@ def main() -> int:
         QMessageBox.critical(None, APP_NAME, "--source checkout: the portal is not running from a suite checkout.")
         return 1
     sources = Sources(state_dir() / "releases", checkout=checkout, download=http_download(INFO.user_agent))
+    # One instance: a second launch brings the running window to the front and exits.
     if instance.already_running(INFO.app_id):
         return 0
 
+    # The newest portal release on GitHub, and which app releases it pins differently, checked once in the
+    # background; offline it simply finds nothing.
     def portal_check():
         return portal_update.check(repo_slug(INFO.repo_url), INFO.tag_prefix, entries, INFO.user_agent)
 
+    build = portal_update.running_build(ROOT) if installed_copy() else None       # None: from a checkout
     window = MainWindow(entries, sources, Records(state_dir() / "installed.json"), portal_check=portal_check,
-                        build=portal_update.running_build(ROOT) if installed_copy() else None,
+                        build=build,
                         local_build=local_build, installed=installed_copy())
-    window.showFullScreen()
+    window.showFullScreen()                          # the portal's one view is fullscreen; the intro first
     window.start_up()
     server = instance.serve(INFO.app_id, window)  # noqa: F841 (kept alive while the app runs)
     return exec_app(app)

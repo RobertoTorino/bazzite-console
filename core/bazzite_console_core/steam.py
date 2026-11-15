@@ -99,26 +99,11 @@ def shutdown_command() -> list[str]:
     return ["steam", "-shutdown"]
 
 
-# Steam's library, in Big Picture on a handheld's screen; Steam starts when it does not run (owner, 29-10-2026: an
-# Open Steam button in the game managers)
-OPEN_URL = "steam://open/bigpicture"
-
-
 def play_url(number: int) -> str:
     """The steam:// address that starts the non-Steam game whose shortcut has appid *number* (its 32 bits, as
     Change.number): Steam's game id for a shortcut is that appid in the high half with 0x02000000 below it. Steam
     starts first when it does not run (owner, 29-10-2026: a game started from its manager, through Steam)."""
     return f"steam://rungameid/{((number & 0xFFFFFFFF) << 32) | 0x02000000}"
-
-
-def signed_in() -> bool:
-    """Whether Steam runs signed in: whether Steam runs."""
-    return steam_running()
-
-
-def open_url(url: str, run: Run | None = None) -> None:
-    """A steam:// address handed to Steam with xdg-open."""
-    (run or _run)(["xdg-open", url])
 
 
 def _run(command: list[str]) -> None:
@@ -317,6 +302,16 @@ def field(item: dict, name: str, default="") -> object:
 def _number(item: dict) -> int:
     """The number a shortcut's artwork is filed under: from its program and name, as appid() gives it."""
     return appid(str(field(item, "Exe")), str(field(item, "AppName")))
+
+
+def shortcut_number(steam: Path, ours: Match) -> int | None:
+    """The appid of the shortcut *ours* recognizes, as Steam's file has it for the first user with one (its 32
+    bits, for play_url()); from its program and name when the file names none. None when no user has the shortcut."""
+    for item in shortcuts(steam):
+        if ours(item):
+            number = field(item, "appid", None)
+            return (number if isinstance(number, int) else _number(item)) & 0xFFFFFFFF
+    return None
 
 
 def write_shortcuts(steam: Path, changes: Sequence[Change]) -> list[int]:

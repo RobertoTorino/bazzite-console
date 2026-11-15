@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The runner (each script in its own process, in order, with its output) and the window (the suite's tests with
-their results, the suite chosen in the header)."""
+their results). Ported from PS5 Installer Tests on 02-11-2026."""
 
 from __future__ import annotations
 
@@ -12,16 +12,16 @@ import pytest
 from PyQt6.QtCore import QEventLoop, QTimer
 
 from installer_tests import APP_NAME, CHECKOUT, ROOT, runner
-from installer_tests.main_window import SUITE_KEY, MainWindow, suites_here
+from installer_tests.main_window import MainWindow
 from installer_tests.runner import InstallerTestRunner, command_for, discover_tests
 from installer_tests.runner import tests_dir as suite_tests_dir     # not tests_dir: pytest would collect it
 
 INSTALLER = ROOT / "install.sh"
-BAZZITE = CHECKOUT
+SUITE = CHECKOUT
 
 
 def test_discovery_excludes_the_helpers_and_takes_the_bash_scripts(tmp_path: Path) -> None:
-    for name in ("zeta.sh", "shims.sh", "alpha.sh", "notes.txt"):
+    for name in ("zeta.sh", "shims.sh", "alpha.sh", "beta.ps1"):
         (tmp_path / name).write_text("#!/usr/bin/env bash\n", encoding="utf-8")
 
     assert [path.name for path in discover_tests(tmp_path)] == ["alpha.sh", "zeta.sh"]
@@ -31,9 +31,8 @@ def test_a_script_runs_with_bash(tmp_path: Path) -> None:
     assert command_for(tmp_path / "a.sh") == ["bash", str(tmp_path / "a.sh")]
 
 
-def test_the_suites_with_tests_are_listed() -> None:
-    assert suites_here(CHECKOUT) == ["bazzite-console"]
-    assert suite_tests_dir(BAZZITE) == BAZZITE / "tools" / "installer-tests"
+def test_the_suites_tests_are_in_its_tools() -> None:
+    assert suite_tests_dir(SUITE) == SUITE / "tools" / "installer-tests"
 
 
 def test_runner_adds_homebrew_fakeroot_directory_to_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -111,53 +110,41 @@ def test_runner_rejects_helpers_and_scripts_outside_the_tests_folder(tmp_path: P
 
 @pytest.fixture
 def checkout(tmp_path: Path) -> Path:
-    """A checkout with two suites."""
-    root = tmp_path / "nexus"
-    for suite, scripts in (("bazzite-console", ("check.sh",)),
-                           ("nexus-suite", ("fan.sh", "check.sh", "shims.sh"))):
-        folder = root / suite / "tools" / "installer-tests"
-        folder.mkdir(parents=True)
-        (root / suite / "portal").mkdir()
-        (root / suite / "portal" / "apps.toml").write_text("", encoding="utf-8")
-        if suite != "nexus-suite":
-            (root / suite / "TAG_PREFIX").write_text("ps5-", encoding="utf-8")
-        for name in scripts:
-            (folder / name).write_text("exit 0\n", encoding="utf-8")
+    """A suite with installer tests, and their helper."""
+    root = tmp_path / "suite"
+    folder = root / "tools" / "installer-tests"
+    folder.mkdir(parents=True)
+    (root / "portal").mkdir()
+    (root / "portal" / "apps.toml").write_text("", encoding="utf-8")
+    for name in ("fan.sh", "check.sh", "shims.sh"):
+        (folder / name).write_text("exit 0\n", encoding="utf-8")
     return root
 
 
-def test_window_lists_the_suites_tests_and_remembers_the_suite(checkout: Path) -> None:
-    from PyQt6.QtCore import QSettings
-    settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
-    window = MainWindow(checkout, settings)
+def test_window_lists_the_suites_tests(checkout: Path) -> None:
+    window = MainWindow(checkout)
 
     assert window.windowTitle() == APP_NAME
-    assert window.suites == ["bazzite-console", "nexus-suite"] and window.suite == "nexus-suite"
     assert list(window._items) == ["check.sh", "fan.sh"]
-    assert settings.value(SUITE_KEY) == window.suite
     assert all(
         window.test_list.item(index).text() == ""
         and window._items[window.test_list.item(index).toolTip()][2].text()
         for index in range(window.test_list.count())
     )
-    assert window.runner is not None and window.runner.tests_directory == suite_tests_dir(checkout / window.suite)
-    window.close()
-
-    window = MainWindow(checkout, settings, suite="nope")          # an unknown suite: the remembered one
-    assert window.suite == settings.value(SUITE_KEY)
+    assert window.runner is not None and window.runner.tests_directory == suite_tests_dir(checkout)
     window.close()
 
 
 def test_window_on_the_real_checkout_lists_the_suites_installer_tests() -> None:
     window = MainWindow()
-    assert window.suite == "bazzite-console" and "board.sh" in window._items and "shims.sh" not in window._items
+    assert "portal.sh" in window._items and "shims.sh" not in window._items
     window.close()
 
 
 def test_a_checkout_without_tests_says_so(tmp_path: Path) -> None:
     window = MainWindow(tmp_path)
-    assert window.suite is None and window.runner is None
-    assert "No suite in" in window.statusBar().currentMessage()
+    assert window.runner is None
+    assert "No installer tests in" in window.statusBar().currentMessage()
     assert not window.run_all_button.isEnabled()
     window.close()
 
@@ -194,9 +181,9 @@ def test_window_keeps_previous_results_when_another_test_starts(checkout: Path, 
     window._test_started(running_name)
 
     assert (passed_status.text(), passed_status.styleSheet(), passed_status.toolTip()) == previous
-    assert not window.suite_box.isEnabled()            # no other suite while a run is on
+    assert not window.run_all_button.isEnabled()        # no second run while one is on
     window._run_finished(False)
-    assert window.suite_box.isEnabled()
+    assert window.run_all_button.isEnabled()
     window.close()
 
 

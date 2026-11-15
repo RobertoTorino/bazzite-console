@@ -6,15 +6,18 @@
 
 # Nexus Installer Tests
 
-A window that runs this suite's installer tests one at a time, with live output and each test's result. Start it
-from [the developer dashboard](../dash), or:
+A window that runs the suite's installer tests, `tools/installer-tests/*.sh`, one at a time, with their live
+output and each one's result. A development app: it runs from the checkout it lives in and has no releases of its own. Start it
+from [Nexus Dashboard](../dash), or:
 
-- Open it: `dev/itests/run.sh`
-- Menu entry and Desktop icon: `dev/itests/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`)
+| | Linux |
+|---|---|
+| Open it | `dev/itests/run.sh` |
+| Menu entry and Desktop icon | `dev/itests/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) |
 
 Nothing is copied: the entry starts the app of the checkout you installed it from.
 
-Documentation: [Bazzite Console](https://robertotorino.github.io/bazzite-console/).
+How to use it: [Installer tests in the wiki](https://robertotorino.github.io/bazzite-console/development/dashboard/#installer-tests).
 
 ## License
 

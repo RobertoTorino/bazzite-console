@@ -1,17 +1,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: the suite's installer tests on the left, each with a tick box and its result, the live output on
-the right. The suite is chosen in the header (remembered in the settings) among the suites of the checkout with
-installer tests."""
+"""The window: the suite's installer tests (its .sh tests in tools/installer-tests) on the left, each with a tick box
+and its result, the live output on the right."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from PyQt6.QtCore import QSettings, Qt
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QCloseEvent, QTextCursor
 from PyQt6.QtWidgets import (
     QCheckBox,
-    QComboBox,
     QHBoxLayout,
     QLabel,
     QListWidget,
@@ -25,66 +23,33 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from nexus_core.theme import GREEN, RED
-from nexus_core.widgets import AppHeader, InfoButton, hint_label
+from bazzite_console_core.theme import GREEN, RED
+from bazzite_console_core.nexus import header as nexus_header
+from bazzite_console_core.widgets import InfoButton, hint_label
 
-from . import APP_NAME, CHECKOUT, LOGO_PATH, __version__
-from .runner import SUFFIX, InstallerTestRunner, discover_tests, tests_dir
+from . import APP_NAME, CHECKOUT, LOGO_PATH
+from .runner import InstallerTestRunner, discover_tests, tests_dir
 
-SUITE_KEY = "suite"                     # the chosen suite, in the settings
 ABOUT = ("Each installer test installs an app of the suite from the checkout, as its installer does on a device, "
          "and removes it again, in a temporary home: nothing of yours is touched. On Linux the tests run with "
          "fakeroot (Homebrew's on Bazzite) and fixed temporary folders under /tmp, so the same test is never run "
          "twice at once. CI runs every one of them on each push; here they run one at a time with their output.")
 
 
-def suites_here(root: Path = CHECKOUT) -> list[str]:
-    """The suites of the checkout with installer tests (their folder names, sorted)."""
-    found = sorted(p.name for p in root.iterdir()
-                   if p.is_dir() and (p / "portal" / "apps.toml").is_file() and
-                   discover_tests(tests_dir(p)))
-    if found:
-        return found
-    return [root.name] if (root / "portal" / "apps.toml").is_file() and \
-        discover_tests(tests_dir(root)) else []
-
-
-def default_suite(root: Path, suites: list[str]) -> str | None:
-    unprefixed = [name for name in suites
-                  if not ((root if name in {root.name, "."} else root / name) / "TAG_PREFIX").is_file()
-                  or not ((root if name in {root.name, "."} else root / name) / "TAG_PREFIX")
-                  .read_text(encoding="utf-8").strip()]
-    return unprefixed[0] if len(unprefixed) == 1 else suites[0] if suites else None
-
-
 class MainWindow(QMainWindow):
-    def __init__(self, root: Path = CHECKOUT, settings: QSettings | None = None, suite: str | None = None):
-        """*settings* keeps the chosen suite (None: this session only); *suite* opens that suite (a folder name)."""
+    def __init__(self, root: Path = CHECKOUT):
+        """*root*: the suite whose installer tests are listed (the checkout the app lives in)."""
         super().__init__()
         self.root = root
-        self.settings = settings
         self.setWindowTitle(APP_NAME)
         self.resize(1050, 700)
-        self.suites = suites_here(root)
-        remembered = str(settings.value(SUITE_KEY, "")) if settings is not None else ""
-        self.suite = suite if suite in self.suites else remembered if remembered in self.suites else \
-            default_suite(root, self.suites)
         self.runner: InstallerTestRunner | None = None
         self._items: dict[str, tuple[QListWidgetItem, str, QCheckBox, QLabel]] = {}
 
         central = QWidget()
         layout = QVBoxLayout(central)
-        header = AppHeader(LOGO_PATH, APP_NAME, __version__)
+        header = nexus_header(LOGO_PATH, APP_NAME, CHECKOUT)  # the checkout's commit, never a version
         header.add_action(InfoButton(ABOUT, "What this app does"))
-        self.suite_box = QComboBox()
-        self.suite_box.addItems(self.suites)
-        self.suite_box.setToolTip("The suite whose installer tests are listed: the suites of the checkout with "
-                                  "tests that run on this system")
-        if self.suite is not None:
-            self.suite_box.setCurrentText(self.suite)
-        self.suite_box.currentTextChanged.connect(self.choose_suite)
-        header.add_second(QLabel("Suite:"))
-        header.add_second(self.suite_box)
         header.add_second(hint_label("Tick the tests to run, or Run all; the output and each result show here."), 1)
         layout.addLayout(header)
 
@@ -130,44 +95,27 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(1, 2)
         layout.addWidget(splitter, 1)
         self.setCentralWidget(central)
-        self.choose_suite(self.suite)
+        self.load()
 
-    # --- the suite -------------------------------------------------------------------------------------------
+    # --- the tests -------------------------------------------------------------------------------------------
     @property
-    def suite_dir(self) -> Path | None:
-        return (self.root if self.suite in {self.root.name, "."} else self.root / self.suite) if self.suite else None
+    def tests_dir(self) -> Path:
+        return tests_dir(self.root)
 
-    @property
-    def tests_dir(self) -> Path | None:
-        return tests_dir(self.suite_dir) if self.suite_dir else None
-
-    def choose_suite(self, name: str | None) -> None:
-        """The suite's tests listed, a runner for its folder; the choice remembered."""
-        if self.runner is not None and self.runner.busy:
-            return
-        self.suite = name if name in self.suites else None
-        if self.settings is not None and self.suite:
-            self.settings.setValue(SUITE_KEY, self.suite)
-        if self.runner is not None:
-            self.runner.deleteLater()
-            self.runner = None
-        self.test_list.clear()
-        self._items.clear()
-        if self.suite is None:
-            self.statusBar().showMessage(f"No suite in {self.root} has installer tests that run on this system "
-                                         f"({SUFFIX} scripts in <suite>/tools/installer-tests).")
+    def load(self) -> None:
+        """The suite's tests listed, with a runner for its folder."""
+        if not discover_tests(self.tests_dir):
+            self.statusBar().showMessage(f"No installer tests in {self.tests_dir} (.sh scripts).")
             for button in (self.run_selected_button, self.run_all_button):
                 button.setEnabled(False)
             return
-        self.runner = InstallerTestRunner(self.tests_dir, self.suite_dir, self)
+        self.runner = InstallerTestRunner(self.tests_dir, self.root, self)
         self.runner.output.connect(self._append_output)
         self.runner.test_started.connect(self._test_started)
         self.runner.test_finished.connect(self._test_finished)
         self.runner.run_finished.connect(self._run_finished)
         self._populate_tests()
-        for button in (self.run_selected_button, self.run_all_button):
-            button.setEnabled(True)
-        self.statusBar().showMessage(f"{self.suite}: select tests or choose Run all.")
+        self.statusBar().showMessage("Select tests or choose Run all.")
 
     def _populate_tests(self) -> None:
         for script in discover_tests(self.tests_dir):
@@ -225,7 +173,6 @@ class MainWindow(QMainWindow):
             return
         self.run_selected_button.setEnabled(False)
         self.run_all_button.setEnabled(False)
-        self.suite_box.setEnabled(False)
         self.statusBar().showMessage(f"Running {len(scripts)} installer test(s)…")
 
     def _stop(self) -> None:
@@ -260,7 +207,6 @@ class MainWindow(QMainWindow):
         self.run_selected_button.setEnabled(True)
         self.run_all_button.setEnabled(True)
         self.stop_button.setEnabled(False)
-        self.suite_box.setEnabled(True)
         self.statusBar().showMessage("Run canceled." if cancelled else "Run complete.")
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)

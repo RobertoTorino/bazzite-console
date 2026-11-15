@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
+[![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+
 # PS5 CEC Manager
 
 HDMI-CEC for the **PlayStation 5** on **Bazzite**: turn the TV on and off from the PS5, switch it to the PS5's

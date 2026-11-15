@@ -4,35 +4,24 @@ fix for it; and Bazzite's update state. A Nexus app (dev/), run from the checkou
 
 from pathlib import Path
 
-from nexus_core import AppInfo
+from bazzite_console_core import AppInfo
+from bazzite_console_core.nexus import checkout_commit
 
 APP_NAME = "Nexus Deps"
 APP_ID = "nexus-deps"
-__version__ = "3.4.0"
 
 PACKAGE = Path(__file__).resolve().parent
 ROOT = PACKAGE.parent
-CHECKOUT = ROOT.parents[1]                  # the repository (Nexus), dev/deps/ in it
-CATALOGS = PACKAGE / "catalogs"             # one catalog per suite: <suite folder>.toml
-DEFAULT_SUITE = "bazzite-console"
-CATALOG = CATALOGS / f"{DEFAULT_SUITE}.toml"
+CHECKOUT = ROOT.parents[1]                  # the repository, dev/deps/ in it
+CATALOGS = PACKAGE / "catalogs"
+SUITE = "bazzite-console"                   # the suite the repository is: its catalog, catalogs/<suite>.toml
+SUITE_NAME = "Bazzite Console Suite"
+CATALOG = CATALOGS / f"{SUITE}.toml"
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 
 # Settings in ~/.config/nexus-deps/nexus-deps.ini
-INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH, settings_ini=True)
+INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=checkout_commit(CHECKOUT)[0], logo=LOGO_PATH, settings_ini=True)
 
 
-def suites() -> list[str]:
-    """The suites with a catalog: the names --suite takes."""
-    return sorted(path.stem for path in CATALOGS.glob("*.toml"))
-
-
-def catalog(suite: str = DEFAULT_SUITE) -> Path:
-    """The catalog of *suite* (a folder of the checkout)."""
-    if suite not in suites():
-        raise ValueError(f"no catalog for {suite!r}: {', '.join(suites())}")
-    return CATALOGS / f"{suite}.toml"
-
-
-__all__ = ["APP_ID", "APP_NAME", "CATALOG", "CATALOGS", "CHECKOUT", "DEFAULT_SUITE", "INFO", "LOGO_PATH", "ROOT",
-           "__version__", "catalog", "suites"]
+__all__ = ["APP_ID", "APP_NAME", "CATALOG", "CATALOGS", "CHECKOUT", "INFO", "LOGO_PATH", "ROOT", "SUITE",
+           "SUITE_NAME"]

@@ -2,24 +2,23 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Build the release assets of one tag:
 
-    python3 tools/build_release.py <app>-v<x.y.z> <out-dir> [--bundle DIR]
+    python3 tools/build_release.py ps5-<app>-v<x.y.z> <out-dir> [--bundle DIR]
 
-The tag uses the prefix in TAG_PREFIX and names an app or portal in this repository. Remote Play's native wheel can
-be supplied with PS5_NATIVE_WHEEL_DIR; otherwise it is read from apps/remoteplay/native/wheel.
+The tag starts with the suite's TAG_PREFIX (tools/suites.py) and names an app or the portal of this repository.
 
 <out-dir> gets <tag>.tar.gz (unpacks into <tag>/), SHA256SUMS, notes.md and title.txt (the release's title). The
-tag's version must equal the app's VERSION. An app in NATIVE_WHEELS needs the wheel of its native core in that folder
-first, built by release.yml; it goes into the tarball, so the portal's checksum covers it. A portal tag needs --bundle:
-a folder with the pinned required-app release (<tag>.tar.gz and SHA256SUMS, as
-published); it is verified against apps.toml and unpacked into bundled/.
-
-Board Test's tarball has its engine's checksum recorded (development/tools/build_info.py writes
-board_test/_build_info.py), which makes it a release build: the app refuses a test engine that was changed.
+tag's version must equal the app's VERSION. An app in NATIVE_WHEELS needs the wheel of its native core, built by
+release.yml: in the folder PS5_NATIVE_WHEEL_DIR names (release.yml's, outside the checkout), else in the app's
+folder NATIVE_WHEELS gives; it goes into the tarball, so the portal's checksum covers it. An app with
+development/tools/build_info.py (Board Test) gets its engine checksum recorded, which makes it a release build that
+refuses a changed engine. A portal tag needs --bundle: a folder with the pinned release of the required app
+(<tag>.tar.gz and SHA256SUMS, as published); it is verified against apps.toml and unpacked into bundled/.
 
 The tar inside is reproducible and the same on Linux and Windows: sorted entries, root:root, the commit time (or
 SOURCE_DATE_EPOCH) as mtime, and modes set here (755 for folders and scripts, 644 for the rest), not taken from the
 file system, which on Windows has no exec bit. The .tar.gz is only byte for byte the same with the same zlib: its
-compressed bytes differ between zlib builds (Fedora's zlib-ng, Ubuntu's zlib)."""
+compressed bytes differ between zlib builds (Fedora's zlib-ng, Ubuntu's zlib). Board Test also records its build
+time in board_test/_build_info.py."""
 
 from __future__ import annotations
 
@@ -38,11 +37,14 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LATEST_URL = "https://github.com/RobertoTorino/bazzite-console/releases/latest"
+# GitHub's "Latest" release is the newest portal (publish_release.sh, and Nexus Release Tool's Publish for a draft).
+INDEX_URL = "https://github.com/RobertoTorino/bazzite-console/releases/latest"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
 # The app's folder for the wheel of its native core (Rust with FFmpeg inside), which release.yml builds before this
-# runs: users install it with pip and need no compiler. Its version is the app's.
+# runs: users install it with pip and need no compiler. Its version is the app's. NATIVE_WHEEL_DIR, when set, is the
+# folder the wheel is taken from instead; it is copied into this folder of the staged app.
 NATIVE_WHEELS = {"remoteplay": Path("native/wheel")}
+NATIVE_WHEEL_DIR = "PS5_NATIVE_WHEEL_DIR"
 
 
 def _load(name: str, path: Path):
@@ -53,14 +55,14 @@ def _load(name: str, path: Path):
     return module
 
 
+suites = _load("nexus_suites", ROOT / "tools" / "suites.py")
 stage_app = _load("bazzite_console_stage_app", ROOT / "tools" / "stage_app.py")
-SUITE = ROOT
+SUITE = stage_app.SUITE                     # the repository; the tests set another
 MANIFEST = SUITE / "portal" / "apps.toml"
-TAG_PREFIX = (SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip()
 
 
 def portal_package(suite: Path | None = None) -> Path:
-    suite = suite or SUITE
+    suite = suite or SUITE                  # SUITE as it is now, not as it was when this was defined
     packages = [path for path in (suite / "portal").iterdir()
                 if path.is_dir() and (path / "__init__.py").is_file()]
     if len(packages) != 1:
@@ -83,7 +85,8 @@ def portal_stage() -> tuple[str, str]:
 
 
 def release_title(app: str, version: str) -> str:
-    """The GitHub release's title: the portal's name, then the app's name from apps.toml."""
+    """The GitHub release's title: the suite's name (the portal's APP_NAME), then the app's name in apps.toml, so a
+    release names what it is among every suite's releases ("Bazzite Console Suite: Xenia Manager 0.11.0")."""
     text = (portal_package() / "__init__.py").read_text(encoding="utf-8")
     found = re.search(r'^APP_NAME = "(.*)"$', text, re.M)
     suite_name = found[1] if found else SUITE.name
@@ -148,7 +151,7 @@ def latest_changes(changelog: Path) -> str:
 
 
 def bundle_required_app(stage_dir: Path, bundle: Path) -> str:
-    """Verify the first required app release in *bundle* and unpack it into stage_dir/bundled/. Returns its tag."""
+    """Verify the required app's release in *bundle* and unpack it into stage_dir/bundled/. Returns its tag."""
     entry = next(e for e in manifest.load(MANIFEST) if e.required)
     archive = bundle / entry.asset
     if not archive.is_file():
@@ -177,21 +180,21 @@ def native_wheel(app: str, src: Path, version: str) -> str | None:
     """The name of the app's native wheel, None for an app without one; refuses a missing or stale wheel."""
     if app not in NATIVE_WHEELS:
         return None
-    folder = Path(os.environ.get("PS5_NATIVE_WHEEL_DIR", src / NATIVE_WHEELS[app]))
+    folder = Path(os.environ.get(NATIVE_WHEEL_DIR) or src / NATIVE_WHEELS[app])
     wheels = sorted(folder.glob("*.whl"))
     if len(wheels) != 1:
-        raise SystemExit(f"{app} ships the wheel of its native core: {folder} must hold exactly one .whl, built with "
-                         "native/ffmpeg/build.sh and maturin build --release --features "
-                         "python,pyo3/extension-module,decoder (tools/tag-release.sh does both)")
+        raise SystemExit(f"{app} ships the wheel of its native core: {folder} must hold exactly one .whl, built by "
+                         "release.yml (native/ffmpeg/build.sh, then maturin build with the feature decoder)")
     if wheels[0].name.split("-")[1] != version:
         raise SystemExit(f"{wheels[0].name} is not version {version}; build the wheel again")
     return wheels[0].name
 
 
 def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
-    match = _TAG.match(tag.removeprefix(TAG_PREFIX))
+    prefix = suites.tag_prefix(SUITE)
+    match = _TAG.match(tag.removeprefix(prefix)) if tag.startswith(prefix) else None
     if not match:
-        raise SystemExit(f"{tag} is not <app>-v<x.y.z>")
+        raise SystemExit(f"{tag} is not {prefix}<app>-v<x.y.z>")
     app, version = match["app"], match["version"]
     src = stage_app.source_dir(app, SUITE)
     if (src / ".checkout-only").is_file():
@@ -206,22 +209,21 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
     if app == "portal" and stage:
         notes += [f"> **{stage}:** {stage_note}", ""]
     if app != "portal":
-        notes += [f"> **To install the suite, use the portal, not this file:** the [Bazzite Console Portal]"
-                  f"({LATEST_URL}) installs, updates and removes {app} for you and checks every download. "
+        notes += [f"> **To install the suite, use the portal, not this file:** the newest portal, the "
+                  f"[latest release]({INDEX_URL}), installs, updates and removes {app} for you and checks every download. "
                   "This tarball is what the portal downloads; install it by hand only without the portal.", ""]
     with tempfile.TemporaryDirectory() as tmp:
         stage_dir = stage_app.stage(app, Path(tmp) / tag, SUITE)
-        wheel_dir = os.environ.get("PS5_NATIVE_WHEEL_DIR")
-        if wheel and wheel_dir:
+        if wheel is not None and os.environ.get(NATIVE_WHEEL_DIR):
             wheel_dest = stage_dir / NATIVE_WHEELS[app]
-            if wheel_dest.exists():
-                shutil.rmtree(wheel_dest)
+            shutil.rmtree(wheel_dest, ignore_errors=True)
             wheel_dest.mkdir(parents=True)
-            shutil.copy2(Path(wheel_dir) / wheel, wheel_dest / wheel)
+            shutil.copy2(Path(os.environ[NATIVE_WHEEL_DIR]) / wheel, wheel_dest / wheel)
         epoch = source_epoch()
-        if app == "board":                 # its build date is the commit time too: the same tag, the same bytes
-            subprocess.run([sys.executable, str(stage_dir / "development" / "tools" / "build_info.py")], check=True,
-                           stdout=subprocess.DEVNULL, env=dict(os.environ, SOURCE_DATE_EPOCH=str(epoch)))
+        build_info = stage_dir / "development" / "tools" / "build_info.py"
+        if build_info.is_file():             # its build date is the commit time too: the same tag, the same bytes
+            subprocess.run([sys.executable, str(build_info)], check=True, stdout=subprocess.DEVNULL,
+                           env=dict(os.environ, SOURCE_DATE_EPOCH=str(epoch)))
         if app == "portal":
             if bundle is None:
                 raise SystemExit("a portal release needs --bundle with its required app release")
@@ -233,7 +235,8 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
             notes += [f"Includes its native core as `{wheel}`, built for Linux x86-64 with FFmpeg linked in "
                       "(LGPL, from its own sources).", ""]
         if (stage_dir / "bazzite_console_core").is_dir():
-            notes += ["Bundles the shared `bazzite_console_core` package.", ""]
+            core = (ROOT / "core" / "VERSION").read_text(encoding="utf-8").strip()
+            notes += [f"Bundles the suite core `bazzite_console_core` {core}.", ""]
         archive = out / f"{tag}.tar.gz"
         write_tarball(stage_dir, tag, archive, epoch)
     digest = sha256_of(archive)
@@ -252,10 +255,8 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("tag")
     parser.add_argument("out", type=Path)
-    parser.add_argument("--bundle", type=Path, help="folder with the pinned check release (portal tags)")
+    parser.add_argument("--bundle", type=Path, help="folder with the pinned release of the required app (portal tags)")
     args = parser.parse_args(argv)
-    if not args.tag.startswith(TAG_PREFIX):
-        raise SystemExit(f"{args.tag}: expected a tag starting with {TAG_PREFIX}")
     archive = build(args.tag, args.out, args.bundle)
     print(f"{archive} {sha256_of(archive)}")
     return 0

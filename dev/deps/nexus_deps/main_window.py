@@ -17,14 +17,16 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QStyle, QToolButton, QVBoxLayout, QWidget,
 )
 
-from nexus_core.text import window_title
-from nexus_core.theme import BLUE, GREEN, GREY, ORANGE, RED, header_font, surface_style
-from nexus_core.updates import UpdateChecker
-from nexus_core.widgets import (
-    AppHeader, InfoButton, MetricBox, StatusPill, Terminal, accent, current_theme, hint_label, outline,
+from bazzite_console_core import SUITE_MANUAL_URL
+from bazzite_console_core.nexus import header as nexus_header
+from bazzite_console_core.text import window_title
+from bazzite_console_core.theme import BLUE, GREEN, GREY, ORANGE, RED, header_font, surface_style
+from bazzite_console_core.updates import UpdateChecker
+from bazzite_console_core.widgets import (
+    InfoButton, MetricBox, StatusPill, Terminal, accent, current_theme, hint_label, outline,
 )
 
-from . import APP_NAME, DEFAULT_SUITE, INFO, LOGO_PATH, __version__
+from . import APP_NAME, CHECKOUT, INFO, LOGO_PATH, SUITE_NAME
 from .bazzite import BazziteState, describe, read_state
 from .dependencies import (
     App, CheckResult, Dependency, DependencyStatus, ExternalTool, ToolSource, ToolStatus, check_all, release,
@@ -35,10 +37,8 @@ from .system import Source, Update, read_sources, steps as system_steps, summary
 from .upstreams import read as read_upstreams
 
 
-# The apps' manuals: each suite's wiki
-DOCS = {"bazzite-console": "https://robertotorino.github.io/bazzite-console/apps/{app}/"}
-DOCS_URL = DOCS[DEFAULT_SUITE]
-SUITE_NAMES = {"bazzite-console": "Bazzite Console"}
+# The apps' manuals: the suite's wiki
+DOCS_URL = SUITE_MANUAL_URL + "apps/{app}/"
 CARD_STYLE = "QFrame#dependencyCard { border:1px solid palette(mid); border-radius:8px; }"
 NEEDS_ROOT = f"<span style='color:{ORANGE}; font-weight:700;'>Needs root.</span>"
 CVE_OK = f"<span style='color:{GREEN}; font-weight:700;'>✓ CVE</span>"
@@ -603,7 +603,6 @@ class DependencyWindow(QMainWindow):
         check: Callable[[], CheckResult] | None = None,
         bazzite: Callable[[], BazziteState] | None = None,
         system: Callable[[], tuple[Source, ...]] | None = None,
-        suite: str = DEFAULT_SUITE,
         offer_fix: bool = False,
         ask: Callable[[str], bool] | None = None,
     ):
@@ -612,7 +611,6 @@ class DependencyWindow(QMainWindow):
         (--fix)."""
         super().__init__(parent)
         self.resize(960, 760)
-        self.suite = suite
         self.offer_fix = offer_fix
         self._ask = ask or self._ask_user
         self.plan = Plan()
@@ -636,7 +634,7 @@ class DependencyWindow(QMainWindow):
         central = QWidget()
         root = QVBoxLayout(central)
 
-        header = AppHeader(LOGO_PATH, APP_NAME, __version__)
+        header = nexus_header(LOGO_PATH, APP_NAME, CHECKOUT)  # the checkout's commit, never a version
         self.box_packages = MetricBox("Python packages", accent())
         self.box_tools = MetricBox("Tools available", BLUE)
         self.box_missing = MetricBox("Missing", GREY)
@@ -674,7 +672,7 @@ class DependencyWindow(QMainWindow):
         header.add_second(self.fix_button, 1)
         root.addLayout(header)
         about = QHBoxLayout()
-        suite_name = escape(SUITE_NAMES.get(self.suite, self.suite))
+        suite_name = escape(SUITE_NAME)
         about.addWidget(hint_label(f"This machine's updates and the {suite_name}'s apps on it."), 1)
         about.addWidget(InfoButton(
             "<b>System</b> shows Bazzite's update state and what is newer on this machine: Bazzite's image, the "

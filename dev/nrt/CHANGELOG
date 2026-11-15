@@ -1,3 +1,35 @@
+Changelog: 15-11-2026 10:17:45
+
+Breaking. One suite (owner, 15-11-2026): the code for several suites in one repository is gone (the Portals column,
+the suite chosen in the settings, Nexus's own version and its nexus-v tags, the other suites' workflows). The
+release is release.yml's, the ticker and the notifications show every run of the push, and the commit runs
+tools/check_versions.py and tools/check_manifest.py once. has_release_workflow(), unused since the manual mode went,
+is gone too.
+
+Breaking. No VERSION (owner, 15-11-2026): a development app is never released, so its header names the checkout's
+last commit and its time ("5fb1aa8 · 15-11-2026 07:20", core's nexus.header()) where it showed a version, and
+--version prints the same.
+
+Fixed. The app imports bazzite_console_core directly, with the Nexus design from core's nexus.py (owner,
+15-11-2026): the compatibility package dev/core_compat is gone, and run.sh puts only core/ on the path.
+
+Fixed. An open incident on githubstatus.com counts as GitHub being down, with its stage (monitoring) in its name:
+the page's indicator goes back to none while an incident is still being monitored. Commit offers the portal bump
+when apps.toml changed since the last portal release. The Remove suite text names check-release.sh remove --purge
+again.
+
+Changelog: 15-11-2026 08:41:40
+
+Fixed. Publish fetches main with the new tag (owner, 15-11-2026), so Bring in the pin commit lights as soon as it
+ends: the pin commit, pushed with the workflow's token, has no run of its own on main, and the steps showed every
+step done while it was not pulled yet. The steps follow only a release run on main, never one on a tag.
+
+Changelog: 15-11-2026 07:50:10
+
+Fixed. Right after a push, the GitHub pill and the line under the pills wait for GitHub to start the runs of the
+commit pushed (owner, 15-11-2026): until then they showed the runs of the commit before, so a push after a commit
+that failed showed as failed, then as passed. While Run CI again runs, its step says so.
+
 Changelog: 15-11-2026 07:21:45
 
 Fixed. Push shows where CI's jobs here stand (owner, 15-11-2026: the push seemed to hang, and a job that failed went

@@ -13,8 +13,8 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-PORTAL_LAUNCHER = Path.home() / ".local" / "bin" / "bazzite-console-suite"
-INSTALLER = "install.sh"            # a portal release's installer, beside its apps.toml
+PORTAL_LAUNCHER = Path.home() / ".local" / "bin" / "bazzite-console-suite"   # the suite's portal, installed
+INSTALLER = "install.sh"                                    # a portal release's installer, beside its apps.toml
 OBS_FLATPAK_ID = "com.obsproject.Studio"
 RECORDINGS_DIRECTORY = Path.home() / "Videos" / "demos"     # where OBS saves the demos (the tours go to ~/Videos too)
 RECORDING_EXTENSIONS = frozenset({".avi", ".flv", ".mkv", ".mov", ".mp4", ".m3u8", ".ts", ".webm"})
@@ -59,7 +59,7 @@ def load_optional_apps(manifest: Path) -> tuple[DemoApp, ...]:
 
 
 def _detect_path(path: str) -> Path:
-    """A detect path of the manifest, from ~."""
+    """A detect path of the manifest, with ~ for the home folder."""
     return Path(path).expanduser()
 
 
@@ -68,7 +68,6 @@ def validate_release(folder: Path) -> tuple[Path, tuple[DemoApp, ...]]:
     installer, manifest = selected / INSTALLER, selected / "apps.toml"
     if installer.is_file() and manifest.is_file():
         return installer, load_optional_apps(manifest)
-
     for checkout in (selected, *selected.parents):
         checkout_installer = checkout / "install.sh"
         checkout_manifest = checkout / "portal" / "apps.toml"
@@ -77,7 +76,7 @@ def validate_release(folder: Path) -> tuple[Path, tuple[DemoApp, ...]]:
 
     raise WorkflowError(
         f"{selected} is not a portal release or suite checkout. Choose an extracted portal release folder, "
-        "or this Bazzite Console checkout."
+        "or a checkout of the repository."
     )
 
 

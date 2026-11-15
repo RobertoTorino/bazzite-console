@@ -1,119 +1,238 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: CI
 
+# The checks of the Bazzite Console Suite on every push and pull request: the portal, the apps, core
+# (bazzite_console_core, bundled in every app), the tools, the development apps (dev/), the wiki and the
+# repository's rules. Releases are made by release.yml, which waits for this workflow on the release commit
+# (tools/ci_state.py); tools/tag-release.sh asks the same before it tags.
+# A tag starts no CI of its own: tools/tag-release.sh tags only a pushed commit CI passed, and release.yml waits for
+# that commit's CI. A run per tag (22 in one release) only queued the same jobs again and gave each release one more
+# run that could fail or hang.
+# Every job has a time limit far above its usual minute or two, so a hanging test fails the run instead of holding
+# it (and every release waiting for it) for GitHub's six hours.
+
 on:
   push:
-    branches: ["**"]
+    branches: ["**"]                    # every branch, no tag. Not tags-ignore alone: GitHub then runs no branch push
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  tests:
+  versions:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # the base commit and the tags, for check_manifest
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Hard-coded versions match each VERSION file
+        run: python tools/check_versions.py
+      # apps.toml: every app listed, pinned tags exist (or are the next release), and a change to it since the last
+      # portal release comes with a big enough portal/VERSION bump (tools/check_manifest.py).
+      - name: Portal manifest
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python tools/check_manifest.py ${BASE:+--base "$BASE"}
+
+  plan:
+    # The pytest matrix, read from the repository's folders (tools/ci_matrix.py: every folder with tests/: core,
+    # tools, dev/*, the portal and the apps), so a new app needs no edit here.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      dirs: ${{ steps.plan.outputs.dirs }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: The folders with tests
+        id: plan
+        run: python3 tools/ci_matrix.py pytest | tee -a "$GITHUB_OUTPUT"
+
+  pytest:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        directory:
-          - apps/board
-          - apps/bluetooth
-          - apps/cec
-          - apps/fan
-          - apps/overlay
-          - apps/clb
-          - apps/remoteplay
-          - apps/datstation
-          - apps/webcam
-          - apps/controller
-          - apps/pcsx2
-          - apps/ppsspp
-          - apps/rpcs3
-          - apps/sftp
-          - apps/shadps4
-          - apps/ssd
-          - apps/upscaler
-          - apps/vita3k
-          - apps/xenia
-          - portal
-          - tools
+        dir: ${{ fromJSON(needs.plan.outputs.dirs) }}
     defaults:
       run:
-        working-directory: ${{ matrix.directory }}
+        working-directory: ${{ matrix.dir }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # the tags: tools/tests checks the shipped apps.toml, whose pins must exist
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: ${{ matrix.directory }}/requirements-dev.txt
+          cache-dependency-path: "**/requirements-dev.txt"
+
       - name: Qt runtime libraries
-        if: startsWith(matrix.directory, 'apps/') || matrix.directory == 'portal'
-        working-directory: .
+        timeout-minutes: 5                    # a stalled mirror fails here, by name, not after the job's 20
+        working-directory: .                  # the script's path is from the root, not the matrix folder
         run: bash tools/ci-qt-libs.sh --pulse
+
       - name: Install
         run: python -m pip install -q -r requirements-dev.txt
+
       - name: Test
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -X faulthandler -m pytest -v tests
+        run: python -X faulthandler -m pytest -v tests        # -v: a crash log names the test
 
-  manifest:
+  # Remote Play's native core (Rust, apps/remoteplay/native): its own tests, clippy, and the Python module
+  # built into a wheel and tested from Python, all with the video decoder (FFmpeg from native/ffmpeg/build.sh, kept
+  # in the cache until the script changes); clippy also without it, as a clone without FFmpeg builds it. Rust is
+  # preinstalled on ubuntu-latest. The pytest job above skips tests/test_native.py, which needs the built module.
+  native:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/remoteplay/native
     steps:
       - uses: actions/checkout@v7
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Check release manifest
-        run: python tools/check_manifest.py
-      - name: Check the category icons' copies
-        run: python tools/sync_icons.py --check
+
+      - name: nasm and the libva headers
+        run: sudo apt-get update -q && sudo apt-get install -y -q nasm libva-dev
+
+      - name: FFmpeg cache
+        id: ffmpeg
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ps5-remoteplay
+          key: ffmpeg-${{ runner.os }}-${{ hashFiles('apps/remoteplay/native/ffmpeg/build.sh') }}
+
+      - name: FFmpeg
+        if: steps.ffmpeg.outputs.cache-hit != 'true'
+        run: ffmpeg/build.sh
+
+      - name: cargo test
+        run: cargo test --locked --features decoder
+
+      - name: clippy
+        run: |
+          cargo clippy --locked --all-targets --features python,decoder -- -D warnings
+          cargo clippy --locked --all-targets --features python -- -D warnings
+
+      - name: Build the Python module
+        run: |
+          python -m pip install -q "maturin>=1.5,<2"
+          maturin build --release --locked --compatibility linux --features python,pyo3/extension-module,decoder -o dist
+
+      - name: Test the module from Python
+        working-directory: apps/remoteplay         # the app's package imports from here, as in test.sh
+        run: |
+          python -m pip install -q -r requirements-dev.txt native/dist/*.whl     # conftest.py uses PyQt6
+          python -m pytest -v tests/test_native.py tests/test_stream.py tests/test_senkusha.py
 
   shell:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - name: Check shell syntax
-        run: find apps portal tools test.sh -name '*.sh' -print0 | xargs -0 -n1 bash -n
 
+      - name: bash -n
+        run: |
+          rc=0
+          while IFS= read -r -d '' f; do bash -n "$f" || { echo "::error file=$f::syntax error"; rc=1; }; done \
+            < <(find . -path ./.git -prune -o -path './.venv*' -prune -o -name '*.sh' -print0)
+          exit $rc
+
+      # shellcheck is preinstalled on ubuntu-latest. Error level for everything; warning level for the scripts
+      # that their own release workflows already held to it.
+      - name: shellcheck (errors, all scripts)
+        run: find . -path ./.git -prune -o -path './.venv*' -prune -o -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
+      - name: shellcheck (warnings, the installers, the run wrappers, the suite's own scripts and the app scripts that hold to it)
+        # Every install.sh and ps5-*-run wrapper by glob, so a new app's are checked without an edit here; the
+        # rest by name: scripts the baseline holds to it (test-board.sh does not).
+        run: |
+          shellcheck -x -S warning install.sh portal/install.sh apps/*/install.sh \
+            apps/*/ps5-*-run tools/*.sh tools/installer-tests/*.sh test.sh
+          shellcheck -S warning dev/*/*.sh
+
+      - name: Line endings
+        run: |
+          if git ls-files --eol | grep -E '^i/(crlf|mixed)' ; then echo "::error::CRLF in the index (see above)"; exit 1; fi
+
+      # A checkout with core.fileMode=false records new files as 100644; tools/fix-modes.sh repairs it.
+      - name: Scripts are executable
+        run: |
+          missing=$(git ls-files -s -- '*.sh' | awk '$1 != "100755" { print $4 }')
+          if [ -n "$missing" ]; then
+            echo "::error::not executable in git (run tools/fix-modes.sh):"; echo "$missing"; exit 1
+          fi
+
+      - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG (dev/ apps no VERSION)
+        run: |
+          rc=0
+          for d in core portal apps/* dev/*; do
+            files="LICENSE .gitignore VERSION CHANGELOG"
+            case "$d" in dev/*) files="LICENSE .gitignore CHANGELOG" ;; esac
+            for f in $files; do
+              [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
+            done
+          done
+          for f in LICENSE .gitignore CHANGELOG README.md; do
+            [ -f "$f" ] || { echo "::error::$f missing at the repo root"; rc=1; }
+          done
+          exit $rc
+
+      - name: Workflows only at the repo root
+        run: |
+          if find . -path ./.git -prune -o -path ./.github -prune -o -type d -name .github -print | grep . ; then
+            echo "::error::GitHub only runs workflows from the root .github/; move these"; exit 1
+          fi
+
+  # The installers on Linux without root or network: sudo becomes fakeroot, venvs are stubs (see shims.sh).
   installers:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - name: Install fakeroot
-        run: sudo apt-get update -q && sudo apt-get install -y -q fakeroot
-      - name: Installer tests
+      - name: fakeroot
+        run: sudo apt-get install -y -q fakeroot
+      - name: Every installer test (tools/installer-tests/*.sh), then the release tarballs end to end
+        # Read from the folder, so a new app's test runs without an edit here (stage 2, 04-11-2026); each in a
+        # group of its own in the log, every one run, the failed ones named at the end.
         run: |
           failed=()
-          run() {
-            echo "::group::${1##*/}"
-            bash "$1" || { echo "::error file=$1::${1##*/} failed"; failed+=("${1##*/}"); }
-            echo "::endgroup::"
-          }
+          run() { echo "::group::${1##*/}"; bash "$1" || { echo "::error file=$1::${1##*/} failed"; failed+=("${1##*/}"); }; echo "::endgroup::"; }
           for t in tools/installer-tests/*.sh; do
-            [ "${t##*/}" = shims.sh ] || run "$t"
+            case "${t##*/}" in shims.sh|release.sh) continue ;; esac
+            run "$t"
           done
+          run tools/installer-tests/release.sh
           [ ${#failed[@]} -eq 0 ] || { echo "Failed: ${failed[*]}" >&2; exit 1; }
 
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Install docs requirements
-        run: python -m pip install -q mkdocs-material "mkdocs>=1.6,<2" "pillow>=12,<13"
+      - run: python -m pip install -q mkdocs-material "mkdocs>=1.6,<2" "pillow>=12,<13"   # pillow: the WebP copies of the app pictures
       - name: Qt runtime libraries
+        timeout-minutes: 5
         run: bash tools/ci-qt-libs.sh
       - name: Bazzite's font, for the portal's picture
+        timeout-minutes: 5
         run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-core
-      - name: The portal's picture on the home page, from the portal as docs.yml takes it
+      - name: The portal's picture on the home page, as docs.yml takes it
         run: |
           python -m pip install -q -r portal/requirements.txt
           QT_QPA_PLATFORM=offscreen python tools/portal_screenshot.py
-      - name: Build docs
-        run: mkdocs build --strict
+      - run: mkdocs build --strict

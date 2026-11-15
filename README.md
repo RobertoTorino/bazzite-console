@@ -8,6 +8,8 @@
 
 Control your PlayStation 5 running Bazzite. The portal installs and opens the suite's apps. Board Test is always installed and listed first; it is the only required app.
 
+**Beta:** The suite is in active development: features and layout may still change between releases.
+
 **Sustainable**: system and device information, and what keeps the console cool.
 
 - <img src="portal/images/apps/board.webp" width="20" height="20" alt=""/> **[PS5 Board Test](apps/board)**: Read-only system details for PlayStation 5 hardware running Bazzite.
@@ -54,4 +56,4 @@ GPL-3.0-or-later, see [LICENSE](LICENSE).
 
 ## Disclaimer
 
-Bazzite Console is an independent community project, not affiliated with or endorsed by AMD, ASRock, the Bazzite / Universal Blue project, Sony, Microsoft, Valve, or the makers of the emulators and the other programs the apps work with. Bazzite is developed by the Universal Blue project. PlayStation, PS4, PS5, PS3, PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of the emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K and Xenia) belong to their owners. The project uses them only to say what its apps work with.
+Bazzite Console is an independent community project, not affiliated with or endorsed by AMD, ASRock, the Bazzite / Universal Blue project, Sony, Microsoft, Valve, or the makers of the emulators and the other programs the apps work with. Bazzite is developed by the Universal Blue project. PlayStation, PS4, PS5, PS3, PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of the emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, and Xenia) belong to their owners. The project uses their names only to say what its apps work with.

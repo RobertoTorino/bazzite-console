@@ -1,6 +1,20 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Plan a Bazzite Console Suite release and pin its app checksums."""
+"""The steps of a release of the Bazzite Console Suite that its release workflow (release.yml) runs besides the build,
+from the checkout of the release commit:
+
+    python3 tools/suite_release.py plan [--tag TAG]   # what the run releases, for $GITHUB_OUTPUT
+    python3 tools/suite_release.py pin DIR TAG...     # each TAG's sha256 into portal/apps.toml
+
+plan prints three lines: apps=<JSON list of tags>, portal=<tag or nothing> and draft=<true|false>. With --tag (a
+tag pushed by hand) it is that one tag, published at once. Without it (a release started by Nexus Release Tool's Start
+new release): every app tag apps.toml pins that has no published release yet, and ps5-portal-v<portal/VERSION>
+when that has none, as a draft: Nexus Release Tool publishes it after the device test on the console. A draft counts as
+not released, so a run started again makes it anew.
+
+pin writes the sha256 of <TAG>.tar.gz from DIR/<TAG>/SHA256SUMS (the release's own, downloaded) on the sha256 line
+of that app in portal/apps.toml; the tag lines are the release commit's and stay. GitHub is asked with the gh CLI
+(GH_TOKEN)."""
 
 from __future__ import annotations
 
@@ -9,43 +23,46 @@ import json
 import re
 import subprocess
 import sys
-import tomllib
 from collections.abc import Callable
 from pathlib import Path
 
-SUITE = Path(__file__).resolve().parent.parent
+SUITE = Path(__file__).resolve().parent.parent          # the repository, which is the suite
 MANIFEST = SUITE / "portal" / "apps.toml"
-PREFIX = (SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip()
-_TAG = re.compile(rf"^{re.escape(PREFIX)}(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
+PREFIX = (SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip()     # the suite's tags start with it
+_TAG = re.compile(rf"^{re.escape(PREFIX)}(?P<app>[a-z0-9-]+)-v\d+\.\d+\.\d+$")
 
 
 def published(tag: str) -> bool:
-    """Whether *tag* has a GitHub release that is not a draft."""
+    """Whether *tag* has a release on GitHub that is not a draft."""
     result = subprocess.run(["gh", "release", "view", tag, "--json", "isDraft", "--jq", ".isDraft"],
                             capture_output=True, text=True)
     return result.returncode == 0 and result.stdout.strip() == "false"
 
 
-def pinned_tags(text: str) -> list[str]:
+def pinned_tags(text: str) -> list[tuple[str, str]]:
+    """(app, tag) of every [apps.<app>] in apps.toml that is not withdrawn, in the file's order."""
+    import tomllib
     apps = tomllib.loads(text).get("apps", {})
-    return [entry["tag"] for entry in apps.values() if not entry.get("withdrawn")]
+    return [(key, entry["tag"]) for key, entry in apps.items() if not entry.get("withdrawn")]
 
 
 def plan(text: str, portal_version: str, released: Callable[[str], bool] = published,
          tag: str | None = None) -> dict:
-    """Return the app and portal tags a release run will build."""
+    """What a run releases: {"apps": [tags], "portal": tag or "", "draft": bool}. Raises
+    ValueError for a tag that is not the suite's, and for apps to release without a portal release to bring them."""
     if tag:
-        match = _TAG.fullmatch(tag)
+        match = _TAG.match(tag)
         if not match:
             raise ValueError(f"{tag} is not {PREFIX}<app>-v<x.y.z>")
         portal = match["app"] == "portal"
-        return {"apps": [] if portal else [tag], "portal": tag if portal else "", "draft": False}
-    apps = [app_tag for app_tag in pinned_tags(text) if not released(app_tag)]
+        apps = [] if portal else [tag]
+        return {"apps": apps, "portal": tag if portal else "", "draft": False}
+    apps = [pinned for _key, pinned in pinned_tags(text) if not released(pinned)]
     portal = f"{PREFIX}portal-v{portal_version}"
     if released(portal):
         if apps:
-            raise ValueError(f"{', '.join(apps)} would have no portal to bring them: {portal} is out already; "
-                             "bump portal/VERSION")
+            raise ValueError(f"{', '.join(apps)} would have no portal to bring them: {portal} is out already, bump "
+                             "portal/VERSION")
         portal = ""
     return {"apps": apps, "portal": portal, "draft": True}
 
@@ -56,6 +73,7 @@ def output_lines(found: dict) -> list[str]:
 
 
 def sha256_of(sums: str, asset: str) -> str:
+    """The checksum SHA256SUMS lists for *asset*; ValueError when it lists none."""
     for line in sums.splitlines():
         parts = line.split()
         if len(parts) == 2 and parts[1].lstrip("*") == asset and re.fullmatch(r"[0-9a-fA-F]{64}", parts[0]):
@@ -64,7 +82,9 @@ def sha256_of(sums: str, asset: str) -> str:
 
 
 def pin(text: str, tag: str, sha256: str) -> str:
-    match = _TAG.fullmatch(tag)
+    """apps.toml with the sha256 line of the app that pins *tag* set (one added after its tag line when it has
+    none); everything else stays as it is. ValueError when no app pins *tag*."""
+    match = _TAG.match(tag)
     start = re.search(rf"^\[apps\.{re.escape(match['app'])}\]\s*$", text, re.M) if match else None
     if start is None:
         raise ValueError(f"apps.toml has no app for {tag}")
@@ -80,11 +100,11 @@ def pin(text: str, tag: str, sha256: str) -> str:
 
 
 def main(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     steps = parser.add_subparsers(dest="step", required=True)
     planning = steps.add_parser("plan", help="what the run releases")
     planning.add_argument("--tag", help="the tag pushed by hand")
-    pinning = steps.add_parser("pin", help="write each app release checksum into apps.toml")
+    pinning = steps.add_parser("pin", help="the sha256 of each tag into portal/apps.toml")
     pinning.add_argument("sums", type=Path, help="folder with <tag>/SHA256SUMS")
     pinning.add_argument("tags", nargs="+")
     args = parser.parse_args(argv)
@@ -95,10 +115,9 @@ def main(argv: list[str]) -> int:
             print("\n".join(output_lines(plan(text, version, tag=args.tag))))
             return 0
         for tag in args.tags:
-            asset = f"{tag}.tar.gz"
-            digest = sha256_of((args.sums / tag / "SHA256SUMS").read_text(encoding="utf-8"), asset)
-            text = pin(text, tag, digest)
-            print(f"pinned {tag} ({digest[:16]}…)")
+            sha = sha256_of((args.sums / tag / "SHA256SUMS").read_text(encoding="utf-8"), f"{tag}.tar.gz")
+            text = pin(text, tag, sha)
+            print(f"pinned {tag} ({sha[:16]}…)")
     except (OSError, ValueError) as exc:
         print(f"suite_release.py {args.step}: {exc}", file=sys.stderr)
         return 1

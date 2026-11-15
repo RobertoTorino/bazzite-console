@@ -56,10 +56,10 @@ def test_a_commit_without_a_run_is_answered_within_minutes(monkeypatch, capsys):
     def sleep(seconds):
         clock[0] += seconds
     assert ci_state.check("abc1234", 60, fetch=lambda sha, workflow: [], sleep=sleep, now=lambda: clock[0],
-                          workflow="ci-other.yml") == 2
+                          workflow="ci-windows-portable.yml") == 2
     assert ci_state.NONE_GRACE_S <= clock[0] < ci_state.NONE_GRACE_S + 2 * ci_state.POLL_S
     out, err = capsys.readouterr()
-    assert out.startswith("none\n") and "no run of ci-other.yml on abc1234" in err
+    assert out.startswith("none\n") and "no run of ci-windows-portable.yml on abc1234" in err
     clock[0] = 0.0
     late = [[]] * 4 + [[run(status="in_progress", conclusion=None)], [run()]]
     assert ci_state.check("abc1234", 60, fetch=lambda sha: late.pop(0), sleep=sleep, now=lambda: clock[0]) == 0
@@ -76,7 +76,7 @@ def test_unreachable_and_the_stub(monkeypatch):
 
 
 def test_a_suite_of_its_own_asks_for_its_own_workflow(monkeypatch):
-    """ci.yml by default; --workflow another suite's CI (owner, 27-10-2026: one
+    """ci.yml by default (Nexus and the Bazzite Console Suite); --workflow another suite's CI (owner, 27-10-2026: one
     suite's CI never holds another suite's releases)."""
     monkeypatch.delenv("PS5_CI_STATE", raising=False)
     asked = []
@@ -85,15 +85,15 @@ def test_a_suite_of_its_own_asks_for_its_own_workflow(monkeypatch):
         asked.append(workflow)
         return [run()]
     assert ci_state.check("abc1234", fetch=fetch) == 0
-    assert ci_state.check("abc1234", fetch=fetch, workflow="ci-other.yml") == 0
-    assert asked == ["ci.yml", "ci-other.yml"]
+    assert ci_state.check("abc1234", fetch=fetch, workflow="ci-windows-portable.yml") == 0
+    assert asked == ["ci.yml", "ci-windows-portable.yml"]
     calls = []
     monkeypatch.setattr(ci_state, "check", lambda sha, wait, workflow: calls.append((sha, wait, workflow)) or 0)
     assert ci_state.main(["abc1234"]) == 0
-    assert ci_state.main(["--wait", "1", "--workflow", "ci-other.yml", "abc1234"]) == 0
-    assert calls == [("abc1234", 0.0, "ci.yml"), ("abc1234", 1.0, "ci-other.yml")]
-    assert "workflows/ci-other.yml/runs" in ci_state.RUNS_URL.format(
-        repo="r", workflow="ci-other.yml", sha="s")
+    assert ci_state.main(["--wait", "1", "--workflow", "ci-windows-portable.yml", "abc1234"]) == 0
+    assert calls == [("abc1234", 0.0, "ci.yml"), ("abc1234", 1.0, "ci-windows-portable.yml")]
+    assert "workflows/ci-windows-portable.yml/runs" in ci_state.RUNS_URL.format(
+        repo="r", workflow="ci-windows-portable.yml", sha="s")
 
 
 def test_a_release_commit_is_answered_by_its_work_commit(monkeypatch, capsys):
@@ -128,18 +128,3 @@ def test_a_release_commit_is_answered_by_its_work_commit(monkeypatch, capsys):
                         lambda sha, wait, workflow: calls.append((sha, wait, workflow)) or 0)
     assert ci_state.main(["--workflow", "ci-nexus.yml", "--release-commit", "--wait", "75", "rel4567"]) == 0
     assert calls == [("rel4567", 75.0, "ci-nexus.yml")]
-
-
-def test_repo_names_the_checkout_the_commit_is_of(tmp_path, monkeypatch):
-    """--repo: a suite in a repository of its own, cloned into the Nexus checkout (owner, 13-11-2026), is asked
-    about at its own origin, also in a workflow, where GITHUB_REPOSITORY names the repository that runs it."""
-    import subprocess
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
-    subprocess.run(["git", "remote", "add", "origin", "https://github.com/someone/a-suite.git"], cwd=tmp_path, check=True)
-    monkeypatch.setenv("GITHUB_REPOSITORY", "someone/nexus")
-    monkeypatch.setattr(ci_state, "CHECKOUT", None)
-    assert ci_state.repo_slug() == "someone/nexus"
-    calls = []
-    monkeypatch.setattr(ci_state, "check", lambda sha, wait, workflow: calls.append(ci_state.repo_slug()) or 0)
-    assert ci_state.main(["--repo", str(tmp_path), "--workflow", "ci.yml", "abc1234"]) == 0
-    assert calls == ["someone/a-suite"]

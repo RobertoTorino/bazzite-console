@@ -1,64 +1,157 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The category icons' copies: every app of the portal has its entry, and no copy differs from its category's."""
+"""tools/sync_icons.py: a suite's category icons in icons/<category>/, converted from dropped images, and their
+copies in the suite's apps and portal (icons/categories.toml). Every function takes the suite's folder."""
 
 from __future__ import annotations
 
 import sys
-import tomllib
 from pathlib import Path
 
-TOOLS = Path(__file__).resolve().parents[1]
-SUITE = TOOLS.parent
-sys.path.insert(0, str(TOOLS))
+import pytest
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
 import sync_icons  # noqa: E402
 
 
-def test_every_app_has_its_category_and_icons():
-    apps = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8"))["apps"]
-    table = tomllib.loads((SUITE / "icons" / "categories.toml").read_text(encoding="utf-8"))
-    assert set(table) == set(apps)
-    for key, entry in table.items():
-        assert entry["category"] == apps[key]["category"], key
-        assert entry["tile"] == f"portal/images/apps/{key}.webp", key
-        assert all(icon.startswith(f"apps/{key}/images/") for icon in entry["icons"]), key
-
-
-def test_no_copy_is_out_of_date():
-    assert [path.relative_to(SUITE).as_posix() for path in sync_icons.stale()] == []
-
-
-def _suite(root: Path) -> Path:
-    icons = root / "icons" / "gaming"
-    icons.mkdir(parents=True)
-    for size in sync_icons.SIZES:
-        sync_icons.icon_path(icons, size).write_bytes(f"gaming {size}".encode())
-    (root / "icons" / "categories.toml").write_text(
-        '[game]\ncategory = "gaming"\nicons = ["apps/game/images/ps5-game"]\ntile = "portal/images/apps/game.webp"\n',
+def _suite(tmp_path):
+    """A checkout with one category, its four icons and one app: what sync_icons reads."""
+    (tmp_path / "icons" / "leaf").mkdir(parents=True)
+    (tmp_path / "icons" / "categories.toml").write_text(
+        '[app]\ncategory = "leaf"\nicons = ["apps/app/images/app"]\ntile = "portal/images/apps/app.webp"\n',
         encoding="utf-8")
-    return root
+    for size in sync_icons.SIZES:
+        _image(sync_icons.icon_path(tmp_path / "icons" / "leaf", size), size, "red")
+    return tmp_path
 
 
-def test_check_lists_and_sync_writes(tmp_path, capsys):
+def _image(path, size, color, width=None):
+    Image.new("RGBA", (width or size, size), color).save(path)
+    return path
+
+
+def _color(path):
+    """The color in the middle, each channel 0 or 255: WebP is lossy."""
+    with Image.open(path) as image:
+        pixel = image.convert("RGB").getpixel((image.width // 2, image.height // 2))
+    return tuple(255 if channel > 127 else 0 for channel in pixel)
+
+
+def test_category_icons_need_no_conversion(tmp_path):
+    assert sync_icons.dropped(_suite(tmp_path)) == {}
+
+
+def test_an_image_by_another_name_becomes_every_size(tmp_path):
     root = _suite(tmp_path)
-    assert sync_icons.main(["--check"], root) == 1
-    assert "out of date: apps/game/images/ps5-game.webp" in capsys.readouterr().out
-    assert sync_icons.main([], root) == 0
-    assert (root / "apps/game/images/ps5-game.webp").read_bytes() == b"gaming 512"
-    assert (root / "apps/game/images/ps5-game-128.png").read_bytes() == b"gaming 128"
-    assert (root / "portal/images/apps/game.webp").read_bytes() == b"gaming 256"
-    assert (root / "portal/images/categories/gaming.webp").read_bytes() == b"gaming 512"
+    source = _image(root / "icons" / "leaf" / "new leaf.png", 700, "blue")
+
+    written = sync_icons.convert_dropped(root)
+
+    assert written == [sync_icons.icon_path(root / "icons" / "leaf", size) for size in sync_icons.SIZES]
+    assert not source.exists()
+    for size in sync_icons.SIZES:
+        assert sync_icons.is_icon(sync_icons.icon_path(root / "icons" / "leaf", size))
+        assert _color(sync_icons.icon_path(root / "icons" / "leaf", size)) == (0, 0, 255)
+    assert sync_icons.dropped(root) == {}
+
+
+def test_an_image_named_by_its_size_replaces_only_that_size(tmp_path):
+    """leaf-512.png becomes leaf-512.webp; a 128 px PNG at the wrong size is scaled in place; the rest stays."""
+    root = _suite(tmp_path)
+    folder = root / "icons" / "leaf"
+    _image(folder / "leaf-512.png", 512, "blue")
+    _image(folder / "leaf-128.png", 300, "lime")
+
+    sync_icons.convert_dropped(root)
+
+    assert sorted(p.name for p in folder.iterdir()) == ["leaf-1024.webp", "leaf-128.png", "leaf-256.webp",
+                                                        "leaf-512.webp"]
+    assert all(sync_icons.is_icon(p) for p in folder.iterdir())
+    assert _color(folder / "leaf-512.webp") == (0, 0, 255)
+    assert _color(folder / "leaf-128.png") == (0, 255, 0)
+    assert _color(folder / "leaf-1024.webp") == _color(folder / "leaf-256.webp") == (255, 0, 0)
+
+
+def test_a_size_of_its_own_wins_over_the_whole_set(tmp_path):
+    root = _suite(tmp_path)
+    folder = root / "icons" / "leaf"
+    _image(folder / "set.png", 1024, "blue")
+    _image(folder / "leaf-256.png", 256, "lime")
+
+    sync_icons.convert_dropped(root)
+
+    assert _color(folder / "leaf-1024.webp") == (0, 0, 255)
+    assert _color(folder / "leaf-256.webp") == (0, 255, 0)
+
+
+def test_two_images_for_every_size_are_refused(tmp_path):
+    root = _suite(tmp_path)
+    _image(root / "icons" / "leaf" / "a.png", 512, "blue")
+    _image(root / "icons" / "leaf" / "b.png", 512, "lime")
+    with pytest.raises(SystemExit, match="more than one image for all sizes: a.png, b.png"):
+        sync_icons.dropped(root)
+
+
+def test_a_wide_image_is_refused(tmp_path):
+    root = _suite(tmp_path)
+    source = _image(tmp_path / "wide.png", 256, "blue", width=512)
+    with pytest.raises(SystemExit, match="512 x 256 px, an icon of leaf must be square"):
+        sync_icons.convert(source, root / "icons" / "leaf")
+
+
+def test_from_converts_the_sizes_named_and_writes_the_copies(tmp_path, capsys):
+    root = _suite(tmp_path)
+    source = _image(tmp_path / "outside.png", 1024, "blue")
+
+    assert sync_icons.main(["--category", "leaf", "--from", str(source), "--size", "256", "--size", "128"], root) == 0
+
+    assert source.exists()   # an image from outside icons/ is left where it is
+    assert _color(root / "icons" / "leaf" / "leaf-256.webp") == (0, 0, 255)
+    assert _color(root / "icons" / "leaf" / "leaf-1024.webp") == (255, 0, 0)
+    assert _color(root / "portal" / "images" / "apps" / "app.webp") == (0, 0, 255)
+    assert _color(root / "apps" / "app" / "images" / "app-128.png") == (0, 0, 255)
+    assert "updated: portal/images/apps/app.webp" in capsys.readouterr().out
     assert sync_icons.main(["--check"], root) == 0
 
 
-def test_convert_writes_the_four_sizes(tmp_path):
-    from PIL import Image
+@pytest.mark.parametrize("argv", [["--from", "x.png"], ["--category", "leaf"], ["--size", "512"],
+                                  ["--check", "--category", "leaf", "--from", "x.png"], ["--size", "64"]])
+def test_from_options_that_do_not_go_together_are_refused(argv, tmp_path):
+    with pytest.raises(SystemExit) as stop:
+        sync_icons.main(argv, _suite(tmp_path))
+    assert stop.value.code == 2
 
+
+def test_root_picks_the_suite_and_one_without_category_icons_is_refused(tmp_path, monkeypatch, capsys):
+    """The default is the checkout; --root names a suite folder anywhere (tools/new_app.py). A suite whose apps take
+    no category icons has no icons/categories.toml."""
+    suite = _suite(tmp_path / "suite")
+    other = tmp_path / "other"
+    other.mkdir()
+    monkeypatch.setattr(sync_icons, "ROOT", suite)
+    assert sync_icons.main(["--check"]) == 1                        # the copies are not written yet
+    assert sync_icons.main([]) == 0 and sync_icons.main(["--check"]) == 0
+    assert sync_icons.main(["--check", "--root", str(suite)]) == 0
+    with pytest.raises(SystemExit) as stop:
+        sync_icons.main(["--check", "--root", str(other)])
+    assert stop.value.code == 2 and "no icons/categories.toml" in capsys.readouterr().err
+
+
+def test_the_suite_is_in_step():
+    assert sync_icons.main(["--check"], ROOT) == 0
+
+
+def test_check_lists_what_is_not_converted(tmp_path, capsys):
     root = _suite(tmp_path)
-    source = tmp_path / "new.png"
-    Image.new("RGBA", (1024, 1024), (10, 20, 30, 255)).save(source)
-    assert sync_icons.main(["--category", "gaming", "--from", str(source)], root) == 0
-    for size in sync_icons.SIZES:
-        with Image.open(sync_icons.icon_path(root / "icons" / "gaming", size)) as image:
-            assert image.size == (size, size) and image.format == ("PNG" if size == 128 else "WEBP")
-    assert (root / "apps/game/images/ps5-game-128.png").read_bytes() == \
-        (root / "icons/gaming/gaming-128.png").read_bytes()
+    assert sync_icons.main([], root) == 0
+    _image(root / "icons" / "leaf" / "leaf-512.png", 512, "blue")
+    (root / "icons" / "leaf" / "leaf-512.webp").unlink()
+
+    assert sync_icons.main(["--check"], root) == 1
+    out = capsys.readouterr()
+    assert "not converted: icons/leaf/leaf-512.png" in out.out
+    assert "missing: icons/leaf/leaf-512.webp" in out.err
+    assert (root / "icons" / "leaf" / "leaf-512.png").exists()
+    assert sync_icons.main([], root) == 0
+    assert sync_icons.main(["--check"], root) == 0

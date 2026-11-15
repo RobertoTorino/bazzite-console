@@ -251,7 +251,7 @@ def parse_rustup(text: str) -> tuple[Update, ...]:
     return tuple(Update(*found.groups()) for line in text.splitlines() if (found := RUSTUP_LINE.match(line.strip())))
 
 
-RUST_ABOUT = ("<p>The Rust toolchains and rustup itself, for Console Link's native core (<code>cargo test</code>, "
+RUST_ABOUT = ("<p>The Rust toolchains and rustup itself, for Remote Play's native core (<code>cargo test</code>, "
               "<code>maturin build</code>). <b>Update</b> runs <code>rustup update</code>; nothing needs a restart. "
               "A new Rust can warn where the old did not: run clippy afterwards. <code>rustup default "
               "&lt;version&gt;</code> goes back to an older toolchain.</p>")

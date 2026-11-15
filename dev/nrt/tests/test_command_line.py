@@ -88,12 +88,12 @@ def test_the_board_checks_go_to_a_terminal(app, tmp_path):
     """check-release.sh asks for the sudo password and keeps the portal running, which the line cannot do (owner,
     03-11-2026: run here, sudo asked through KDE's dialog at every one of the installer's 14 calls)."""
     from nexus_release_tool.command_line import needs_terminal
-    assert needs_terminal("nexus-suite/tools/check-release.sh release portal-v13.1.1") == "check-release.sh"
+    assert needs_terminal("tools/check-release.sh release portal-v13.1.1") == "check-release.sh"
     assert needs_terminal("./tools/check-release.sh local") == "check-release.sh"
     assert needs_terminal("git push") == "" and needs_terminal("") == ""
     launched: list[str] = []
     pane = CommandLine(tmp_path, bash="/bin/bash", terminal=launched.append)
-    command = "nexus-suite/tools/check-release.sh release portal-v13.1.1"
+    command = "tools/check-release.sh release portal-v13.1.1"
     pane.line.setText(command)
     pane.submit()
     in_checkout = f"cd {shlex.quote(str(tmp_path))} && {command}"   # the terminal opens in the home folder, not here

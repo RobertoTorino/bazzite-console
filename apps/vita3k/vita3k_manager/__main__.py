@@ -8,9 +8,9 @@ import sys
 
 from bazzite_console_core import __version__ as CORE_VERSION, applog, instance
 from bazzite_console_core.app import create_app, exec_app
+from bazzite_console_core import exit_keys
 
 from . import APP_ID, APP_NAME, INFO, __version__
-from . import exit_keys
 
 
 def main() -> int:
@@ -19,7 +19,7 @@ def main() -> int:
     _args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args)
-    exit_keys.install(app)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     if instance.already_running(INFO.app_id):
         return 0
     log_path = applog.setup(APP_ID, private=True)         # the user's folders as ~: no user name in the log

@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Whether GitHub's CI passed on a commit: every run of .github/workflows/ci.yml on it (the push to main; a tag
-starts none of its own) finished and passed; with --workflow, of another workflow. The release workflow asks it
-before it builds, so only a commit that CI passed becomes a release.
+starts none of its own) finished and passed; with --workflow, of another workflow. tools/tag-release.sh asks it
+before tagging, and the release workflow before it builds, so only a commit that CI passed becomes a release.
 
-    python3 tools/ci_state.py [--wait MINUTES] [--workflow FILE] [--repo DIR] [--release-commit] <commit>
+    python3 tools/ci_state.py [--wait MINUTES] [--workflow FILE] [--release-commit] <commit>
 
 Prints the state (passed, failed, running, none) and the runs. Exit status: 0 passed, 1 failed, 2 still running or
 no run yet (after waiting --wait minutes, default 0), 3 GitHub not reachable. When no run has appeared after
 NONE_GRACE_S of waiting, the answer is "none" at once, with the reason, rather than after the whole wait. Signs in
 with GH_TOKEN, GITHUB_TOKEN or the gh login when there is one (60 requests an hour without, 5,000 with).
 PS5_CI_STATE answers instead of GitHub (passed, failed, running, none): for tests.
-
-With --repo DIR the commit is of the checkout in DIR, and GitHub is asked about that checkout's repository (its
-origin remote).
 
 With --release-commit (the release workflow): when the commit only writes a release (tools/release_commit.py:
 versions, Release and Version entries, apps.toml's tags and sha256), the CI of its parent, the work commit, answers
@@ -32,31 +29,28 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from pathlib import Path
 
 REPO = "RobertoTorino/bazzite-console"
 RUNS_URL = "https://api.github.com/repos/{repo}/actions/workflows/{workflow}/runs?head_sha={sha}&per_page=50"
-WORKFLOW = "ci.yml"                     # the suite's checks on every push
+WORKFLOW = "ci.yml"                     # the checks on every push
 OK = ("success", "skipped", "neutral")
 POLL_S = 30
 NONE_GRACE_S = 300                      # a run GitHub is about to start appears well within this
 EXIT = {"passed": 0, "failed": 1, "running": 2, "none": 2}
-CHECKOUT: str | None = None            # --repo: the checkout the commit is of (default, the folder it is run in)
 NO_RUN = "no run of {workflow} on {sha}: push the commit to main, where CI runs on every push."
 
 
 def repo_slug() -> str:
-    """owner/name: with --repo, that checkout's origin remote; else GitHub Actions says it; else the origin remote
-    here; else the suite's repository."""
-    if CHECKOUT is None and os.environ.get("GITHUB_REPOSITORY"):
+    """owner/name: GitHub Actions says it; else the origin remote here; else the suite's repository."""
+    if os.environ.get("GITHUB_REPOSITORY"):
         return os.environ["GITHUB_REPOSITORY"]
     try:
         url = subprocess.run(["git", "remote", "get-url", "origin"], capture_output=True, text=True,
-                             timeout=10, cwd=CHECKOUT).stdout.strip()
+                             timeout=10).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         url = ""
     match = re.search(r"github\.com[:/](.+?)(?:\.git)?$", url)
-    return match.group(1) if match else os.environ.get("GITHUB_REPOSITORY") or REPO
+    return match.group(1) if match else REPO
 
 
 def token() -> str:
@@ -73,7 +67,7 @@ def token() -> str:
 
 def fetch_runs(sha: str, workflow: str = WORKFLOW) -> list[dict]:
     """The runs of *workflow* on *sha*; raises OSError when GitHub cannot be reached or refuses (its hourly limit)."""
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "bazzite-console-ci-state"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "ps5-ci-state"}
     signed = token()
     if signed:
         headers["Authorization"] = f"Bearer {signed}"
@@ -127,8 +121,6 @@ def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep,
 def work_commit_of(sha: str) -> str | None:
     """The parent of *sha* when *sha* only writes a release (tools/release_commit.py); else None."""
     import release_commit                   # next to this file
-    if CHECKOUT is not None:
-        release_commit.ROOT = Path(CHECKOUT)
     return release_commit.check(sha)[0]
 
 
@@ -155,16 +147,13 @@ def check_release_commit(sha: str, wait_minutes: float = 0, workflow: str = WORK
 
 
 def main(argv: list[str]) -> int:
-    global CHECKOUT
     wait, workflow, release = 0.0, WORKFLOW, False
-    while argv[:1] == ["--release-commit"] or argv[:1] in (["--wait"], ["--workflow"], ["--repo"]) and len(argv) >= 2:
+    while argv[:1] == ["--release-commit"] or argv[:1] in (["--wait"], ["--workflow"]) and len(argv) >= 2:
         if argv[0] == "--release-commit":
             release, argv = True, argv[1:]
             continue
         if argv[0] == "--wait":
             wait = float(argv[1])
-        elif argv[0] == "--repo":
-            CHECKOUT = argv[1]
         else:
             workflow = argv[1]
         argv = argv[2:]

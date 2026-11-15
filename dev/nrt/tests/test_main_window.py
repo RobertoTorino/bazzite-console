@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget
+from PyQt6.QtCore import QPoint
+from PyQt6.QtWidgets import QApplication, QWidget
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def test_every_widget_keeps_qts_window_method(window):
 
 
 def test_without_notify_send_the_tray_icon_notifies(window, monkeypatch):
-    """Windows has no notify-send: the notification comes from the tray icon instead (owner, 28-10-2026)."""
+    """A desktop without notify-send: the notification comes from the tray icon instead (owner, 28-10-2026)."""
     from nexus_release_tool import main_window
     w, _app = window
     shown = []
@@ -51,7 +51,7 @@ def test_without_notify_send_the_tray_icon_notifies(window, monkeypatch):
 
 
 def test_tooltip_over_the_build_indicator(window):
-    from nexus_core.widgets import RoundedToolTip
+    from bazzite_console_core.widgets import RoundedToolTip
     w, app = window
     w.show()
     tip = RoundedToolTip(app)
@@ -64,7 +64,7 @@ def test_the_header_is_a_row_of_pills(window):
     """Refresh, GitHub's build, its API requests left and GitHub status: pills as in the apps' headers, all as wide
     as the widest (owner, 20-10-2026). No Working tree pill: step 2 of the Nexus release says it (owner,
     01-11-2026)."""
-    from nexus_core.widgets import MetricBox, Pill
+    from bazzite_console_core.widgets import MetricBox, Pill
     w, _app = window
     pills = [w.refresh_pill, w.build, w.build.rate, w.github_status]
     assert all(isinstance(p, MetricBox) for p in pills) and not hasattr(w, "status")
@@ -121,7 +121,7 @@ def test_selection_is_a_teal_outline(window):
 
 def test_a_second_launch_opens_no_window(monkeypatch):
     """A double-click on the Desktop icon starts the app twice: the second launch hands over to the first."""
-    from nexus_core import instance
+    from bazzite_console_core import instance
     import nexus_release_tool.__main__ as entry
     import nexus_release_tool.main_window as main_window
     app = QApplication.instance() or QApplication([])
@@ -139,7 +139,7 @@ def test_a_second_launch_opens_no_window(monkeypatch):
 def test_the_settings_of_the_earlier_name_are_taken_over(tmp_path):
     """Nexus Releases' settings (nexus-releases, until 30-10-2026) become the Nexus Release Tool's, once."""
     import nexus_release_tool.__main__ as entry
-    SETTINGS = "[General]\nsuite=ws\n"
+    SETTINGS = "[General]\nsuite=windows-portable\n"
     new = entry.settings_file()
     assert new.parent.name == new.stem == "nexus-release-tool" and str(new).startswith(str(tmp_path))
     old = new.parent.parent / "nexus-releases" / "nexus-releases.ini"
@@ -213,6 +213,12 @@ SUMMARY_DOWN = {   # githubstatus.com's summary.json during the incident of 19-1
                    {"name": "Pages", "status": "major_outage"}],
     "incidents": [{"name": "Degraded availability for GitHub Actions, GitHub Pages and Webhooks"}],
 }
+SUMMARY_MONITORING = {   # 11-11-2026: the indicator back to "none" while the incident is monitored, Actions' backlog
+    "status": {"indicator": "none", "description": "All Systems Operational"},   # still queued
+    "components": [{"name": "Actions", "status": "operational"}],
+    "incidents": [{"name": "Impact across multiple GitHub products including Actions, Pages, and Copilot products.",
+                   "status": "monitoring", "impact": "critical"}],
+}
 SUMMARY_UP = {"status": {"indicator": "none", "description": "All Systems Operational"},
               "components": [{"name": "Actions", "status": "operational"}], "incidents": []}
 
@@ -226,6 +232,8 @@ def test_github_status_is_read_from_the_status_page(monkeypatch):
     assert down.affected == ("Actions: degraded performance", "Pages: major outage")
     assert down.incidents == ("Degraded availability for GitHub Actions, GitHub Pages and Webhooks",)
     assert rp.parse_github_status(SUMMARY_UP).up
+    monitoring = rp.parse_github_status(SUMMARY_MONITORING)                  # an open incident is a problem
+    assert not monitoring.up and monitoring.incidents[0].endswith("Copilot products. (monitoring)")
     assert not rp.parse_github_status("not json").up                 # an odd answer is never "up"
     asked = []
 
@@ -248,7 +256,7 @@ def test_github_status_is_a_pill_that_opens_the_status_page(window, monkeypatch)
     """Green while GitHub is up, red while githubstatus.com reports a problem, gray while not known; a click opens
     https://www.githubstatus.com/ (owner, 19-10-2026). A pill, as the apps' status boxes (owner, 20-10-2026)."""
     from PyQt6.QtGui import QColor, QDesktopServices
-    from nexus_core.theme import GREEN, GREY, RED
+    from bazzite_console_core.theme import GREEN, GREY, RED
     from nexus_release_tool import main_window
     from nexus_release_tool import plan as rp
     w, _app = window
@@ -318,7 +326,7 @@ def test_claude_usage_is_a_pill_that_opens_the_usage_page(window, monkeypatch):
     """Claude tokens today (the blue edge every neutral pill has, owner 26-10-2026), hidden without Claude Code; a
     click opens Claude's usage page."""
     from PyQt6.QtGui import QDesktopServices
-    from nexus_core.theme import BLUE
+    from bazzite_console_core.theme import BLUE
     from nexus_release_tool import main_window
     from nexus_release_tool import plan as rp
     w, _app = window
@@ -347,7 +355,7 @@ def test_the_window_has_nexus_design(window):
     """A Nexus app, not a suite's (owner, 26-10-2026): create_app() puts Nexus's theme on the application (ink,
     silver, teal: nexus/docs/stylesheets/nexus.css), the widgets draw with it, and the icon is the Nexus drawing."""
     from PyQt6.QtGui import QPalette
-    from nexus_core import theme, widgets
+    from bazzite_console_core import theme, widgets
     from nexus_release_tool import LOGO_PATH
     from nexus_release_tool.style import EDGE, INK, MAIN, NEXUS, SILVER, TEAL
     w, app = window
@@ -368,35 +376,35 @@ def test_the_window_has_nexus_design(window):
     assert f"border-color:{TEAL}" in w.refresh_pill.styleSheet()
     assert LOGO_PATH.name == "nexus-release-tool.webp" and LOGO_PATH.is_file()
     assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
-    # The checkboxes: a teal box with its teal checkmark (owner, 28-10-2026), and Portals drawn as a selected tab.
+    # The checkboxes: a teal box with its teal checkmark (owner, 28-10-2026).
     from pathlib import Path
     from nexus_release_tool.style import CHECK_IMAGE
     assert f"border:1px solid {TEAL}" in w.styleSheet() and f"image:url({CHECK_IMAGE})" in w.styleSheet()
     assert Path(CHECK_IMAGE).is_file() and TEAL in Path(CHECK_IMAGE).read_text(encoding="utf-8")
-    title = w.suite_column.findChild(QLabel)
-    assert title.text() == "Portals" and f"border-top:2px solid {TEAL}" in title.styleSheet()
-    assert title.alignment() == Qt.AlignmentFlag.AlignCenter                        # as wide as the column
     central = w.centralWidget().layout()
     row = next(central.itemAt(i).layout() for i in range(central.count())
-               if central.itemAt(i).layout() is not None and central.itemAt(i).layout().indexOf(w.suite_column) >= 0)
+               if central.itemAt(i).layout() is not None and central.itemAt(i).layout().indexOf(w.tabs) >= 0)
     assert row.contentsMargins().top() == central.spacing() > 0                 # twice the spacing off the pills
 
 
-def test_the_release_tool_icons_have_the_expected_sizes():
-    """The checkout app and its menu icon are supplied locally, without another suite's image tree."""
+def test_the_icons_are_the_nexus_drawing():
+    """The app's icon and its menu icon are the Nexus drawing at 512 and 128 px, square. It has no tile on a portal:
+    it runs from the checkout."""
     Image = pytest.importorskip("PIL.Image")
-    from nexus_release_tool import LOGO_PATH, ROOT
-    for path, size in ((LOGO_PATH, 512), (ROOT / "images" / "nexus-release-tool-128.png", 128)):
-        with Image.open(path) as icon:
-            assert icon.size == (size, size), path.name
+    from nexus_release_tool import ROOT
+    assert not (ROOT.parents[1] / "portal" / "images" / "apps" / "releases.webp").exists()
+    for copy, size in ((ROOT / "images" / "nexus-release-tool.webp", 512), (ROOT / "images" / "nexus-release-tool-128.png", 128)):
+        with Image.open(copy) as got:
+            assert got.size == (size, size), copy.name
 
 
-
-def test_remove_suite_runs_check_release_remove(window):
-    """Remove suite: check-release.sh remove in a terminal, on a tab of its own since 15-11-2026."""
+def test_remove_suite_runs_check_release_remove_on_the_board(window, monkeypatch):
+    """Remove suite (owner, 15-11-2026): check-release.sh remove in a terminal, on the console."""
     w, _app = window
     launched = []
     w.launch = launched.append
-    w.remove_page.remove_button.click()
+    page = w.remove_page
+    assert page.remove_button.isEnabled() and "check-release.sh remove" in page.remove_button.toolTip()
+    page.remove_button.click()
     assert launched and launched[0].endswith("tools/check-release.sh remove")
-    assert "Board Test asks for the sudo password" in w.remove_page.output.toPlainText()
+    assert "Board Test asks for the sudo password" in page.output.toPlainText()

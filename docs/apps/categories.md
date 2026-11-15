@@ -14,7 +14,7 @@ playing, or a utility.
   icons look like one family.
 - **One place to change them.** Each category's icon is kept once, in `icons/<category>/`. A new app picks a
   category and gets its icon; a new icon for a category reaches every app in it. How that works is in
-  [Development](../development/index.md#icons).
+  [Architecture and consistency](../development/architecture.md#icons).
 
 The categories are also the [portal's](../portal.md) categories: an app's tile is under its category's name.
 

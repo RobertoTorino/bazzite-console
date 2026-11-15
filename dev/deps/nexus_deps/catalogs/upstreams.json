@@ -1,5 +1,5 @@
 {
-  "about": "The programs and firmware the suites' apps use, and where Nexus Deps learns of their updates (nexus_deps/upstreams.py). Hand-written: id, name, what, compare, url, targets, how, and per app its suite, app, module and constants. Synced from the apps' code and their portal's apps.toml by `dev/deps/run.sh --sync-upstreams` (tests/test_upstreams.py fails while it is stale): repo, pin, version, home, version_file, name and launcher.",
+  "about": "The programs and firmware the suite's apps use, and where Nexus Deps learns of their updates (nexus_deps/upstreams.py). Hand-written: id, name, what, compare, url, targets, how, and per app its app, module and constants. Synced from the apps' code and their portal's apps.toml by `dev/deps/run.sh --sync-upstreams` (tests/test_upstreams.py fails while it is stale): repo, pin, version, home, name and launcher.",
   "github": [
     {
       "id": "rpcs3",
@@ -8,7 +8,6 @@
       "compare": "version",
       "apps": [
         {
-          "suite": "bazzite-console",
           "app": "rpcs3",
           "module": "rpcs3_manager/emulator.py",
           "constants": {
@@ -32,7 +31,6 @@
       "compare": "version",
       "apps": [
         {
-          "suite": "bazzite-console",
           "app": "pcsx2",
           "module": "pcsx2_manager/emulator.py",
           "constants": {
@@ -56,7 +54,6 @@
       "compare": "version",
       "apps": [
         {
-          "suite": "bazzite-console",
           "app": "ppsspp",
           "module": "ppsspp_manager/emulator.py",
           "constants": {
@@ -80,7 +77,6 @@
       "compare": "build",
       "apps": [
         {
-          "suite": "bazzite-console",
           "app": "vita3k",
           "module": "vita3k_manager/emulator.py",
           "constants": {
@@ -104,7 +100,6 @@
       "compare": "published",
       "apps": [
         {
-          "suite": "bazzite-console",
           "app": "xenia",
           "module": "xenia_manager/emulator.py",
           "constants": {
@@ -128,7 +123,6 @@
       "compare": "version",
       "apps": [
         {
-          "suite": "bazzite-console",
           "app": "shadps4",
           "module": "shadps4_manager/emulator.py",
           "constants": {
@@ -146,5 +140,64 @@
       ]
     }
   ],
-  "sony": []
+  "sony": [
+    {
+      "id": "dualsense",
+      "name": "DualSense firmware",
+      "what": "the firmware of the DualSense and DualSense Edge controllers",
+      "kind": "controllers",
+      "url": "https://fwupdater.dl.playstation.net/fwupdater/info.json",
+      "targets": {
+        "0x0004": "DualSense",
+        "0x000B": "DualSense",
+        "0x000E": "DualSense",
+        "0x0044": "DualSense Edge"
+      },
+      "apps": [
+        {
+          "app": "controller",
+          "name": "PS5 Controller",
+          "launcher": "~/.local/bin/ps5-controller"
+        }
+      ],
+      "how": "Connect the controller with a USB cable and open {apps}: it reads the controller's firmware, compares it with Sony's and updates it (the Edge's profiles are backed up first). Bluetooth is not enough for an update."
+    },
+    {
+      "id": "ps4",
+      "name": "PS4 system software",
+      "what": "the PlayStation 4's system software, from Sony's update list",
+      "kind": "ps4-updatelist",
+      "url": "http://fus01.ps4.update.playstation.net/update/ps4/list/us/ps4-updatelist.xml",
+      "apps": [
+        {
+          "app": "remoteplay",
+          "name": "Remote Play",
+          "launcher": "~/.local/bin/ps5-remoteplay"
+        }
+      ],
+      "how": "Update on the console: Settings, System Software Update. Remote Play with {apps} may need the console's newest system software."
+    },
+    {
+      "id": "ps5",
+      "name": "PS5 system software",
+      "what": "the PlayStation 5's system software",
+      "kind": "on-device",
+      "apps": [
+        {
+          "app": "remoteplay",
+          "name": "Remote Play",
+          "launcher": "~/.local/bin/ps5-remoteplay"
+        }
+      ],
+      "how": "Sony publishes no update list a program can read safely. The console says when an update is out: Settings, System, System Software, System Software Update and Settings. Remote Play with {apps} may need the newest one."
+    },
+    {
+      "id": "psportal",
+      "name": "PlayStation Portal",
+      "what": "the PlayStation Portal remote player's system software",
+      "kind": "on-device",
+      "apps": [],
+      "how": "Sony publishes no update list for it. The Portal updates itself when it is online: Settings, System Software, System Software Update. Its latest version is listed at playstation.com."
+    }
+  ]
 }

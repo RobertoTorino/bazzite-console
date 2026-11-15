@@ -1,3 +1,25 @@
+Changelog: 15-11-2026 10:50:24
+
+Added. The Sony cards: DualSense firmware (with PS5 Controller), PS4 system software
+(Sony's update list), PS5 system software and PlayStation Portal (on the device), each with how to update.
+
+Changelog: 15-11-2026 10:17:45
+
+Breaking. One suite (owner, 15-11-2026): the repository is the suite, so --suite is gone, the catalog is
+catalogs/bazzite-console.toml, and catalogs/upstreams.json lists an app without its suite. An upstream's card names
+the app alone.
+
+Breaking. No VERSION (owner, 15-11-2026): a development app is never released, so its header names the checkout's
+last commit and its time ("5fb1aa8 · 15-11-2026 07:20", core's nexus.header()) where it showed a version, and
+--version prints the same. The GitHub requests say nexus-deps.
+
+Fixed. The app imports bazzite_console_core directly, with the Nexus design from core's nexus.py (owner,
+15-11-2026): the compatibility package dev/core_compat is gone, and run.sh puts only core/ on the path.
+
+Fixed. The code for Decky Loader is gone: the suite has no Decky app, and its loader.py glob matched the webcam's
+firmware loader. The catalog lists core and its PyQt6, as core/pyproject.toml asks. Rust's card names Remote Play's
+native core.
+
 Changelog: 15-11-2026 06:25:22
 
 Fixed. The catalog names Board Test by its new key, board, as apps.toml does: it said bazzite, so every check

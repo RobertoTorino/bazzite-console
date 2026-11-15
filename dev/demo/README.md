@@ -6,16 +6,19 @@
 
 # Nexus Demo Recorder
 
-Records a Bazzite Console portal installation with OBS: a portal release extracted in Downloads, or this checkout,
-installed in a terminal while OBS records the screen, then the portal opened and an optional app installed and shown.
-Start it from [the developer dashboard](../dash), or:
+Records a demo of a portal installation with OBS: a portal release extracted in Downloads, or the suite in this
+checkout, installed in a terminal while OBS records the screen, then the portal opened and one optional app
+installed and shown. A development app: it runs from the checkout it lives in and has no
+releases of its own. Start it from [Nexus Dashboard](../dash), or:
 
-- Open it: `dev/demo/run.sh`
-- Menu entry and Desktop icon: `dev/demo/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`)
+| | Linux |
+|---|---|
+| Open it | `dev/demo/run.sh` |
+| Menu entry and Desktop icon | `dev/demo/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) |
 
 Nothing is copied: the entry starts the app of the checkout you installed it from.
 
-Documentation: [Bazzite Console](https://robertotorino.github.io/bazzite-console/).
+How to use it: [Demo Recorder in the wiki](https://robertotorino.github.io/bazzite-console/development/dashboard/#demo-recorder).
 
 ## License
 

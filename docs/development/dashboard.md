@@ -1,0 +1,329 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
+# Dashboard
+
+The **Nexus Dashboard** (`dev/dash/` in the repository) is the one door to the tools for working on the suite.
+Its tiles start the development apps of the checkout, each in a window of its own, and open the suite's tools;
+below them, Test local apps starts the suite's own apps and its wiki from the checkout. Like every development app
+it runs from the checkout it lives in, takes Nexus's design and icon, and has no releases of its own: nothing of it
+is in the portal.
+
+The suite's own scripts stay in `tools/`: the dashboard runs them there. A tile is grayed out where it does not run
+on this system, and says why in its tooltip.
+
+## Start it
+
+From the repository's root, with the checkout's venv (`.venv-linux`, see
+[Set up and test](index.md#set-up-and-test)). Nothing is copied when you install it: the menu entry always
+starts the app of the checkout you installed it from. After moving the checkout, install it again.
+
+```bash
+dev/dash/run.sh                             # open it
+dev/dash/install.sh                         # app menu entry and Desktop icon
+dev/dash/install.sh --no-desktop-shortcut   # app menu entry only
+dev/dash/install.sh --uninstall             # remove them; the checkout stays
+dev/dash/install.sh --uninstall --purge     # also remove the settings
+```
+
+Run the installer as your own user, not with sudo. Then a double-click on **Nexus Dashboard** on the Desktop, or its
+menu entry, opens the dashboard.
+
+Opening the dashboard while it is already open closes the open window and opens a new one: the app runs from the
+checkout, so the new window has the code as it is now. An open dashboard that does not answer within 5 seconds is
+ended.
+
+## The window
+
+The header holds the icon, the name and the checkout's last commit with its time (a development app has no
+version). A click on the icon opens the suite's wiki. Below it are the tiles, then
+[Test local apps](#test-local-apps), and under them a line for each click: which app started and where its log is,
+or why a tile is off.
+
+The first tiles are the development apps of the checkout. A click starts the app with its run script, in a window
+of its own that keeps running when the dashboard closes.
+
+| Tile | What it opens |
+|---|---|
+| **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the console checks ([Releases](releases.md)). |
+| **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)). |
+| **Nexus Deps** | The suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). |
+| **Nexus Installer Tests** | The suite's installer tests, one at a time ([below](#installer-tests)). |
+| **Nexus Sound Lab** | Short sound effects for the suite's windows, made from sliders ([below](#sound-lab)). |
+
+The other tiles work on the suite:
+
+| Tile | What it opens |
+|---|---|
+| **Portal video tour** | Records the portal's tour ([below](#video-tours)). |
+| **Apps video tour** | Records a short tour of each app you tick ([below](#video-tours)). |
+| **Convert icons** | Makes a category's icons from your images ([below](#convert-icons)). |
+| **Close issues** | Closes the open issues on GitHub you tick ([below](#close-issues)). |
+
+## Test local apps
+
+Under **Test local apps** are the suite's portal and every app window of it in the checkout, as an icon (the portal
+first). A click starts that app from the checkout, to try a change before its release. They start as
+`python -m <package>` with the checkout's venv and its `core`, as `run.sh` starts a development app. When the
+portal is already open, its icon warns instead of starting: a second portal never opens (starting it only brings
+the open window to the front), so close it first. An app that changes how the console runs (an orange **!**
+on its icon) asks first, as in the portal; started from the checkout it uses the scripts in the checkout. Each app
+writes its output to `~/.cache/nexus-dashboard/local/<package>.log`. When an app stops with an error, the end of its log
+shows below. The apps keep running when you close the dashboard. The round **i** beside the title says the same.
+
+The last icon is the wiki: **Bazzite Console Suite wiki (local)** serves it from the checkout with `mkdocs serve`
+(the development venv has MkDocs) and opens it in the browser at `http://127.0.0.1:8775/bazzite-console/`, with its
+design panel open. It rebuilds on every save; its log is `mkdocs-root-local.log` there. When it is already
+running, a click only opens the page again. The wiki, like the apps, keeps running when you close the dashboard,
+which has no button that stops it. A wiki started before the checkout changed (after a pull, or a change to
+`mkdocs.yml` or the design panel) can still show the old setup: stop it, then click its icon again.
+`pkill -f "mkdocs serve"` stops it.
+
+With **Wiki on the network** ticked, the icon serves the wiki on every address of the computer, at port 8795, so a
+handheld, a laptop or the TV opens it too: the addresses for those devices show below once the wiki started. The
+computer's firewall has to let them in.
+
+## Close issues
+
+**Close issues** lists the open issues on GitHub, such as the weekly Upstream review, each with a tick box. **Run**
+closes the ticked ones with `gh issue close`, one after the other, with a comment when you write one; their output
+shows below, and when one fails the ones after it stay open. It needs the GitHub CLI with a login
+(`gh auth login`). A double click opens an issue on GitHub.
+
+## Video tours
+
+The tours are recorded from the checkout as it is now, from the real windows, offscreen: nothing shows on the
+screen while they record. They go to your Videos folder, with music under them that fades out over the last two
+seconds (untick **Music** for a video without sound). **Size** is 1080p (1920 × 1080) by default, the wiki's;
+choose 2160p (4K, 3840 × 2160) for a video for YouTube, which shows a 4K upload far sharper than a 1080p one: the
+same tour, drawn at twice the scale so the text stays crisp, about four times the time, and `-2160p` before `.mp4`
+in its name (1440p is the step between). A recording runs in the background; its output shows in the dialog,
+**Stop** ends it, and **Play** opens the video in your video player.
+
+- **Portal video tour** records the portal's tour, about two minutes: `ps5-portal-tour-v<portal version>.mp4`.
+  Tick **Also write the copy on the wiki's Portal Tour page** to write `docs/videos/portal-tour.mp4` and its poster
+  in the checkout too, for you to review and commit.
+- **Apps video tour** lists every app of the suite. Tick the apps (**All**, **None**), set the **Length** (40
+  seconds by default) and choose **Record**: each tour takes a few seconds,
+  `ps5-<app>-tour-v<version>.mp4`. Double-click an app to play its video. What an app reads from the console is
+  real, so watch a video before you publish it.
+
+The dialogs run `tools/record-tour.sh` and `tools/record-app-tour.sh` with the checkout's development environment;
+they need ffmpeg. The same scripts run from a terminal:
+[The wiki's pictures and tours](index.md#the-wikis-pictures-and-tours) says how. The music under every tour is in
+`tools/sounds/`.
+
+## Convert icons
+
+Every app in a category shares the category's icon, kept in `icons/<category>/` at 1024, 512, 256 and 128 px.
+**Convert icons** makes a category's icons from your images: one image for every size, or an image for a single
+size. They are scaled, saved under the category's names as WebP (the 128 px icon as PNG), and copied to every app
+of the category, the portal's tiles and the wiki, as `icons/categories.toml` says. Images must be square.
+
+The dialog shows the current icons of the chosen category; **Convert and copy to the apps** runs
+`tools/sync_icons.py`, whose output shows in the dialog; the icons and their copies are changed in the checkout, for
+you to review and commit.
+
+## Demo Recorder
+
+The **Nexus Demo Recorder** (`dev/demo/`) records a demo of a portal installation with OBS: a portal release
+extracted in Downloads (found by itself; **Find in Downloads** looks again, **Choose folder…** takes another), or,
+without one, the suite in this checkout, whose `portal/install.sh` installs the released apps from the checkout's
+source. `dev/demo/run.sh` and `dev/demo/install.sh` start and install it on their own.
+
+Before you record, have:
+
+- **The checkout's venv** with `requirements-dev.txt` installed: it brings the OBS WebSocket client (`obsws-python`)
+  and the desktop portal's client (`dbus-fast`).
+- **OBS Studio 30 or newer**, running, which has WebSocket 5.3 built in: the recorder sets the recordings folder
+  through it. On Bazzite the flatpak `com.obsproject.Studio` (or an `obs` on the PATH). **Open OBS** starts it.
+- **In OBS, a scene with a screen-capture source** (on Wayland: Screen Capture through PipeWire) whose preview
+  shows your desktop.
+- **OBS's WebSocket server on:** Tools, WebSocket Server Settings, **Enable WebSocket server**, with a password.
+  Note the port (4455 unless you changed it) and the password for step 1.
+- **A portal release:** an extracted portal release in Downloads, or the suite in this checkout. **Open the
+  releases page** goes to them.
+- **A clean system for a fresh install:** the portal not installed, and the app you want to show not installed.
+  The recorder checks both and keeps **Start recording and install portal** off until they are gone.
+- **A terminal emulator** (Konsole, GNOME Terminal, Ptyxis, Xfce Terminal, foot, Alacritty, kitty or xterm, or the
+  one `$TERMINAL` names) for the installer and its password prompts, and a desktop whose portal offers global
+  shortcuts (KDE Plasma, as on Bazzite) for the stop shortcut.
+
+1. **OBS setup:** OBS needs a scene with a screen-capture source (on Wayland, Screen Capture through PipeWire) and
+   its WebSocket server enabled (Tools, WebSocket Server Settings); **Setup instructions** has the steps. Enter the
+   port and the password and **Test connection**: the recordings go to `~/Videos/demos`.
+2. **Portal release and app:** the release and the optional app to show; the portal and that app must not be
+   installed yet, since the demo is a fresh install.
+3. **Record:** **Start recording and install portal** starts the OBS recording and the portal's installer in a
+   terminal, for its output and its password prompts; the window hides. Once the installer is done the portal
+   opens: show PS5 Board Test, install the chosen app and open it. The global shortcut the window named
+   (Ctrl+Alt+F12 by default) stops the recording and brings the window back; **Recent recordings…** lists the
+   videos and plays one.
+
+## Installer tests
+
+**Nexus Installer Tests** (`dev/itests/`) runs the suite's installer tests, `tools/installer-tests/*.sh`, one at a
+time (bash, with fakeroot), with their live output on the right and each one's result at the end of its row. Tick
+the tests and **Run selected**, or **Run all**; **Stop** ends the one that runs and skips the rest. Each test
+installs an app from the checkout as its installer does on a console and removes it again, in a temporary home:
+nothing of yours is touched. The tests use fixed temporary folders under `/tmp`, so the same test is never run
+twice at once. `dev/itests/run.sh` and `dev/itests/install.sh` start and install it on their own.
+
+## Sound Lab
+
+**Nexus Sound Lab** (`dev/sounds/`) makes and tries the short sound effects a window plays, such as the tick when
+the controller moves the focus in the portal. Choose a **Preset** to start from (Tick, High tick, Blip, Thock, Click,
+Select, Back, Error, Tick after silence) and a **Waveform** (sine, triangle, square, saw or noise), then shape the
+sound with the sliders: the pitch at the start and the end of a tone (a sweep when they differ), the length of a
+tone, the attack (the rise to full volume) and the decay (how fast it dies away, per second), the number of tones
+and the interval between them in semitones (two tones a fifth apart make a blip), the noise over the tone and its
+own decay, the silence before the sound, and the volume (its peak). The sound is drawn beside the sliders and plays
+each time a slider is let go, with **Play**, or when the focus moves between the buttons of **Try it** (Tab, the
+arrow keys or a controller's d-pad; A plays it again), the way a window plays it while you navigate. Once a slider
+has left the preset the box says Custom. **Save as WAV…** writes the sound as 16-bit mono at 44.1 kHz, for the
+portal's sounds folder (`portal/bazzite_console_portal/sounds/`, where it plays a sound by its file name). The last
+sound, the preset and the save folder are remembered.
+
+**Keep the audio link awake**, on by default, plays a silent loop while the window is open. Without it a short
+sound can stay silent on a TV: PipeWire pauses the output when nothing plays, and an HDMI TV mutes a moment after
+the stream stops and needs time to unmute when it starts again, so a 50 ms tick is over before it is heard. The
+preset Tick after silence shows the same from the other side: with the link asleep, only its tick comes through. A
+window that plays such sounds needs the same loop while it is open. `dev/sounds/run.sh` and
+`dev/sounds/install.sh` start and install it on their own, and the dashboard's tile does the same.
+
+## Deps
+
+**Nexus Deps** (`dev/deps/`) lists the Python packages and external tools of the suite's apps installed on this
+machine, which apps and features use them, and what is missing or must be updated; **Fix** installs that. On top,
+it shows whether a Bazzite update waits for you and every update the machine has: Bazzite's image, the Flatpaks,
+Homebrew, Rust and the development venv. It runs from the checkout, like every development app; its catalog of the
+suite is `dev/deps/nexus_deps/catalogs/bazzite-console.toml`.
+
+```bash
+dev/deps/run.sh                             # open it
+dev/deps/run.sh --fix                       # open it and offer Fix as soon as the check is done
+dev/deps/run.sh --remind                    # no window: the hourly check once, from a terminal
+dev/deps/run.sh --sync-upstreams            # the list of emulators in line with the apps' pins again
+dev/deps/install.sh                         # app menu entry, Desktop icon and the hourly reminder
+dev/deps/install.sh --no-desktop-shortcut   # the same without the Desktop icon
+dev/deps/install.sh --uninstall             # remove them and the reminder; --purge also the settings
+```
+
+Installing it removes the development machine's hourly `nexus-dev-updates.timer`: Nexus Deps takes its place.
+
+**Bazzite**, the first card, shows the Bazzite image the machine runs (its version and build date), whether a newer
+one is installed and waits for a reboot, and when Bazzite's updater last ran. That updater, `uupd`, runs every
+night by itself and updates the image, Flatpaks, Homebrew and distroboxes; a new image takes effect at the next
+boot, so an update can wait unnoticed for days. The card turns to **Reboot to update** then. It also warns when
+the updater failed on its last run or has not run for over a week. This card only reads (from `rpm-ostree status`
+and `systemctl`, without root or the network).
+
+**The machine's updates** follow, a card per source the machine has, each with what is newer (installed → new):
+
+| Card | Asked with | Update runs |
+|---|---|---|
+| Bazzite image | `rpm-ostree upgrade --check` | `rpm-ostree upgrade`: the new image is used after a restart |
+| Flatpak | `flatpak remote-ls --updates` | `flatpak update -y --noninteractive` |
+| Homebrew | `brew update`, then `brew outdated` (formulae and casks) | `brew upgrade` |
+| Rust | `rustup check` (the toolchains and rustup) | `rustup update` |
+| Python venv (.venv-linux) | `pip list --outdated` and a dry run of `requirements-dev.txt` | `pip install --upgrade` of the outdated packages within `requirements-dev.txt` |
+
+**Update** on a card asks with its command and runs it in a window with its output; **Fix** runs every card's with
+the packages' and tools' fixes. A source whose tool is missing has no card; one that could not be checked (offline)
+says why. The venv card lists the packages `requirements-dev.txt` holds back (MkDocs below 2, say), which no
+Update installs, and the packages missing from the venv: its `python` links to Bazzite's `/usr/bin/python3`, so a
+Bazzite image with a newer Python leaves the venv without its packages, and the card says so. Bazzite's updater
+still installs the image, the Flatpaks and Homebrew's packages every night by itself; Update only does it sooner.
+**Updates** in the header counts them, with the emulators' below.
+
+The **i** beside each card's name says what its Update does and how to handle what goes wrong (going back to the
+version before, keeping one package where it is). What needs care is said on the card itself, in orange: a new
+**major** version (marked on its row: it can change how a tool behaves), a Bazzite image that is used after a
+restart, a venv left on an older Python. An update that should not be installed by a click has no Update and shows
+**By hand**: a Bazzite image of a new Fedora release (44 → 45, say) changes the kernel, Mesa and the system's
+Python at once, so its i gives the steps instead: read its release notes, `ujust update` in a terminal, restart,
+open Nexus Deps again for what the new Python left without packages, and how to roll back.
+
+**Emulators and firmware** follow, the programs and firmware the suite's apps use, each on a card with the latest version and an
+i that says how to handle it. None of them is installed from here:
+
+| Card | Asked | What an update means |
+|---|---|---|
+| RPCS3, PCSX2, PPSSPP, Vita3K, Xenia Canary, shadPS4 | GitHub's latest release | Each app installs the build it was tested with (its pin). **Installed** behind the pin: open the app and use its Install. **On GitHub**, newer than the pin: it comes with a release of the app, after a test on a console. |
+| DualSense firmware (and the Edge's) | Sony's firmware list | A new version since the last look: connect the controller with a USB cable and update it in PS5 Controller. |
+| PS4 system software | Sony's PS4 update list | A new version since the last look: update on the console. |
+| PS5 system software, PlayStation Portal | nothing a program can read | **On the device**: the i says where the device shows its updates. |
+
+GitHub is asked with the GitHub CLI's login (`gh auth login`): without one it allows 60 requests an hour, and a card
+then says its hourly limit is used up, and until when.
+
+An app installed without its emulator so far is no update; the card says so. Sony's versions are news once: the
+first look learns them, a later one shows what changed. The list is `dev/deps/nexus_deps/catalogs/upstreams.json`:
+which program each app uses and how its versions compare, written by hand, with the pins, repositories, names and
+launchers read from the apps' code and the portal's `apps.toml`. After a pin moves, `dev/deps/run.sh
+--sync-upstreams` brings it in line; CI fails until it is, and so does a new emulator app it does not list.
+
+**Python packages** are checked where each app runs: Nexus Deps finds every installed app by its launcher and
+reads the package versions in that app's Python environment (the suite's shared one, or the app's own). A card
+shows the version in each environment, whether it meets the app's requirement, and the latest version on PyPI.
+A package that no installed app uses is shown as **Not needed**. Each installed version is also looked up in
+[OSV.dev](https://osv.dev), which collects the GitHub, PyPA and NVD advisories: a green **✓ CVE** means no known
+vulnerability, a red **✗ CVE** lists each one by its CVE ID, linked to
+[Snyk's vulnerability database](https://security.snyk.io/), with the release that fixes it, and **CVE ?** means the
+check could not run (no network) or no installed app has the package.
+
+**External tools** are checked for availability, on your PATH and in `~/.local/bin` and Homebrew, where the apps
+also look. Each app says whether it needs the tool (required) or uses it when it is there (optional); the links
+open the app's chapter in the wiki. Tools that do their work only as root are marked **Needs root.**; the apps run
+them through sudo or pkexec. Remote Play's FFmpeg, inside its native core, is asked for its version through the
+app's own Python.
+
+### Fix
+
+**Fix**, beside the check button, is on when something can be fixed; its tooltip says what. A click lists every
+command it will run and asks first; **No** changes nothing. **Yes** runs them one after the other in a window that
+shows their output and stops at the first that fails, then the check runs again.
+
+- A Python package that is **Missing**, at a **Wrong version** or that **Needs update** is installed with pip into
+  the environment of the app that needs it, at the version the apps in that environment allow (and at least the
+  release that fixes a known vulnerability). One command per environment.
+- A missing tool an installed app **needs** is installed with Homebrew when Homebrew has it (no restart), else
+  layered into the Bazzite image with `rpm-ostree install`, which may ask for your password. A layered package is
+  there after a restart: the window says so and gives the command (`systemctl reboot`); Nexus Deps never restarts
+  by itself.
+- The machine's updates: each card's **Update** command (above), after the packages and the tools.
+- Optional tools are left out: the apps work without them. A tool neither Homebrew nor Fedora has (`ujust`, Steam,
+  a tool an app brings itself) is left to the app's chapter, which says how to get it.
+
+The catalog says how each tool is installed: `brew` (the Homebrew formula) and `rpm` (the Fedora package).
+
+### The hourly reminder
+
+Every hour (or at the next login, when the machine was off then) Nexus Deps runs its check
+without a window and, when something needs you, says so in a desktop notification: a Bazzite update waiting for a
+reboot, Bazzite's updater failing or not running, the machine's updates (per source, with how many), a venv left
+on an older Python, the emulators with news (each piece of news once), Python packages missing or to
+update, tools an installed app needs. **Fix…** opens the window and asks to fix it, the same question as the
+button; **Open Nexus Deps** opens the window. When all is well it says nothing. It is a systemd user timer,
+`nexus-deps-reminder.timer`, that `install.sh` adds and `--uninstall` removes;
+`systemctl --user disable --now nexus-deps-reminder.timer` switches it off.
+
+### What the statuses mean
+
+Each card has one status, the most urgent that applies. The boxes at the top count them.
+
+| Status | For | Meaning |
+|---|---|---|
+| **Up to date** | package | Installed where the apps need it, at PyPI's latest version, no known vulnerability. |
+| **Update available** | package | PyPI has a newer version. Nothing is wrong: newer versions come with an app release, after they are tested; Fix leaves it. |
+| **Needs update** | package | An installed app needs a newer version, or a newer release fixes a known vulnerability. Fix updates it. |
+| **Vulnerable** | package | An installed version has a known vulnerability that no release fixes yet. |
+| **Wrong version** | package | An installed version does not meet an app's requirement. Fix installs one that does. |
+| **Missing** | package | Not in the Python environment of an installed app that uses it. Fix installs it. |
+| **Missing** | tool | Not found, and an installed app needs it. Fix installs it when the catalog says how. |
+| **Not installed** | tool | Not found, but the installed apps only use it when it is there. |
+| **Available** | tool | Found; the card shows where (and the version, where the check can read one). |
+| **Unsupported build** | tool | Found, but in a form the app cannot use. |
+| **Not needed** | both | No installed app uses it. |
+| **Check failed** | package | PyPI could not be reached (no network). |
+
+The check sends the names and versions of the Python packages to PyPI and OSV.dev, nothing else.

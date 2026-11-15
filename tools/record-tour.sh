@@ -9,16 +9,17 @@
 # --size 2160p renders the tour at 3840 x 2160 for YouTube (about four times the time); the file is then named
 # ...-2160p.mp4 unless OUT says otherwise.
 #
-# Music: tools/sounds/the_quiet_engine_remix.ogg, faded out over the last two seconds.
-# Default output: ~/Videos/<tag-prefix>portal-tour-v<portal version>.mp4 (an earlier file of that name is replaced).
-# Interpreter: $PYTHON if set, else the venv for this OS, as test.sh. Needs ffmpeg with libx264.
+# Music: tools/sounds/the_quiet_engine_remix.ogg (made with generative AI tools), faded out over the last two
+# seconds.
+# Default output: ~/Videos/<tag prefix>portal-tour-v<portal version>.mp4 (an earlier file of that name is replaced).
+# Interpreter: $PYTHON if set, else the checkout's venv, as test.sh. Needs ffmpeg with libx264.
 set -euo pipefail
 if [[ "${1:-}" == -h || "${1:-}" == --help ]]; then
-    sed -n '3,10p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'
     exit 0
 fi
-SUITE=$(cd "$(dirname "$0")/.." && pwd -P)
-cd "$SUITE"
+SUITE=$(cd "$(dirname "$0")/.." && pwd -P)       # the suite: the repository
+cd "$SUITE"                                      # the repository: the venvs
 
 PY=${PYTHON:-}
 if [[ -z "$PY" ]]; then
@@ -27,7 +28,7 @@ if [[ -z "$PY" ]]; then
     done
 fi
 if [[ -z "$PY" ]]; then
-    echo "No venv for this OS. Create one, e.g. on Linux:" >&2
+    echo "No venv in the checkout. Create one:" >&2
     echo "  python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirements-dev.txt" >&2
     exit 1
 fi

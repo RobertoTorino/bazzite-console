@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The apps' icons on the Desktop, which the user switches on or off in the portal (the "Icons on Desktop" pill).
 
-Every app's installer writes an app menu entry and by default the same file on the Desktop. The portal starts every
-app, so the Desktop icons are optional: switched off, the portal removes the Desktop copies of the suite's menu
-entries; switched on, it copies every installed app's menu entry there. Only known suite app entries are touched,
-never the portal's own icon. The menu entries always stay: the app menu, KDE's search and Steam's
-"Add a Non-Steam Game" list find the apps through them."""
+Every app's installer writes an app menu entry, ~/.local/share/applications/ps5-*.desktop (or one of OTHERS), and
+by default the same file on the Desktop. The portal starts every app, so the Desktop icons are optional: switched off, the portal removes
+the Desktop copies of the suite's menu entries; switched on, it copies every installed app's menu entry there. Only
+files named like a suite menu entry are touched, and never the portal's own icon. The menu entries always stay: the
+app menu, KDE's search and Steam's "Add a Non-Steam Game" list find the apps through them."""
 
 from __future__ import annotations
 
@@ -15,27 +15,9 @@ from pathlib import Path
 
 from bazzite_console_core.platform import data_home
 
-APP_LAUNCHERS = frozenset(f"{app_id}.desktop" for app_id in (
-    "ps5-board-test",
-    "ps5-remoteplay",
-    "ps5-datstation",
-    "ps5-pcsx2-manager",
-    "ps5-ppsspp-manager",
-    "ps5-rpcs3-manager",
-    "ps5-sftp-tools",
-    "ps5-shadps4-manager",
-    "ps5-ssd-check",
-    "ps5-webcam",
-    "ps5-controller",
-    "ps5-vita3k-manager",
-    "ps5-xenia-manager",
-    "ps5-xbox-remoteplay",
-    "ps5-system-overlay",
-    "ps5-fan-controller",
-    "ps5-cec-manager",
-    "ps5-upscaler",
-    "ps5-bluetooth",
-))
+PORTAL = "bazzite-console-suite.desktop"
+PATTERN = "ps5-*.desktop"
+OTHERS: tuple[str, ...] = ()                    # apps not ps5-*: none in this suite
 
 
 def desktop_dir() -> Path:
@@ -58,7 +40,8 @@ def launchers(menu: Path) -> list[Path]:
     """The installed apps' menu entries, the portal's own left out."""
     if not menu.is_dir():
         return []
-    return sorted(path for name in APP_LAUNCHERS if (path := menu / name).is_file())
+    found = set(menu.glob(PATTERN)) | {menu / name for name in OTHERS}
+    return sorted(p for p in found if p.name != PORTAL and p.is_file())
 
 
 def on_desktop(desktop: Path, menu: Path) -> list[Path]:

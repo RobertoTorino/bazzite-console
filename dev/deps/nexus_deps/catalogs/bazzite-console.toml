@@ -5,6 +5,10 @@
 name = "Bazzite Console Suite"
 launchers = ["~/.local/bin/bazzite-console-suite"]
 
+[app.core]
+name = "Shared core"
+launchers = []
+
 [app.board]
 name = "PS5 Board Test"
 launchers = ["~/.local/bin/ps5-board-test"]
@@ -87,6 +91,10 @@ description = "The Qt widget toolkit used by every app and the portal."
 
 [[dependency.source]]
 owner = "portal"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "core"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]

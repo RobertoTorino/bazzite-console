@@ -14,7 +14,7 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QFileDialog
 
-from nexus_core.gamepad import Gamepad
+from bazzite_console_core.gamepad import Gamepad
 from sound_lab import APP_NAME, LOGO_PATH, ROOT, main_window, player as player_module
 from sound_lab.main_window import CUSTOM, KEEP_AWAKE_KEY, MainWindow
 from sound_lab.synth import PRESETS, RATE, Sound, render
@@ -221,7 +221,7 @@ def test_the_real_player_plays_a_file_of_its_own_per_sound_and_cleans_up(qapp, t
     assert p.play(render(Sound(length_ms=20)))
     second = Path(p.effect.source().toLocalFile())
     assert second != first and second.is_file() and not first.exists()
-    # one right after another, while the sound before still loads (Windows keeps its file open then): each plays
+    # one right after another, while the sound before still loads (it keeps its file open then): each plays
     assert all(p.play(render(Sound(length_ms=20))) for _ in range(4))
     assert p.keep_awake(True) and p.keeper is not None and p.keeper.loopCount() == -2
     _loaded(qapp, p.keeper)

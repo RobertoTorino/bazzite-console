@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Write a wiki's design mock into its stylesheets:
 
-    python3 tools/apply_design.py                     # every wiki (mkdocs.yml, */mkdocs.yml) that has a mock
-    python3 tools/apply_design.py nexus/mkdocs.yml    # one wiki
+    python3 tools/apply_design.py                     # the wiki (mkdocs.yml), when it has a mock
+    python3 tools/apply_design.py mkdocs.yml          # one wiki
 
 The mock is what the design panel changed while `mkdocs serve` ran: .design-mock.json beside the wiki's mkdocs.yml.
 Each changed variable is written in place into the stylesheet that defines it (the wiki's own, extra_css): the file
@@ -62,7 +62,8 @@ def apply(config: Path, root: Path = ROOT) -> tuple[list[Path], list[str]]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("config", nargs="*", type=Path, help="a wiki's mkdocs.yml (default: every wiki with a mock)")
+    parser.add_argument("config", nargs="*", type=Path,
+                        help="a wiki's mkdocs.yml (default: the wiki, when it has a mock)")
     args = parser.parse_args(argv)
     configs = args.config or ([ROOT / "mkdocs.yml"] if (ROOT / "mkdocs.yml").is_file() and
                               (ROOT / design_panel.MOCK_FILE).is_file() else [])

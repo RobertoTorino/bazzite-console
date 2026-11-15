@@ -6,17 +6,18 @@ from __future__ import annotations
 import argparse
 import sys
 
-from nexus_core import __version__ as CORE_VERSION, instance
-from nexus_core.app import create_app, exec_app
-from nexus_core.nexus import NEXUS
-from nexus_core.platform import data_home
+from bazzite_console_core import __version__ as CORE_VERSION, instance
+from bazzite_console_core.app import create_app, exec_app
+from bazzite_console_core.nexus import NEXUS, checkout_stamp
+from bazzite_console_core.platform import data_home
 
-from . import APP_ID, APP_NAME, INFO, __version__
+from . import APP_ID, APP_NAME, CHECKOUT, INFO
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="demo_recorder", description=f"{APP_NAME} {__version__}")
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__} (core {CORE_VERSION})")
+    stamp = checkout_stamp(CHECKOUT)  # never released: the commit says which code runs
+    parser = argparse.ArgumentParser(prog="demo_recorder", description=f"{APP_NAME} {stamp}".strip())
+    parser.add_argument("--version", action="version", version=f"%(prog)s {stamp} (core {CORE_VERSION})")
     _args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args, theme=NEXUS)           # Nexus's design, not a suite's theme

@@ -7,6 +7,7 @@ from pathlib import Path
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QImage
 
+from bazzite_console_core.widgets import AppHeader
 from demo_recorder import APP_NAME, LOGO_PATH, main_window
 from demo_recorder.workflow import WorkflowError
 
@@ -103,7 +104,7 @@ def test_choose_a_folder_inside_a_suite_loads_the_suite(qapp, monkeypatch, tmp_p
         encoding="utf-8",
     )
     app_folder = tmp_path / "apps" / "fan"
-    (app_folder / "fan_controller").mkdir(parents=True)
+    (app_folder / "fan_control").mkdir(parents=True)
     no_release(monkeypatch, tmp_path)
     monkeypatch.setattr(main_window.QFileDialog, "getExistingDirectory", lambda *args: str(app_folder))
     window = main_window.MainWindow()
@@ -293,6 +294,7 @@ def test_start_hides_window_and_global_shortcut_stops_recording(qapp, monkeypatc
         lambda *_args: (_ for _ in ()).throw(AssertionError("Shortcut stop must not prompt before stopping")),
     )
     monkeypatch.setattr(main_window.subprocess, "Popen", lambda argv, **_kwargs: opened.append(argv))
+    monkeypatch.setattr(main_window, "nexus_header", lambda logo, name, _root: AppHeader(logo, name))   # no git
     window = main_window.MainWindow()
     window.release_dir = release
     window.apps = (main_window.DemoApp("overlay", "Overlay", (tmp_path / "overlay",)),)
@@ -338,3 +340,4 @@ def test_a_second_launch_opens_no_window(qapp, monkeypatch):
     monkeypatch.setattr(entry.instance, "already_running", lambda app_id: asked.append(app_id) or True)
     monkeypatch.setattr("sys.argv", ["demo_recorder"])
     assert entry.main() == 0 and asked == [entry.APP_ID]
+

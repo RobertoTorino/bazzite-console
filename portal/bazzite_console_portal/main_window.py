@@ -2,15 +2,17 @@
 """The portal window: one fullscreen view (bigpicture.py; owner, 01-11-2026: Suite Desktop Mode, the window of
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
 icon (a click plays the Portal Tour), spanning the name with the version and the stage, a line that says what the open
-category is for, ☰ at the top right, and under them a row of big symbols (owner, 05-11-2026: in place of the pills):
-Refresh, Sys info (a small window with what the system reports about the console, sysinfo.py), Install all apps and
-Install all updates (the counts in their tooltips, the updates waiting on a red badge). On the right of the symbols
-how many apps are installed (installed / listed), and under it the CPU's and the GPU's load and temperature with the
-date and time (status.py: the loads every 2 s, the clock every second), the clock on a second line when one is too
-narrow. With a place chosen, the weather follows the symbols (weather.py, from Open-Meteo every 30 minutes): its
-symbol and the place's name. ☰ opens the Settings page (owner, 04-11-2026, as the earlier implementation's portal;
+category is for, ☰ and the close symbol at the top right, and under them a row of big symbols (owner, 05-11-2026: in
+place of the pills): Refresh, Sys info (a small window with what the system reports about the console, sysinfo.py),
+Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
+shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, YouTube (in Brave Browser), and the
+desktop's Bluetooth, Network, Volume (sound) and Screen (display) settings. On the right of the symbols
+how many apps are installed (installed / listed), and under it the status, a line each (owner, 12-11-2026): the
+CPU's and the GPU's load and temperature, the date and time (status.py: the loads every 2 s, the clock every
+second) and, with a place chosen, the weather (weather.py, from Open-Meteo every 30 minutes): its symbol, the
+place's name, the temperature and the sky. ☰ opens the Settings page (owner, 04-11-2026, as the earlier implementation's portal;
 the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the theme (a
-click takes the next one), the wallpaper, the clock (12 or 24 hours, the seconds, the system's time zone, CET or
+click goes to the next one), the wallpaper, the clock (12 or 24 hours, the seconds, the system's time zone, CET or
 UTC), the weather's place and the touchpad's speed, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
 the open category; check is the first tile on Sustainable (owner, 20-10-2026). The portal always opens on the
 first category (owner, 20-10-2026). Everything is reached with the keyboard, the mouse or a controller
@@ -18,7 +20,7 @@ first category (owner, 20-10-2026). Everything is reached with the keyboard, the
 
 A tile: a click, Enter or A opens the app (an app with two windows asks which one), or offers to install one that is
 not installed. An app that runs already comes to the front (kwin.py), also from behind the portal. Its menu (the
-Menu key or X) holds every action: Open, Install (Update, Reinstall) and Uninstall. A right click or Y updates
+Menu key, M, or the left button of the controller's four, SDL's X) holds every action: Open, Install (Update, Reinstall) and Uninstall. A right click or Y updates
 (owner, 04-11-2026, as the earlier implementation's portal): the portal itself while a newer one is out, else the
 app's update or reinstall; a right click on a tile with nothing to update opens its menu. Install, update and
 uninstall run the app's own installer in a terminal window (they may ask for the sudo password and print what they
@@ -68,6 +70,7 @@ virtual mouse of pointer.py), as Steam Input does for the Steam Controller."""
 
 from __future__ import annotations
 
+import os
 import shlex
 import subprocess
 import time
@@ -88,7 +91,7 @@ from PyQt6.QtWidgets import (
     QTextEdit, QVBoxLayout, QWidget, QWidgetAction,
 )
 
-from bazzite_console_core import __version__ as CORE_VERSION, upstream
+from bazzite_console_core import SUITE_MANUAL_URL, __version__ as CORE_VERSION, upstream
 from bazzite_console_core.platform import bin_home, expand, launch_in_terminal
 from bazzite_console_core.settings import open_settings
 from bazzite_console_core.theme import BLUE, ORANGE, RED, THEMES, muted, save_theme_name, theme_name
@@ -101,14 +104,19 @@ from . import wallpaper, weather
 from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
 from .gamepad import TOUCH_SPEED, Gamepad
 from .looks import VEIL
-from . import APP_ICONS, APP_ID, APP_NAME, CARDS, INFO, STAGE, STAGE_NOTE, SUITE_MANUAL_URL, __version__
-from .manifest import CATEGORIES, AppEntry, CardEntry, load_cards
+from . import APP_ICONS, APP_ID, APP_NAME, INFO, STAGE, STAGE_NOTE, __version__
+from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate
 
 PROGRESS_MS = 500                       # how often a download's size is shown (a 90 MB release looked like a hang)
+# Asked only while a download or an install runs, with what exiting does to it; else the portal closes at once
+# (owner, 12-11-2026: no question on exit).
 EXIT_QUESTION = "Do you really want to exit the Portal?"
-# Ignore a held B press briefly after another app returns focus to the portal.
+# B counts once the portal has had the focus this long (owner, 12-11-2026: B closes an app): the portal reads the
+# controller too, and gets the focus back the moment the app closes, so the press that closed the app would close
+# the portal with it.
 BACK_GRACE_S = 0.5
+# The header's shortcuts (owner, 12-11-2026): what a message calls each one, and what finds its program.
 SHORTCUTS = {"files": ("The file manager", shortcuts.files), "steam": ("Steam", shortcuts.steam),
              "youtube": ("YouTube", shortcuts.youtube),
              "bluetooth": ("The Bluetooth settings", shortcuts.bluetooth_settings),
@@ -130,7 +138,7 @@ from .sources import (Records, SourceError, Sources, fetch_portal, installed_fro
                       local_version)
 
 POLL_MS = 1000
-STATUS_MS = 2000                # the status line on the right of the symbols: load and temperatures this often,
+STATUS_MS = 2000                # the status on the right of the symbols: load and temperatures this often,
 CLOCK_MS = 1000                 # the date and time this often (the seconds may show)
 WAIT_UPDATE = "The portal's update starts once the download or install that runs now has finished."
 VEIL_MAX = 90                   # the slider's end: the picture still shows; "No wallpaper" takes it away
@@ -152,7 +160,7 @@ SETTING_LINES = ("An icon on the Desktop for every installed app, or only the po
                  "The look of every app in the suite. The portal shows it at once.",
                  "A picture behind the portal, and how much of it shows through.",
                  "12 or 24 hours, the seconds, and the time zone of the clock.",
-                 "The weather where you are, beside the symbols, from Open-Meteo.",
+                 "The weather where you are, under the date and time, from Open-Meteo.",
                  "How fast a controller's touchpad moves the mouse pointer.")
 VALUE_PX = 300                  # a value in the Sys info window wraps beyond this width
 SYSINFO_OPACITY = 85            # % of the window color behind the Sys info text: what lies behind shows through
@@ -163,7 +171,6 @@ CATEGORY_HINTS = {
     "graphics": "Graphics features and tools for games.",
     "gaming": "Games, emulators, streaming and controller tools.",
     "utilities": "System information, connectivity and other console utilities.",
-    "media": "Video and other media.",
 }
 
 BOARD_WARNING = (
@@ -269,9 +276,9 @@ class AppState:
         source = entry.tag or "runs from the suite checkout"
         # An app that changes the board says on hover what it touches and how that is undone (apps.toml's
         # board_change), under the orange line its tile shows.
-        system = (f"<p style='color:{ORANGE};'><b>Changes the board.</b> {escape(entry.board_change)}</p>"
-                  if entry.changes_board and entry.board_change else "")
-        self.tooltip = (f"<p><b>{escape(entry.name)}</b></p><p>{escape(entry.summary)}</p>" + system
+        board = (f"<p style='color:{ORANGE};'><b>Changes the board.</b> {escape(entry.board_change)}</p>"
+                 if entry.changes_board and entry.board_change else "")
+        self.tooltip = (f"<p><b>{escape(entry.name)}</b></p><p>{escape(entry.summary)}</p>" + board
                         + f"<p style='color:gray;'>{escape(detail)}<br>{escape(source)}"
                         + (f"<br>{escape(how)}" if installed else "") + "</p>")
         self.action = "Update" if update else "Reinstall" if (reinstall or installed) else "Install"
@@ -479,7 +486,7 @@ class MainWindow(QMainWindow):
         self.records = records
         self.build = build
         self.pending: Pending | None = None
-        self.exit_confirmed = False                     # the exit question was answered Yes: close without asking
+        self.exit_confirmed = False                     # the exit was decided already: close without asking
         self.progress_timer = QTimer(self)              # while a release downloads: its size on the tile
         self.progress_timer.setInterval(PROGRESS_MS)
         self.progress_timer.timeout.connect(self.refresh)
@@ -507,7 +514,7 @@ class MainWindow(QMainWindow):
         self.gamepad = gamepad or Gamepad(self)
         self.keyboard = keyboard.OnScreenKeyboard()                       # R3 (tests give it a fake bus)
         self.gamepad.action.connect(self._gamepad_action)
-        self.active_since = 0.0
+        self.active_since = 0.0                         # when the portal last got the focus (BACK_GRACE_S)
         QApplication.instance().applicationStateChanged.connect(self._focus_changed)
         self.mouse = mouse or pointer.VirtualMouse()                     # made at the first touch
         self.gamepad.pointer_moved.connect(self._pointer_moved)
@@ -527,8 +534,7 @@ class MainWindow(QMainWindow):
         self.resize(1600, 900)                          # the portal runs fullscreen; this when it is not
 
         self.states: dict[str, AppState] = {entry.key: AppState(entry) for entry in entries}
-        cards = load_cards(CARDS)
-        self.big = BigPicture(entries, CATEGORIES, CATEGORY_HINTS, __version__, STAGE, STAGE_NOTE, cards=cards)
+        self.big = BigPicture(entries, CATEGORIES, CATEGORY_HINTS, __version__, STAGE, STAGE_NOTE)
         self.big.set_veil(self.transparency())
         self.big.open_requested.connect(self._open_tile)
         self.big.menu_requested.connect(self._tile_menu)
@@ -579,6 +585,7 @@ class MainWindow(QMainWindow):
         self.close_button = SymbolButton(glyphs.close, "Exit: close the portal. B on the controller and Escape close "
                                          "it too.")
         self.close_button.clicked.connect(self.exit_portal)
+        # The shortcuts (owner, 12-11-2026): programs outside the suite, started from the header (shortcuts.py).
         self.files_button = SymbolButton(glyphs.folder, "Files: open the file manager on your home folder.")
         self.steam_button = SymbolButton(glyphs.steam, "Steam: open Steam.")
         self.youtube_button = SymbolButton(glyphs.youtube, "YouTube: open YouTube fullscreen in Brave Browser, which "
@@ -587,11 +594,12 @@ class MainWindow(QMainWindow):
         self.network_button = SymbolButton(glyphs.network, "Network: open the desktop's network settings.")
         self.volume_button = SymbolButton(glyphs.volume, "Volume: open the desktop's sound settings.")
         self.screen_button = SymbolButton(glyphs.screen, "Screen: open the desktop's display settings.")
+        # In the row's order: Files before Steam (owner, 12-11-2026)
         self.shortcuts = {self.files_button: "files", self.steam_button: "steam", self.youtube_button: "youtube",
                           self.bluetooth_button: "bluetooth", self.network_button: "network",
                           self.volume_button: "sound", self.screen_button: "display"}
         for button in self.shortcuts:
-            button.clicked.connect(self._shortcut_clicked)
+            button.clicked.connect(self._shortcut_clicked)      # a bound method: no lambda keeps self
         self.icons_box = TogglePill(
             "Icons on Desktop", "On: every installed app gets an icon on the Desktop. Off: only the portal's icon is "
             "there, and you start the apps from here. The apps stay in the app menu either way. Click to switch.",
@@ -619,7 +627,9 @@ class MainWindow(QMainWindow):
         self.weather_pill.clicked.connect(self._weather_menu)
         self.touch_pill = HeaderPill("100 %", "Touchpad")
         self.touch_pill.clicked.connect(self._next_touch_speed)
-        # Settings stay on their own page; the app actions and system shortcuts share the header row.
+        # The settings have a page of their own behind ☰ (owner, 04-11-2026, as the earlier implementation's portal);
+        # what acts on the apps stays in the header, as big symbols (owner, 05-11-2026), ☰ at the top right, and
+        # the close symbol in the corner itself (owner, 12-11-2026).
         self.shortcut_buttons = list(self.shortcuts)
         self.header_buttons = [self.refresh_button, self.sysinfo_button, self.apps_button, self.updates_button,
                                *self.shortcut_buttons]
@@ -1070,6 +1080,12 @@ class MainWindow(QMainWindow):
         if self.busy():
             return
         launcher = bin_home() / APP_ID
+        # The portal's own update replaced the folder this one was started in: a shell started there says it
+        # cannot read its current directory. The launcher's folder is still there.
+        try:
+            os.chdir(launcher.parent)
+        except OSError:
+            pass
         if not self.launch(["sh", "-c", 'sleep 1; exec "$0"', str(launcher)]):
             QMessageBox.warning(self, APP_NAME, f"The portal could not be started again ({launcher}). Close this "
                                 "window and start it from the app menu.")
@@ -1078,7 +1094,7 @@ class MainWindow(QMainWindow):
         QCoreApplication.quit()
 
     def show_status(self) -> None:
-        """The status line on the right of the symbols: the clock every CLOCK_MS, the loads sampled every STATUS_MS;
+        """The status on the right of the symbols: the clock every CLOCK_MS, the loads sampled every STATUS_MS;
         none while the portal is minimized or hidden, so it costs nothing behind a game."""
         if self.isMinimized() or not self.isVisible():
             return
@@ -1281,7 +1297,7 @@ class MainWindow(QMainWindow):
                                  zone_key if zone_key in status.ZONES else style.zone)
 
     def _show_clock(self) -> None:
-        """The Clock pill and the status line in the clock's style."""
+        """The Clock pill and the status in the clock's style."""
         style = self.clock_style()
         zone = status.ZONES[style.zone]
         self.clock_pill.set_value(f"{style.hours} h", (
@@ -1328,7 +1344,7 @@ class MainWindow(QMainWindow):
         self._show_clock()
 
     def weather_menu(self) -> QMenu:
-        """The Weather pill's menu, and the weather symbol's: choose a place, the weather again now, or none."""
+        """The Weather pill's menu: choose a place, the weather again now, or none."""
         menu = QMenu(self)
         menu.addAction("Choose a place…").setData("choose")
         menu.addAction("Update the weather now").setData("update")
@@ -1394,11 +1410,13 @@ class MainWindow(QMainWindow):
         self._show_weather()
 
     def _show_weather(self) -> None:
-        """The Weather pill and the status' third line; hidden without a chosen place."""
+        """The Weather pill (the place, or None) and the status' third line: the sky's symbol, the place's name, the
+        temperature and the sky, the wind, the humidity and the time it came in its tooltip; no line without a
+        place."""
         place, now = self.place, self.weather
         name = place.name if place else ""
         self.weather_pill.set_value(name or "None",
-            (f"The weather at {place.label}, in the status at the top. " if place else
+            (f"The weather at {place.label}, under the date and time at the top. " if place else
              "No weather: nothing is sent to Open-Meteo. ")
             + "Click to choose a place, to update the weather now, or for no weather.")
         if place is None:
@@ -1408,8 +1426,7 @@ class MainWindow(QMainWindow):
             sky = now.description or f"weather code {now.code}"
             wind = f", wind {now.wind_kmh:.0f} km/h" if now.wind_kmh is not None else ""
             humidity = f", humidity {now.humidity} %" if now.humidity is not None else ""
-            tip = f"{place.label}: {sky}, {now.temperature:.0f}°C{wind}{humidity}. " \
-                  f"From Open-Meteo at {self.weather_at}."
+            tip = f"{place.label}: {sky}, {now.temperature:.0f}°C{wind}{humidity}. From Open-Meteo at {self.weather_at}."
             detail, glyph = f"{now.temperature:.0f}°C  {sky}", glyphs.weather(now.symbol, now.is_day)
         else:
             tip, glyph = f"{place.label}: the weather is on its way from Open-Meteo.", glyphs.weather("cloudy")
@@ -1579,7 +1596,8 @@ class MainWindow(QMainWindow):
         self.big.show_settings(not self.big.in_settings())
 
     def escape(self) -> None:
-        """Escape, or B with nothing open: skip the intro, leave Settings, or close the portal."""
+        """Escape, or B with nothing open: skip the intro while it plays, leave the Settings page, else close the
+        portal."""
         if self.intro is not None:
             self.intro.skip()
         elif self.big.in_settings():
@@ -1588,13 +1606,15 @@ class MainWindow(QMainWindow):
             self.exit_portal()
 
     def exit_portal(self) -> None:
-        """The close symbol, and B or Escape with nothing open: close unless work in progress needs confirmation."""
+        """The close symbol, and B or Escape with nothing open: the portal closes."""
         if self.confirm_exit():
             self.exit_confirmed = True
             self.close()
 
     def confirm_exit(self) -> bool:
-        """Ask only while a download or install runs, and explain what happens to it on exit."""
+        """The exit asks nothing (owner, 12-11-2026: the question on every exit, of 05-11-2026, is gone). Only while a
+        download or an install runs it asks, No the default, and says what exiting does to it: the download stops,
+        or the installer finishes in its terminal, unrecorded."""
         if not self.busy():
             return True
         text = EXIT_QUESTION + ("\n\nThe download stops." if self.downloading() else
@@ -1605,19 +1625,18 @@ class MainWindow(QMainWindow):
         return answer == QMessageBox.StandardButton.Yes
 
     def closeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """A desktop close asks only during an operation; an internal close, such as a restart, never asks."""
+        """The window closed by the desktop (its close button, Alt+F4) closes as Escape, B and the close symbol do:
+        at once, or after the question while a download or an install runs; a close of the portal's own (a restart)
+        never asks."""
         if event.spontaneous() and not self.exit_confirmed and not self.confirm_exit():
             event.ignore()
             return
         self._close_window(event)
 
     # ---------------------------------------------------------------------------------------- the tiles
-    def _open_tile(self, entry: AppEntry | CardEntry) -> None:
+    def _open_tile(self, entry: AppEntry) -> None:
         """A tile pressed: open the app (one with two windows asks which one), or offer to install one that is not
         installed."""
-        if isinstance(entry, CardEntry):
-            self.open_card(entry)
-            return
         state = self.states[entry.key]
         if entry.withdrawn or state.busy:
             return
@@ -1636,27 +1655,6 @@ class MainWindow(QMainWindow):
         tile = self.big.tiles[entry.key]
         menu.exec(tile.mapToGlobal(tile.rect().bottomLeft()))
         menu.deleteLater()
-
-    def open_card(self, card: CardEntry) -> None:
-        """Open an external media card in its required Flatpak."""
-        try:
-            result = subprocess.run(["flatpak", "info", card.flatpak_id], capture_output=True, text=True, timeout=5)
-        except FileNotFoundError:
-            QMessageBox.warning(self, APP_NAME, f"Flatpak is not available; cannot check {card.flatpak_name}.")
-            return
-        except subprocess.TimeoutExpired:
-            QMessageBox.warning(self, APP_NAME, f"Could not check whether {card.flatpak_name} is installed.")
-            return
-        except OSError as exc:
-            QMessageBox.critical(self, APP_NAME, f"Could not check {card.flatpak_name}:\n\n{exc}")
-            return
-        if result.returncode:
-            detail = f"\n\n{result.stderr.strip()}" if result.stderr.strip() else ""
-            QMessageBox.information(self, APP_NAME,
-                                    f"{card.flatpak_name} is required. Install its Flatpak to open {card.name}.{detail}")
-            return
-        if not self.launch(list(card.launch)):
-            QMessageBox.critical(self, APP_NAME, f"{card.name} could not be started with {card.flatpak_name}.")
 
     def install_from_tile(self, entry: AppEntry) -> None:
         """A tile of an app that is not installed: install it after one question; for an app that changes the board
@@ -1745,8 +1743,8 @@ class MainWindow(QMainWindow):
 
     def _gamepad_action(self, action: str) -> None:
         """What the controller does reaches the portal as the keys it would press: in a menu or a dialog the keys
-        Qt knows, in the view its own moves. Only while the portal has focus; B is ignored briefly when another
-        window has just closed and returned focus."""
+        Qt knows, in the view its own moves. Only while the portal's window has the focus, and B only once it has
+        had it for a moment (BACK_GRACE_S)."""
         if QApplication.activeWindow() is None:
             return
         if action == "back" and time.monotonic() - self.active_since < BACK_GRACE_S:
@@ -1796,14 +1794,13 @@ class MainWindow(QMainWindow):
                 self.big.focus_first()
         elif action == "menu":
             tile = self.big.focused_tile()
-            if tile is not None and tile.key in self.states:
+            if tile is not None:
                 self._tile_menu(self.states[tile.key].entry)
         elif action == "settings":
             self.toggle_settings()
         elif action == "update":
             tile = self.big.focused_tile()
-            state = self.states.get(tile.key) if tile is not None else None
-            self.update_action(state.entry if state is not None else None)
+            self.update_action(self.states[tile.key].entry if tile is not None else None)
         elif action in ("previous", "next"):
             self.big.change_category(-1 if action == "previous" else 1)
         elif action == "back":
@@ -2015,7 +2012,8 @@ class MainWindow(QMainWindow):
         self.open_shortcut(self.shortcuts[self.sender()])
 
     def open_shortcut(self, which: str) -> None:
-        """Start a header shortcut and bring its window forward when it is already running."""
+        """A shortcut's symbol pressed: start its program, and bring its window to the front when it runs already
+        (kwin.py). One whose program is missing says what is needed."""
         name, find = SHORTCUTS[which]
         try:
             start = find()

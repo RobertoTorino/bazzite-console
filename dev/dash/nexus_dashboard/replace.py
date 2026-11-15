@@ -16,7 +16,7 @@ from __future__ import annotations
 import os
 import signal
 
-from nexus_core import instance
+from bazzite_console_core import instance
 from PyQt6.QtCore import QLockFile
 from PyQt6.QtNetwork import QLocalSocket
 from PyQt6.QtWidgets import QWidget

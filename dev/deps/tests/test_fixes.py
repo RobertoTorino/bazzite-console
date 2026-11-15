@@ -141,11 +141,12 @@ def test_remind_opens_the_app_on_a_click(monkeypatch):
     monkeypatch.setattr(entry, "read_sources", lambda: ())
     monkeypatch.setattr(entry, "read_upstreams", lambda section: ())         # GitHub is not asked from a test
     monkeypatch.setattr(entry, "notify", lambda title, text, icon, actions: "open")
+    monkeypatch.setattr(entry, "checkout_stamp", lambda checkout: "")  # git is not started
     monkeypatch.setattr(entry.subprocess, "Popen", lambda argv, **kw: started.append(argv))
     monkeypatch.setattr("sys.argv", ["nexus_deps", "--remind"])
     assert entry.main() == 0
     assert len(started) == 1 and started[0][0].endswith("dev/deps/run.sh")
-    assert started[0][1:] == ["--suite", "bazzite-console"]
+    assert started[0][1:] == []
     monkeypatch.setattr(entry, "notify", lambda *args: "fix")
     started.clear()
     assert entry.main() == 0 and started[0][-1] == "--fix"

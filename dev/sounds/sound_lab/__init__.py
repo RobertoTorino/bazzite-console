@@ -6,17 +6,17 @@ between buttons, and saves the sound as a WAV. A Nexus app (dev/), run from the 
 
 from pathlib import Path
 
-from nexus_core import AppInfo
+from bazzite_console_core import AppInfo
+from bazzite_console_core.nexus import checkout_commit
 
 APP_NAME = "Nexus Sound Lab"
 APP_ID = "nexus-sound-lab"
-__version__ = "0.2.0"
 
 ROOT = Path(__file__).resolve().parent.parent
-CHECKOUT = ROOT.parents[1]                  # the repository (Nexus), dev/sounds/ in it
+CHECKOUT = ROOT.parents[1]                  # the repository, dev/sounds/ in it
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 
 # Settings in ~/.config/nexus-sound-lab/nexus-sound-lab.ini: the last sound, preset and save folder
-INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH, settings_ini=True)
+INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=checkout_commit(CHECKOUT)[0], logo=LOGO_PATH, settings_ini=True)
 
-__all__ = ["APP_ID", "APP_NAME", "CHECKOUT", "INFO", "LOGO_PATH", "ROOT", "__version__"]
+__all__ = ["APP_ID", "APP_NAME", "CHECKOUT", "INFO", "LOGO_PATH", "ROOT"]

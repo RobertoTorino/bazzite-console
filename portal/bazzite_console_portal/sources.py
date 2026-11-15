@@ -28,9 +28,10 @@ from bazzite_console_core.appinfo import SUITE_REPO_URL
 from bazzite_console_core.platform import expand
 
 from . import suite_folder
-from .manifest import AppEntry, RENAMED
+from .manifest import RENAMED, TAG_PREFIX, AppEntry
 
 Download = Callable[[str, Path], None]          # url, destination file
+# A release folder is named by its tag; one without the prefix an earlier portal kept, before the tags had ps5-
 _RELEASE_FOLDER = re.compile(r"^(?:ps5-)?(?P<key>[a-z0-9-]+)-v\d+\.\d+\.\d+$")
 TIMEOUT = 30
 
@@ -267,7 +268,8 @@ class Records:
         except (OSError, ValueError):
             self._data = {}
         # An app renamed in the suite: its record moves to the new key, the tag's prefix with it (ace-queues-v0.2.0
-        # under "ace-queues" is ace-v0.2.0 under "ace"), so the copy needs no reinstall and gets no update it has.
+        # under "ace-queues" is ace-v0.2.0 under "ace", and so with the suite's TAG_PREFIX before it), so the copy
+        # needs no reinstall and gets no update it has.
         moved = False
         for old, new in RENAMED.items():
             tag = self._data.pop(old, None)
@@ -275,7 +277,8 @@ class Records:
                 continue
             moved = True
             if new not in self._data:
-                self._data[new] = f"{new}-v{tag[len(old) + 2:]}" if tag.startswith(f"{old}-v") else tag
+                prefix = next((p for p in (TAG_PREFIX, "") if tag.startswith(f"{p}{old}-v")), None)
+                self._data[new] = tag if prefix is None else f"{prefix}{new}-v{tag[len(prefix + old) + 2:]}"
         if moved:
             self._save()
 

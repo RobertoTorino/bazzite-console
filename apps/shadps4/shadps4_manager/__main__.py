@@ -11,9 +11,9 @@ from PyQt6.QtCore import QTimer
 
 from bazzite_console_core import __version__ as CORE_VERSION, applog, instance
 from bazzite_console_core.app import create_app, exec_app
+from bazzite_console_core import exit_keys
 
 from . import APP_ID, APP_NAME, INFO, __version__
-from . import exit_keys
 
 
 def main() -> int:
@@ -31,7 +31,7 @@ def main() -> int:
     args.pkg_file = [os.path.abspath(f) for f in args.pkg_file]
 
     app = create_app(INFO, qt_args)
-    exit_keys.install(app)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     # A second launch (opening a package with the app from the file manager) hands its package to the open window.
     if instance.already_running(INFO.app_id, args.pkg_file):
         return 0

@@ -10,7 +10,7 @@
 - [ ] New icons, sounds or other media are my own work or under a compatible license; their source is named below,
       and whether they were made with generative AI tools.
 - [ ] The app's CHANGELOG (or the root one) has an entry.
-- [ ] `./test.sh` and `tools/ci-local.sh` pass.
+- [ ] `tools/ci-local.sh` or `./test.sh` passes.
 
 ## How I tested it
 

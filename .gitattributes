@@ -1,1 +1,20 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# Every text file is LF in the repository and in the working tree, whatever core.autocrlf says: scripts, units and
+# .desktop files must reach the machine with LF.
+* text=auto eol=lf
+
+# Never touch these. .ts files are Qt XML, not TypeScript; .qm are compiled translations.
+*.qm                binary
+*.ts                text eol=lf linguist-language=XML
+*.ttf               binary
+*.png               binary
+*.jpg               binary
+*.webp              binary
+*.woff2             binary
+*.wav               binary
+*.ogg               binary
+*.mp3               binary
+*.mp4               binary
+*.gz                binary
+*.ico               binary
+*.cpio              binary
+*.aml               binary

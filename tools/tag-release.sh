@@ -1,119 +1,75 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Build and publish already-committed Bazzite Console releases with gh. This does not commit or push source.
+# Tags release commits and pushes the tags, but only when they can be built: HEAD must hold each tag's version
+# (the bump is committed), have no uncommitted changes in that folder, be pushed to origin/main, and have passed CI
+# on GitHub (tools/ci_state.py; it waits while CI still runs, up to an hour): ci.yml, which checks the suite, core,
+# the tools and the repository's rules. A portal tag also needs every app release HEAD's apps.toml pins: tagged on
+# origin and pinned with its sha256. A plain `git tag` tags whatever HEAD is, also a commit from before the bump or
+# one CI failed, which release.yml then refuses. release.yml builds and publishes each tag pushed.
+#
+#   tools/tag-release.sh ps5-portal-v0.9.5
+#   tools/tag-release.sh ps5-fan-v2.0.1 ps5-upscaler-v0.1.2
 set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+die() { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
+info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
+
 if [[ "${1:-}" == -h || "${1:-}" == --help ]]; then
-    echo "Usage: tools/tag-release.sh ps5-<app>-v<x.y.z> [...]"
-    echo "Builds releases from the pushed HEAD and publishes their assets with gh."
-    echo "A portal release downloads its required app release as the bundle."
-    echo "Remote Play also builds its native decoder wheel (maturin and a C toolchain required)."
+    sed -n '3,11p' "$0" | sed 's/^# \{0,1\}//'
     exit 0
 fi
-[[ $# -ge 1 ]] || { echo "Usage: tools/tag-release.sh ps5-<app>-v<x.y.z> [...]" >&2; exit 2; }
-PY=${PYTHON:-}
-if [[ -z "$PY" ]]; then
-    for candidate in "$SUITE/.venv-linux/bin/python" python3; do
-        if command -v "$candidate" >/dev/null 2>&1 || [[ -x "$candidate" ]]; then
-            PY=$candidate
-            break
+prefix=$(tr -d '[:space:]' < TAG_PREFIX)
+[ $# -gt 0 ] || die "Usage: $0 ${prefix}<name>-v<x.y.z> [...], for example $0 ${prefix}portal-v0.9.5"
+command -v python3 >/dev/null || die "No python3 found."
+
+tags=()
+for tag in "$@"; do
+    read -r name version < <(python3 tools/suites.py --tag "$tag") ||
+        die "$tag is not ${prefix}<name>-v<x.y.z> (tools/suites.py --tag)."
+    if [ "$name" = portal ]; then dir=portal; else dir=apps/$name; fi
+    [ -f "$dir/VERSION" ] || die "$tag: there is no $dir/VERSION."
+    # A new app is not in HEAD yet: git show fails, which pipefail would turn into a silent exit 128.
+    committed=$(git show "HEAD:$dir/VERSION" 2>/dev/null | tr -d '[:space:]') || committed=""
+    if [ "$committed" != "$version" ]; then
+        if [ "$(tr -d '[:space:]' <"$dir/VERSION")" = "$version" ]; then
+            die "$tag: the bump to $version is not committed yet (HEAD has $dir/VERSION ${committed:-not at all}). Commit it, push, then run this again."
         fi
-    done
-fi
-[[ -n "$PY" ]] || { echo "No Python interpreter found." >&2; exit 1; }
-command -v gh >/dev/null || { echo "GitHub CLI (gh) is required to publish a release." >&2; exit 1; }
-
-GIT_ROOT=$(git -C "$SUITE" rev-parse --show-toplevel)
-SUITE_REL=$(realpath --relative-to="$GIT_ROOT" "$SUITE")
-git -C "$GIT_ROOT" fetch -q origin main
-git -C "$GIT_ROOT" merge-base --is-ancestor HEAD origin/main || {
-    echo "HEAD is not on origin/main; push the release commit before publishing." >&2
-    exit 1
-}
-
-WORK=
-cleanup() {
-    [[ -z "$WORK" ]] || rm -rf "$WORK"
-}
-trap cleanup EXIT
-
-for TAG in "$@"; do
-    parsed=$("$PY" "$SUITE/tools/suites.py" --tag "$TAG") || exit 1
-    read -r suite app version <<<"$parsed"
-    [[ "$suite" == "." ]] || { echo "$TAG does not belong to this Bazzite Console checkout." >&2; exit 1; }
-    if [[ "$app" == portal ]]; then
-        source_dir=portal
-    else
-        source_dir="apps/$app"
+        die "$tag: HEAD has $dir/VERSION ${committed:-not at all}, not $version."
     fi
-    [[ -f "$SUITE/$source_dir/VERSION" ]] || { echo "$TAG has no $source_dir/VERSION." >&2; exit 1; }
-    actual=$("$PY" - "$SUITE/$source_dir/VERSION" <<'PY'
-from pathlib import Path
-import sys
-
-print(Path(sys.argv[1]).read_text(encoding="utf-8").strip())
-PY
-    )
-    [[ "$actual" == "$version" ]] || {
-        echo "$TAG expects version $version, but $source_dir/VERSION is $actual." >&2
-        exit 1
-    }
-
-    REPO_PATH="$SUITE_REL/$source_dir"
-    git -C "$GIT_ROOT" diff --quiet HEAD -- "$REPO_PATH" || {
-        echo "$REPO_PATH has uncommitted changes; commit and push them before publishing." >&2
-        exit 1
-    }
-    [[ -z "$(git -C "$GIT_ROOT" status --porcelain -- "$REPO_PATH")" ]] || {
-        echo "$REPO_PATH has untracked changes; commit and push them before publishing." >&2
-        exit 1
-    }
-
-    WORK=$(mktemp -d "${TMPDIR:-/tmp}/bazzite-release.XXXXXX")
-    args=("$TAG" "$WORK/build")
-    if [[ "$app" == portal ]]; then
-        bundle_tag=$("$PY" - "$SUITE/portal/apps.toml" <<'PY'
-import sys
-import tomllib
-from pathlib import Path
-
-manifest = tomllib.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-required = next((entry for entry in manifest.get("apps", {}).values() if entry.get("required")), None)
-if required is None or not required.get("tag"):
-    raise SystemExit("portal/apps.toml has no pinned required app release")
-print(required["tag"])
-PY
-        )
-        mkdir "$WORK/bundle"
-        gh release download "$bundle_tag" --dir "$WORK/bundle" \
-            --pattern "$bundle_tag.tar.gz" --pattern SHA256SUMS
-        args+=(--bundle "$WORK/bundle")
+    git diff --quiet HEAD -- "$dir" ||
+        die "$tag: $dir has changes that are not committed (git status $dir). Commit them first: the tag gets only what is committed."
+    git rev-parse -q --verify "refs/tags/$tag" >/dev/null &&
+        die "$tag exists already. To move it: git tag -d $tag && git push origin :refs/tags/$tag (as a repository admin: the release-tag ruleset lets only admins delete a tag)"
+    if [ "$name" = portal ] && git cat-file -e "HEAD:portal/apps.toml" 2>/dev/null; then
+        # release.yml builds a portal only on app releases that exist, pinned with their checksum.
+        pins=$(git show "HEAD:portal/apps.toml" 2>/dev/null | python3 -c '
+import sys, tomllib
+for key, app in tomllib.loads(sys.stdin.read()).get("apps", {}).items():
+    print(app.get("tag", ""), app.get("sha256", "") or "-")') ||
+            die "$tag: could not read portal/apps.toml at HEAD."
+        remote=$(git ls-remote --tags origin) || die "Could not reach origin to check the pinned app releases."
+        while read -r pin sha; do
+            [ -n "$pin" ] || continue
+            awk -v ref="refs/tags/$pin" '$2 == ref { found = 1 } END { exit !found }' <<<"$remote" ||
+                die "$tag: apps.toml pins $pin, which is not tagged yet. Tag the apps first ($0 $pin), then pin their releases and commit, push and tag the portal."
+            [ "$sha" != - ] ||
+                die "$tag: apps.toml pins $pin without its sha256. Pin it when GitHub has built it (tools/pin_app.py), commit, push, then tag the portal."
+        done <<<"$pins"
     fi
-    if [[ "$app" == remoteplay ]]; then
-        # maturin: on the PATH, or in the virtual environment of the Python used here (requirements-dev.txt).
-        MATURIN=$(command -v maturin || true)
-        [[ -n "$MATURIN" || ! -x "$(dirname "$PY")/maturin" ]] || MATURIN="$(dirname "$PY")/maturin"
-        [[ -n "$MATURIN" ]] || {
-            echo "maturin is required to build the Remote Play release wheel." >&2
-            exit 1
-        }
-        ffmpeg_dir=${PS5_FFMPEG_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ps5-remoteplay/ffmpeg-7.1.2}
-        if [[ ! -f "$ffmpeg_dir/lib/pkgconfig/libavcodec.pc" ]]; then
-            "$SUITE/apps/remoteplay/native/ffmpeg/build.sh" "$ffmpeg_dir"
-        fi
-        mkdir "$WORK/wheel"
-        (
-            cd "$SUITE/apps/remoteplay/native"
-            PS5_FFMPEG_DIR="$ffmpeg_dir" "$MATURIN" build --release --locked --compatibility linux \
-                --features python,pyo3/extension-module,decoder --out "$WORK/wheel"
-        )
-        PS5_NATIVE_WHEEL_DIR="$WORK/wheel" "$PY" "$SUITE/tools/build_release.py" "${args[@]}"
-    else
-        "$PY" "$SUITE/tools/build_release.py" "${args[@]}"
-    fi
-    commit=$(git -C "$GIT_ROOT" rev-parse HEAD)
-    "$SUITE/tools/publish_release.sh" "$TAG" "$commit" "$WORK/build"
-    cleanup
-    WORK=
+    tags+=("$tag")
+done
+
+git fetch -q origin main || die "Could not reach origin to check that HEAD is pushed."
+git merge-base --is-ancestor HEAD origin/main ||
+    die "HEAD ($(git rev-parse --short HEAD)) is not on origin/main yet: git push first, then run this again."
+head=$(git rev-parse HEAD)
+info "Checking that CI (ci.yml) passed on ${head:0:7} (waits while it runs, up to an hour)"
+python3 tools/ci_state.py --wait 60 "$head" ||
+    die "CI has not passed on HEAD (${head:0:7}), so it gets no tag: fix what failed, commit and push, then run this again."
+
+for tag in "${tags[@]}"; do
+    git tag "$tag"
+    git push -q origin "$tag"
+    info "Tagged ${head:0:7} as $tag and pushed it: release.yml builds and publishes it now."
 done

@@ -1,3 +1,8 @@
+Changelog: 15-11-2026 10:16:55
+
+Fixed. Escape is core's exit_keys, without the controller (the app's own copy is gone): the controller stays the
+game's, and a stream window keeps its keys.
+
 Changelog: 15-11-2026 07:43:14
 
 Release 1.0.2.

@@ -1,3 +1,69 @@
+Changelog: 15-11-2026 10:55:02
+
+Added. DESIGN.md at the root lists every color of the suite, where it is defined and what it is for (owner, 15-11-2026):
+the rules, the color families, the apps' themes and state colors, the wiki, the development apps' Nexus design, the
+apps' own colors and the portal screenshot's palette, each with an SVG sample in design/colors/. tools/make_design.py
+writes both from its listing (this suite's apps and colors); tools/make_design.py --check, run by tools/tests
+(test_make_design.py), says when DESIGN.md or a sample is out of date and when the wiki's stylesheet and the listing
+disagree. The samples no color uses any more are gone from design/colors/.
+
+Changelog: 15-11-2026 10:20:56
+
+Fixed. tools/check-release.sh is its twin's: the test mark lies in the suite's folder with the time
+of the portal's launcher (an install by hand ends it), `local` starts the portal with the pinned releases
+(--source release), the uninstallers read no terminal input, and status reads the installed portal's VERSION.
+The root install.sh says what it does and takes every option of portal/install.sh.
+
+Fixed. The installer tests are their twin's: portal.sh (from the checkout, a release-shaped tree,
+the portal's own update from the state folder and from inside the portal's folder, uninstall keeping the
+wallpaper, the question per app, --all), release.sh (Board Test, SSD Check and portal releases built, the portal's
+fetch and checksum refusal, check-release.sh local/release/draft; `release.sh release TAG` stays), release-check.sh,
+and one per development app (dash, demo, deps, itests, nrt, sounds). not-installed.sh and shims.sh set
+PS5_BOARD_TEST_OPT_DIR and PS5_BOARD_TEST_LOG_DIR, which the installers read (the old BAZZITE_TEST_* and
+NEXUS_CONSOLE_* names were never read, so the /opt and /var/log sandboxes did not apply).
+
+Fixed. README.md carries the Beta notice and the wiki's disclaimer word for word; the READMEs of Board Test, CEC
+Manager, Fan Controller, System Overlay and XBOX Remote Play have the three badges, and the game managers', Remote
+Play's and XBOX Remote Play's READMEs the suite's disclaimer.
+
+Changelog: 15-11-2026 10:15:40
+
+Breaking. A release by hand is tagged, not built here: tools/tag-release.sh checks that HEAD holds each tag's
+version, is pushed and passed CI on GitHub (and, for a portal, that every pinned app release is tagged and pinned),
+then pushes the tags; release.yml builds and publishes them (it now also runs on a pushed tag, and leaves a tag
+whose release is out alone). Nothing is built or published from this machine any more.
+Breaking. tools/ci-local.sh runs the jobs of ci.yml as GitHub runs them: in a podman (or docker) container with
+Python 3.12, each job with only its own requirements (tools/ci_local.py, tools/ci-local/Containerfile), the jobs read
+from ci.yml itself, six at a time, one line per job. Its logs and venvs are in ~/.cache/bazzite-console-ci-local.
+Breaking. The tools are single-suite: tools/suites.py names the repository's suite only, and no tool takes --suite
+any more; tools/check_versions.py lost --suite and --nexus and no longer checks dev/ (the development apps have no
+VERSION). The local CHANGELOG merge driver setting was removed.
+Added. ci.yml runs every check its twin's does: the versions and the portal bump since the pushed base
+(check_manifest.py --base), the pytest matrix read from the folders (tools/ci_matrix.py: core, tools, every dev/ app,
+the portal and every app), Remote Play's native core (cargo test, clippy, the wheel tested from Python, FFmpeg
+cached), shellcheck, line endings, exec bits, the four files of every former repository, workflows only at the root,
+and time limits on every job.
+Added. .github/workflows/upstream.yml and tools/check_upstream.py: a weekly check of what the apps pin (shadPS4,
+HelixSR, PPSSPP, PCSX2, RPCS3, Vita3K, Xenia, FFmpeg and libva, the webcam firmware, the speedtest CLI) into the
+"Upstream review" issue.
+Added. tools/new_app.py (a new app from the architecture chapter, listed everywhere), tools/make_portal_sounds.py
+(the portal's intro sound), tools/nrt.sh (Nexus Release Tool from the terminal), tools/ci_matrix.py, and their
+tests; tools/tests now has the twin's tool tests (layout, installer tests, icons, READMEs, wiki, stage, tags,
+publishing, CI, upstream).
+Added. requirements-dev.txt takes in core's requirements too; tools/tests/test_layout.py checks that every folder
+with tests/ is in it.
+Added. build_release.py names the core's version in a release's notes and links the newest portal; the release
+notes' Board Test build record follows any app with development/tools/build_info.py.
+Added. tools/sync_icons.py converts images dropped in icons/<category>/ and reports missing sizes.
+Fixed. tools/check_manifest.py read portal/VERSION at a Nexus path, so the portal-bump check never ran; it reads
+portal/VERSION and portal/apps.toml of the last portal release now.
+Fixed. .gitattributes makes every text file LF again (* text=auto eol=lf); it had kept only its SPDX line.
+Fixed. tools/portal_screenshot.py's notes say the wiki's workflow takes the picture before every build.
+Fixed. The bug report's App list names exactly the apps of portal/apps.toml (it had bazzite and btpair, and lacked
+upscaler and the portal); tools/tests/test_issue_templates.py keeps it so.
+Fixed. icons/ holds only the category icons: the suite's logo in four sizes there was used by nothing (the portal
+has its own copy).
+
 Changelog: 15-11-2026 07:21:45
 
 Fixed. tools/ci-local.sh runs every job of ci.yml here, one line per job as it ends: the versions, the manifest and the
@@ -63,7 +129,7 @@ Coming soon, is gone: the category has its app.
 Changelog: 14-11-2026 15:50:35
 
 Added. The picture of the portal on the wiki's home page keeps up with the portal by itself (owner, 14-11-2026), as
-the BC250 Bazzite Suite's does: the wiki's workflow (docs.yml) takes it again from the portal on main with
+its twin's does: the wiki's workflow (docs.yml) takes it again from the portal on main with
 tools/portal_screenshot.py before every build, and CI's docs job does the same, so a portal the tool cannot draw
 fails there. The file in the repository (docs/images/home/portal.webp) is taken again too: it shows the portal with
 its example wallpaper. The wiki's Development chapter says so.

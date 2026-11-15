@@ -1,3 +1,22 @@
+Changelog: 15-11-2026 10:17:45
+
+Added. The tiles Convert icons (the category icons from your images, with tools/sync_icons.py) and Close issues (the
+repository's open GitHub issues, closed with gh issue close).
+
+Breaking. One suite (owner, 15-11-2026): the repository is the suite, so the suite chosen in the header, --suite and
+its setting are gone. The tours, Convert icons and Test local apps work on the checkout; Test local apps serves the
+suite's wiki alone (Wiki on the network), and the apps start without --suite.
+
+Breaking. No VERSION (owner, 15-11-2026): a development app is never released, so its header names the checkout's
+last commit and its time ("5fb1aa8 · 15-11-2026 07:20", core's nexus.header()) where it showed a version, and
+--version prints the same.
+
+Fixed. The app imports bazzite_console_core directly, with the Nexus design from core's nexus.py (owner,
+15-11-2026): the compatibility package dev/core_compat is gone, and run.sh puts only core/ on the path.
+
+Fixed. A tour video's name starts with the suite's TAG_PREFIX (ps5-), no longer with nexus- when it has none. The
+About text names every tile, and a click on the header's icon opens the suite's wiki.
+
 Changelog: 15-11-2026 04:16:24
 
 Fixed. Names the suite's renamed apps by their names, ids and keys where it mentions them (owner, 15-11-2026): PS5

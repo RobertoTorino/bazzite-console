@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Marks every shell script in the git index as executable (mode 100755).
 #
-# Git for Windows runs with core.fileMode=false, so a script added from Windows is recorded as 100644 and a Linux
-# checkout (or a release tarball) gets a script that `./install.sh` cannot run. This sets the bit in the index
-# itself, which works the same on Windows and Linux. Run it after `git add`, before committing (Nexus Release
-# Tool's Commit step does). Only the index changes: nothing is committed.
+# A checkout with core.fileMode=false (Git for Windows, a file system without exec bits) records a new script as
+# 100644, and a Linux checkout (or a release tarball) then gets a script that `./install.sh` cannot run. This sets
+# the bit in the index itself. Run it after `git add`, before committing; CI fails when a script is missing the bit.
+# Only the index changes: nothing is committed.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 

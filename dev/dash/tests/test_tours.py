@@ -9,16 +9,16 @@ from nexus_dashboard.tours import AppsTourDialog, PortalTourDialog, TourApp
 
 MANIFEST = '''
 [apps.fan]
-name = "Nexus Fan Controller"
+name = "PS5 Fan Control"
 
 [apps.compute]
-name = "Nexus CU Bisect"
+name = "PS5 CU Bisect"
 
 [apps.gone]
 name = "No program"
 
 [checkout.installer-tests]
-name = "Nexus Installer Tests"
+name = "PS5 Installer Tests"
 folder = "tools/gui"
 '''
 
@@ -31,7 +31,8 @@ def checkout(tmp_path: Path, body: str = 'touch "$2"') -> Path:
     (root / "portal").mkdir(parents=True)
     (root / "portal" / "apps.toml").write_text(MANIFEST, encoding="utf-8")
     (root / "portal" / "VERSION").write_text("6.4.0\n", encoding="utf-8")
-    for folder, packages, version in (("apps/fan", ["fan_controller"], "0.5.1"),
+    (root / "TAG_PREFIX").write_text("ps5-\n", encoding="utf-8")
+    for folder, packages, version in (("apps/fan", ["fan_control"], "0.5.1"),
                                       ("apps/compute", ["cu_unlock", "cu_bisect"], "0.3.0"),
                                       ("apps/gone", [], "1.0.0"),
                                       ("tools/gui", ["installer_tests"], "")):
@@ -66,11 +67,11 @@ def videos(tmp_path, monkeypatch):
 def test_every_program_of_the_manifest_once_in_its_order(tmp_path):
     apps = tours.tour_apps(checkout(tmp_path))
 
-    assert [app.label for app in apps] == ["Nexus Fan Controller", "Nexus CU Bisect (cu_bisect)",
-                                           "Nexus CU Bisect (cu_unlock)", "Nexus Installer Tests"]
-    assert [app.file_name for app in apps] == ["nexus-fan-tour-v0.5.1.mp4", "nexus-compute-cu_bisect-tour-v0.3.0.mp4",
-                                               "nexus-compute-cu_unlock-tour-v0.3.0.mp4",
-                                               "nexus-installer-tests-tour.mp4"]
+    assert [app.label for app in apps] == ["PS5 Fan Control", "PS5 CU Bisect (cu_bisect)",
+                                           "PS5 CU Bisect (cu_unlock)", "PS5 Installer Tests"]
+    assert [app.file_name for app in apps] == ["ps5-fan-tour-v0.5.1.mp4", "ps5-compute-cu_bisect-tour-v0.3.0.mp4",
+                                               "ps5-compute-cu_unlock-tour-v0.3.0.mp4",
+                                               "ps5-installer-tests-tour.mp4"]
 
 
 def test_the_commands_carry_the_options(tmp_path):
@@ -95,15 +96,14 @@ def test_a_size_other_than_1080p_is_passed_on_and_names_the_video(tmp_path):
     assert tours.portal_command(root, out, music=True, wiki=True, size="2160p")[-3:] == ["--wiki", "--size", "2160p"]
     assert tours.app_command(root, TourApp("fan", "Fan"), out, 40, music=True, size="1440p")[-4:] == [
         "--seconds", "40", "--size", "1440p"]
-    assert tours.portal_video(root).name == "nexus-portal-tour-v6.4.0.mp4"
-    assert tours.portal_video(root, "2160p").name == "nexus-portal-tour-v6.4.0-2160p.mp4"
-    (root / "TAG_PREFIX").write_text("ws-\n", encoding="utf-8")         # a suite with a prefix: its videos too
-    assert tours.portal_video(root).name == "ws-portal-tour-v6.4.0.mp4"
-    assert tours.tour_apps(root)[0].file_name == "ws-fan-tour-v0.5.1.mp4"
-    (root / "TAG_PREFIX").unlink()
-    app = TourApp("fan", "Fan", None, "0.5.1")
-    assert app.video() == app.file_name == "nexus-fan-tour-v0.5.1.mp4"
-    assert app.video("2160p") == "nexus-fan-tour-v0.5.1-2160p.mp4"
+    assert tours.portal_video(root).name == "ps5-portal-tour-v6.4.0.mp4"
+    assert tours.portal_video(root, "2160p").name == "ps5-portal-tour-v6.4.0-2160p.mp4"
+    (root / "TAG_PREFIX").unlink()                                      # the names follow the suite's prefix
+    assert tours.portal_video(root).name == "portal-tour-v6.4.0.mp4"
+    assert tours.tour_apps(root)[0].file_name == "fan-tour-v0.5.1.mp4"
+    app = TourApp("fan", "Fan", None, "0.5.1", "ps5-")
+    assert app.video() == app.file_name == "ps5-fan-tour-v0.5.1.mp4"
+    assert app.video("2160p") == "ps5-fan-tour-v0.5.1-2160p.mp4"
 
 
 def test_the_dialogs_record_at_the_chosen_size(qapp, tmp_path, videos):
@@ -111,11 +111,11 @@ def test_the_dialogs_record_at_the_chosen_size(qapp, tmp_path, videos):
     dialog = AppsTourDialog(root)
     assert dialog.size.currentText() == "1080p" and [dialog.size.itemText(i) for i in range(3)] == list(tours.SIZES)
     dialog.size.setCurrentText("2160p")
-    assert dialog.apps.item(0).toolTip() == str(videos / "nexus-fan-tour-v0.5.1-2160p.mp4")
+    assert dialog.apps.item(0).toolTip() == str(videos / "ps5-fan-tour-v0.5.1-2160p.mp4")
     dialog.apps.item(0).setCheckState(tours.Qt.CheckState.Checked)
     dialog.record()
     wait(dialog)
-    assert dialog.made == [videos / "nexus-fan-tour-v0.5.1-2160p.mp4"]
+    assert dialog.made == [videos / "ps5-fan-tour-v0.5.1-2160p.mp4"]
     assert "--size 2160p" in dialog.output.toPlainText()
     dialog.close()
 
@@ -123,7 +123,7 @@ def test_the_dialogs_record_at_the_chosen_size(qapp, tmp_path, videos):
     dialog.size.setCurrentText("1440p")
     dialog.record()
     wait(dialog)
-    assert dialog.made == [videos / "nexus-portal-tour-v6.4.0-1440p.mp4"]
+    assert dialog.made == [videos / "ps5-portal-tour-v6.4.0-1440p.mp4"]
     assert "--size 1440p" in dialog.output.toPlainText()
     dialog.close()
 
@@ -140,7 +140,7 @@ def test_the_apps_dialog_records_the_ticked_apps_one_after_another(qapp, tmp_pat
     assert dialog.stop_button.isEnabled() and not dialog.record_button.isEnabled()
     wait(dialog)
 
-    assert dialog.made == [videos / "nexus-fan-tour-v0.5.1.mp4", videos / "nexus-compute-cu_unlock-tour-v0.3.0.mp4"]
+    assert dialog.made == [videos / "ps5-fan-tour-v0.5.1.mp4", videos / "ps5-compute-cu_unlock-tour-v0.3.0.mp4"]
     text = dialog.output.toPlainText()
     assert "args: fan " in text and "--seconds 30" in text and "--package cu_unlock" in text
     assert "Done: 2 video(s)" in text
@@ -155,7 +155,7 @@ def test_a_failed_run_is_named_and_the_next_one_still_runs(qapp, tmp_path, video
     dialog.record()
     wait(dialog)
 
-    assert [path.name for path in dialog.failed] == ["nexus-fan-tour-v0.5.1.mp4"]
+    assert [path.name for path in dialog.failed] == ["ps5-fan-tour-v0.5.1.mp4"]
     assert len(dialog.made) == 3
     assert "stopped with status 3" in dialog.output.toPlainText()
     dialog.close()
@@ -184,16 +184,16 @@ def test_the_portal_dialog_records_into_videos_with_the_wiki_copy_when_asked(qap
     dialog.record()
     wait(dialog)
 
-    assert dialog.made == [videos / "nexus-portal-tour-v6.4.0.mp4"]
+    assert dialog.made == [videos / "ps5-portal-tour-v6.4.0.mp4"]
     assert "--no-music --wiki" in dialog.output.toPlainText()
     assert "wiki's copy is changed in the checkout" in dialog.output.toPlainText()
     dialog.play_button.click()
-    assert played == [videos / "nexus-portal-tour-v6.4.0.mp4"]
+    assert played == [videos / "ps5-portal-tour-v6.4.0.mp4"]
     dialog.close()
 
 
-def test_a_suite_without_the_tour_scripts_gets_the_dialog_greyed_out(qapp, tmp_path):
-    """A suite without record-tour.sh: the dialog says so and records nothing."""
+def test_a_checkout_without_the_tour_scripts_gets_the_dialog_greyed_out(qapp, tmp_path):
+    """Without record-tour.sh the dialog says so and records nothing."""
     root = checkout(tmp_path)
     (root / "tools" / "record-tour.sh").unlink()
 
@@ -202,5 +202,5 @@ def test_a_suite_without_the_tour_scripts_gets_the_dialog_greyed_out(qapp, tmp_p
     assert dialog.checkout is None
     assert "has no tools/record-tour.sh" in dialog.output.toPlainText()
     assert not dialog.record_button.isEnabled()
-    assert dialog.suite_label.text() == str(root)
+    assert dialog.checkout_label.text() == str(root)
     dialog.close()

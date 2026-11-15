@@ -9,7 +9,7 @@ rm -rf "${T:?}"; mkdir -p "$T/home/Desktop" "$T/opt" "$T/log" "$T/system" "$T/sh
 printf '#!/bin/sh\necho "sudo $*" >> %s/sudo-calls\nexit 1\n' "$T" > "$T/shims/sudo"
 chmod +x "$T/shims/sudo"
 export PATH="$T/shims:$PATH" HOME="$T/home" XDG_DATA_HOME="$T/home/.local/share" XDG_CONFIG_HOME="$T/home/.config" \
-       BAZZITE_TEST_OPT_DIR="$T/opt" BAZZITE_TEST_LOG_DIR="$T/log" PS5_SYSTEM_ROOT="$T/system" \
+       PS5_BOARD_TEST_OPT_DIR="$T/opt" PS5_BOARD_TEST_LOG_DIR="$T/log" PS5_SYSTEM_ROOT="$T/system" \
        WEBCAM_SYSTEM_ROOT="$T/system"
 fail=0
 for installer in "$SUITE"/apps/*/install.sh "$SUITE/portal/install.sh"; do

@@ -8,6 +8,7 @@ import sys
 
 from bazzite_console_core import __version__ as CORE_VERSION, instance
 from bazzite_console_core.app import create_app, exec_app
+from bazzite_console_core import exit_keys
 
 from . import APP_NAME, INFO, __version__
 
@@ -32,8 +33,8 @@ def main() -> int:
             parser.error(f"--player-experiment: {error}")
 
     app = create_app(INFO, qt_args)
-    from .exit_keys import EscapeToClose
-    escape_to_close = EscapeToClose(app)  # noqa: F841 (kept alive while the app runs)
+    exit_keys.install(app, controller=False)    # Escape closes the window; not B:
+                                                # the controller is the game's while it streams
     if args.stream:
         from . import direct
         return direct.run(args.stream, app, players=players, simulated_loss=max(0.0, min(args.simulate_loss, 100.0)))

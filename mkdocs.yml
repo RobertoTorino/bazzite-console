@@ -89,6 +89,11 @@ nav:
           - PS5 Webcam: apps/webcam.md
   - Development:
       - development/index.md
+      - Architecture and consistency: development/architecture.md
+      - Dashboard: development/dashboard.md
+      - Releases: development/releases.md
+      - GitHub settings: development/github-settings.md
+      - "Remote Play: the stream's threads": development/remoteplay-stream.md
   - Security:
       - Security policy: SECURITY.md
       - Privacy: privacy.md

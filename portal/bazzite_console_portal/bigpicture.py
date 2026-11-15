@@ -2,8 +2,8 @@
 """The portal's view (owner, 01-11-2026: the one view; Suite Desktop Mode, the window of tabs, is gone), as Steam's
 Big Picture is for Steam: fullscreen, for a TV and a controller as much as for a desk. Large icons and type, the
 header with the suite's icon, its name, ☰ at the top right and a row of big symbols (owner, 05-11-2026: in place of
-the pills) with the system's load, temperatures, date and time on its right (on two lines when one is too narrow), the
-weather beside the symbols when a place is chosen, a category strip, and a focus that moves
+the pills) with the status on its right, a line each (owner, 12-11-2026): the console's load and temperatures, the date
+and time, and the weather when a place is chosen; a category strip, and a focus that moves
 with the arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always. The Settings
 page (the ☰ symbol or the controller's ☰ button, owner 04-11-2026, as the earlier implementation's portal) takes the
 place of the category strip and the tiles: the pills of the settings, each with a short line, under the same
@@ -24,9 +24,8 @@ from PyQt6.QtWidgets import (
 from bazzite_console_core.theme import BLUE, ORANGE, RED, header_font, muted, outline
 from bazzite_console_core.widgets import InfoButton, Pill, current_theme
 
-from . import APP_ICONS, APP_NAME, CARD_ICONS, CATEGORY_ICONS, INTRO_LOGO, LOGO_PATH, glyphs
+from . import APP_ICONS, APP_NAME, CATEGORY_ICONS, INTRO_LOGO, LOGO_PATH, glyphs
 from .looks import Backdrop, greyed
-from .manifest import CardEntry
 
 TILE_W, TILE_H = 244, 316
 ICON_PX = 184
@@ -38,7 +37,7 @@ PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse)
 SYMBOL_PX = 84                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
 GLYPH_PX = 56
 SYMBOL_SMALLEST = 0.5           # the row's symbols on a narrow screen: never smaller than this part of their size
-PLACE_W = 220                   # the weather's place name: at most this wide, else it ends in …
+PLACE_W = 220                   # the weather's place name in the status: at most this wide, else it ends in …
 GAP = 20
 MARGIN = 48
 FULL_HEIGHT = 1000             # a window this high or higher is drawn at full size, a lower one smaller
@@ -56,7 +55,9 @@ KEYS = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Q
 CATEGORY_KEYS = {Qt.Key.Key_PageUp: "previous", Qt.Key.Key_Q: "previous", Qt.Key.Key_PageDown: "next",
                  Qt.Key.Key_E: "next"}
 # Y and a right click update (owner, 04-11-2026, as the earlier implementation's portal): the portal while a newer
-# one is out, else the focused app. The app's menu remains on X or the Menu key.
+# one is out, else the focused app. The app's menu (the Menu key, M, or the left button of the controller's four) is
+# not named here (owner, 12-11-2026): "X" is the bottom button on a PlayStation controller, which opens, and "Menu"
+# read as the settings; ☰ is the one menu the line names.
 LEGEND = ("A / Enter  Open    Y / Right click  Update    LB / RB  Category"
           "    ☰  Settings    R3  Keyboard    B / Esc  Close")
 SETTINGS_LEGEND = "A / Enter  Change    ☰ / B / Esc  Back"
@@ -109,13 +110,17 @@ class ElidedLabel(QLabel):
 
 
 class StatusLine(QWidget):
-    """The console status, clock, and optional weather shown to the right of the header symbols."""
+    """The status on the right of the symbols, a line each (owner, 12-11-2026: three lines, in place of one line that
+    broke in two where it was too narrow): the CPU's and the GPU's load and temperature, "CPU 12% 54°C | GPU 3%
+    61°C"; the date and time, "Thursday 11/5/26 | 07:44 PM CEST"; and, with a place chosen, the weather: its symbol,
+    the place's name (ending in … beyond PLACE_W), the temperature and the sky, muted until the first weather has
+    come, with the rest in its tooltip."""
 
     def __init__(self):
         super().__init__()
         self.parts = ("", "")
         self.place = self.detail = ""
-        self.glyph = None
+        self.glyph = None                           # glyphs.weather(...): a color in, a QIcon out
         self.known = False
         self.scale = 1.0
         layout = QVBoxLayout(self)
@@ -124,7 +129,7 @@ class StatusLine(QWidget):
         self.lines = QLabel()
         self.lines.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self.lines)
-        self.weather = QWidget()
+        self.weather = QWidget()                    # hidden without a place: two lines then
         row = self.weather_row = QHBoxLayout(self.weather)
         row.setContentsMargins(0, 0, 0, 0)
         row.addStretch(1)
@@ -143,6 +148,8 @@ class StatusLine(QWidget):
         self.lines.setText("\n".join(part for part in self.parts if part))
 
     def set_weather(self, place: str, detail: str, glyph, known: bool, tooltip: str) -> None:
+        """The third line: *place* and *detail* ("8°C  Overcast", "" before the first weather) after *glyph*; no
+        line without a place."""
         self.place, self.detail, self.glyph, self.known = place, detail, glyph, known
         self.weather.setToolTip(tooltip)
         self.weather.setVisible(bool(place))
@@ -154,10 +161,11 @@ class StatusLine(QWidget):
         return "  ".join(part for part in (place, self.detail) if part)
 
     def text(self) -> str:
+        """The lines as they show, the weather's last."""
         return "\n".join(line for line in (*self.parts, self.weather_text()) if line)
 
     def _metrics(self) -> QFontMetrics:
-        self.lines.ensurePolished()
+        self.lines.ensurePolished()                 # the style sheet's font size
         return self.lines.fontMetrics()
 
     def _show_weather(self) -> None:
@@ -181,6 +189,8 @@ class StatusLine(QWidget):
         self._show_weather()
 
     def narrowest(self) -> int:
+        """The width the status needs at least, with room for a load that grows to three figures: what the row of
+        symbols leaves it (BigPicture.fit_symbols)."""
         metrics = self._metrics()
         weather = (metrics.horizontalAdvance(self.weather_text()) + metrics.height() + self.weather_row.spacing()
                    if self.place else 0)
@@ -290,7 +300,6 @@ class BigTile(QAbstractButton):
         self._shown: tuple[int, float, int] | None = None   # what the scaled copy was made for: side, ratio, picture
         self._scaled = QPixmap()
         self.scale = 1.0
-        self.icon_scale = 1.0
         self.marker = ""                    # "update": a red dot on the icon; "reinstall": the red circular arrow
         self.setFixedSize(self.sizeHint())
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -371,10 +380,7 @@ class BigTile(QAbstractButton):
         side = round(ICON_PX * s)
         icon = QRect((width - side) // 2, round(18 * s), side, side)
         if not self.pixmap.isNull():
-            picture_side = round(side * self.icon_scale)
-            picture = QRect(icon.x() + (side - picture_side) // 2, icon.y() + (side - picture_side) // 2,
-                            picture_side, picture_side)
-            painter.drawPixmap(picture.topLeft(), self._picture(picture_side))
+            painter.drawPixmap(icon.topLeft(), self._picture(side))
         dot = round(28 * s)
         painter.setPen(QPen(QColor("#1b1b1b"), 3))
         painter.setBrush(QColor(RED))
@@ -517,8 +523,8 @@ class NoticeButton(QToolButton):
 
 
 class UpdateBanner(QToolButton):
-    """The orange banner beside the category strip while a newer portal is out (owner,
-    04-11-2026): white capitals on the suite's orange; a click, Enter or A does what Y does. While the
+    """The orange banner beside the category strip while a newer portal is out (owner, 04-11-2026, as the earlier
+    implementation's portal): white capitals on the suite's orange; a click, Enter or A does what Y does. While the
     update downloads and installs it says how far it is. Hidden while there is nothing to say."""
 
     def __init__(self):
@@ -543,7 +549,7 @@ class UpdateBanner(QToolButton):
 
 class BigPicture(Backdrop):
     """The view: the header (the suite's icon, its name with the version and the stage, the line under it, ☰ at the
-    top right, the row of symbols with the installed count and the status line on its right), the category strip with the notices beside it, the tiles of the open category, and under them
+    top right, the row of symbols with the installed count and the status on its right), the category strip with the notices beside it, the tiles of the open category, and under them
     what the buttons do. It shows what the window knows of each app (sync); a tile opens its app by
     open_requested(entry) and asks for its menu by menu_requested(entry)."""
 
@@ -554,12 +560,11 @@ class BigPicture(Backdrop):
     tour_requested = pyqtSignal()               # a click on the suite's icon
 
     def __init__(self, entries, categories: dict[str, str], hints: dict[str, str], version: str = "",
-                 stage: str = "", stage_note: str = "", cards: list[CardEntry] | None = None):
+                 stage: str = "", stage_note: str = ""):
         super().__init__()
         self.setAutoFillBackground(True)
         self.setMinimumSize(640, 360)               # the layout's own minimum is for a big screen: it scales down
         self.entries = {entry.key: entry for entry in entries}
-        self.cards = {card.key: card for card in cards or []}
         self.columns: dict[str, int] = {}                # per category: the columns its tiles are laid out in
         self.scale = 1.0
         self._art: dict[tuple[str, bool], QPixmap] = {}
@@ -603,7 +608,7 @@ class BigPicture(Backdrop):
         words.addLayout(upper)
         words.addStretch(1)
         self.symbol_row = QHBoxLayout()              # the symbols, then on the right the installed count over the
-        self.symbol_row.addStretch(1)                # status line (owner, 05-11-2026)
+        self.symbol_row.addStretch(1)                # status (owner, 05-11-2026)
         readout = QVBoxLayout()
         readout.setSpacing(0)
         readout.addStretch(1)
@@ -619,6 +624,7 @@ class BigPicture(Backdrop):
         self.info.installEventFilter(self)
         self.symbols: list[SymbolButton] = []
         self.corner: list[SymbolButton] = []
+        self._fitted_status = 0                      # the status' width the symbols were last fitted to
         outer.addLayout(top)
 
         strip = QHBoxLayout()
@@ -673,7 +679,7 @@ class BigPicture(Backdrop):
         self.grids: dict[str, QGridLayout] = {}
         self.tiles: dict[str, BigTile] = {}
         for category, label in categories.items():
-            keys = [item.key for item in [*entries, *(cards or [])] if item.category == category]
+            keys = [entry.key for entry in entries if entry.category == category]
             if not keys:
                 continue
             self.categories.append(category)
@@ -699,21 +705,13 @@ class BigPicture(Backdrop):
             self.stack.addWidget(page)
             self.bar.addTab(label)
             self.bar.setTabToolTip(self.bar.count() - 1, hints.get(category, ""))
-            for item in [*entries, *(cards or [])]:
-                if item.category != category:
-                    continue
-                tile = BigTile(item.key)
+            for key in keys:
+                tile = BigTile(key)
                 tile.navigate.connect(self.navigate)
-                if isinstance(item, CardEntry):
-                    tile.clicked.connect(lambda _=False, k=item.key: self.open_requested.emit(self.cards[k]))
-                    tile.set_look(item.name, QPixmap(str(CARD_ICONS / item.icon)),
-                                  f"{item.flatpak_name} required", muted(current_theme()), "")
-                    tile.setToolTip(item.summary)
-                else:
-                    tile.clicked.connect(lambda _=False, k=item.key: self.open_requested.emit(self.entries[k]))
-                    tile.menu_requested.connect(lambda k=item.key: self.menu_requested.emit(self.entries[k]))
-                    tile.update_requested.connect(lambda k=item.key: self.update_requested.emit(self.entries[k]))
-                self.tiles[item.key] = tile
+                tile.clicked.connect(lambda _=False, k=key: self.open_requested.emit(self.entries[k]))
+                tile.menu_requested.connect(lambda k=key: self.menu_requested.emit(self.entries[k]))
+                tile.update_requested.connect(lambda k=key: self.update_requested.emit(self.entries[k]))
+                self.tiles[key] = tile
         self.hints = {category: SHORT_HINTS.get(category, text) for category, text in hints.items()}
         self.full_hints = hints
         self.bar.currentChanged.connect(self._category_changed)
@@ -743,7 +741,8 @@ class BigPicture(Backdrop):
         self.add_control(widget)
 
     def place_symbols(self, symbols: list[SymbolButton], corner: list[SymbolButton]) -> None:
-        """The window's symbols in a row under the title, and corner controls at the top right."""
+        """The window's symbols, in a row under the title, and those of *corner* (☰, then the close symbol in the
+        corner itself) at the top right; the focus reaches them."""
         for symbol in symbols:
             self.symbol_row.insertWidget(self.symbol_row.count() - 2, symbol)
             self.add_control(symbol)
@@ -754,16 +753,19 @@ class BigPicture(Backdrop):
         self.set_scale(self.scale)
 
     def set_installed(self, text: str, tooltip: str = "") -> None:
-        """The small line over the status line: how many apps are installed."""
+        """The small line over the status: how many apps are installed."""
         self.installed.setText(text)
         self.installed.setToolTip(tooltip)
 
     def set_status(self, loads: str, clock: str = "") -> None:
-        """The console load and the clock on the right of the symbols."""
+        """The status on the right of the symbols: the CPU's and the GPU's load and temperature, and under it the
+        date and time. A status much wider or narrower than the one the symbols were fitted to (another clock
+        style) fits them again."""
         self.status.set_parts(loads, clock)
         self._refit()
 
     def set_weather(self, place: str, detail: str, glyph, known: bool, tooltip: str) -> None:
+        """The status' third line: the weather of *place*; none without a place."""
         self.status.set_weather(place, detail, glyph, known, tooltip)
         self._refit()
 
@@ -803,8 +805,8 @@ class BigPicture(Backdrop):
 
     def sync(self, states: dict) -> None:
         """Show each app as its tile in the window's state of it (AppState): icon, name, state."""
-        for key, state in states.items():
-            tile = self.tiles[key]
+        for key, tile in self.tiles.items():
+            state = states[key]
             entry = state.entry
             pixmap = self.art(entry.category, key, state.installed)
             marker = "update" if state.update else "reinstall" if state.reinstall else ""
@@ -852,8 +854,7 @@ class BigPicture(Backdrop):
         if not self.categories:
             return []
         category = self.categories[self.bar.currentIndex()]
-        items = [*self.entries.values(), *self.cards.values()]
-        return [self.tiles[item.key] for item in items if item.category == category]
+        return [self.tiles[e.key] for e in self.entries.values() if e.category == category]
 
     def show_app(self, key: str) -> None:
         """Open the category of the app and put the focus on its tile: a line of the notice."""
@@ -868,11 +869,9 @@ class BigPicture(Backdrop):
 
     def restyle(self) -> None:
         """The view in the theme the widgets draw with now, after a change of theme (the Theme pill): every style
-        sheet that holds a color of the theme is written again, and the cards' muted line takes the new one. The
-        apps' tiles take theirs from the window's next sync()."""
+        sheet that holds a color of the theme is written again. The tiles take their line's color from the window's
+        next sync()."""
         self.info.restyle()
-        for key in self.cards:
-            self.tiles[key].status_colour = muted(current_theme())
         self.set_scale(self.scale)
         self.update()
 
@@ -931,7 +930,8 @@ class BigPicture(Backdrop):
         self.reflow()
 
     def fit_symbols(self) -> None:
-        """Shrink the symbol row as needed to fit beside the status, including on handheld screens."""
+        """The row's symbols at the view's scale, or smaller where they and the status would not fit the window's
+        width: the shortcuts on a handheld's 1280 px."""
         shown = [symbol for symbol in self.symbols if not symbol.isHidden()]
         margins = self.outer.contentsMargins()
         self._fitted_status = self.status.narrowest()

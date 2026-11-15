@@ -1,3 +1,43 @@
+Changelog: 15-11-2026 11:08:06
+
+Added. Tests of the portal window with a fake terminal and downloads (test_window.py) and of the fullscreen view, the
+intro, the sound, the controller, the tiles, their menus, the keys and the handheld scaling (test_bigpicture.py), on
+the suite's own apps.
+
+Changelog: 15-11-2026 10:16:55
+
+Breaking. The portal is as its twin's (owner, 15-11-2026): install.sh installs Board Test
+first, then the portal's copy in ~/.local/share/bazzite-console-suite/portal; a portal installed from a checkout names
+it (suite-checkout) and installs the apps from there; the release tarball's sha256 goes beside the program
+(build.sha256), so a new build of the same version is offered; a portal installed while one runs offers a restart.
+installed_copy() named no folder in this layout, so neither was offered. The move of the state of a portal up to
+1.0.0 out of the program folder is gone (owner: no backward compatibility). Board Test's tag is recorded, its Desktop
+icon follows --no-desktop-shortcut, and the menu entry has the full desktop entry.
+
+Added. The suite is Beta (STAGE).
+
+Fixed. RENAMED names the apps renamed on 15-11-2026 (bazzite: board, btpair: bluetooth), so an app installed under
+its old key is recorded under its new one, its tag renamed with it.
+
+Fixed. The last of the media cards: the Media category, its hint and portal/images/categories/media.webp are gone;
+the four categories are its twin's.
+
+Fixed. apps.toml is read as in its twin (tag, sha256, withdrawn and board_change checked with their
+own messages; board_change's white space collapsed, as the wiki's box compares it); the desktop icons are every
+ps5-*.desktop menu entry, so a new app is never left out; the restart after the portal's own update starts from the
+launcher's folder; the weather texts say it is the status' third line; BigTile.icon_scale, never set, is gone.
+
+Fixed. requirements-dev.txt takes pytest>=8 like every folder; .gitignore as the other folders'.
+
+Added. The twin's portal tests for the shared code (sources, portal update, status, weather, keyboard,
+touchpad, sysinfo, the installed copy), adapted to this suite's apps.
+
+Changelog: 15-11-2026 08:12:48
+
+Fixed. The code of the media cards is gone (owner, 15-11-2026): tiles that opened a media service in its Flatpak
+("<name> required"), left from the Media tab, which went before. cards.toml listed none, so the portal showed none;
+nothing changes on the screen.
+
 Changelog: 15-11-2026 07:43:15
 
 Release 2.0.0. Pins ps5-upscaler-v0.1.1, ps5-rpcs3-v1.0.2, ps5-remoteplay-v1.0.2, ps5-clb-v1.0.2, ps5-shadps4-v1.0.2, ps5-datstation-v1.0.2, ps5-ppsspp-v1.0.2, ps5-pcsx2-v1.0.2, ps5-vita3k-v1.0.2, ps5-xenia-v1.0.2, ps5-sftp-v1.1.1, ps5-webcam-v1.1.1, ps5-controller-v1.1.1, ps5-ssd-v1.1.1, ps5-overlay-v1.0.2, ps5-fan-v2.0.0, ps5-cec-v2.0.0.

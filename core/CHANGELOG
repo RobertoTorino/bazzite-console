@@ -1,3 +1,26 @@
+Changelog: 15-11-2026 10:20:56
+
+Added. nexus.py gives the development apps their header: header() names the checkout's last commit and its time
+(checkout_stamp()) where a released app shows its version (owner, 15-11-2026: the development apps have no
+VERSION).
+It moves into core from dev/core_compat, which is gone: the development apps import bazzite_console_core.
+
+Changelog: 15-11-2026 10:16:55
+
+Added. exit_keys.py and action_tab.py in core: Escape and a controller's
+B close an app's window (install(app), or install(app, controller=False) where the controller is the app's subject),
+B only once the app has had the focus for half a second, so the press that closed one app does not close the one
+behind it too; ActionTab, a last tab that acts (Start game), which the keyboard passes by. steam.shortcut_number()
+gives a shortcut's appid as Steam's file has it. The apps' own copies move onto these.
+
+Fixed. Bluetooth's `from bazzite_console_core import exit_keys` found no module: it is in core now.
+
+Breaking. suite_data(), suite_config(), applog's suite= argument and steam's OPEN_URL, signed_in() and open_url() are
+gone: no app or the portal used them.
+
+Added. LICENSE, README.md, pyproject.toml, requirements-dev.txt, .gitignore and tests/ (the shared modules' tests): core
+is tested on its own, like every other folder.
+
 Changelog: 15-11-2026 07:43:15
 
 Version 4.0.2.

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""What the video tours share (tools/portal_tour.py and tools/app_tour.py): a temporary home for an offscreen Qt, and
+"""What the video tours share (tools/portal_tour.py, tools/app_tour.py): a temporary home for an offscreen Qt, and
 Recorder, which renders a window frame by frame into an MP4 (H.264, 1920 x 1080 by default, no sound) with a pointer,
 clicks, captions and title cards drawn in, and add_music(), which lays a track under a finished video.
 
@@ -10,7 +10,6 @@ not an enlarged one, so the text stays crisp; it takes about four times as long.
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 import subprocess
@@ -18,31 +17,16 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def _suites():
-    spec = importlib.util.spec_from_file_location("nexus_suites", ROOT / "tools" / "suites.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-suites = _suites()
-SUITE = suites.suite()                              # the default suite; set_suite() for another (--suite)
+SUITE = ROOT                                        # the repository, which is the suite
 
 
 def set_scale(scale: float) -> None:
-    """How large the window is drawn in the layout: 1.2 (1600 x 900 logical desktop) or 1.5 (1280 x
-    720, handheld). Before prepare_home(); read it as tour_frames.SCALE afterwards."""
+    """How large the window is drawn in the layout: 1.2 (1600 x 900 logical, the portal's) or 1.5 (1280 x
+    720, a handheld's). Before prepare_home(); read it as tour_frames.SCALE afterwards."""
     global SCALE
     SCALE = scale
 
 
-def set_suite(name: str | None) -> None:
-    """The suite the tour works on, by its folder name (tools/suites.py); None keeps the default. Read it as
-    tour_frames.SUITE afterwards, not as a name imported before."""
-    global SUITE
-    SUITE = suites.suite(name)
 WIDTH, HEIGHT = 1920, 1080                          # the layout: every position in the tours is in these pixels
 SCALE = 1.2                                         # the window is 1600 x 900 at 120 %: readable on a phone too
 MUSIC_DIR = ROOT / "tools" / "sounds"               # the tours' music, every suite's (owner, 02-11-2026)

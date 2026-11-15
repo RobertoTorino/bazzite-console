@@ -5,15 +5,16 @@
     python3 tools/portal_screenshot.py [--out FILE]
 
 It opens the portal's view offscreen on the apps.toml and the icons of this checkout, in a home folder of its
-own (nothing is installed or changed on this computer), with a fixed demo state: every app installed but two, one
+own (nothing is installed or changed on this computer), with a fixed demo state: every app installed but one, one
 update (the notice and the red count on its category), a fixed status (the loads, the clock and the weather of a
-place) and Gaming open. Then it saves the window as WebP, by default over docs/images/home/portal.webp. The picture
-is a file of the repository: run the tool again when the portal's look or its apps changed.
+place) and Gaming open. Then it saves the window as WebP, by default over docs/images/home/portal.webp. The
+wiki's workflow runs it before every build, so the published picture always shows the portal as it is on main; run
+it by hand to see the same picture locally.
 
 The window and the application are deleted here, in that order, once the picture is saved: left to the
 interpreter's exit, Qt's multimedia backend (the portal's sound asks it for an audio output) and SDL (its controller
 reader) went down in whatever order came, and on a runner without an audio device that crashed the process now and
-then after the picture was written."""
+then after the picture was written (03-11-2026, the wiki's workflow)."""
 
 from __future__ import annotations
 

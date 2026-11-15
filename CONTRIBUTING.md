@@ -24,7 +24,8 @@ request. Say so when something was made with generative AI tools.
 
 Every app in a category has the same icon. A new or changed icon goes in `icons/<category>/`, and
 `icons/categories.toml` names each app's category; `python3 tools/sync_icons.py` writes the copies the apps, the
-portal and the wiki use. The wiki's [Development](docs/development/index.md#icons) page describes it.
+portal and the wiki use (Nexus Dashboard's Convert icons does the same from a window). The wiki's
+[Architecture and consistency](docs/development/architecture.md#icons) page describes it, and how a new app is built.
 
 ## Before a pull request
 
@@ -32,5 +33,4 @@ portal and the wiki use. The wiki's [Development](docs/development/index.md#icon
   suite. The format is a `Changelog: DD-MM-YYYY HH:MM:SS` line (Europe/Amsterdam time), a blank line, then plain
   sentences starting with `Breaking.`, `Added.` or `Fixed.`.
 - Leave `VERSION` files and `portal/apps.toml` as they are: versions and releases are the maintainer's.
-- Run the checks: `./test.sh` (every test folder) and `tools/ci-local.sh` (the versions, the manifest, the icons'
-  copies, and the tests of `tools/` and `dev/`).
+- Run the checks CI runs: `tools/ci-local.sh` (podman), or at least `./test.sh`.

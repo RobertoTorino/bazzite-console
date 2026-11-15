@@ -18,32 +18,6 @@ PS4 = (b'<?xml version="1.0" ?>\n<update_data_list>\n\t<region id="us">\n\t\t<sy
        b'</update_data_list>\n')
 
 
-# Kinds of entries this suite's catalog has none of (it lists the six emulators): Decky Loader, which updates itself,
-# and Sony's firmware, with a version list or with none.
-DECKY = {"id": "decky", "name": "Decky Loader", "what": "the plugin loader for Game Mode", "compare": "version",
-         "apps": [{"suite": "bazzite-console", "app": "decky", "repo": "SteamDeckHomebrew/decky-loader",
-                   "pin": "3.2.1", "version": "3.2.1", "version_file": "~/homebrew/services/.loader.version",
-                   "name": "Decky Manager", "launcher": "~/.local/bin/ps5-decky-manager"}]}
-SONY = {
-    "dualsense": {"id": "dualsense", "name": "DualSense firmware", "kind": "controllers",
-                  "what": "the firmware of the DualSense and DualSense Edge controllers",
-                  "url": "https://fwupdater.dl.playstation.net/fwupdater/info.json",
-                  "targets": {"0x0004": "DualSense", "0x000B": "DualSense", "0x000E": "DualSense",
-                              "0x0044": "DualSense Edge"},
-                  "apps": [], "how": "Connect the controller with a USB cable and update it."},
-    "ps4": {"id": "ps4", "name": "PS4 system software", "kind": "ps4-updatelist",
-            "what": "the PlayStation 4's system software, from Sony's update list",
-            "url": "http://fus01.ps4.update.playstation.net/update/ps4/list/us/ps4-updatelist.xml",
-            "apps": [], "how": "Update on the console: Settings, System Software Update."},
-    "ps5": {"id": "ps5", "name": "PS5 system software", "kind": "on-device",
-            "what": "the PlayStation 5's system software", "apps": [],
-            "how": "The console says when an update is out: Settings, System, System Software."},
-    "psportal": {"id": "psportal", "name": "PlayStation Portal", "kind": "on-device",
-                 "what": "the PlayStation Portal remote player's system software", "apps": [],
-                 "how": "The Portal updates itself when it is online: Settings, System Software."},
-}
-
-
 def catalog():
     return upstreams.load()
 
@@ -59,10 +33,9 @@ def test_the_catalog_is_in_sync_with_the_apps():
 
 
 def test_every_app_with_a_pinned_upstream_is_listed():
-    listed = {(app["suite"], app["app"]) for item in catalog()["github"] for app in item["apps"]}
+    listed = {app["app"] for item in catalog()["github"] for app in item["apps"]}
     assert listed == upstreams.apps_with_upstreams()
-    assert {app for _suite, app in listed} == {"rpcs3", "pcsx2", "ppsspp", "vita3k", "xenia", "shadps4"}
-    assert {suite for suite, _app in listed} == {"bazzite-console"}
+    assert listed == {"rpcs3", "pcsx2", "ppsspp", "vita3k", "xenia", "shadps4"}
 
 
 def test_the_constants_are_read_without_running_the_module(tmp_path):
@@ -91,14 +64,9 @@ def install(home: Path, app: dict, version: str | None):
     launcher.write_text("")
     if version is None:
         return
-    if "home" in app:
-        folder = home / app["home"].removeprefix("~/")
-        (folder / version).mkdir(parents=True)
-        (folder / "current").symlink_to(version)
-    else:
-        path = home / app["version_file"].removeprefix("~/")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(f"v{version}\n")
+    folder = home / app["home"].removeprefix("~/")
+    (folder / version).mkdir(parents=True)
+    (folder / "current").symlink_to(version)
 
 
 def test_an_emulator_at_its_pin_with_nothing_newer(tmp_path):
@@ -115,7 +83,7 @@ def test_installed_behind_the_pin_and_upstream_past_it(tmp_path):
     app = vita["apps"][0]
     install(tmp_path, app, "4200")
     source = upstreams.check_github(vita, release(str(int(app["pin"]) + 14)), tmp_path)
-    assert [update.name for update in source.updates] == ["Vita3K Manager (Bazzite Console Suite): installed",
+    assert [update.name for update in source.updates] == ["Vita3K Manager: installed",
                                                           "Vita3K on GitHub"]
     assert source.manual and source.step is None                        # never by a click
     assert "use its Install" in source.note and "comes with a release of the app" in source.note
@@ -129,13 +97,6 @@ def test_an_app_without_its_program_is_no_update(tmp_path):
     assert source.updates == () and "Installed without Xenia Canary so far: Xenia Manager." in source.detail
     later = upstreams.check_github(xenia, release("cf206a3", "2026-11-09T09:00:00Z"), tmp_path)
     assert later.updates[0].latest == "cf206a3"
-
-
-def test_decky_past_its_pin_updated_itself(tmp_path):
-    install(tmp_path, DECKY["apps"][0], "9.9.9")
-    source = upstreams.check_github(DECKY, release("v9.9.9"), tmp_path)
-    assert [update.name for update in source.updates] == ["Decky Loader on GitHub"]
-    assert "update itself" in source.about
 
 
 def test_github_offline(tmp_path):
@@ -155,7 +116,7 @@ def test_the_comparisons():
 def test_sonys_firmware_is_news_once(tmp_path):
     """The first look learns the versions; a later one names what changed; the one after says nothing again."""
     state = tmp_path / "state.json"
-    catalog_ = {"github": [], "sony": [SONY["dualsense"], SONY["ps4"]]}
+    catalog_ = {"github": [], "sony": [entry("dualsense"), entry("ps4")]}
     first = upstreams.read("seen", catalog_, get=lambda url: INFO if url.endswith(".json") else PS4, state=state)
     assert all(source.updates == () for source in first)
     assert first[0].detail.startswith("Latest: DualSense (0x0004) 0x0630") and first[1].detail == "Latest: PS4 14.02."
@@ -185,9 +146,7 @@ def test_the_ps4_list_is_read_by_its_one_attribute():
 
 def test_devices_with_no_list_say_where_to_look():
     for key in ("ps5", "psportal"):
-        def never(url):
-            raise AssertionError(url)
-        source = upstreams.check_sony(SONY[key], None, get=never)
+        source = upstreams.check_sony(entry(key), None, get=lambda url: (_ for _ in ()).throw(AssertionError(url)))
         assert not source.checked and "System Software" in source.about and source.updates == ()
 
 

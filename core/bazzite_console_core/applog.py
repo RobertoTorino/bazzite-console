@@ -5,10 +5,7 @@ ones kept, so it never grows past a few MB. An app calls setup() once at start a
 the file holds the app also shows in its window, so the log is what happened in words, not a debug trace.
 
 Personal data stays out of it as it stays out of everything else the suite writes: an app logs what it did, not
-keys or account details.
-
-An app can name its suite folder to keep its log with its other data; Bazzite Console apps use their own
-~/.local/share/<app id>/ folder."""
+keys or account details."""
 
 from __future__ import annotations
 
@@ -17,7 +14,7 @@ import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from .platform import data_home, private as private_text, suite_data
+from .platform import data_home, private as private_text
 
 MAX_BYTES = 1_000_000
 KEPT = 3
@@ -25,9 +22,9 @@ FORMAT = "%(asctime)s %(levelname)s %(message)s"
 DATE = "%d-%m-%Y %H:%M:%S"
 
 
-def log_file(app_id: str, suite: str = "") -> Path:
-    """The app's log: in its *suite*'s folder when it names one, else ~/.local/share/<app id>/."""
-    return (suite_data(suite) if suite else data_home()) / app_id / f"{app_id}.log"
+def log_file(app_id: str) -> Path:
+    """The app's log: ~/.local/share/<app id>/<app id>.log."""
+    return data_home() / app_id / f"{app_id}.log"
 
 
 def logger(app_id: str) -> logging.Logger:
@@ -41,13 +38,12 @@ class _Private(logging.Formatter):
         return private_text(super().format(record))
 
 
-def setup(app_id: str, path: Path | None = None, suite: str = "", private: bool = False) -> Path:
-    """The app's log, in *path* (its own file, log_file(app_id, suite), when not given): every record of
+def setup(app_id: str, path: Path | None = None, private: bool = False) -> Path:
+    """The app's log, in *path* (its own file, log_file(app_id), when not given): every record of
     logger(app_id) goes there, and an uncaught exception is written before Python reports it. A second call changes
     nothing. Returns the file; when it cannot be made, the log goes to stderr and the file is still what is
-    returned. *private*: the user's folders masked in every line (the earlier implementation's apps, owner
-    29-10-2026: the log shows on their screen)."""
-    path = path or log_file(app_id, suite)
+    returned. *private*: the user's folders masked in every line (owner, 29-10-2026: no user name in a log)."""
+    path = path or log_file(app_id)
     log = logger(app_id)
     if log.handlers:
         return path

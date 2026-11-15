@@ -77,7 +77,7 @@ class Player(QObject):
             if self.effect is not None:
                 last = Path(self.effect.source().toLocalFile())
                 self.effect.stop()
-                # deleted now, not later: on Windows the effect keeps its file open until then. One still loading
+                # deleted now, not later: the effect keeps its file open until then. One still loading
                 # can hold it a moment longer; it stays, and close() removes the folder
                 sip.delete(self.effect)
                 self.effect = None
@@ -100,7 +100,7 @@ class Player(QObject):
         """The silent loop on or off; False when it could not start."""
         if self.keeper is not None:
             self.keeper.stop()
-            sip.delete(self.keeper)             # now: on Windows it keeps its file open until then
+            sip.delete(self.keeper)             # now: it keeps its file open until then
             self.keeper = None
         if not on or not self.available():
             return False
@@ -115,7 +115,7 @@ class Player(QObject):
         for effect in (self.effect, self.keeper):
             if effect is not None:
                 effect.stop()
-                sip.delete(effect)              # now, so their files are closed before the folder goes (Windows)
+                sip.delete(effect)              # now, so their files are closed before the folder goes
         self.effect = self.keeper = None
         shutil.rmtree(self.folder, ignore_errors=True)
 

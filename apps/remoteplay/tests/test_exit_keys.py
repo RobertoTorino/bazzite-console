@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Escape closes ordinary windows, while dialogs and streams keep their own keys."""
+"""Escape closes ordinary windows, while dialogs and streams keep their own keys (core's exit_keys, as the app
+installs it: without the controller)."""
 
 import pytest
 from PyQt6.QtCore import Qt
@@ -7,13 +8,13 @@ from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtTest import QTest
 from PyQt6.QtWidgets import QApplication, QDialog, QLineEdit, QMenu, QVBoxLayout, QWidget
 
-from remoteplay.exit_keys import EscapeToClose
+from bazzite_console_core import exit_keys
 from remoteplay.stream_view import StreamWindow
 
 
 @pytest.fixture
 def escape_filter(qapp):
-    handler = EscapeToClose(qapp)
+    handler = exit_keys.install(qapp, controller=False)
     yield handler
     qapp.removeEventFilter(handler)
 

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What a newer portal release brings: its apps.toml, read from GitHub at its tag, compared with the running
 portal's pins. App updates reach users through a portal update, so the portal's update button can name them. The
-release's SHA256SUMS tells a new build of the running portal's own version (owner,
-03-11-2026): a release built again under the same version, which the version alone
+release's SHA256SUMS tells a new build of the running portal's own version (owner, 03-11-2026, as the earlier
+implementation's portal since 31-10-2026): a release built again under the same version, which the version alone
 never offers; install.sh writes the sha256 of the tarball a portal came from beside its program (build.sha256)."""
 
 from __future__ import annotations
@@ -15,10 +15,11 @@ from pathlib import Path
 
 from bazzite_console_core.updates import ReleaseInfo, latest_release
 
+from . import CHECKOUT_FILE
 from .manifest import AppEntry, ManifestError, parse
 from .sources import expected_sha256
 
-# The manifest shipped with the Bazzite Console Suite portal release.
+# The newer portal's manifest at its tag, in the repository's portal/ folder.
 RAW_URLS = ("https://raw.githubusercontent.com/{repo}/{tag}/portal/apps.toml",)
 SUMS_URL = "https://github.com/{repo}/releases/download/{tag}/SHA256SUMS"
 BUILD_FILE = "build.sha256"                 # beside the installed program: the sha256 of the tarball it came from
@@ -30,8 +31,8 @@ class AppChange:
     name: str                           # an app's name
     old: str                            # "0.1.0"; "" for an app the new portal adds
     new: str                            # "0.1.1"
-    short: str = ""                     # the name on its tile, when apps.toml sets one ("HDMI-CEC")
-    withdrawn: str = ""                 # why the new portal withdraws it
+    short: str = ""                     # the name on its tile, when apps.toml sets one ("DatStation")
+    withdrawn: str = ""                 # why the new portal withdraws it (it removes the app from the system)
 
 
 @dataclass(frozen=True)
@@ -96,8 +97,11 @@ def fetch_text(url: str, user_agent: str) -> str:
 
 def running_build(root: Path) -> str | None:
     """The sha256 of the tarball the running portal was installed from (build.sha256 beside its program): None from
-    a checkout (no build to compare), "" for an installed portal without the file (installed before it was written,
-    or from a folder without its tarball beside it), which a new build is offered to once."""
+    a checkout or installed from one (no build to compare: the release of its version is not offered, which would
+    replace the checkout's portal under test), "" for an installed portal without the file (installed before it
+    was written, or from a folder without its tarball beside it), which a new build is offered to once."""
+    if (root / CHECKOUT_FILE).is_file():
+        return None
     try:
         text = (root / BUILD_FILE).read_text(encoding="utf-8")
     except OSError:

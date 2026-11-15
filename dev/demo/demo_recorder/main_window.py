@@ -32,9 +32,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from nexus_core.widgets import AppHeader, InfoButton
+from bazzite_console_core.nexus import header as nexus_header
+from bazzite_console_core.widgets import InfoButton
 
-from . import APP_NAME, CHECKOUT, LOGO_PATH, __version__
+from . import APP_NAME, CHECKOUT, LOGO_PATH
 from .global_shortcut import GlobalShortcutManager
 from .workflow import (
     PORTAL_LAUNCHER,
@@ -56,16 +57,15 @@ from .workflow import (
 )
 
 RELEASES_URL = "https://github.com/RobertoTorino/bazzite-console/releases"
-SUITE_IN_CHECKOUT = CHECKOUT
+SUITE_IN_CHECKOUT = CHECKOUT                             # the suite whose portal install the demo records
 ABOUT = ("The demo is a real portal installation recorded with OBS: a portal release extracted in Downloads (found by "
-         "itself), or Bazzite Console in this checkout, installed in a terminal while OBS records the screen, "
+         "itself), or the Bazzite Console Suite in this checkout, installed in a terminal while OBS records the screen, "
          "then the portal opened and one optional app installed and shown.\n\n"
          "OBS needs a screen-capture source and its WebSocket server (Setup instructions). The portal and the "
          "chosen app must not be installed yet: the demo is a fresh install. While it records, this window hides; "
          "the global shortcut stops the recording and brings it back. The recordings are in ~/Videos/demos.")
 INSTRUCTIONS = ("The installer runs in a terminal, for its output and its password prompts. This window then hides "
                 "and opens the portal; the global shortcut shown stops the recording and brings it back.")
-
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
     def _build_ui(self) -> None:
         central = QWidget()
         layout = QVBoxLayout(central)
-        header = AppHeader(LOGO_PATH, APP_NAME, __version__)
+        header = nexus_header(LOGO_PATH, APP_NAME, CHECKOUT)  # the checkout's commit, never a version
         header.add_action(InfoButton(ABOUT, "What this app does"))
         header.add_second(QLabel("A portal installation, recorded with OBS."))
         header.second_row.addStretch(1)
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
         choose_row = QHBoxLayout()
         self.release_path = QLineEdit()
         self.release_path.setReadOnly(True)
-        self.release_path.setPlaceholderText("An extracted portal release, or the suite's folder in a checkout")
+        self.release_path.setPlaceholderText("An extracted portal release, or a checkout of the repository")
         choose_row.addWidget(self.release_path, 1)
         choose_button = QPushButton("Choose folder…")
         choose_button.clicked.connect(self._choose_release)
@@ -349,7 +349,7 @@ class MainWindow(QMainWindow):
         return True
 
     def _choose_release(self) -> None:
-        selected = QFileDialog.getExistingDirectory(self, "Choose a portal release or a suite's folder in a checkout")
+        selected = QFileDialog.getExistingDirectory(self, "Choose a portal release or a checkout of the repository")
         if not selected:
             return
         try:
@@ -516,7 +516,7 @@ class MainWindow(QMainWindow):
             self._update_start_button()
             return
         self.instructions.setText(
-            "The portal is installed. Open it, show Bazzite Console Test, "
+            "The portal is installed. Open it, show PS5 Board Test, "
             "install the selected optional app, "
             "then open that app for the peek."
         )

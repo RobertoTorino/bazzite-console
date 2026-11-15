@@ -8,7 +8,7 @@
 #   dev/nrt/install.sh        # app menu entry and Desktop icon for this checkout (Linux)
 set -euo pipefail
 APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
-REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venvs and core/
+REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venv and core/
 
 die() { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
 
@@ -26,4 +26,4 @@ if [[ -z "$PY" ]]; then
 fi
 [[ -n "$PY" ]] || die "No venv in $REPO: see CLAUDE.md or ./test.sh for how to create one."
 cd "$APP"
-PYTHONPATH="$REPO/dev/core_compat:$REPO/core${PYTHONPATH:+:$PYTHONPATH}" exec "$PY" -m nexus_release_tool "$@"
+PYTHONPATH="$REPO/core${PYTHONPATH:+:$PYTHONPATH}" exec "$PY" -m nexus_release_tool "$@"

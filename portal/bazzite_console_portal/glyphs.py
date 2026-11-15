@@ -147,7 +147,7 @@ def close(color: str) -> QIcon:
 
 
 def steam(color: str) -> QIcon:
-    """Steam's mark."""
+    """Steam: a disc with a piston's rod cut out of it, a large ring at its head and a small one at its foot."""
     def draw(p: QPainter) -> None:
         p.setBrush(QColor(color))
         p.setPen(Qt.PenStyle.NoPen)
@@ -157,13 +157,13 @@ def steam(color: str) -> QIcon:
         cut.setCapStyle(Qt.PenCapStyle.RoundCap)
         p.setPen(cut)
         p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawEllipse(QPointF(41, 25), 9.5, 9.5)
+        p.drawEllipse(QPointF(41, 25), 9.5, 9.5)            # the head: a ring
         cut.setWidthF(9)
         p.setPen(cut)
-        _line(p, (33, 33), (21, 41))
+        _line(p, (33, 33), (21, 41))                        # the rod
         cut.setWidthF(4.5)
         p.setPen(cut)
-        p.drawEllipse(QPointF(18, 42), 6, 6)
+        p.drawEllipse(QPointF(18, 42), 6, 6)                # the foot
     return _icon(color, draw, BIG)
 
 
@@ -213,14 +213,14 @@ def network(color: str) -> QIcon:
 
 
 def volume(color: str) -> QIcon:
-    """A loudspeaker with two waves of sound."""
+    """A loudspeaker with two waves of sound: the volume."""
     def draw(p: QPainter) -> None:
         pen = p.pen()
         pen.setWidthF(5)
         p.setPen(pen)
         p.setBrush(QColor(color))
-        p.drawPolygon(QPolygonF([QPointF(8, 25), QPointF(18, 25), QPointF(31, 14), QPointF(31, 50),
-                                 QPointF(18, 39), QPointF(8, 39)]))
+        p.drawPolygon(QPolygonF([QPointF(8, 25), QPointF(18, 25), QPointF(31, 14), QPointF(31, 50), QPointF(18, 39),
+                                 QPointF(8, 39)]))
         p.setBrush(Qt.BrushStyle.NoBrush)
         for r in (10, 21):
             p.drawArc(QRectF(34 - r, 32 - r, 2 * r, 2 * r), -48 * 16, 96 * 16)
@@ -240,7 +240,8 @@ def screen(color: str) -> QIcon:
 
 
 # The weather beside the symbols (owner, 05-11-2026): a symbol for each kind of weather.py, a sun by day and a moon
-# by night where the sky shows.
+# by night where the sky shows. Since 12-11-2026 the weather is the status' third line, on the right: the symbol
+# stands before the place, the temperature and the sky.
 def _sun(p: QPainter, cx: float, cy: float, r: float) -> None:
     p.drawEllipse(QPointF(cx, cy), r, r)
     for step in range(8):

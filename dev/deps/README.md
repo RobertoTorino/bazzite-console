@@ -6,11 +6,11 @@
 
 # Nexus Deps
 
-A window that lists the Python packages and external tools of a suite's apps installed on this machine, which apps
+A window that lists the Python packages and external tools of the suite's apps installed on this machine, which apps
 use them, what is missing or must be updated (with the known vulnerabilities from OSV.dev), Bazzite's update
 state, and every update of the machine (Bazzite's image, Flatpaks, Homebrew, Rust, the development venv); **Fix**
 installs what is missing, outdated or newer, after it shows every command and asks. An hourly notification
-says when something needs you. A Nexus app: it runs from the checkout it lives in and has no releases of its own.
+says when something needs you. A development app: it runs from the checkout it lives in and has no releases of its own.
 Start it from [Nexus Dashboard](../dash), or:
 
 | | Linux |
@@ -18,10 +18,10 @@ Start it from [Nexus Dashboard](../dash), or:
 | Open it | `dev/deps/run.sh` (`--fix` offers Fix at once, `--remind` is the hourly check) |
 | Menu entry, Desktop icon and hourly reminder | `dev/deps/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) |
 
-Nothing is copied: the entry starts the app of the checkout you installed it from. It checks the apps in this
-Bazzite Console checkout, using `nexus_deps/catalogs/bazzite-console.toml`.
+Nothing is copied: the entry starts the app of the checkout you installed it from. Its catalog of the suite is
+`nexus_deps/catalogs/bazzite-console.toml`.
 
-Documentation: [Bazzite Console](https://robertotorino.github.io/bazzite-console/).
+How to use it: [Deps in the wiki](https://robertotorino.github.io/bazzite-console/development/dashboard/#deps).
 
 ## License
 

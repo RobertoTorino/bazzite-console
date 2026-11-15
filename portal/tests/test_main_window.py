@@ -9,11 +9,11 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPixmap
 from PyQt6.QtWidgets import QMessageBox
 
-from bazzite_console_portal import APP_NAME, CARDS, MANIFEST
+from bazzite_console_portal import APP_NAME, MANIFEST
 from bazzite_console_portal import desktop_icons
 from bazzite_console_portal.bigpicture import ICON_PX
 from bazzite_console_portal.main_window import DESKTOP_ICONS_KEY, MainWindow, Pending
-from bazzite_console_portal.manifest import load, load_cards
+from bazzite_console_portal.manifest import load
 from bazzite_console_portal.sources import Records, Sources
 
 
@@ -56,7 +56,8 @@ class FakeTour:
 def test_the_icon_plays_the_portal_tour_and_the_name_opens_the_wiki(window, monkeypatch):
     """Owner, 14-11-2026: the icon plays the Portal Tour in the portal (the wiki's video), the name opens the wiki;
     a tour that cannot be played opens the wiki's Portal Tour page in the browser."""
-    from bazzite_console_portal import SUITE_MANUAL_URL, main_window
+    from bazzite_console_core import SUITE_MANUAL_URL
+    from bazzite_console_portal import main_window
     opened = []
     FakeTour.made = []
     monkeypatch.setattr(main_window.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
@@ -188,7 +189,6 @@ def test_the_theme_pill_shows_the_next_theme_at_once_and_the_portal_stays_open(w
     from bazzite_console_core import theme, widgets
 
     before = widgets.current_theme()
-    card = next(iter(window.big.cards), None)
     started = []
     monkeypatch.setattr(window, "launch", lambda argv: started.append(argv) or True)
     monkeypatch.setattr(window, "restart_portal", lambda: started.append("restart"))
@@ -207,8 +207,6 @@ def test_the_theme_pill_shows_the_next_theme_at_once_and_the_portal_stays_open(w
             assert theme.outline(now) in window.big.bar.styleSheet()
             assert theme.muted(now) in window.big.hint.styleSheet()
             assert now.accent in window.big.info.styleSheet()
-            if card is not None:
-                assert window.big.tiles[card].status_colour == theme.muted(now)
     finally:
         from bazzite_console_core.app import switch_theme
 

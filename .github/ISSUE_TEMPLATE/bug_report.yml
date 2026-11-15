@@ -9,7 +9,7 @@ body:
       label: App
       options:
         - portal
-        - bazzite
+        - board
         - upscaler
         - rpcs3
         - remoteplay
@@ -27,7 +27,7 @@ body:
         - overlay
         - fan
         - cec
-        - btpair
+        - bluetooth
     validations:
       required: true
   - type: textarea
@@ -58,7 +58,7 @@ body:
     attributes:
       label: Report or log
       description: >-
-        Bazzite Test: Show Logs → the full report of the run. Other apps: their log, if they show one.
+        board: Show Logs → the full report of the run. Other apps: their log, if they show one.
         Drag the file here or paste the relevant part.
   - type: checkboxes
     id: privacy

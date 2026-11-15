@@ -6,8 +6,7 @@ __pycache__/
 .vscode/
 *.log
 
-# Local venvs: per app (python/, _python/ as in the old repos) and the suite-wide one. A venv only works on the
-# OS that created it (bin/ on Linux, Scripts/ on Windows), so never share one between Linux and Windows.
+# Local venvs: per app (python/, _python/ as in the old repos) and the suite-wide one (.venv-linux/).
 python/
 _python/
 /.venv/
@@ -31,8 +30,3 @@ ehthumbs.db
 desktop.ini
 $RECYCLE.BIN/
 .DS_Store
-
-# Windows' NUL device written as a real file by a Git Bash command meant for cmd (podman machine ssh's known-hosts
-# file): git cannot add it, "unable to index file 'NUL'" (06-11-2026)
-NUL
-*.dmp

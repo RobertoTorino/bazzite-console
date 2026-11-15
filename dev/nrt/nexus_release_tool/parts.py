@@ -10,7 +10,7 @@ from collections.abc import Callable
 
 from PyQt6.QtWidgets import QHBoxLayout, QWidget
 
-from nexus_core.widgets import InfoButton, Terminal, hint_label
+from bazzite_console_core.widgets import InfoButton, Terminal, hint_label
 
 
 def info_row(short: str, text: str) -> QHBoxLayout:

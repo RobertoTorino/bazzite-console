@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Test local apps: the suite's windows as they are in the checkout, to try them before their release (the suite's
-portal, then every app with a __main__.py), and the wikis served from the checkout with mkdocs serve. A window starts as `python -m <module>` with the dev venv's
-python and the checkout's core on the path, as a Nexus app's run.sh starts it. It moved here from Nexus Release Tool's Test on this board (owner, 04-11-2026: the release tool is the release)."""
+portal, then every app with a __main__.py), and its wiki served from the checkout with mkdocs serve. A window starts
+as `python -m <module>` with the dev venv's python and the checkout's core on the path, as a development app's run.sh starts it. It moved here from Nexus Release Tool's Test on this board (owner, 04-11-2026: the release tool is the release)."""
 
 from __future__ import annotations
 
@@ -14,13 +14,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from .checkout import suites
-
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 DOCS_HOST = "127.0.0.1"
 DOCS_PORT = 8775                        # not mkdocs' default 8000, which other dev servers like to take
 NETWORK_HOST = "0.0.0.0"                # every address of this computer, for the other devices
-NETWORK_PORT = 8795                     # ports of their own, so a wiki can be served both ways at once
+NETWORK_PORT = 8795                     # a port of its own, so the wiki can be served both ways at once
 _CONSTANT = re.compile(r'^(APP_NAME|APP_ID)\s*=\s*"([^"]+)"', re.M)
 
 
@@ -37,7 +35,7 @@ class Launch:
     args: tuple[str, ...] = ()          # after `python -m <module>`
     url: str = ""                       # a server: the page to open once it answers
     app_id: str = ""                    # an app that runs once per user: a second launch only shows the first
-    log_stem: str = ""                  # its log's name, when the module does not tell it apart (two wikis)
+    log_stem: str = ""                  # its log's name, when the module does not tell it apart (the wiki)
     note: str = ""                      # said once it started (a wiki on the network: its addresses)
 
     @property
@@ -49,31 +47,22 @@ class Launch:
         return f"{self.log_stem or self.module}.log"
 
 
-def suite_dir(root: Path, suite: str | None = None) -> Path:
-    """The suite's folder in the checkout, or the first suite's when none is named; *root* itself when it is laid
-    out as a suite (the repositories the tests make)."""
-    if suite:
-        return root if suite in {root.name, "."} else root / suite
-    names = suites(root)
-    return root if not names or names[0] in {root.name, "."} else root / names[0]
-
-
-def changes_board(root: Path, suite: str | None = None) -> dict[str, bool]:
+def changes_board(root: Path) -> dict[str, bool]:
     """Each app of the suite's portal/apps.toml and whether it is marked changes_board; {} without a manifest."""
     try:
-        with open(suite_dir(root, suite) / "portal" / "apps.toml", "rb") as file:
+        with open(root / "portal" / "apps.toml", "rb") as file:
             apps = tomllib.load(file).get("apps", {})
     except (OSError, tomllib.TOMLDecodeError):
         return {}
     return {key: bool(card.get("changes_board", False)) for key, card in apps.items() if isinstance(card, dict)}
 
 
-def launch_targets(root: Path, suite: str | None = None) -> list[Launch]:
+def launch_targets(root: Path) -> list[Launch]:
     """Every app window of the suite in the checkout: each package with a __main__.py (one or two levels below the
     app folder, tests left out). The checkout-only apps are not listed."""
-    board = changes_board(root, suite)
+    board = changes_board(root)
     found = []
-    apps = suite_dir(root, suite) / "apps"
+    apps = root / "apps"
     for app in sorted(apps.iterdir()) if apps.is_dir() else ():
         if not (app / "VERSION").is_file() or (app / CHECKOUT_ONLY).is_file():
             continue
@@ -98,18 +87,16 @@ def launch_targets(root: Path, suite: str | None = None) -> list[Launch]:
     return found
 
 
-def wiki_icon(folder: Path) -> Path | None:
-    """The icon of the wiki in *folder*: its suite's portal icon or its own drawing at 256 px; None without either."""
-    for icon in (folder / "portal" / "images" / f"{folder.name}-suite.webp", folder / "images" / f"{folder.name}-256.png"):
-        if icon.is_file():
-            return icon
-    return None
+def wiki_icon(root: Path) -> Path | None:
+    """The icon of the suite's wiki: its portal's icon (portal/images/bazzite-console-suite.webp); None without one."""
+    portal = sorted((root / "portal" / "images").glob("*-suite.webp"))
+    return portal[0] if len(portal) == 1 else None
 
 
-def portal_target(root: Path, suite: str | None = None) -> Launch | None:
-    """The suite's portal, started from the checkout as `python -m <its package>` in portal/: it takes its apps from the checkout, as it does when it runs from
+def portal_target(root: Path) -> Launch | None:
+    """The suite's portal, started from the checkout as `python -m <its package>` in portal/ (bazzite_console_portal): it takes its apps from the checkout, as it does when it runs from
     one. None when the suite has no portal window."""
-    folder = suite_dir(root, suite) / "portal"
+    folder = root / "portal"
     mains = sorted(p for p in folder.glob("*/__main__.py") if p.parent.name != "tests")
     if not mains:
         return None
@@ -120,7 +107,7 @@ def portal_target(root: Path, suite: str | None = None) -> Launch | None:
     except OSError:
         return None
     return Launch("portal", package.name, consts.get("APP_NAME", package.name), folder, version, False,
-                  wiki_icon(suite_dir(root, suite)), app_id=consts.get("APP_ID", ""))
+                  wiki_icon(root), app_id=consts.get("APP_ID", ""))
 
 
 def network_addresses() -> list[str]:
@@ -140,55 +127,41 @@ def network_addresses() -> list[str]:
     return [a for i, a in enumerate(found) if not a.startswith("127.") and a != "0.0.0.0" and a not in found[:i]]
 
 
-def wiki_configs(root: Path) -> list[Path]:
-    """Each wiki in the checkout: mkdocs.yml at the root, then one in a folder directly below it (by folder name)."""
-    return [p for p in (root / "mkdocs.yml", *sorted(root.glob("*/mkdocs.yml"))) if p.is_file()]
+def docs_target(root: Path, network: bool = False, addresses: list[str] | None = None) -> Launch | None:
+    """The suite's wiki (mkdocs.yml at the root), served from the checkout with `mkdocs serve` (the dev venv has it):
+    it rebuilds on every save, and its page opens with the design panel. The page is under the path of site_url, as
+    on GitHub Pages. With *network* it is served on every address of this computer, for the other devices on the
+    network; the browser here still opens it at 127.0.0.1. None without a wiki."""
+    config = root / "mkdocs.yml"
+    if not config.is_file():
+        return None
+    text = config.read_text(encoding="utf-8")
+    name = re.search(r"^site_name:\s*(.+?)\s*$", text, re.M)
+    site = re.search(r"^site_url:\s*(\S+)", text, re.M)
+    path = urlparse(site[1]).path.strip("/") if site else ""
+    path = f"/{path}/" if path else "/"
+    port = NETWORK_PORT if network else DOCS_PORT
+    where = "network" if network else "local"
+    note = ""
+    if network:
+        reach = [f"http://{a}:{port}{path}" for a in (network_addresses() if addresses is None else addresses)]
+        note = ("On the other devices: " + ", ".join(reach)) if reach else \
+            "This computer has no network address the other devices can reach."
+    return Launch("docs", "mkdocs", f"{name[1] if name else root.name} wiki ({where})", root, "", False,
+                  wiki_icon(root), ("serve", "-f", "mkdocs.yml",
+                                    "--dev-addr", f"{NETWORK_HOST if network else DOCS_HOST}:{port}"),
+                  f"http://{DOCS_HOST}:{port}{path}?design", log_stem=f"mkdocs-root-{where}", note=note)
 
 
-def docs_targets(root: Path, network: bool = False, addresses: list[str] | None = None,
-                 suite: str | None = None) -> list[Launch]:
-    """Each wiki, served from the checkout with `mkdocs serve` (the dev venv has it), each on a port of its own: it
-    rebuilds on every save, and its page opens with the design panel. The page is under the path of site_url, as on
-    GitHub Pages. With *network* it is served on every address of this computer, for the other devices on the
-    network; the browser here still opens it at 127.0.0.1. With *suite*, that suite's wiki and the ones that are no
-    suite's (the Nexus page), never another suite's (owner, 29-10-2026); a wiki keeps its port whichever suite is
-    chosen."""
-    others = {name for name in suites(root) if name != suite} if suite else set()
-    found = []
-    for number, config in enumerate(wiki_configs(root)):
-        if config.parent.name in others and config.parent != root:
-            continue
-        text = config.read_text(encoding="utf-8")
-        name = re.search(r"^site_name:\s*(.+?)\s*$", text, re.M)
-        site = re.search(r"^site_url:\s*(\S+)", text, re.M)
-        path = urlparse(site[1]).path.strip("/") if site else ""
-        path = f"/{path}/" if path else "/"
-        port = (NETWORK_PORT if network else DOCS_PORT) + number
-        folder = config.parent.relative_to(root).as_posix()
-        where = "network" if network else "local"
-        note = ""
-        if network:
-            reach = [f"http://{a}:{port}{path}" for a in (network_addresses() if addresses is None else addresses)]
-            note = ("On the other devices: " + ", ".join(reach)) if reach else \
-                "This computer has no network address the other devices can reach."
-        found.append(Launch("docs" if folder == "." else f"docs-{folder}", "mkdocs",
-                            f"{name[1] if name else folder} wiki ({where})", root, "", False, wiki_icon(config.parent),
-                            ("serve", "-f", config.relative_to(root).as_posix(),
-                             "--dev-addr", f"{NETWORK_HOST if network else DOCS_HOST}:{port}"),
-                            f"http://{DOCS_HOST}:{port}{path}?design",
-                            log_stem=f"mkdocs-{'root' if folder == '.' else folder}-{where}", note=note))
-    return found
-
-
-def targets(root: Path, suite: str | None, network: bool = False) -> list[Launch]:
-    """The icons under Test local apps, in their order: the suite's portal, its apps, the wikis."""
-    portal = portal_target(root, suite)
-    return ([portal] if portal else []) + launch_targets(root, suite) + docs_targets(root, network, suite=suite)
+def targets(root: Path, network: bool = False) -> list[Launch]:
+    """The icons under Test local apps, in their order: the suite's portal, its apps, its wiki."""
+    portal, docs = portal_target(root), docs_target(root, network)
+    return ([portal] if portal else []) + launch_targets(root) + ([docs] if docs else [])
 
 
 def launch_command(root: Path, target: Launch, python: str = sys.executable) -> tuple[list[str], dict[str, str]]:
-    """The command and environment that start *target* from the checkout: the dev venv's python with the
-    checkout's core on the path as run.sh does it (a release bundles core instead)."""
+    """The command and environment that start *target* from the checkout: the dev venv's python with the checkout's
+    core on the path as run.sh does it (a release bundles core instead)."""
     env = dict(os.environ)
     env["PYTHONPATH"] = os.pathsep.join(filter(None, (str(root / "core"), env.get("PYTHONPATH"))))
     return [python, "-m", target.module, *target.args], env

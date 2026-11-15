@@ -9,17 +9,11 @@ import subprocess
 import sys
 import time
 
-import pytest
-from nexus_core import instance
+from bazzite_console_core import instance
 from PyQt6.QtCore import QCoreApplication, QLockFile
 from PyQt6.QtWidgets import QWidget
 
 from nexus_dashboard import replace
-
-# On Windows the socket is a named pipe, which the server and the client in one thread do not get through (two
-# processes, two launches of the app, do).
-ONE_THREAD = pytest.mark.skipif(sys.platform == "win32", reason="a named pipe on Windows: server and client in one thread")
-
 
 def pump_until(predicate, seconds: float = 10) -> bool:
     end = time.monotonic() + seconds
@@ -33,7 +27,6 @@ def test_nobody_open(qapp):
     assert replace.close_running(f"nexus-test-nobody-{os.getpid()}")
 
 
-@ONE_THREAD
 def test_the_open_window_closes_when_asked_and_only_then(qapp):
     app_id = f"nexus-test-quit-{os.getpid()}"
     window = QWidget()
@@ -63,7 +56,6 @@ app.exec()
 """
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="ends a process by its signal")
 def test_a_dashboard_that_does_not_answer_is_ended(qapp):
     app_id = f"nexus-test-deaf-{os.getpid()}"
     name = instance.server_name(app_id)

@@ -15,8 +15,8 @@ pytest.importorskip("PyQt6.QtWidgets", reason="the portal's PyQt6 is not install
 
 
 def test_the_picture_is_written_and_the_tool_exits_cleanly(tmp_path):
-    """The tool deletes the window and the application itself, in order, once the picture is saved (left to the
-    interpreter's exit, the process crashed now and then on a runner after the picture was written)."""
+    """The tool deletes the window and the application itself, in order, once the picture is saved (03-11-2026: left
+    to the interpreter's exit, the process crashed now and then on the wiki's runner after the picture was written)."""
     out = tmp_path / "portal.webp"
     env = {**os.environ, "QT_QPA_PLATFORM": "offscreen"}
     result = subprocess.run([sys.executable, str(TOOLS / "portal_screenshot.py"), "--out", str(out)],

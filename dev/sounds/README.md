@@ -6,18 +6,20 @@
 
 # Nexus Sound Lab
 
-A window that makes and tries short sound effects for the suites' windows, such as the tick a menu makes when the
+A window that makes and tries short sound effects for the suite's windows, such as the tick a menu makes when the
 controller moves the focus: a preset and a waveform to start from, a slider for each number of the sound, the
 sound drawn beside them and played at every change, a row of buttons to try it while moving between them, and
-Save as WAV for a suite's sounds folder. A Nexus app: it runs from the checkout it lives in and has no releases of
+Save as WAV for the portal's sounds folder. A development app: it runs from the checkout it lives in and has no releases of
 its own. Start it from [Nexus Dashboard](../dash), or:
 
-- Open it: `dev/sounds/run.sh`
-- Menu entry and Desktop icon: `dev/sounds/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`)
+| | Linux |
+|---|---|
+| Open it | `dev/sounds/run.sh` |
+| Menu entry and Desktop icon | `dev/sounds/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) |
 
 Nothing is copied: the entry starts the app of the checkout you installed it from.
 
-Documentation: [Bazzite Console](https://robertotorino.github.io/bazzite-console/).
+How to use it: [Sound Lab in the wiki](https://robertotorino.github.io/bazzite-console/development/dashboard/#sound-lab).
 
 ## License
 

@@ -24,7 +24,7 @@ from PyQt6.QtCore import QProcess, QProcessEnvironment, QSettings, Qt, QTimer
 from PyQt6.QtGui import QTextCursor
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QMenu, QPushButton, QToolButton, QVBoxLayout, QWidget
 
-from nexus_core.widgets import Terminal
+from bazzite_console_core.widgets import Terminal
 
 HISTORY_KEY = "command_line/history"
 HISTORY_MAX = 200
@@ -288,7 +288,7 @@ class CommandLine(QWidget):
         self.kill_timer.start()
 
     def _signal(self, sig) -> None:
-        """*sig* to the command's process group; without one (Windows), terminate or kill (*sig* None) bash."""
+        """*sig* to the command's process group; without one (no setsid), terminate or kill (*sig* None) bash."""
         try:
             if self.grouped:
                 os.killpg(self.pid, sig)

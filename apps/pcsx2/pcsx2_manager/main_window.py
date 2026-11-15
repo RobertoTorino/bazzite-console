@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QComboBox, QGridLayout,
 from bazzite_console_core import SUITE_MANUAL_URL, applog, covers, sound, steam, upstream, window_title
 from bazzite_console_core import __version__ as CORE_VERSION
 from bazzite_console_core import keep, renamed
-from .action_tab import ActionTab, shortcut_number
+from bazzite_console_core.action_tab import ActionTab
 from bazzite_console_core.keep_dialog import KeepDialog
 from bazzite_console_core.platform import bin_home, private, xdg_open
 from bazzite_console_core.settings import SettingsStore
@@ -751,7 +751,7 @@ class MainWindow(QMainWindow):
         if self.worker.running:
             self.say("Wait until what runs now has finished, then start the game.", ok=False)
             return
-        number = (shortcut_number(self.steam_dir, shortcuts.for_game(game))
+        number = (steam.shortcut_number(self.steam_dir, shortcuts.for_game(game))
                   if self.steam_dir is not None and str(game.file) in self.in_steam else None)
         if number is None:
             self.say(f"{game.title} is not in Steam yet: tick it and press Update Steam first.", ok=False)

@@ -1,45 +1,60 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs the portal and its required app for the logged-in user:
+# Installs the Bazzite Console Suite portal and PS5 Board Test, from the extracted portal release:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entries only, no icons on the Desktop
 #   ./install.sh --uninstall             # remove the portal, Board Test and (asked per app) the other apps;
-#                                        # keeps settings and the wallpaper
-#   ./install.sh --uninstall --purge     # also remove the portal's and Board Test's settings and state
+#                                        # keeps settings, results and the wallpaper
+#   ./install.sh --uninstall --purge     # also remove settings, history and results
 #   ./install.sh --uninstall --all       # the whole suite: every other app too, without a question per app,
 #                                        # after one confirmation; with --purge their settings go as well
+#
+# Run it as your own user, not with sudo: only Board Test's copy to /opt asks for the sudo password.
+#  * ~/.local/share/bazzite-console-suite/portal: the portal, its apps.toml and the bazzite_console_core it was tested
+#    with, a copy of your own that every install replaces. Installed from a checkout, it names the checkout
+#    (suite-checkout) and installs the other apps from there.
+#  * ~/.local/share/bazzite-console-suite/state: what the portal remembers (the apps it installed and their releases,
+#    the wallpaper, the music).
+#  * ~/.local/share/bazzite-console-suite/venv: the suite's shared venv with PyQt6 and pygame-ce (the portal's
+#    controller reader), removed with the last suite app that uses it.
+#  * ~/.local/bin/bazzite-console-suite, an app menu entry and a Desktop icon.
+#  * PS5 Board Test, which the suite always includes, through its own installer (bundled in the release).
+# The other apps are installed from the portal, each with its own installer.
 set -euo pipefail
 
 APP_ID="bazzite-console-suite"
 APP_NAME="Bazzite Console Suite"
-APP_KEY="board"
+OPT_DIR="${PS5_BOARD_TEST_OPT_DIR:-/opt}"            # where Board Test is installed; override only for testing
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 SUITE_DIR="$DATA_DIR/$APP_ID"
 VENV="$SUITE_DIR/venv"
 VENV_USERS="$SUITE_DIR/venv-users"
-PORTAL_DIR="$SUITE_DIR/portal"
+PORTAL_DIR="$SUITE_DIR/portal"          # the installed portal
 STATE_DIR="$SUITE_DIR/state"            # what the portal remembers: the installed apps, downloads, the wallpaper
 LAUNCHER="$HOME/.local/bin/$APP_ID"
 MENU_ENTRY="$DATA_DIR/applications/$APP_ID.desktop"
 DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 DESKTOP_ICON="$DESKTOP_DIR/$APP_ID.desktop"
-OPT_DIR="${PS5_BOARD_TEST_OPT_DIR:-/opt}"     # where Board Test is installed; override only for testing
+BT_KEY="board"
 BT_ID="ps5-board-test"
 
 SRC=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+# A release bundles bazzite_console_core and the pinned Board Test; in the suite checkout they live in core/ and apps/.
+if [ -d "$SRC/bazzite_console_core" ]; then CORE_SRC="$SRC/bazzite_console_core"; else CORE_SRC="$SRC/../core/bazzite_console_core"; fi
+BT_SRC=""
 if [ -d "$SRC/bundled" ]; then
-    APP_SRC=$(find "$SRC/bundled" -mindepth 2 -maxdepth 2 -type f -path '*/install.sh' -print -quit |
-        sed 's|/install.sh$||')
-    [ -n "$APP_SRC" ] || { echo "The required Board Test app is missing from this portal release." >&2; exit 1; }
-else
-    APP_SRC="$SRC/../apps/$APP_KEY"
+    BT_SRC=$(find "$SRC/bundled" -mindepth 1 -maxdepth 1 -type d -name "ps5-$BT_KEY-v*" |
+        sort -V | tail -1)
 fi
+BT_TAG=$(basename "${BT_SRC:-local}")
+[ -n "$BT_SRC" ] || BT_SRC="$SRC/../apps/$BT_KEY"
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
-die() { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
-usage() { sed -n '5,11p' "$0" | sed 's/^# \{0,1\}//'; }
+die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
+
+usage() { sed -n '3,11p' "$0" | sed 's/^# \{0,1\}//'; }
 
 DESKTOP_SHORTCUT=true
 UNINSTALL=false
@@ -57,7 +72,8 @@ for arg in "$@"; do
 done
 $PURGE && ! $UNINSTALL && die "--purge only goes with --uninstall."
 $ALL && ! $UNINSTALL && die "--all only goes with --uninstall."
-[ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo."
+
+[ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo: the portal, the venv and the launcher belong in your home folder."
 
 remove_menu_entries() {
     rm -f "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON"
@@ -65,7 +81,7 @@ remove_menu_entries() {
 }
 
 release_venv() {
-    rm -f "${VENV_USERS:?}/${APP_ID:?}-portal"
+    rm -f "${VENV_USERS:?}/${APP_ID:?}"
     rmdir "$VENV_USERS" 2>/dev/null || true
     if [ -d "$VENV_USERS" ]; then
         info "Keeping the suite venv: other suite apps still use it ($(ls "$VENV_USERS" | tr '\n' ' '))"
@@ -208,7 +224,7 @@ uninstall_other_apps() {
             *) info "Canceled: nothing was uninstalled."; exit 1 ;;
         esac
         mapfile -t chosen < <(cut -f1 <<<"$list")
-    elif [ -n "$list" ] && { [ -t 0 ] || [ -n "${BAZZITE_CONSOLE_INTERACTIVE:-}" ]; }; then   # the variable: tests only
+    elif [ -n "$list" ] && { [ -t 0 ] || [ -n "${BAZZITE_CONSOLE_INTERACTIVE:-}" ]; }; then   # BAZZITE_CONSOLE_INTERACTIVE: tests only
         info "Other suite apps are installed. For each: y = uninstall it, s = skip it (keep it), c = cancel."
         while IFS=$'\t' read -r key name folder commands <&3; do
             while true; do
@@ -312,17 +328,18 @@ if $UNINSTALL; then
     STAGING=$(mktemp -d)                              # where apps are staged for their uninstallers
     trap 'rm -rf "${STAGING:?}"' EXIT
     mkdir "$STAGING/check" "$STAGING/apps"
+    # Nothing of the portal, of Board Test or of another suite app: nothing to uninstall.
     found=false
-    installed_here "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON" "$PORTAL_DIR" "$VENV_USERS/$APP_ID-portal" \
+    installed_here "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON" "$PORTAL_DIR" "$VENV_USERS/$APP_ID" \
         "$OPT_DIR/$BT_ID" && found=true
-    $PURGE && installed_here "${CONFIG_DIR:?}/$APP_ID" "${STATE_DIR:?}" && found=true
+    $PURGE && installed_here "${STATE_DIR:?}" "${CONFIG_DIR:?}/$APP_ID" && found=true
     if ! $found && [ -z "$(installed_apps "$STAGING/check" 2>/dev/null)" ]; then
         info "$APP_NAME is not installed: nothing to remove."
         exit 0
     fi
     uninstall_other_apps
     if [ -f "$OPT_DIR/$BT_ID/install.sh" ]; then
-        info "Uninstalling Board Test"
+        info "Uninstalling PS5 Board Test"
         bt_args=(--uninstall)
         $PURGE && bt_args+=(--purge)
         bash "$OPT_DIR/$BT_ID/install.sh" "${bt_args[@]}"
@@ -345,73 +362,136 @@ if $UNINSTALL; then
     exit 0
 fi
 
+# --- Checks ------------------------------------------------------------------------------------
 [ "$(uname -s)" = Linux ] || die "This suite runs on Linux (Bazzite) only."
-for file in "$SRC/apps.toml" "$SRC/requirements.txt" "$APP_SRC/install.sh"; do
-    [ -f "$file" ] || die "Required file is missing: $file"
+for f in apps.toml requirements.txt bazzite_console_portal/__init__.py bazzite_console_portal/__main__.py; do
+    [ -f "$SRC/$f" ] || die "$f is missing: run install.sh from the extracted release folder."
 done
-if [ -d "$SRC/bazzite_console_core" ]; then CORE_SRC="$SRC/bazzite_console_core"; else CORE_SRC="$SRC/../core/bazzite_console_core"; fi
-[ -f "$CORE_SRC/__init__.py" ] || die "bazzite_console_core is missing."
-[ -f "$APP_SRC/VERSION" ] || die "Board Test is missing its VERSION file."
+[ -f "$CORE_SRC/__init__.py" ] || die "bazzite_console_core is missing: run install.sh from the extracted release folder."
+CORE_SRC=$(cd "$CORE_SRC" && pwd -P)
+[ -f "$BT_SRC/install.sh" ] || die "PS5 Board Test is missing: run install.sh from the extracted release folder."
+VERSION=$(sed -n 's/^__version__ = "\([0-9.]*\)"$/\1/p' "$SRC/bazzite_console_portal/__init__.py")
+[ -n "$VERSION" ] || die "Could not read the version from bazzite_console_portal/__init__.py."
+command -v python3 >/dev/null 2>&1 || die "python3 is not installed."
+python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' || die "Python 3.11 or newer is needed."
+python3 -c 'import venv, ensurepip' 2>/dev/null || die "python3 has no venv/ensurepip module."
 
-info "Installing the required Board Test app"
-bash "$APP_SRC/install.sh" --no-desktop-shortcut
+info "Installing $APP_NAME $VERSION"
+
+# --- 1. PS5 Board Test, always part of the suite -------------------------------------------
+# First, while the release folder is whole: the portal's own update runs this script from a folder that the copy
+# below may replace (an earlier portal kept its downloads in what is the portal's own folder now).
+info "Installing PS5 Board Test ($BT_TAG)"
+bt_args=()
+$DESKTOP_SHORTCUT || bt_args+=(--no-desktop-shortcut)
+bash "$BT_SRC/install.sh" ${bt_args[@]+"${bt_args[@]}"}
+# Tell the portal which Board Test it installed ("local" from a checkout), as it does for apps it installs.
+mkdir -p "$STATE_DIR"
+python3 - "$STATE_DIR/installed.json" "$BT_KEY" "$BT_TAG" <<'PY'
+import json, sys
+from pathlib import Path
+path, key, tag = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+try:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data = data if isinstance(data, dict) else {}
+except (OSError, ValueError):
+    data = {}
+data[key] = tag
+tmp = path.with_suffix(".tmp")
+tmp.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+tmp.replace(path)
+PY
+
+# --- 2. The portal's copy in the home folder -----------------------------------------------------
 info "Copying the portal to $PORTAL_DIR"
-# The new portal is copied beside the installed one first and takes its place only then: the portal's own update
-# runs this script from a folder inside the installed portal, which the removal below takes with it.
+# The new portal is copied beside the installed one first and takes its place only then. The bundled Board Test is
+# installed by its own installer below, so it is not part of the portal's copy.
 NEW_DIR="$SUITE_DIR/.portal.new"
 rm -rf "${NEW_DIR:?}"
 mkdir -p "$NEW_DIR"
-(cd "$SRC" && tar --exclude='./tests' --exclude='__pycache__' --exclude='./.git' -cf - .) |
-    tar -xf - -C "$NEW_DIR"
-if [ "$CORE_SRC" != "$SRC/bazzite_console_core" ]; then
+(cd "$SRC" && tar --exclude='./bundled' --exclude='./tests' --exclude='./.git' --exclude='__pycache__' \
+    --exclude='./requirements-dev.txt' -cf - .) | tar -xf - -C "$NEW_DIR"
+if [ "$CORE_SRC" != "$SRC/bazzite_console_core" ]; then         # from the checkout: bundle core like a release
     mkdir -p "$NEW_DIR/bazzite_console_core"
     (cd "$CORE_SRC" && tar --exclude='__pycache__' -cf - .) | tar -xf - -C "$NEW_DIR/bazzite_console_core"
+    # The installed portal installs the other apps from this checkout too, as when it runs from here: the
+    # repository, one level up from <checkout>/portal.
+    (cd "$SRC/.." && pwd -P) > "$NEW_DIR/suite-checkout"
 fi
-# Up to portal 1.0.0 the portal kept what it remembers in its program folder, where every install removed it: move
-# it to the state folder, once.
-mkdir -p "$STATE_DIR"
-for kept in "$PORTAL_DIR"/installed.json "$PORTAL_DIR"/releases "$PORTAL_DIR"/wallpapers.json \
-            "$PORTAL_DIR"/wallpaper-example "$PORTAL_DIR"/wallpaper.*; do
-    if [ -e "$kept" ] && [ ! -e "$STATE_DIR/${kept##*/}" ]; then
-        mv "$kept" "$STATE_DIR/"
-    fi
-done
+# The release's tarball beside the unpacked folder, as the install steps and check-release.sh leave it: its sha256
+# goes beside the program, so the portal can tell a release built again under this version from the build it runs
+# (build.sha256; the portal's update check reads the newest release's SHA256SUMS).
+tarball="$SRC/../$(basename "$SRC").tar.gz"
+if [ -f "$tarball" ]; then
+    sha256sum "$tarball" > "$NEW_DIR/build.sha256"
+fi
 rm -rf "${PORTAL_DIR:?}"
 mv "$NEW_DIR" "$PORTAL_DIR"
+cd "$SUITE_DIR"                         # the folder this ran from may be gone with the old copy
+
+# --- 3. Shared suite venv with PyQt6 and pygame-ce ------------------------------------------------------------
 # A venv made by an older Python has no site-packages for the one that runs it now (a Bazzite update moves
 # /usr/bin/python3 to the next version, and the venv's python links to it): make it again.
 VENV_FITS='import os, sysconfig; raise SystemExit(not os.path.isdir(sysconfig.get_path("purelib")))'
 if [ ! -x "$VENV/bin/python" ] || ! "$VENV/bin/python" -c "$VENV_FITS" 2>/dev/null; then
+    info "Creating the suite venv in $VENV"
     rm -rf "${VENV:?}"
     mkdir -p "$SUITE_DIR"
     python3 -m venv "$VENV"
 fi
 mkdir -p "$VENV_USERS"
-touch "$VENV_USERS/$APP_ID-portal"
+touch "$VENV_USERS/$APP_ID"
+info "Installing PyQt6 and pygame-ce into the venv (downloads ~110 MB the first time)"
+"$VENV/bin/python" -m pip install -q --disable-pip-version-check --upgrade pip
 "$VENV/bin/python" -m pip install -q --disable-pip-version-check --upgrade -r "$PORTAL_DIR/requirements.txt"
+"$VENV/bin/python" -c 'import PyQt6.QtWidgets' || die "PyQt6 does not load from the venv."
 
+# --- 4. Launcher, menu entry, Desktop icon ------------------------------------------------------
+info "Creating the launcher $LAUNCHER"
 mkdir -p "$(dirname "$LAUNCHER")"
 cat >"$LAUNCHER" <<EOF
 #!/usr/bin/env bash
-cd "$PORTAL_DIR"
+# $APP_NAME launcher, written by install.sh. Starts from the installed portal's folder, so Python imports the
+# portal and the bazzite_console_core bundled there, never a copy from the current directory.
+cd "$PORTAL_DIR" || { echo "$APP_NAME is not installed in $PORTAL_DIR; run install.sh again." >&2; exit 1; }
 exec "$VENV/bin/python" -m bazzite_console_portal "\$@"
 EOF
 chmod 755 "$LAUNCHER"
-mkdir -p "$(dirname "$MENU_ENTRY")"
-cat >"$MENU_ENTRY" <<EOF
-[Desktop Entry]
+
+DESKTOP_FILE_CONTENT="[Desktop Entry]
 Type=Application
+Version=1.0
 Name=$APP_NAME
+GenericName=PlayStation 5 tools
+Comment=Install and start the PlayStation 5 tools for Bazzite
 Exec=$LAUNCHER
 Icon=$PORTAL_DIR/images/$APP_ID-128.png
 Terminal=false
-Categories=System;
-EOF
+Categories=System;Settings;
+Keywords=PS5;PlayStation;Bazzite;suite;portal;
+StartupNotify=true
+StartupWMClass=$APP_ID"
+
+info "Adding the app menu entry"
+mkdir -p "$(dirname "$MENU_ENTRY")"
+printf '%s\n' "$DESKTOP_FILE_CONTENT" >"$MENU_ENTRY"
 chmod 644 "$MENU_ENTRY"
+command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q "$DATA_DIR/applications" || true
+
 if $DESKTOP_SHORTCUT && [ -d "$DESKTOP_DIR" ]; then
-    cp "$MENU_ENTRY" "$DESKTOP_ICON"
+    info "Adding the Desktop icon"
+    printf '%s\n' "$DESKTOP_FILE_CONTENT" >"$DESKTOP_ICON"
+    # KDE and GNOME only start Desktop launchers that are executable (GNOME also wants them trusted).
     chmod 755 "$DESKTOP_ICON"
+    command -v gio >/dev/null 2>&1 && gio set "$DESKTOP_ICON" metadata::trusted true 2>/dev/null || true
 elif ! $DESKTOP_SHORTCUT; then
     rm -f "$DESKTOP_ICON"
 fi
-info "Installed. Start $APP_NAME from the app menu or run $LAUNCHER."
+
+info "Done. Start \"$APP_NAME\" from the app menu$($DESKTOP_SHORTCUT && echo ' or the Desktop'), or run: $APP_ID"
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) info "Note: ~/.local/bin is not on your PATH, so the terminal command needs the full path: $LAUNCHER" ;; esac
+# A portal window that is still open keeps running the old version, and starting the portal again only brings that
+# window to the front: say so.
+if command -v pgrep >/dev/null 2>&1 && pgrep -u "$(id -u)" -f -- '-m bazzite_console_portal' >/dev/null 2>&1; then
+    info "A $APP_NAME window is still open with the version from before: close it, then start it again."
+fi

@@ -8,15 +8,14 @@ tools). The same script for every app: only the name changes.
     python3 tools/app_tour.py APP [OUT.mp4] [--package PACKAGE] [--seconds 40] [--music FILE | --no-music] [--fps 30]
                               [--size 1080p|1440p|2160p]
 
-Default output: ~/Videos/<prefix><app>-tour-v<its VERSION>.mp4, the suite's tag prefix (with the package for compute and cores; -2160p or
--1440p before .mp4 for another size). --size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a
+Default output: ~/Videos/<prefix><app>-tour-v<its VERSION>.mp4, the prefix the suite's TAG_PREFIX (with the
+package for compute and cores; -2160p or -1440p before .mp4 for another size). --size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a
 4K upload far sharper than a 1080p one (about four times the time).
 
-APP is the app's key in the suite's portal/apps.toml (fan, cec, ...) or its folder under its apps/ (--suite names the
-suite; with one suite in the checkout it is the default). An app with two programs
+APP is the app's key in portal/apps.toml (fan, cec, ...) or its folder under apps/. An app with two programs
 (compute, cores) needs --package to say which one (cu_bisect, cu_unlock, ...).
 
-The app starts as it does on a console, through its own __main__, in a temporary home folder (no settings of yours)
+The app starts as it does on the console, through its own __main__, in a temporary home folder (no settings of yours)
 and offscreen; the tour takes over where the app would wait for the user. pkexec, sudo and run0 refuse (and are
 named on stderr): nothing runs as root and no password is asked. The tour shows the app's title card, its summary
 from the manifest, the icon, the controls of the header with their own tooltips as the captions, the tabs (or the
@@ -301,7 +300,7 @@ def chapter_of(key: str, name: str) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("app", help="its key in portal/apps.toml, or its folder under apps/")
-    parser.add_argument("out", nargs="?", help="default: ~/Videos/<suite-prefix><app>-tour-v<version>.mp4")
+    parser.add_argument("out", nargs="?", help="default: ~/Videos/<prefix><app>-tour-v<version>.mp4")
     parser.add_argument("--package", help="which program, for an app with two (compute, cores)")
     parser.add_argument("--seconds", type=float, default=SECONDS, help="the length of the video (default 40)")
     parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the_quiet_engine.mp3)")
@@ -309,13 +308,8 @@ def main() -> int:
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--size", choices=tuple(tour_frames.SIZES), default="1080p",
                         help="the video's size: 1080p (the default), 1440p or 2160p (4K, for YouTube)")
-    tour_frames.suites.add_argument(parser)
     args = parser.parse_args()
     tour_frames.set_size(args.size)
-    try:
-        tour_frames.set_suite(args.suite)
-    except LookupError as error:
-        parser.error(str(error))
     if not shutil.which("ffmpeg"):
         print("ffmpeg is needed", file=sys.stderr)
         return 1
@@ -331,7 +325,7 @@ def main() -> int:
         version = (folder / "VERSION").read_text(encoding="utf-8").strip() if (folder / "VERSION").is_file() else ""
         name = key if args.package is None else f"{key}-{package}"
         size = "" if args.size == "1080p" else f"-{args.size}"
-        prefix = tour_frames.suites.tag_prefix(tour_frames.SUITE)
+        prefix = (tour_frames.SUITE / "TAG_PREFIX").read_text(encoding="utf-8").strip()     # the suite's tag prefix
         out = Path.home() / "Videos" / f"{prefix}{name}-tour{f'-v{version}' if version else ''}{size}.mp4"
     out.parent.mkdir(parents=True, exist_ok=True)
 

@@ -2,6 +2,14 @@
 
 # Apps
 
+**Closing an app.** In every app's window **Escape** closes the window, as its close button does, and so does **B** on a
+controller (Circle on a PlayStation controller): first an open menu, then a question or a dialog, then the window
+itself. Where Escape already has a meaning in an app (back to the tiles in PS5 DatStation), that comes first. An app
+that is busy asks before it closes, as always. The controller's B needs the app to have the focus, and is left out where
+the controller belongs to something else: in the two Remote Play apps (a stream's window keeps all its keys too, Escape
+among them), in PS5 Controller and in PS5 System Overlay. A controller Steam Input owns sends what its desktop layout
+says, by default Escape for B.
+
 **Sustainable**: system and device information, and what keeps the console cool.
 
 | App | What it does |

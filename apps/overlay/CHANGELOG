@@ -1,3 +1,8 @@
+Changelog: 15-11-2026 10:47:39
+
+Added. Escape closes the window, as in every app of the suite (core's exit_keys); a controller's B does not:
+the controller is the game's under the overlay.
+
 Changelog: 15-11-2026 07:43:14
 
 Release 1.0.2.

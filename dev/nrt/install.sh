@@ -58,15 +58,14 @@ fi
 [ -x "$REPO/.venv-linux/bin/python" ] || [ -x "$REPO/.venv/bin/python" ] || [ -n "${PYTHON:-}" ] ||
     info "Note: no .venv-linux yet; create it (see CLAUDE.md) before you start the app."
 
-# The launcher, menu entry and Desktop icon of the app's earlier names pointed at a folder that is gone.
-# Releases (nexus-releases in dev/releases, until 30-10-2026).
-# They go when this app is installed; the settings are taken over by the app when it starts.
-for old_id in nexus-releases; do
-    for old in "$HOME/.local/bin/$old_id" "$DATA_DIR/applications/$old_id.desktop" "$DESKTOP_DIR/$old_id.desktop"; do
-        [ -e "$old" ] || continue
-        info "Removing $old (the app's earlier name)"
-        rm -f "$old"
-    done
+# The launcher, menu entry and Desktop icon of the app's earlier name, Nexus Releases (nexus-releases in
+# dev/releases, until 30-10-2026), pointed at a folder that is gone. They go when this app is installed; its settings
+# are taken over by the app when it starts.
+old_id=nexus-releases
+for old in "$HOME/.local/bin/$old_id" "$DATA_DIR/applications/$old_id.desktop" "$DESKTOP_DIR/$old_id.desktop"; do
+    [ -e "$old" ] || continue
+    info "Removing $old (the app's earlier name)"
+    rm -f "$old"
 done
 
 info "Creating the launcher $LAUNCHER"

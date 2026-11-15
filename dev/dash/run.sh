@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts Nexus Dashboard with the dev venv of this OS, as ./test.sh picks it, on the checkout it lives in.
+# Starts Nexus Dashboard with the checkout's dev venv, on the checkout it lives in.
 #
-#   dev/dash/run.sh [--suite NAME]   # open the window (on the suite named)
-#   dev/dash/install.sh        # app menu entry and Desktop icon for this checkout
+#   dev/dash/run.sh            # open the window
+#   dev/dash/install.sh        # app menu entry and Desktop icon for this checkout (Linux)
 set -euo pipefail
 APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
-REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venvs and core/
+REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venv and core/
 
 die() { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
 
@@ -21,6 +21,6 @@ if [[ -z "$PY" ]]; then
         [[ -x "$REPO/$candidate" ]] && PY="$REPO/$candidate" && break
     done
 fi
-[[ -n "$PY" ]] || die "No venv for this OS in $REPO: see CLAUDE.md or ./test.sh for how to create one."
+[[ -n "$PY" ]] || die "No venv in $REPO: see CLAUDE.md or ./test.sh for how to create one."
 cd "$APP"
-PYTHONPATH="$REPO/dev/core_compat:$REPO/core${PYTHONPATH:+:$PYTHONPATH}" exec "$PY" -m nexus_dashboard "$@"
+PYTHONPATH="$REPO/core${PYTHONPATH:+:$PYTHONPATH}" exec "$PY" -m nexus_dashboard "$@"

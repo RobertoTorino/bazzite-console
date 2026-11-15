@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Record a suite's video tours: front ends for the suite's tools/record-tour.sh (the portal's tour) and
 tools/record-app-tour.sh (one app's), which run in the background with their output shown. The dialogs take the
-suite's folder in the checkout (the dashboard's chosen suite); they were the Media Tool's until 02-11-2026."""
+checkout; they were the Media Tool's until 02-11-2026."""
 
 from __future__ import annotations
 
@@ -44,11 +44,12 @@ def size_suffix(size: str) -> str:
 
 
 def video_prefix(suite: Path) -> str:
-    """What the suite's tour videos start with: its tag prefix (ps5-), or nexus- for the suite without one."""
+    """What the suite's tour videos start with, as the tour scripts name them: its tag prefix (TAG_PREFIX: ps5-),
+    "" without one."""
     try:
-        return (suite / "TAG_PREFIX").read_text(encoding="utf-8").strip() or "nexus-"
+        return (suite / "TAG_PREFIX").read_text(encoding="utf-8").strip()
     except OSError:
-        return "nexus-"
+        return ""
 
 
 def size_options(size: str) -> list[str]:
@@ -64,7 +65,7 @@ class TourApp:
     name: str
     package: str | None = None                      # only for an app with two programs
     version: str = ""
-    prefix: str = "nexus-"                          # the suite's: what its videos' names start with
+    prefix: str = ""                                # the suite's: what its videos' names start with (video_prefix())
 
     @property
     def label(self) -> str:
@@ -124,7 +125,7 @@ def app_command(checkout: Path, app: TourApp, out: Path, seconds: int, music: bo
 
 
 class TourDialog(QDialog):
-    """A tour dialog: the suite's folder, the dialog's own options, the output of the runs, and Record and Stop.
+    """A tour dialog: the checkout, the dialog's own options, the output of the runs, and Record and Stop.
     The runs go one after another, each in its own process group so Stop ends the recording and what it started."""
 
     SCRIPT = RECORD_TOUR
@@ -145,12 +146,12 @@ class TourDialog(QDialog):
         text = QLabel(intro)
         text.setWordWrap(True)
         layout.addWidget(text)
-        suite_row = QHBoxLayout()
-        suite_row.addWidget(QLabel("Suite:"))
-        self.suite_label = QLabel(str(checkout))
-        self.suite_label.setToolTip("The suite's folder in the checkout, as chosen in the dashboard")
-        suite_row.addWidget(self.suite_label, 1)
-        layout.addLayout(suite_row)
+        checkout_row = QHBoxLayout()
+        checkout_row.addWidget(QLabel("Checkout:"))
+        self.checkout_label = QLabel(str(checkout))
+        self.checkout_label.setToolTip("The checkout the tour is recorded from")
+        checkout_row.addWidget(self.checkout_label, 1)
+        layout.addLayout(checkout_row)
 
         self.options = QVBoxLayout()
         layout.addLayout(self.options)
@@ -196,12 +197,12 @@ class TourDialog(QDialog):
         row.addStretch(1)
         return row
 
-    # --- the suite ------------------------------------------------------------------------------------------
+    # --- the checkout ---------------------------------------------------------------------------------------
     def set_checkout(self, checkout: Path) -> None:
-        """The suite's folder; a suite without the script gets the dialog greyed out."""
+        """The checkout; one without the script gets the dialog greyed out."""
         self.checkout = checkout
         if not (checkout / self.SCRIPT).is_file():
-            self.output.setPlainText(f"This suite has no {self.SCRIPT.as_posix()}: its tours are not recorded here.")
+            self.output.setPlainText(f"This checkout has no {self.SCRIPT.as_posix()}: its tours are not recorded here.")
             self.checkout = None
         else:
             self.output.clear()

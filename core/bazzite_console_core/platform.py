@@ -3,9 +3,7 @@
 
 launch_in_terminal() is the bisect GUIs' terminal.py (identical in cu, cores and gpu-oc), plus an optional exit
 file: the shell writes the command's exit status there when it ends, so a caller that cannot wait for the detached
-terminal (the portal running an installer) can still tell when, and how, it finished.
-
-A suite's own folders are suite_data() and suite_config(): ~/.local/share/<suite> and ~/.config/<suite>."""
+terminal (the portal running an installer) can still tell when, and how, it finished."""
 
 from __future__ import annotations
 
@@ -43,16 +41,6 @@ def bin_home() -> Path:
     return Path(os.environ.get("XDG_BIN_HOME") or Path.home() / ".local" / "bin")
 
 
-def suite_data(suite: str) -> Path:
-    """A suite's data folder, one for all its apps: ~/.local/share/<suite>."""
-    return data_home() / suite
-
-
-def suite_config(suite: str) -> Path:
-    """A suite's settings folder: ~/.config/<suite>."""
-    return config_home() / suite
-
-
 def private(text: str | PurePath) -> str:
     """*text* (a path, a message, a log line) with the user's home folder written as ~, so the user's name never
     shows on the screen or in a log (owner, 29-10-2026: the privacy rule, "we don't do that anywhere"). Every place
@@ -78,9 +66,8 @@ def xdg_open(target: str | Path) -> bool:
 
 
 def show_in_folder(path: str | Path) -> bool:
-    """The folder of the file at *path* in the file manager, with the file selected: the
-    desktop's file manager over D-Bus (org.freedesktop.FileManager1, Dolphin on Bazzite), else the folder opened with
-    xdg-open. False when nothing opened it. A saved screenshot shows itself so (owner, 06-11-2026)."""
+    """The folder of the file at *path* in the file manager, with the file selected: the desktop's file manager
+    over D-Bus (org.freedesktop.FileManager1, Dolphin on Bazzite), else the folder opened with xdg-open. False when nothing opened it. A saved screenshot shows itself so (owner, 06-11-2026)."""
     path = Path(path)
     gdbus = shutil.which("gdbus")
     if gdbus is not None:

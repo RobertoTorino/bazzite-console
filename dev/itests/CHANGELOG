@@ -1,3 +1,15 @@
+Changelog: 15-11-2026 10:17:45
+
+Breaking. One suite (owner, 15-11-2026): the repository is the suite, so the suite chosen in the header, --suite and
+its setting are gone; the window lists the checkout's tools/installer-tests.
+
+Breaking. No VERSION (owner, 15-11-2026): a development app is never released, so its header names the checkout's
+last commit and its time ("5fb1aa8 · 15-11-2026 07:20", core's nexus.header()) where it showed a version, and
+--version prints the same.
+
+Fixed. The app imports bazzite_console_core directly, with the Nexus design from core's nexus.py (owner,
+15-11-2026): the compatibility package dev/core_compat is gone, and run.sh puts only core/ on the path.
+
 Changelog: 14-11-2026 03:27:00
 
 Breaking. Windows support is removed: the suite is for Bazzite. run.ps1 is gone, and the app no longer lists or runs

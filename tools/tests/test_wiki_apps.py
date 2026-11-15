@@ -22,10 +22,11 @@ def test_every_app_has_a_chapter_and_no_chapter_is_left_over():
 
 
 def test_the_overviews_list_exactly_the_apps():
+    """The app overviews by each app's name; the home page links every app, by a name of its own."""
     for page in ("docs/apps/index.md", "docs/apps/categories.md", "docs/index.md"):
         text = (SUITE / page).read_text(encoding="utf-8")
         assert set(_LINK.findall(text)) - {"install", "portal", "privacy"} - OTHER == set(APPS), page
-        for app in APPS.values():
+        for app in APPS.values() if page != "docs/index.md" else ():
             assert app["name"] in text, f"{page}: {app['name']}"
 
 

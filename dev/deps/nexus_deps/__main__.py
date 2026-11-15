@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Entry point: python -m nexus_deps [--suite NAME] [--fix | --remind] (run.sh starts it with the checkout's dev venv).
+"""Entry point: python -m nexus_deps [--fix | --remind] (run.sh starts it with the checkout's dev venv).
 
 --fix opens the window and offers Fix as soon as the check is done (the hourly notification's Fix… button).
 --sync-upstreams writes catalogs/upstreams.json again from the apps' pins (upstreams.py), after a pin moved.
@@ -14,9 +14,10 @@ import argparse
 import subprocess
 import sys
 
-from nexus_core import __version__ as CORE_VERSION, instance
+from bazzite_console_core import __version__ as CORE_VERSION, instance
+from bazzite_console_core.nexus import checkout_stamp
 
-from . import APP_ID, APP_NAME, DEFAULT_SUITE, INFO, LOGO_PATH, ROOT, __version__, catalog, suites
+from . import APP_ID, APP_NAME, CATALOG, CHECKOUT, INFO, LOGO_PATH, ROOT
 from .bazzite import read_state
 from .dependencies import DependencyCatalogError, DependencyCheckError, check_all, load_apps, load_catalog, load_tools
 from .fixes import notify, reminder_text
@@ -24,9 +25,9 @@ from .system import read_sources
 from .upstreams import read as read_upstreams, unnotified
 
 
-def remind(suite: str) -> int:
+def remind() -> int:
     """The hourly check: a notification when something needs the user; a click on a button opens the app."""
-    path = catalog(suite)
+    path = CATALOG
     try:
         result = check_all(load_catalog(path), load_tools(path), load_apps(path), INFO.user_agent)
     except (DependencyCatalogError, DependencyCheckError, OSError) as exc:
@@ -39,17 +40,16 @@ def remind(suite: str) -> int:
     print(note.text)
     answer = notify(APP_NAME, note.text, str(LOGO_PATH), note.actions)
     if answer in ("fix", "open"):
-        argv = [str(ROOT / "run.sh"), "--suite", suite, *(["--fix"] if answer == "fix" else [])]
+        argv = [str(ROOT / "run.sh"), *(["--fix"] if answer == "fix" else [])]
         subprocess.Popen(argv, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
     return 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="nexus_deps", description=f"{APP_NAME} {__version__}")
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__} (core {CORE_VERSION})")
-    parser.add_argument("--suite", metavar="NAME", default=DEFAULT_SUITE, choices=suites(),
-                        help=f"the suite whose apps to check (default {DEFAULT_SUITE})")
+    stamp = checkout_stamp(CHECKOUT)  # never released: the commit says which code runs
+    parser = argparse.ArgumentParser(prog="nexus_deps", description=f"{APP_NAME} {stamp}".strip())
+    parser.add_argument("--version", action="version", version=f"%(prog)s {stamp} (core {CORE_VERSION})")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--fix", action="store_true", help="offer Fix as soon as the check is done")
     mode.add_argument("--remind", action="store_true", help="no window: a desktop notification when something "
@@ -58,19 +58,19 @@ def main() -> int:
                                                                     "line with the apps' pins (after a moved pin)")
     args, qt_args = parser.parse_known_args()
     if args.remind:
-        return remind(args.suite)
+        return remind()
     if args.sync_upstreams:
         from .upstreams import write
         print(f"{APP_NAME}: upstreams.json " + ("updated." if write() else "was in sync."))
         return 0
 
-    from nexus_core.app import create_app, exec_app
-    from nexus_core.nexus import NEXUS
-    from nexus_core.platform import data_home
+    from bazzite_console_core.app import create_app, exec_app
+    from bazzite_console_core.nexus import NEXUS
+    from bazzite_console_core.platform import data_home
     from PyQt6.QtWidgets import QMessageBox
 
     app = create_app(INFO, qt_args, theme=NEXUS)           # Nexus's design, not a suite's theme
-    path = catalog(args.suite)
+    path = CATALOG
     try:
         apps = load_apps(path)
         dependencies = load_catalog(path)
@@ -84,7 +84,7 @@ def main() -> int:
     if not (data_home() / "applications" / f"{APP_ID}.desktop").is_file():
         app.setDesktopFileName("")              # no menu entry: no desktop file name for Qt to look up
     from .main_window import DependencyWindow
-    window = DependencyWindow(dependencies, tools, apps, suite=args.suite, offer_fix=args.fix)
+    window = DependencyWindow(dependencies, tools, apps, offer_fix=args.fix)
     window.show()
     server = instance.serve(INFO.app_id, window)  # noqa: F841 (kept alive while the app runs)
     return exec_app(app)

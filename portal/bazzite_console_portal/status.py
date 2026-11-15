@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The line on the right of the portal's header: the CPU's and GPU's load and temperature,
+"""The line on the right of the portal's header (owner, 05-11-2026): the CPU's and the GPU's load and temperature,
 then the date and the time, as in "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST". The clock is set
 on the Settings page (ClockStyle, owner 05-11-2026): a 12- or 24-hour clock, with or without the seconds, in the
 system's own time zone, Central European Time (CET, CEST in summer) or UTC.
@@ -67,7 +67,7 @@ def clock_text(now: datetime.datetime | None = None, style: ClockStyle = ClockSt
     """'Thursday 11/5/26 | 07:44 PM CEST': the weekday, month/day/year, the time and its zone, in the style's time
     zone (the system's own by default); '19:44:05 CEST' with 24 hours and the seconds."""
     zone = zone_of(style)
-    now = now or datetime.datetime.now().astimezone()       # the system's own time zone
+    now = now or datetime.datetime.now().astimezone()       # the system's own, as it always was
     if zone is not None:
         now = now.astimezone(zone)
     name = now.tzname() or ""

@@ -7,9 +7,9 @@
 <dest-dir> gets the app's own files without development leftovers (tests, venvs, caches) and, when the app imports
 bazzite_console_core, a copy of core/bazzite_console_core beside its package: each app ships the core it was tested with, and its
 launcher starts from that folder so this copy is the one Python imports. An app also gets its chapter of the
-manual (<suite>/docs/apps/<app>.md) as MANUAL.md, so it can be read without a network.
+manual (docs/apps/<app>.md) as MANUAL.md, so it can be read without a network.
 
-The app comes from this repository's apps/<app> or portal folder; core comes from core/bazzite_console_core.
+The app comes from apps/<app> (or portal/), core from core/bazzite_console_core.
 The release workflow tars this tree; the portal uses the same function to install from a local checkout."""
 
 from __future__ import annotations
@@ -20,7 +20,9 @@ import shutil
 import sys
 from pathlib import Path
 
-SUITE = Path(__file__).resolve().parent.parent
+
+ROOT = Path(__file__).resolve().parent.parent
+SUITE = ROOT                                # the repository is the suite; the functions take another for the tests
 SKIP_DIRS = {"tests", "python", "_python", "__pycache__", ".pytest_cache", ".idea", ".venv",
              "target"}                          # cargo's build output (consoles/native)
 SKIP_FILES = {"requirements-dev.txt", ".gitignore", ".gitattributes", ".standalone"}
@@ -50,7 +52,7 @@ def manual_chapter(name: str, suite: Path = SUITE) -> Path | None:
 
 
 def core_dir(suite: Path = SUITE) -> Path:
-    """The shared core package in this repository."""
+    """core/bazzite_console_core of the suite."""
     return suite / "core" / "bazzite_console_core"
 
 
@@ -75,7 +77,7 @@ def main(argv: list[str]) -> int:
     if args.dest.exists():
         print(f"{args.dest} exists already", file=sys.stderr)
         return 1
-    stage(args.app, args.dest, SUITE)
+    stage(args.app, args.dest)
     print(f"staged {args.app} in {args.dest}" + (" (with bazzite_console_core)" if (args.dest / "bazzite_console_core").is_dir() else ""))
     return 0
 

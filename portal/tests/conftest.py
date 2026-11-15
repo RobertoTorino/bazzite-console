@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Shared fixtures: bazzite_console_core from the checkout and an offscreen QApplication."""
+"""Shared fixtures: bazzite_console_core from the checkout, an offscreen QApplication, and a sandboxed home folder."""
 
 from __future__ import annotations
 
@@ -10,20 +10,21 @@ from pathlib import Path
 import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-PORTAL = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PORTAL.parent / "core"))
-sys.path.insert(0, str(PORTAL))
+
+SUITE = Path(__file__).resolve().parents[2]      # the suite: the repository
+sys.path.insert(0, str(SUITE / "core"))         # the release bundles core; in the checkout it is at the root
 
 
 @pytest.fixture(scope="session")
 def qapp():
     from PyQt6.QtWidgets import QApplication
-
-    return QApplication.instance() or QApplication([])
+    app = QApplication.instance() or QApplication([])
+    yield app
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
+    """HOME and XDG folders inside tmp_path, so detect paths like ~/.local/bin/x resolve there."""
     home = tmp_path / "home"
     (home / ".local" / "bin").mkdir(parents=True)
     monkeypatch.setenv("HOME", str(home))
@@ -34,8 +35,8 @@ def home(tmp_path, monkeypatch):
 
 @pytest.fixture
 def settings_dir(tmp_path, qapp):
+    """QSettings files in tmp_path."""
     from PyQt6.QtCore import QSettings
-
     for fmt in (QSettings.Format.NativeFormat, QSettings.Format.IniFormat):
         QSettings.setPath(fmt, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     return tmp_path / "settings"
@@ -43,12 +44,35 @@ def settings_dir(tmp_path, qapp):
 
 @pytest.fixture(autouse=True)
 def desktop(tmp_path, monkeypatch):
-    from bazzite_console_portal import desktop_icons
-
+    """The Desktop folder inside tmp_path for every test: the portal removes app icons from the Desktop."""
+    import bazzite_console_portal.desktop_icons as desktop_icons
     folder = tmp_path / "Desktop"
     folder.mkdir()
     monkeypatch.setattr(desktop_icons, "desktop_dir", lambda: folder)
     return folder
+
+
+@pytest.fixture(autouse=True)
+def no_session_bus(monkeypatch):
+    """R3's keyboard never reaches the desktop's real KWin: it would change the keyboard mode of the machine the tests
+    run on. A test that wants KWin gives the keyboard a fake bus."""
+    from bazzite_console_portal import keyboard
+
+    def refuse(*_args):
+        raise keyboard.KeyboardError("the tests have no session bus")
+    monkeypatch.setattr(keyboard, "dbus_call", refuse)
+
+
+@pytest.fixture(autouse=True)
+def no_kwin_no_uinput(monkeypatch, tmp_path):
+    """No test brings a real window to the front through KWin, or adds a mouse to the machine through uinput: KWin's
+    calls fail, and the virtual mouse finds no device. A test that wants them gives the window fakes."""
+    from bazzite_console_portal import kwin, pointer
+
+    def refuse(*_args):
+        raise kwin.KWinError("the tests have no session bus")
+    monkeypatch.setattr(kwin, "dbus_call", refuse)
+    monkeypatch.setattr(pointer, "DEVICE", str(tmp_path / "no-uinput"))
 
 
 class SilentPlayer:

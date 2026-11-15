@@ -1,13 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window of the suite ticked in the first column (every suite in the checkout, tools/suites.py, with its
-portal's tag; hidden while there is one). The steps and the withdrawals are the ticked suite's; GitHub is the
-repository's.
+"""The window of the checkout it lives in, the suite: its steps, its withdrawals and its GitHub.
 
 Nexus release: the release as numbered steps, from your own changes to the portal published, and Contents, what it
 holds (release_page.py, flow.py). Retract app: a pinned release withdrawn in apps.toml, tested on a console (Test
 withdrawal); the portal that removes it from the consoles is the next release. Remove suite: what of the suite is
-installed on this machine, removed (check-release.sh remove). The release by hand, a tag at a time (Release apps
-with its Apply, Pin and release Portal with its Pin and Bump, Publish and Test on this board), went on
+installed on this console, removed (check-release.sh remove). The release by hand, a tag at a time
+(Release apps with its Apply, Pin and release Portal with its Pin and Bump, git tag and Test on this board), went on
 15-11-2026 (owner: its Bump wrote a portal release while the release's draft waited for its device test, which then
 went out as a second release of the same apps); tools/tag-release.sh still tags one release from a terminal. Each
 page's explanation sits behind a round "i" in its first row (parts.py), not in a paragraph on the page (owner,
@@ -33,26 +31,25 @@ import shutil
 import time
 from pathlib import Path
 
-from PyQt6.QtCore import QProcess, QSize, Qt, QTimer, QUrl
+from PyQt6.QtCore import QProcess, Qt, QTimer, QUrl
 from PyQt6.QtGui import QDesktopServices, QIcon
-from PyQt6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget,
-                             QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QSystemTrayIcon,
-                             QTabWidget, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox,
+                             QPushButton, QSizePolicy, QSystemTrayIcon, QTabWidget, QVBoxLayout, QWidget)
 
-from nexus_core.platform import launch_in_terminal
-from nexus_core.theme import BLUE, GREEN, GREY, ORANGE, RED
-from nexus_core.updates import UpdateChecker
-from nexus_core.widgets import AppHeader, MetricBox, Pill, accent_button, same_width
+from bazzite_console_core.platform import launch_in_terminal
+from bazzite_console_core.theme import BLUE, GREEN, GREY, ORANGE, RED
+from bazzite_console_core.updates import UpdateChecker
+from bazzite_console_core.nexus import header as nexus_header
+from bazzite_console_core.widgets import MetricBox, Pill, accent_button, same_width
 
-from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
+from . import APP_NAME, LOGO_PATH, CHECKOUT
 from . import flow
 from . import plan as rp
 from .command_line import CommandLine
 from .parts import StepLog, info_row
 from .release_page import ReleasePage
-from .style import CHECK_STYLESHEET, NEXUS, TAB_TITLE_STYLESHEET
+from .style import CHECK_STYLESHEET, NEXUS
 
-SUITE_KEY = "suite"                     # the chosen suite, in the settings
 # every command line's output, a file a day (command_line.py)
 COMMAND_LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-release-tool" / "commands"
 # A selected cell and the input field being typed in: a teal outline (Nexus's accent) with rounded corners on a
@@ -87,8 +84,8 @@ class WithdrawPage(QWidget):
         self.back_button = QPushButton("Take back")
         self.back_button.setToolTip("Remove the mark again (after a test, or a mistake)")
         self.back_button.clicked.connect(self.take_back)
-        # The withdrawal tested on a console with the app installed (the tab Test on this board until 15-11-2026,
-        # whose other tests the release tab's Device test does)
+        # The withdrawal tested on a console with the app installed (the tab Test on this board until 15-11-2026, whose
+        # other tests the release tab's Device test does)
         self.test_button = QPushButton("Test withdrawal")
         self.test_button.setToolTip("On a console with the app installed: install the portal from this checkout and "
                                     "start it (check-release.sh local); it must show the app as not available and "
@@ -110,7 +107,7 @@ class WithdrawPage(QWidget):
             "portal.",
             "For a release that must not be used any more (privacy, security, any reason):<br>"
             "<b>1.</b> Retract: apps.toml marks the pinned release withdrawn, with the reason the consoles show.<br>"
-            "<b>2.</b> <b>Test withdrawal</b> on a console that has the app installed: the portal from this checkout "
+            "<b>2.</b> <b>Test withdrawal</b> on a PS5 that has the app installed: the portal from this checkout "
             "shows it as \"App not available\" and removes it. Take back undoes the mark.<br>"
             "<b>3.</b> Mark the release on GitHub with the command shown (it stays, as a pre-release, so no update "
             "check offers it), then release the portal on the release tab, from Commit your changes: it removes the "
@@ -122,7 +119,7 @@ class WithdrawPage(QWidget):
 
     def fill(self, units: list[rp.Unit]) -> None:
         current = self.app_box.currentData()
-        self.units = rp.withdrawable(self.release_window.root, units, self.release_window.suite)
+        self.units = rp.withdrawable(self.release_window.root, units)
         self.app_box.blockSignals(True)
         self.app_box.clear()
         for unit in self.units:
@@ -138,7 +135,7 @@ class WithdrawPage(QWidget):
 
     def _show_state(self) -> None:
         unit = self.unit()
-        reason = rp.withdrawn_reason(self.release_window.root, unit.key, self.release_window.suite) if unit else ""
+        reason = rp.withdrawn_reason(self.release_window.root, unit.key) if unit else ""
         self.state.setText(f"Withdrawn: {reason}" if reason else "Not withdrawn.")
         self.state.setStyleSheet(f"color:{ORANGE}; font-weight:600;" if reason else "")
         self.withdraw_button.setEnabled(unit is not None and not reason)
@@ -153,7 +150,7 @@ class WithdrawPage(QWidget):
             QMessageBox.warning(self, "Retract", "Say why the release is withdrawn: the consoles show it.")
             return
         root = self.release_window.root
-        changed = rp.withdraw(root, unit, reason, suite=self.release_window.suite)
+        changed = rp.withdraw(root, unit, reason)
         commands = rp.withdraw_commands(unit.pinned_tag, reason)
         self.output.set_text("\n".join([f"{unit.pinned_tag}: withdrawn in " +
                                         ", ".join(p.relative_to(root).as_posix() for p in changed), "", commands]))
@@ -165,7 +162,7 @@ class WithdrawPage(QWidget):
         unit = self.unit()
         if unit is None:
             return
-        rp.withdraw(self.release_window.root, unit, "", suite=self.release_window.suite)
+        rp.withdraw(self.release_window.root, unit, "")
         self.output.set_text(f"{unit.pinned_tag}: no longer withdrawn in portal/apps.toml (and a CHANGELOG entry). "
                              "Marked on GitHub already? Edit that release back: gh release edit "
                              f"{unit.pinned_tag} --prerelease=false --title {unit.pinned_tag}")
@@ -175,7 +172,7 @@ class WithdrawPage(QWidget):
         """The suite's check-release script in a terminal: it installs the portal from this checkout and keeps it
         running there."""
         window = self.release_window
-        path = rp.check_script(window.root, window.suite)
+        path = rp.CHECK_SCRIPT
         if not (window.root / path).is_file():
             self.output.set_text(f"This suite has no {path}.")
             return
@@ -194,7 +191,7 @@ def open_url(url: str) -> None:
 
 
 class RemovePage(QWidget):
-    """Remove suite: what of the suite is installed on this machine, removed with each part's own uninstaller
+    """Remove suite: what of the suite is installed on this console, removed with each part's own uninstaller
     (check-release.sh remove, in a terminal). It was on the tab Test on this board, whose tests the release tab's
     Device test and Retract's Test withdrawal do since 15-11-2026."""
 
@@ -202,7 +199,7 @@ class RemovePage(QWidget):
         super().__init__()
         self.release_window = window
         self.remove_button = QPushButton("Remove suite")
-        self.remove_button.setToolTip("Show what of the suite is installed on this machine and whether a test put it "
+        self.remove_button.setToolTip("Show what of the suite is installed on this console and whether a test put it "
                                       "there, then remove it all: every app, the portal and Board Test, each with "
                                       "its own uninstaller (check-release.sh remove). Settings stay")
         self.remove_button.clicked.connect(self.remove)
@@ -212,17 +209,18 @@ class RemovePage(QWidget):
         row.addStretch(1)
         lay = QVBoxLayout(self)
         lay.addLayout(info_row(
-            "Remove suite shows what of the suite is installed here and removes it all, in a terminal.",
-            "<b>Remove suite</b> lists what of the suite is installed on this machine and whether a test put it there, "
-            "then removes it all: every app, the portal and Board Test, each with its own uninstaller "
-            "(check-release.sh remove). Settings stay. A test on a machine without the suite removes what it "
-            "installed when the portal closes; a machine that had the suite keeps it."))
+            "Remove suite shows what of the suite is installed on this console and removes it all, in a terminal.",
+            "<b>Remove suite</b> lists what of the suite is installed on this console and whether a test put it there "
+            "(check-release.sh status), then removes it all: every app, the portal and Board Test, each with its own "
+            "uninstaller (check-release.sh remove). Settings, history and results stay; <code>check-release.sh remove "
+            "--purge</code> in a terminal removes them too. A test on a console without the suite removes what it "
+            "installed when the portal closes; a console that had the suite keeps it."))
         lay.addLayout(row)
         lay.addStretch(1)
 
     def remove(self) -> None:
         window = self.release_window
-        path = rp.check_script(window.root, window.suite)
+        path = rp.CHECK_SCRIPT
         if not (window.root / path).is_file():
             self.output.appendPlainText(f"This suite has no {path}.")
             return
@@ -240,9 +238,8 @@ _tray: QSystemTrayIcon | None = None    # made at the first notification, kept w
 
 
 def tray_notify(summary: str, body: str) -> bool:
-    """A notification from the app's icon in the notification area, Qt's QSystemTrayIcon: Windows shows it as one of
-    its own notifications (owner, 28-10-2026: Windows has no notify-send, so none came there). A click on it, or on
-    the icon, brings the window to the front. False without a notification area."""
+    """A notification from the app's icon in the notification area, Qt's QSystemTrayIcon, for a desktop without
+    notify-send. A click on it, or on the icon, brings the window to the front. False without a notification area."""
     global _tray
     app = QApplication.instance()
     if app is None or not QSystemTrayIcon.isSystemTrayAvailable():
@@ -267,7 +264,7 @@ def _raise_window() -> None:
 
 
 def desktop_notify(summary: str, body: str) -> bool:
-    """A desktop notification through notify-send (Linux); without it (Windows), from the tray icon (tray_notify).
+    """A desktop notification through notify-send; without it, from the tray icon (tray_notify).
     False when the desktop has neither."""
     exe = shutil.which("notify-send")
     if not exe:
@@ -344,15 +341,24 @@ class BuildIndicator(Pill):
         if runs is not None:
             finished = rp.just_finished(self.seen, runs)
             self.runs, self.seen = runs, {r.url: r for r in runs}
-        # Told about: the runs of the suite ticked and Nexus's own, as the ticker shows them.
-        told = [r for r in finished if r.file not in self.release_window.ticker.hidden]
-        if told:
-            self.announce(told)
-        self.release_window.release_page.show_state()   # the Nexus release's run, from the same runs
+        if finished:
+            self.announce(finished)
+        self.release_window.release_page.show_state()   # the release's run, from the same runs
         latest = rp.latest_push(self.runs)
-        state = rp.build_state(latest)
-        self.show_state(state, self.details(latest))
-        self.release_window.ticker.show_runs(latest, self.signed_in)
+        ticker = self.release_window.ticker
+        if self.awaiting_head():
+            # Pushed, and GitHub has no run of it yet: its newest runs are the commit's before, which say nothing
+            # of this one (owner, 15-11-2026: after a commit that failed, the next push showed as failed, then
+            # passed once GitHub had started its runs).
+            waiting = f"Pushed {self.head[:7]}: waiting for GitHub to start its runs."
+            self.show_state("running", waiting + "\n\nThe runs listed last are the commit's before it.")
+            if not self.release_window.commands.is_running():
+                ticker.show_local(waiting)
+        else:
+            self.show_state(rp.build_state(latest), self.details(latest))
+            if ticker.local.startswith("Pushed "):
+                ticker.show_local("")
+        ticker.show_runs(latest, self.signed_in)
         running = any(not r.done for r in self.runs)
         self.timer.start(BUILD_SOON_MS if self.awaiting_head() else BUILD_BUSY_MS if running else BUILD_IDLE_MS)
 
@@ -425,8 +431,7 @@ TICK_MS = 1000                          # and counts its time
 
 class WorkflowTicker(QFrame):
     """Between the header's pills and the tabs: where GitHub's workflows on the newest push stand (owner,
-    28-10-2026: no switching to the browser for it), those of the suite ticked and Nexus's own; the other suites'
-    CI and releases are left out (owner, 28-10-2026). Each run that runs with its jobs done of all, the job that runs
+    28-10-2026: no switching to the browser for it). Each run that runs with its jobs done of all, the job that runs
     and its step, and the time since it started, counted every second; a failed run names its job and step; a run
     that passed says so. Signed in with gh it reads the jobs of every run that runs every 10 seconds, and of a run
     that failed once (unchanged answers do not count against GitHub's limit); without a token, the 60 requests an
@@ -439,7 +444,6 @@ class WorkflowTicker(QFrame):
         super().__init__()
         self.source = source            # rp.fetch_jobs(url, etag): (jobs | None when unchanged, etag, rate)
         self.pushed: list[rp.BuildRun] = []     # every run of the newest push
-        self.hidden: set[str] = set()           # the workflow files left out: the other suites'
         self.runs: list[rp.BuildRun] = []       # the runs shown
         self.jobs: dict[str, list[rp.BuildJob]] = {}    # by the run's url
         self.etags: dict[str, str] = {}
@@ -474,16 +478,10 @@ class WorkflowTicker(QFrame):
         self.clock.timeout.connect(self.render)
         self.setVisible(False)
 
-    def follow(self, hidden: set[str]) -> None:
-        """Another suite ticked: leave out the runs of these workflow files (the other suites' CI and releases)."""
-        self.hidden = hidden
-        self.show_runs(self.pushed, self.signed_in)
-
     def show_runs(self, runs: list[rp.BuildRun], signed_in: bool) -> None:
-        """The build pill looked: these are the newest push's runs; the ticker shows those of the suite ticked and
-        Nexus's own."""
+        """The build pill looked: these are the newest push's runs, which the ticker shows."""
         self.pushed, self.signed_in = runs, signed_in
-        self.runs = [r for r in runs if r.file not in self.hidden]
+        self.runs = list(runs)
         urls = {r.url for r in self.runs}
         self.jobs = {url: jobs for url, jobs in self.jobs.items() if url in urls}
         self.etags = {url: etag for url, etag in self.etags.items() if url in urls}
@@ -686,98 +684,25 @@ class ClaudeUsageIndicator(Pill):
         self.checker.stop(2000)
 
 
-class SuiteList(QListWidget):
-    """The suites of the checkout as the window's first column, left of the steps (owner, 27-10-2026: in place of a
-    chooser in the header): each portal with its icon, its name and the tag of its current version. The checkmark is
-    the suite this window releases, always exactly one; a click on a row, or on its box, moves it there and calls
-    *chosen* with the suite's folder. Hidden while the checkout holds one suite."""
-
-    WIDTH = 230
-
-    def __init__(self, root: Path, suites: list[str], current: str | None, chosen):
-        super().__init__()
-        self.root, self.chosen = root, chosen
-        self.setFixedWidth(self.WIDTH)
-        self.setIconSize(QSize(32, 32))
-        self.setSpacing(2)
-        self.setToolTip("The suite this window releases: its apps, its portal and its pins. The git buttons, the "
-                        "wikis and GitHub are the repository's, whatever the suite.")
-        for name in suites:
-            icon = rp.suite_icon(root, name)
-            item = QListWidgetItem(QIcon(str(icon)) if icon else QIcon(), "")
-            item.setData(Qt.ItemDataRole.UserRole, name)
-            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
-            self.addItem(item)
-        self.show_texts()
-        self.check(current)
-        self.itemClicked.connect(lambda item: self._pick(item.data(Qt.ItemDataRole.UserRole)))
-        self.itemChanged.connect(self._box)
-        self.setVisible(len(suites) > 1)
-
-    def show_texts(self) -> None:
-        """Each row's name and its portal's tag, read again (after a release the version moved)."""
-        self.blockSignals(True)
-        for row in range(self.count()):
-            item = self.item(row)
-            name = item.data(Qt.ItemDataRole.UserRole)
-            version_file = rp.suite_dir(self.root, name) / "portal" / "VERSION"
-            version = version_file.read_text(encoding="utf-8").strip() if version_file.is_file() else "?"
-            item.setText(f"{rp.suite_name(self.root, name)}\n{rp.tag_prefix(self.root, name)}portal-v{version}")
-            item.setToolTip(f"{name}/: its apps, its portal and its pins")
-        self.blockSignals(False)
-
-    def check(self, name: str | None) -> None:
-        self.blockSignals(True)
-        for row in range(self.count()):
-            item = self.item(row)
-            mine = item.data(Qt.ItemDataRole.UserRole) == name
-            item.setCheckState(Qt.CheckState.Checked if mine else Qt.CheckState.Unchecked)
-        self.blockSignals(False)
-
-    def current(self) -> str | None:
-        return next((self.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.count())
-                     if self.item(row).checkState() == Qt.CheckState.Checked), None)
-
-    def _box(self, item: QListWidgetItem) -> None:
-        """The box of a row clicked: checking it picks that suite; unchecking the checked one keeps it checked."""
-        name = item.data(Qt.ItemDataRole.UserRole)
-        if item.checkState() == Qt.CheckState.Checked:
-            self._pick(name)
-        else:
-            self.check(name)
-
-    def _pick(self, name: str) -> None:
-        self.check(name)
-        self.chosen(name)
-
-
 class ReleaseWindow(QMainWindow):
     def __init__(self, root: Path = CHECKOUT, launch=launch_in_terminal,
                  runs_source=rp.fetch_runs, notify=desktop_notify, settings=None,
                  status_source=rp.fetch_github_status, claude_source=rp.fetch_claude_usage,
-                 suite: str | None = None, jobs_source=rp.fetch_jobs):
+                 jobs_source=rp.fetch_jobs):
         """*runs_source* reads the GitHub Actions runs (None: no build indicator and no ticker); *jobs_source* the
         jobs of a run, for the ticker (None: the runs only); *notify* shows a desktop
-        notification; *settings* keeps the command line's history and the chosen suite (None: this session only);
-        *status_source* reads githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage
-        (None: no Claude pill); *suite* is the suite
-        to open with (a folder name from plan.suites(); None: the one remembered, else the first)."""
+        notification; *settings* keeps the command line's history (None: this session only); *status_source* reads
+        githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage (None: no Claude pill)."""
         super().__init__()
         self.root = root
         self.settings = settings
         self.base_ref = "origin/main"           # the last push, which the steps compare with (tests use another)
-        self.suites = rp.suites(root)
-        remembered = str(settings.value(SUITE_KEY, "")) if settings is not None else ""
-        self.suite = suite or (remembered if remembered in self.suites else self.suites[0] if self.suites else None)
         self.launch = launch
         self.units: list[rp.Unit] = []
         self.setWindowTitle(APP_NAME)
         self.resize(1100, 760)
         self.setStyleSheet(SELECTION_STYLESHEET + CHECK_STYLESHEET)
-        stamp = rp.checkout_stamp(root)                 # never released: the commit says which code runs
-        header = AppHeader(LOGO_PATH, APP_NAME, f"{__version__} · {stamp}" if stamp else __version__)
-        # The suites, the first column left of the steps; hidden while the checkout holds one suite.
-        self.suite_list = SuiteList(root, self.suites, self.suite, self.choose_suite)
+        header = nexus_header(LOGO_PATH, APP_NAME, root)        # never released: the commit says which code runs
         # The header's pills, all as wide as the widest (owner, 20-10-2026).
         self.refresh_pill = Pill("Refresh", "Click to refresh", "Read the checkout and its tags again, for changes "
                                  "made in a terminal; what you entered stays")
@@ -785,7 +710,6 @@ class ReleaseWindow(QMainWindow):
         self.build = BuildIndicator(self, runs_source, notify)
         self.build.checker.finished.connect(self.refreshed)     # after the build's own slot: the steps are drawn
         self.ticker = WorkflowTicker(jobs_source)       # between the pills and the tabs, fed by the build's looks
-        self.ticker.hidden = rp.other_suites_workflows(root, self.suite)
         self.ticker.on_rerun = self.run_git
         self.rerun_asked = self.ticker.rerun_asked      # Run CI again and the ticker's Run again, one memory
         self.github_status = GitHubStatusIndicator(status_source)
@@ -797,9 +721,8 @@ class ReleaseWindow(QMainWindow):
         same_width(pills)
         header.second_row.addStretch(1)
         # The release is one action, Start new release (owner, 30-10-2026), and its steps; the release by hand, a tag
-        # at a time (the tabs Release apps, Pin and release Portal and Test on this board, with the manual mode
-        # for a repository without a release workflow), went on 15-11-2026 (owner: its Bump made a portal release
-        # while the release tab's draft waited for its device test). Remove suite keeps a tab of its own.
+        # at a time (the tabs Release apps, Pin and release Portal and Test on this board), went on 15-11-2026
+        # (owner: its Bump made a portal release while the release tab's draft waited for its device test).
         self.release_page = ReleasePage(self)
         self.tabs.addTab(self.release_page, "Nexus release")
         # What the release holds, a tab of its own (owner, 01-11-2026: with the steps it was squeezed)
@@ -831,17 +754,6 @@ class ReleaseWindow(QMainWindow):
         columns = QHBoxLayout()
         # Twice the layout's spacing between the header's pills and the tabs (owner, 28-10-2026: too close).
         columns.setContentsMargins(0, lay.spacing(), 0, 0)
-        self.suite_column = QWidget()                   # "Portals" over the list; hidden with it
-        column = QVBoxLayout(self.suite_column)
-        column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(0)                            # the title sits on the list as a tab on its page
-        title = QLabel("Portals")                       # as wide as the column (owner, 28-10-2026)
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setStyleSheet(TAB_TITLE_STYLESHEET)
-        column.addWidget(title)
-        column.addWidget(self.suite_list, 1)
-        self.suite_column.setVisible(not self.suite_list.isHidden())
-        columns.addWidget(self.suite_column)
         columns.addWidget(self.tabs, 1)
         lay.addLayout(columns, 1)
         self.setCentralWidget(central)
@@ -849,17 +761,6 @@ class ReleaseWindow(QMainWindow):
         self.build.check()
         self.github_status.check()
         self.claude.check()
-
-    def choose_suite(self, name: str) -> None:
-        """Another suite ticked in the first column: the steps, the pins and the console tests show it from now on,
-        and the next start opens with it."""
-        if not name or name == self.suite:
-            return
-        self.suite = name
-        if self.settings is not None:
-            self.settings.setValue(SUITE_KEY, name)
-        self.ticker.follow(rp.other_suites_workflows(self.root, name))
-        self.refresh()
 
     def offer(self, commands: str) -> None:
         """A step showed the commands to run next: the Commands menu lists them."""
@@ -934,8 +835,7 @@ class ReleaseWindow(QMainWindow):
             self.refresh_pill.caption.setText(f"Refreshed {time.strftime('%H:%M')}")
 
     def reload(self) -> None:
-        units = self.units = rp.load_units(self.root, self.suite)
-        self.suite_list.show_texts()                    # a portal bumped meanwhile shows its new tag
+        units = self.units = rp.load_units(self.root)
         self.release_page.fill()
         self.withdraw_page.fill(units)
         problems = rp.bad_tags(self.root, units)
