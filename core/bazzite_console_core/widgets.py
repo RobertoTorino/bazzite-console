@@ -13,7 +13,7 @@ from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFontDatabase, QMouseEvent, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QHeaderView, QLabel,
-    QPlainTextEdit, QPushButton, QSizePolicy, QTabBar, QToolButton, QToolTip, QVBoxLayout, QWidget,
+    QMenu, QPlainTextEdit, QPushButton, QSizePolicy, QTabBar, QToolButton, QToolTip, QVBoxLayout, QWidget,
 )
 
 from .text import plain_tooltip, window_title
@@ -163,6 +163,34 @@ class Pill(MetricBox):
 
     def click(self) -> None:
         self.clicked.emit()
+
+
+class ActionPill(Pill):
+    """An action as a pill, not a small button (owner, 16-11-2026): the action in large type, what it works on under
+    it. It stands in for a QPushButton: text(), setText(), setMenu() (the menu opens under it on a click) and click(),
+    which, as a button's, does nothing while the pill is off."""
+
+    def __init__(self, text: str, caption: str, tooltip: str = "", colour: str = GREY):
+        super().__init__(text, caption, tooltip, colour)
+        self.menu: QMenu | None = None
+        self.clicked.connect(self.open_menu)
+
+    def text(self) -> str:
+        return self.value.text()
+
+    def setText(self, text: str) -> None:  # noqa: N802 (as QPushButton's)
+        self.set_value(text, self.toolTip())
+
+    def setMenu(self, menu: QMenu | None) -> None:  # noqa: N802 (as QPushButton's)
+        self.menu = menu
+
+    def open_menu(self) -> None:
+        if self.menu is not None:
+            self.menu.popup(self.mapToGlobal(self.rect().bottomLeft()))
+
+    def click(self) -> None:
+        if self.isEnabled():
+            self.clicked.emit()
 
 
 def same_width(boxes: list[MetricBox]) -> None:

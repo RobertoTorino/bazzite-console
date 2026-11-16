@@ -144,13 +144,14 @@ layout.addLayout(header)
 Apps that are not on core yet build the same layout in their own code, with the same sizes: a 96 px icon, a 24 px
 bold title with the version in gray at 14 px, and 6 px between the rows.
 
-Below the header, the rest of the window uses core's widgets: `MetricBox` for figures, `StatusPill` and
-`StatusText` for states (`ok`, `warn`, `bad`, `info`, `neutral`, in the theme's colors), `hint_label()` for a short
-line under a control, `InfoButton` for an explanation that would take the room (a small round "i" at the end of
-the control's row; a click opens the text below it, with its links, and it stays until a click elsewhere),
-`accent_button()` for the page's main action. A window carries no long lines of text: what needs more than a line
-goes behind the info symbol, and the wiki chapter has the rest. An action that is applied already is not offered
-again: its button is off until another value is picked. Secondary windows are titled with `window_title()`.
+Below the header, the rest of the window uses core's widgets: `MetricBox` for figures, `StatusPill` and `StatusText`
+for states (`ok`, `warn`, `bad`, `info`, `neutral`, in the theme's colors), `hint_label()` for a short line under a
+control, `InfoButton` for an explanation that would take the room (a small round "i" at the end of the control's row;
+a click opens the text below it, with its links, and it stays until a click elsewhere), `ActionPill` for an action
+(the action in large type, what it works on under it, as the status boxes look; never a small button), `accent_button()`
+for the page's main action. A window carries no long lines of text: what needs more than a line goes behind the info
+symbol, and the wiki chapter has the rest. An action that is applied already is not offered again: its button is off
+until another value is picked. Secondary windows are titled with `window_title()`.
 
 Every app has the suite's theme: gunmetal (the default), silver or warm, one choice for all the apps, made in the
 portal and kept in `~/.config/bazzite-console/theme`. `create_app()` applies it (an app not on core calls

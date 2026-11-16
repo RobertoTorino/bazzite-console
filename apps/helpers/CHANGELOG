@@ -1,3 +1,10 @@
+Changelog: 16-11-2026 00:48:58
+
+Fixed. Every action in the helpers is the suite's pill (core's ActionPill), as in the other apps, instead of a small
+button: the list's helpers, Refresh, Install all and each group's Install, Turn on and Turn off, MangoHud Config's
+actions, and Boot Command Line's Read, Save changes, Add, Remove, Up, Down, Revert and All settings. MangoHud Config
+has its FPS log actions on a row of their own, so no pill is squeezed.
+
 Changelog: 16-11-2026 00:24:48
 
 Release 0.1.0.

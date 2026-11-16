@@ -1,3 +1,9 @@
+Changelog: 16-11-2026 00:59:53
+
+Added. ActionPill in widgets: an action as a pill instead of a small button, standing in for a QPushButton (text(),
+setText(), setMenu() with its menu under the pill, and click(), which does nothing while the pill is off). Pill
+itself is unchanged.
+
 Changelog: 15-11-2026 11:26:39
 
 Version 4.1.0.

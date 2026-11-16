@@ -5,10 +5,10 @@ portal each helper is a tile of its own, which opens it straight away (ps5-helpe
 
 from __future__ import annotations
 
-from PyQt6.QtWidgets import QGridLayout, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QMainWindow, QVBoxLayout, QWidget
 
 from bazzite_console_core.theme import ORANGE
-from bazzite_console_core.widgets import AppHeader, InfoButton, StatusText, hint_label
+from bazzite_console_core.widgets import ActionPill, AppHeader, InfoButton, StatusText, hint_label, same_width
 
 from . import APP_NAME, LOGO_PATH, __version__
 from .catalog import HELPERS
@@ -35,14 +35,15 @@ class MainWindow(QMainWindow):
         layout.addLayout(header)
         grid = QGridLayout()
         grid.setColumnStretch(1, 1)
-        self.buttons: dict[str, QPushButton] = {}
+        self.buttons: dict[str, ActionPill] = {}
         for row, helper in enumerate(HELPERS):
-            button = QPushButton(helper.name)
+            button = ActionPill(helper.name, "Click to open")
             button.clicked.connect(lambda _=False, k=helper.key: self.open_helper(k))
             self.buttons[helper.key] = button
             grid.addWidget(button, row, 0)
             board = f" <span style='color:{ORANGE};'>Changes the board.</span>" if helper.changes_board else ""
             grid.addWidget(hint_label(helper.summary + board), row, 1)
+        same_width(list(self.buttons.values()))
         layout.addLayout(grid)
         layout.addStretch(1)
         self.setCentralWidget(contents)

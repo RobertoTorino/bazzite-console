@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QPushButton, QTa
 
 from bazzite_console_core import theme
 from bazzite_console_core.widgets import (
-    AppHeader, InfoButton, MetricBox, Pill, RoundedToolTip, StatusPill, StatusText, Terminal, TextDialog,
+    ActionPill, AppHeader, InfoButton, MetricBox, Pill, RoundedToolTip, StatusPill, StatusText, Terminal, TextDialog,
     accent_button, hide_tooltip, same_width, set_button_active, show_tooltip,
 )
 
@@ -414,3 +414,24 @@ def test_info_button_opens_its_text_below_it(qapp):
     button.popup.close()
     qapp.processEvents()
     owner.close()
+
+
+def test_action_pill_stands_in_for_a_button(qapp):
+    from PyQt6.QtWidgets import QMenu
+    pill = ActionPill("Turn on", "Click to apply", "tip")
+    clicks = []
+    pill.clicked.connect(lambda: clicks.append(1))
+    assert pill.text() == "Turn on" and pill.caption.text() == "Click to apply"
+    pill.setText("Apply")
+    assert pill.text() == "Apply" and pill.toolTip() == "tip"
+    pill.click()
+    pill.setEnabled(False)
+    pill.click()                                    # off: as a button, nothing happens
+    assert clicks == [1]
+    pill.setEnabled(True)
+    menu = QMenu()
+    menu.addAction("One")
+    pill.setMenu(menu)
+    pill.click()
+    assert menu.isVisible() and clicks == [1, 1]
+    menu.close()
