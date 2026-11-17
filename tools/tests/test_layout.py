@@ -106,7 +106,7 @@ def test_every_app_has_tests_and_ci_runs_them():
         text = workflow.read_text(encoding="utf-8")
         if static := re.search(r"dir: \[([^\]]*)\]", text):
             listed |= {entry.strip() for entry in static.group(1).replace("\n", " ").split(",")}
-        if "tools/ci_matrix.py pytest" in text:
+        if "tools/ci_matrix.py plan" in text:
             assert "dir: ${{ fromJSON(needs.plan.outputs.dirs) }}" in text, workflow.name
             listed |= set(ci_matrix.pytest_dirs(SUITE))
     folders = {path.parent.relative_to(SUITE).as_posix() for path in SUITE.glob("**/tests")

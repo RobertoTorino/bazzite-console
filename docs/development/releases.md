@@ -48,7 +48,7 @@ app releases need, and can be typed too.
 The release tab holds the release's steps, numbered, in the order you do them, each with its pill. The step to do
 now has an orange ▶ and its pill lit; a step done has a green ✓, one that failed a red !, and the line beside each
 says what there is to do. While a pill's command runs, its step has a teal ⋯ and its line says what runs
-(**Push them** runs CI's jobs here first, a couple of minutes, then pushes); the step is done when it
+(**Push them** runs CI's jobs of what you changed here first, then pushes); the step is done when it
 ends, and its output is on the Commands tab. Only the lit pill does anything, so you never need a command or
 another tab. Every tab explains itself behind the round **i** in its first row: click it to read the whole
 explanation.
@@ -163,7 +163,7 @@ commit, tags included. It reads the newest 30 runs of the repository; when they 
 release of many apps starts many runs), it reads the rest of that commit's runs too, so the CI runs under them
 count. It reads **building** while one runs, then **passed** or **failed**; right after a push, until GitHub has started the runs of that commit, it reads **building** too and the line under the pills says that it waits for GitHub, as the runs GitHub lists then are the commit's before; hover for each run, click
 to open the run that failed (or still runs) on GitHub. A run GitHub canceled because a later run of the same
-workflow on the same commit took its place is no failure: hover says **replaced by a later run**. It looks every 30
+workflow on the same commit took its place is no failure: hover says **replaced by a later run**. It looks every 15
 seconds while a build runs, every 10 seconds after a push until GitHub has started its runs (a few seconds after
 the push), and every 5 minutes otherwise, and **Refresh** looks at once: its pill reads *Refreshing…* while it reads
 the checkout and GitHub's runs (a second or two), then *Refreshed* with the time. When a run it saw running

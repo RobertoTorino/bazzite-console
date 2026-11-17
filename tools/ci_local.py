@@ -8,9 +8,11 @@ pass in the suite's full venv on a newer Python can still fail in CI; this shows
     tools/ci-local.sh [--list] [--all] [--workers N] [job[/matrix value] ...]
     e.g.  tools/ci-local.sh pytest/apps/fan pytest/tools
 
-Without job names it runs the workflows the push would start on GitHub: those whose push paths match a file that
-differs from origin/main (the commits not pushed yet and the changes not committed). --all runs every workflow; so does a checkout without origin/main. Job
-names run those jobs, whatever changed.
+Without job names it runs what the push would run on GitHub: the workflows whose push paths match a file that
+differs from origin/main (the commits not pushed yet and the changes not committed), and of ci.yml the jobs its plan
+job names for those files (tools/ci_matrix.py plan: the test folders, installer tests and jobs of what changed).
+--all runs every job of every workflow; so does a checkout without origin/main. Job names run those jobs, whatever
+changed.
 
 The jobs come from the workflows themselves, so a new app in the matrix or a new installer step is run without
 changing this; a matrix a plan job reads from the repository's folders (tools/ci_matrix.py, fromJSON(needs.plan.outputs.x))
@@ -46,6 +48,8 @@ COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "di
 SHELL = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c"]      # GitHub's shell for run steps on Linux
 EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
 NEEDS = re.compile(r"^\$\{\{\s*fromJSON\(needs\.(\w[\w-]*)\.outputs\.(\w+)\)\s*\}\}$")   # a plan job's output
+OUTPUT = re.compile(r"needs\.(\w[\w-]*)\.outputs\.(\w+)")
+CONDITION = re.compile(r"^needs\.(\w[\w-]*)\.outputs\.(\w+)\s*(==|!=)\s*'([^']*)'$")      # a job's if
 _venv_locks: dict[str, threading.Lock] = {}
 _locks_lock = threading.Lock()
 
@@ -55,6 +59,7 @@ class Job:
     name: str                           # "pytest/tools", "shell"
     spec: dict
     matrix: dict = field(default_factory=dict)
+    needs: dict = field(default_factory=dict)       # the outputs of the jobs it needs: {"plan": {"docs": True}}
 
     @property
     def runs_here(self) -> bool:
@@ -72,16 +77,19 @@ class Result:
     skipped: bool = False               # a job for another system: neither passed nor failed
 
 
-def job_outputs(jobs: dict, name: str, root: Path) -> dict[str, object]:
+def job_outputs(jobs: dict, name: str, root: Path, base: str = "") -> dict[str, object]:
     """The outputs of the job *name* as its steps write them to $GITHUB_OUTPUT (key=value lines), run here in
-    *root*: the plan job of ci.yml, which reads the matrix from the repository's folders (tools/ci_matrix.py).
-    A value that is JSON is parsed, as fromJSON would."""
+    *root*: the plan job of ci.yml, which reads the matrix from the repository's folders and keeps it to what
+    differs from *base* (tools/ci_matrix.py plan; without a base, everything). A value that is JSON is parsed, as
+    fromJSON would."""
     found: dict[str, object] = {}
+    job = Job(name, jobs[name])
     with tempfile.NamedTemporaryFile("w+", encoding="utf-8", prefix="ci-local-outputs-") as output:   # not in root:
         for step in jobs[name].get("steps", []):                                          # the checkout is read-only
             if "run" in step:
+                env = {k: expand(v, job, base) for k, v in (step.get("env") or {}).items()}
                 subprocess.run([*SHELL, str(step["run"])], cwd=root, check=True,
-                               env=dict(os.environ, GITHUB_OUTPUT=output.name), stdout=subprocess.DEVNULL)
+                               env=dict(os.environ, GITHUB_OUTPUT=output.name, **env), stdout=subprocess.DEVNULL)
         output.seek(0)
         for line in output.read().splitlines():
             key, _, value = line.partition("=")
@@ -92,35 +100,54 @@ def job_outputs(jobs: dict, name: str, root: Path) -> dict[str, object]:
     return found
 
 
-def load_jobs(workflow: Path, prefix: str = "") -> list[Job]:
+def output_text(value: object) -> str:
+    """An output as an expression gives it: true, not True; a list as its JSON."""
+    return value if isinstance(value, str) else json.dumps(value)
+
+
+def load_jobs(workflow: Path, prefix: str = "", root: Path | None = None, base: str = "") -> list[Job]:
     """Every job of the workflow, a matrix job once per combination ("pytest/apps/fan"), *prefix* before each name.
-    A matrix given as ${{ fromJSON(needs.plan.outputs.dirs) }} is the plan job's output, read by running it."""
+    A matrix given as ${{ fromJSON(needs.plan.outputs.dirs) }} is the plan job's output, read by running it in
+    *root* (the workflow's checkout when not given) against *base*; a job whose if compares such an output
+    (needs.plan.outputs.docs == 'true') is left out when it is false, as GitHub skips it."""
     jobs = []
     specs = yaml.safe_load(workflow.read_text(encoding="utf-8"))["jobs"]
+    root = root or workflow.resolve().parents[2]
     outputs: dict[str, dict[str, object]] = {}
+
+    def of(plan: str) -> dict[str, object]:
+        if plan not in outputs:
+            outputs[plan] = job_outputs(specs, plan, root, base)
+        return outputs[plan]
+
     for name, spec in specs.items():
+        if condition := CONDITION.match(str(spec.get("if", "")).strip()):
+            plan, out, operator, wanted = condition.groups()
+            if (output_text(of(plan).get(out, "")) == wanted) != (operator == "=="):
+                continue
+        needs = {plan: of(plan) for plan, _ in OUTPUT.findall(str(spec))}
         matrix = dict((spec.get("strategy") or {}).get("matrix") or {})
         for key, value in matrix.items():
             if isinstance(value, str) and (ref := NEEDS.match(value.strip())):
                 plan, out = ref.groups()
-                if plan not in outputs:
-                    outputs[plan] = job_outputs(specs, plan, workflow.resolve().parents[2])
-                matrix[key] = outputs[plan].get(out, [])
+                matrix[key] = of(plan).get(out, [])
         keys = [k for k, v in matrix.items() if isinstance(v, list)]
         if not keys:
-            jobs.append(Job(prefix + name, spec))
+            jobs.append(Job(prefix + name, spec, needs=needs))
             continue
         for values in itertools.product(*(matrix[k] for k in keys)):
             combo = dict(zip(keys, values))
-            jobs.append(Job(f"{prefix}{name}/{'/'.join(str(v) for v in values)}", spec, combo))
+            jobs.append(Job(f"{prefix}{name}/{'/'.join(str(v) for v in values)}", spec, combo, needs))
     return jobs
 
 
-def all_jobs(src: Path = SRC, changed: list[str] | None = None) -> list[Job]:
+def all_jobs(src: Path = SRC, changed: list[str] | None = None, root: Path | None = None,
+             base: str = "") -> list[Job]:
     """The jobs of every workflow run here (WORKFLOWS), in that order; with *changed* (the files a push changes) only
-    those of the workflows that push starts (runs_for)."""
+    those of the workflows that push starts (runs_for), and with *base* only the jobs their plan job names for what
+    differs from it in *root*."""
     return [job for name, prefix in workflows(src, changed)
-            for job in load_jobs(src / ".github" / "workflows" / name, prefix)]
+            for job in load_jobs(src / ".github" / "workflows" / name, prefix, root, base)]
 
 
 def workflows(src: Path = SRC, changed: list[str] | None = None) -> list[tuple[str, str]]:
@@ -160,8 +187,10 @@ def expand(text: str, job: Job, base: str) -> str:
     (origin/main)."""
     def value(m: re.Match) -> str:
         expr = m.group(1)
-        if expr.startswith("matrix."):
+        if expr.startswith("matrix.") and " " not in expr:
             return str(job.matrix.get(expr.removeprefix("matrix."), ""))
+        if output := OUTPUT.fullmatch(expr):
+            return output_text(job.needs.get(output[1], {}).get(output[2], ""))
         if "github.event" in expr and ("before" in expr or "base.sha" in expr):
             return base
         if expr.startswith("hashFiles") or expr.startswith("runner."):
@@ -291,7 +320,8 @@ def main(argv: list[str]) -> int:
     base = prepare_copy()
     changed = None if every or argv else changed_files(base)
     names = [name for name, _ in workflows(SRC, changed)]
-    jobs = selected(all_jobs(SRC, changed), argv)
+    # The plan job of a workflow names the jobs of what changed; --all and job names take every job.
+    jobs = selected(all_jobs(SRC, changed, WORK, "" if every or argv else base), argv)
     if not jobs:
         print(f"no job matches {' '.join(argv)}; tools/ci-local.sh --list shows them" if argv else
               "nothing to run: this push changes no file a CI workflow runs for", file=sys.stderr)

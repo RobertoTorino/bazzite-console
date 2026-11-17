@@ -47,11 +47,15 @@ def test_every_installer_test_is_for_something_that_exists():
 
 
 def test_ci_runs_every_installer_test():
-    """CI's installers job runs every tools/installer-tests/*.sh it finds (stage 2, 04-11-2026: a new app's test
-    runs without an edit to the workflow), the helper left out and the release tarballs last."""
+    """CI's installers job runs the tools/installer-tests/*.sh its plan job names (tools/ci_matrix.py plan): every
+    one it finds on a full run (stage 2, 04-11-2026: a new app's test runs without an edit to the workflow), the
+    helper left out and the release tarballs last; no script is named in the workflow."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ci_matrix", SUITE / "tools" / "ci_matrix.py")
+    ci_matrix = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ci_matrix)
+    listed = ci_matrix.plan(None, SUITE)["installers"].split()
+    assert set(listed) == _scripts() and listed[-1] == "release.sh"
     ci = (SUITE / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-    step = re.search(r"for t in tools/installer-tests/\*\.sh; do\n(.*?)done\n(.*?)\n", ci, re.S)
-    assert step, "no loop over tools/installer-tests/*.sh"
-    assert "shims.sh|release.sh) continue" in step.group(1) and 'run "$t"' in step.group(1)
-    assert step.group(2).strip() == "run tools/installer-tests/release.sh"
+    assert "TESTS: ${{ needs.plan.outputs.installers }}" in ci and 'bash "tools/installer-tests/$1"' in ci
     assert not re.findall(r"bash tools/installer-tests/[\w.-]+\.sh", ci)     # no step by name

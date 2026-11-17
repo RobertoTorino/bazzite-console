@@ -60,6 +60,44 @@ def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
     assert not list(tmp_path.glob(".ci-local*"))                   # nothing written into the checkout
 
 
+def test_a_job_the_plan_leaves_out_is_not_run_and_its_outputs_reach_the_steps(tmp_path):
+    """ci.yml's plan job names what a push runs (tools/ci_matrix.py plan): a job whose if compares one of its
+    outputs is skipped when it is false, as on GitHub, and a step reads an output as its text."""
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "ci.yml").write_text('''jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          echo "docs=false" >> "$GITHUB_OUTPUT"
+          echo "native=true" >> "$GITHUB_OUTPUT"
+          echo "installers=$BASE.sh fan.sh" >> "$GITHUB_OUTPUT"
+  docs:
+    needs: plan
+    if: needs.plan.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+  native:
+    needs: plan
+    if: needs.plan.outputs.native == 'true'
+    runs-on: ubuntu-latest
+  installers:
+    needs: plan
+    if: needs.plan.outputs.installers != ''
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TESTS: ${{ needs.plan.outputs.installers }}
+        run: echo $TESTS
+''', encoding="utf-8")
+    jobs = {j.name: j for j in ci_local.load_jobs(workflows / "ci.yml", base="abc")}
+    assert set(jobs) == {"plan", "native", "installers"}
+    step = jobs["installers"].spec["steps"][0]
+    assert ci_local.expand(step["env"]["TESTS"], jobs["installers"], "abc") == "abc.sh fan.sh"
+
+
 def test_expressions_and_selection():
     jobs = ci_local.all_jobs(SUITE)
     fan = next(j for j in jobs if j.name == "pytest/apps/fan")

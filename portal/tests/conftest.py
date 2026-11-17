@@ -108,3 +108,15 @@ def silent_music(monkeypatch):
     real = music.Player
     monkeypatch.setattr(music, "Player", SilentPlayer)
     return real
+
+
+@pytest.fixture(autouse=True)
+def no_machine_status(tmp_path, monkeypatch):
+    """A window reads its status strip from empty folders, not from this machine's /sys and /proc: the scan of
+    every process for the GPU's clients took half the time of the window tests. test_status.py gives the reader
+    folders of its own."""
+    import time
+
+    from bazzite_console_portal import status
+    monkeypatch.setattr(status.Status.__init__, "__defaults__",
+                        (tmp_path / "no-sys", tmp_path / "no-proc", time.monotonic))

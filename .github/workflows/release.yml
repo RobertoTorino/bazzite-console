@@ -58,16 +58,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  ci:
+  plan:
+    # One job for what was two (ci, then plan; owner, 17-11-2026): every job waits for a runner of its own, and
+    # that wait was a fifth of a release. First whether the commit may be released (CI passed on it, and for a
+    # release Nexus Release Tool started it is main's newest), then what this run releases.
     runs-on: ubuntu-latest
-    timeout-minutes: 80                 # ci_state waits up to 75
+    timeout-minutes: 90                 # ci_state waits up to 75
     permissions:
       actions: read
       contents: read
     outputs:
       out: ${{ steps.out.outputs.out }}
+      apps: ${{ steps.plan.outputs.apps }}
+      portal: ${{ steps.plan.outputs.portal }}
+      draft: ${{ steps.plan.outputs.draft }}
     env:
       COMMIT: ${{ inputs.commit || github.sha }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
     steps:
       - name: Not published already
         id: out
@@ -85,7 +93,7 @@ jobs:
         if: steps.out.outputs.out != 'true'
         with:
           ref: ${{ inputs.commit || github.sha }}
-          fetch-depth: 2                # the parent: a release commit's work commit
+          fetch-depth: 0                # the parent (a release commit's work commit) and the tags, for check_manifest
       - name: The release commit is main's newest
         if: github.event_name == 'workflow_dispatch'
         run: |
@@ -98,28 +106,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 tools/ci_state.py --release-commit --wait 75 "$COMMIT"
-
-  plan:
-    needs: ci
-    if: needs.ci.outputs.out != 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      apps: ${{ steps.plan.outputs.apps }}
-      portal: ${{ steps.plan.outputs.portal }}
-      draft: ${{ steps.plan.outputs.draft }}
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.commit || github.sha }}
-          fetch-depth: 0                # tags, for check_manifest
       - uses: actions/setup-python@v7
+        if: steps.out.outputs.out != 'true'
         with:
           python-version: "3.12"
       - name: Checks
+        if: steps.out.outputs.out != 'true'
         env:
           TAG: ${{ github.event_name == 'push' && github.ref_name || '' }}
         run: |
@@ -129,6 +121,7 @@ jobs:
             *)           python tools/check_manifest.py ;;
           esac
       - name: What this run releases
+        if: steps.out.outputs.out != 'true'
         id: plan
         env:
           TAG: ${{ github.event_name == 'push' && github.ref_name || '' }}
@@ -137,7 +130,7 @@ jobs:
 
   apps:
     needs: plan
-    if: needs.plan.outputs.apps != '[]'
+    if: needs.plan.outputs.out != 'true' && needs.plan.outputs.apps != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false                  # one app's failure leaves the others' releases: a run started again skips them
@@ -177,14 +170,16 @@ jobs:
       - name: Publish
         run: bash tools/publish_release.sh "$TAG" "$COMMIT" dist
 
-  pin:
+  portal:
+    # One job for what was two (pin, then portal; owner, 17-11-2026: a runner less to wait for). The new app
+    # releases are pinned in apps.toml in a commit on top of the release commit, and the portal is built from that
+    # commit.
     needs: [plan, apps]
     if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      commit: ${{ steps.pin.outputs.commit }}
+    timeout-minutes: 20
     env:
+      TAG: ${{ needs.plan.outputs.portal }}
       COMMIT: ${{ inputs.commit || github.sha }}
       APPS: ${{ needs.plan.outputs.apps }}
       DRAFT: ${{ needs.plan.outputs.draft }}
@@ -194,10 +189,12 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.commit || github.sha }}
-          fetch-depth: 0
+          fetch-depth: 0                # tags, for check_manifest and the reproducible mtime
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+
       - name: Pin the new app releases
         id: pin
         run: |
@@ -233,25 +230,12 @@ jobs:
           git push origin "HEAD:refs/heads/main"         # refused when main moved meanwhile: nothing is tagged
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-  portal:
-    needs: [plan, pin]
-    if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
-    runs-on: ubuntu-latest
-    env:
-      TAG: ${{ needs.plan.outputs.portal }}
-      COMMIT: ${{ needs.pin.outputs.commit }}
-      DRAFT: ${{ needs.plan.outputs.draft }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.pin.outputs.commit }}
-          fetch-depth: 0                # tags, for check_manifest and the reproducible mtime
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+      - name: The commit the portal is built from
+        env:
+          PINNED: ${{ steps.pin.outputs.commit }}
+        run: |
+          git fetch -q --tags origin                     # the tags the apps' releases just made
+          git checkout -q "$PINNED"                      # the pin commit: made here, or by the run before
 
       - name: Checks
         run: |
@@ -272,6 +256,8 @@ jobs:
           cat dist/SHA256SUMS
 
       - name: Publish
+        env:
+          COMMIT: ${{ steps.pin.outputs.commit }}
         run: |
           args=()
           [ "$DRAFT" = true ] && args+=(--draft)

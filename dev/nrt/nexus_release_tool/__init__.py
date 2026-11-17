@@ -4,6 +4,7 @@ and the console checks of a portal release. It works on the checkout it lives in
 releases and has none of its own: no version, its header names the checkout's commit."""
 
 APP_NAME = "Nexus Release Tool"
+HEADER_NAME = f"{APP_NAME} for PS5"    # in the window's header: which suite's checkout it releases
 APP_ID = "nexus-release-tool"
 
 from pathlib import Path
@@ -18,4 +19,4 @@ LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 # Settings in ~/.config/nexus-release-tool/nexus-release-tool.ini
 INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=checkout_commit(CHECKOUT)[0], logo=LOGO_PATH, settings_ini=True)
 
-__all__ = ["APP_ID", "APP_NAME", "CHECKOUT", "INFO", "LOGO_PATH", "ROOT"]
+__all__ = ["APP_ID", "APP_NAME", "CHECKOUT", "HEADER_NAME", "INFO", "LOGO_PATH", "ROOT"]

@@ -1,3 +1,13 @@
+Changelog: 17-11-2026 21:31:02
+
+Fixed. The window's header reads Nexus Release Tool for PS5 (owner, 17-11-2026), so the release tools of
+the two suites can be told apart. The window's title, the menu entry and the notifications keep the name.
+
+Changelog: 17-11-2026 21:24:17
+
+Fixed. The header looks at GitHub every 15 seconds while a build runs (it was 30), so the step after CI or the
+release lights sooner. Commit writes ALL-TESTS.md from the tests (tools/all_tests.py) before it adds the changes.
+
 Changelog: 15-11-2026 21:04:48
 
 Added. An orange banner above the release's steps while the wiki's Portal Tour is older than the portal (its window

@@ -69,7 +69,8 @@ same text in a `!!! warning "Changes the board"` box (`tools/check_manifest.py` 
   time).
 - `tools/`: the release and check tools (`build_release.py`, `stage_app.py`, `check_versions.py`,
   `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `check-release.sh`,
-  `suites.py` (this suite only), `fix-modes.sh`, `sync_icons.py`, `ci_state.py`, `ci_matrix.py` and
+  `suites.py` (this suite only), `fix-modes.sh`, `sync_icons.py`, `ci_state.py`, `ci_matrix.py`, `all_tests.py`
+  (`ALL-TESTS.md`, the list of every test, written from the tests; CI compares them) and
   `release_commit.py` for the release workflow), `check_upstream.py`, `new_app.py`, `make_portal_sounds.py`, `nrt.sh`,
   the tours, `portal_screenshot.py` (the portal's picture on the wiki's home page), `make_design.py` (DESIGN.md and its
   samples in `design/colors/`), `ci-local.sh` with `ci_local.py` and `ci-local/` (every CI job here, in a podman

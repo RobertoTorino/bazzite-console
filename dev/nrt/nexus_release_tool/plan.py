@@ -37,6 +37,7 @@ from pathlib import Path
 CHECKOUT = Path(__file__).resolve().parents[3]        # dev/nrt/nexus_release_tool/plan.py: the checkout, the suite
 TOOLS = CHECKOUT / "tools"              # the suite's tools (check_versions.py, stage_app.py, suites.py)
 TAG_SCRIPT = "tools/tag-release.sh"     # tags only a pushed HEAD that holds the version: never one before the bump
+ALL_TESTS = "tools/all_tests.py"        # ALL-TESTS.md from the tests, before a commit
 CI_LOCAL = "tools/ci-local.sh"          # CI's jobs here, in a container: the push only when they pass
 VERSIONS_CHECK = "tools/check_versions.py"
 CHECK_SCRIPT = "tools/check-release.sh"     # the console checks of a portal release (local|release|draft|remove)
@@ -1334,8 +1335,9 @@ def behind(root: Path, base: str) -> int:
 
 
 def add_command() -> str:
-    """The Commit step's git add: everything, the exec bits CI checks, and what is staged now."""
-    return "git add -A && tools/fix-modes.sh && git status --short"
+    """The Commit step's git add: the list of the tests written from the tests as they are (ALL-TESTS.md, which CI
+    compares with them), then everything, the exec bits CI checks, and what is staged now."""
+    return f"python3 {ALL_TESTS} && git add -A && tools/fix-modes.sh && git status --short"
 
 
 def commit_command(message: str, base: str, amend: bool = False, python: str = "python3") -> str:

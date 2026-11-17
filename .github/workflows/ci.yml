@@ -3,7 +3,10 @@ name: CI
 
 # The checks of the Bazzite Console Suite on every push and pull request: the portal, the apps, core
 # (bazzite_console_core, bundled in every app), the tools, the development apps (dev/), the wiki and the
-# repository's rules. Releases are made by release.yml, which waits for this workflow on the release commit
+# repository's rules. A push runs the jobs of what it changed (the plan job, tools/ci_matrix.py plan: a change to one
+# app ran every job, and in the twin suite one job stalled in its checkout held the release for minutes; owner,
+# 17-11-2026); every job runs once a week, from the Actions page (Run workflow), and when core, a workflow or the CI
+# tools change. Releases are made by release.yml, which waits for this workflow on the release commit
 # (tools/ci_state.py); tools/tag-release.sh asks the same before it tags.
 # A tag starts no CI of its own: tools/tag-release.sh tags only a pushed commit CI passed, and release.yml waits for
 # that commit's CI. A run per tag (22 in one release) only queued the same jobs again and gave each release one more
@@ -15,6 +18,9 @@ on:
   push:
     branches: ["**"]                    # every branch, no tag. Not tags-ignore alone: GitHub then runs no branch push
   pull_request:
+  schedule:
+    - cron: "17 3 * * 1"                # every job, Monday 03:17 UTC: what a push did not run
+  workflow_dispatch:                    # every job, by hand
 
 permissions:
   contents: read
@@ -40,17 +46,30 @@ jobs:
         run: python tools/check_manifest.py ${BASE:+--base "$BASE"}
 
   plan:
-    # The pytest matrix, read from the repository's folders (tools/ci_matrix.py: every folder with tests/: core,
-    # tools, dev/*, the portal and the apps), so a new app needs no edit here.
+    # What this push runs (tools/ci_matrix.py plan): the pytest matrix, read from the repository's folders (every
+    # folder with tests/: core, tools, dev/*, the portal and the apps, so a new app needs no edit here) and kept to
+    # the folders the push changed; the installer tests of what it changed; whether the native job and the wiki
+    # run. Everything on the weekly run, on Run workflow, and when the commit before the push is not known.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       dirs: ${{ steps.plan.outputs.dirs }}
+      installers: ${{ steps.plan.outputs.installers }}
+      native: ${{ steps.plan.outputs.native }}
+      docs: ${{ steps.plan.outputs.docs }}
     steps:
       - uses: actions/checkout@v7
-      - name: The folders with tests
+      - name: What the push changed
         id: plan
-        run: python3 tools/ci_matrix.py pytest | tee -a "$GITHUB_OUTPUT"
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          case "$EVENT" in schedule|workflow_dispatch) BASE= ;; esac
+          if [ -n "$BASE" ] && ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            git fetch -q --depth=1 origin "$BASE" 2>/dev/null || BASE=      # a new branch, a forced push: everything
+          fi
+          python3 tools/ci_matrix.py plan ${BASE:+--base "$BASE"} | tee -a "$GITHUB_OUTPUT"
 
   pytest:
     needs: plan
@@ -65,8 +84,11 @@ jobs:
         working-directory: ${{ matrix.dir }}
     steps:
       - uses: actions/checkout@v7
+        timeout-minutes: 3              # a stalled checkout fails here, by name (it held a run for nine minutes)
         with:
-          fetch-depth: 0                # the tags: tools/tests checks the shipped apps.toml, whose pins must exist
+          # The tags, for tools only: its tests check the shipped apps.toml, whose pins must exist. The other
+          # folders take the commit alone.
+          fetch-depth: ${{ matrix.dir == 'tools' && '0' || '1' }}
 
       - uses: actions/setup-python@v7
         with:
@@ -92,6 +114,8 @@ jobs:
   # in the cache until the script changes); clippy also without it, as a clone without FFmpeg builds it. Rust is
   # preinstalled on ubuntu-latest. The pytest job above skips tests/test_native.py, which needs the built module.
   native:
+    needs: plan
+    if: needs.plan.outputs.native == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -103,6 +127,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: "apps/remoteplay/requirements-dev.txt"
 
       - name: nasm and the libva headers
         run: sudo apt-get update -q && sudo apt-get install -y -q nasm libva-dev
@@ -117,6 +143,17 @@ jobs:
       - name: FFmpeg
         if: steps.ffmpeg.outputs.cache-hit != 'true'
         run: ffmpeg/build.sh
+
+      # The crates and what was built of them, until Cargo.lock changes: cargo test, clippy and the module's build
+      # then compile the app's own code only.
+      - name: cargo cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/remoteplay/native/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('apps/remoteplay/native/Cargo.lock') }}
 
       - name: cargo test
         run: cargo test --locked --features decoder
@@ -152,14 +189,18 @@ jobs:
 
       # shellcheck is preinstalled on ubuntu-latest. Error level for everything; warning level for the scripts
       # that their own release workflows already held to it.
+      # A few scripts per shellcheck, side by side: one after the other they took half a minute.
       - name: shellcheck (errors, all scripts)
-        run: find . -path ./.git -prune -o -path './.venv*' -prune -o -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
+        run: |
+          find . -path ./.git -prune -o -path './.venv*' -prune -o -name '*.sh' -print0 \
+            | xargs -0 -n 4 -P "$(nproc)" shellcheck -x -S error
       - name: shellcheck (warnings, the installers, the run wrappers, the suite's own scripts and the app scripts that hold to it)
         # Every install.sh and ps5-*-run wrapper by glob, so a new app's are checked without an edit here; the
         # rest by name: scripts the baseline holds to it (test-board.sh does not).
         run: |
-          shellcheck -x -S warning install.sh portal/install.sh apps/*/install.sh \
-            apps/*/ps5-*-run tools/*.sh tools/installer-tests/*.sh test.sh
+          printf '%s\0' install.sh portal/install.sh apps/*/install.sh \
+            apps/*/ps5-*-run tools/*.sh tools/installer-tests/*.sh test.sh \
+            | xargs -0 -n 4 -P "$(nproc)" shellcheck -x -S warning
           shellcheck -S warning dev/*/*.sh
 
       - name: Line endings
@@ -197,26 +238,35 @@ jobs:
 
   # The installers on Linux without root or network: sudo becomes fakeroot, venvs are stubs (see shims.sh).
   installers:
+    needs: plan
+    if: needs.plan.outputs.installers != ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - name: fakeroot
         run: sudo apt-get install -y -q fakeroot
-      - name: Every installer test (tools/installer-tests/*.sh), then the release tarballs end to end
-        # Read from the folder, so a new app's test runs without an edit here (stage 2, 04-11-2026); each in a
-        # group of its own in the log, every one run, the failed ones named at the end.
+      - name: The installer tests of what the push changed (tools/installer-tests/*.sh), the release tarballs among them
+        # The plan job names them (every one on a full run), so a new app's test runs without an edit here. They
+        # run side by side, each on a folder of its own (shims.sh); each in a group of its own in the log, every
+        # one run, the failed ones named at the end.
+        env:
+          TESTS: ${{ needs.plan.outputs.installers }}
         run: |
+          out=$(mktemp -d)
+          # shellcheck disable=SC2086,SC2016
+          printf '%s\n' $TESTS | xargs -P "$(nproc)" -I{} bash -c \
+            'bash "tools/installer-tests/$1" > "$2/$1.log" 2>&1; echo $? > "$2/$1.rc"' _ {} "$out"
           failed=()
-          run() { echo "::group::${1##*/}"; bash "$1" || { echo "::error file=$1::${1##*/} failed"; failed+=("${1##*/}"); }; echo "::endgroup::"; }
-          for t in tools/installer-tests/*.sh; do
-            case "${t##*/}" in shims.sh|release.sh) continue ;; esac
-            run "$t"
+          for t in $TESTS; do
+            echo "::group::$t"; cat "$out/$t.log"; echo "::endgroup::"
+            [ "$(cat "$out/$t.rc")" = 0 ] || { echo "::error file=tools/installer-tests/$t::$t failed"; failed+=("$t"); }
           done
-          run tools/installer-tests/release.sh
           [ ${#failed[@]} -eq 0 ] || { echo "Failed: ${failed[*]}" >&2; exit 1; }
 
   docs:
+    needs: plan
+    if: needs.plan.outputs.docs == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

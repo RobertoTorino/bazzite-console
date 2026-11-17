@@ -374,7 +374,8 @@ def test_changes_not_committed_make_commit_the_step_to_do(release_window, monkey
     ran = []
     monkeypatch.setattr(w, "run_git", ran.append)
     page.commit()
-    assert ran[0].startswith("git add -A && tools/fix-modes.sh") and "git commit" in ran[0] and "A greeting" in ran[0]
+    assert ran[0].startswith("python3 tools/all_tests.py && git add -A && tools/fix-modes.sh")
+    assert "git commit" in ran[0] and "A greeting" in ran[0]
     assert "check_manifest.py" in ran[0]
     warned = []
     monkeypatch.setattr("nexus_release_tool.release_page.QMessageBox.warning", lambda *a: warned.append(a[2]))

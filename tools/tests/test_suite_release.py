@@ -117,3 +117,27 @@ def test_pin_on_the_command_line(tmp_path, monkeypatch, capsys):
     before = manifest.read_bytes()
     assert sr.main(["pin", str(tmp_path / "sums"), "ps5-new-v0.1.0"]) == 1            # no SHA256SUMS: nothing written
     assert "suite_release.py pin" in capsys.readouterr().err and manifest.read_bytes() == before
+
+
+def test_the_published_releases_come_from_one_listing():
+    """One gh release list for the plan, not a gh release view per pinned app; a draft is not out."""
+    asked = []
+
+    def run(argv, **_kwargs):
+        asked.append(argv)
+        return type("Done", (), {"returncode": 0, "stdout": json.dumps(
+            [{"tagName": "a-v1.0.0", "isDraft": False}, {"tagName": "portal-v2.0.0", "isDraft": True}])})()
+    assert sr.published_tags(run=run) == {"a-v1.0.0"}
+    assert asked == [["gh", "release", "list", "--limit", "1000", "--json", "tagName,isDraft"]]
+
+
+def test_without_a_whole_listing_the_tags_are_asked_one_by_one():
+    """GitHub does not answer, answers something else, or the listing is full (a release could be missing from it,
+    and would be built again): no set, so the plan asks tag by tag."""
+    def answers(code, out):
+        return lambda argv, **_kwargs: type("Done", (), {"returncode": code, "stdout": out})()
+    assert sr.published_tags(run=answers(1, "")) is None
+    assert sr.published_tags(run=answers(0, "not json")) is None
+    full = json.dumps([{"tagName": f"a-v1.0.{n}", "isDraft": False} for n in range(3)])
+    assert sr.published_tags(limit=3, run=answers(0, full)) is None
+    assert sr.published_tags(limit=4, run=answers(0, full)) == {"a-v1.0.0", "a-v1.0.1", "a-v1.0.2"}

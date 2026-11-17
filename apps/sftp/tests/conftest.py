@@ -41,3 +41,18 @@ def no_local_sshd(monkeypatch):
     """The Server Manager does not read this computer's sshd in tests (systemctl, rpm, firewall-cmd)."""
     from sftp_tools import server_tab
     monkeypatch.setattr(server_tab, "supported", lambda: False)
+
+
+@pytest.fixture(autouse=True)
+def no_windows_left():
+    """Every window a test opened is closed and deleted when the test ends, by Qt, in its own order. Left to
+    Python's garbage collector, the windows of earlier tests were taken apart in the middle of a later test, in
+    any order, and that crashed the run (a segmentation fault while collecting, 17-11-2026)."""
+    yield
+    from PyQt6 import sip
+    from PyQt6.QtWidgets import QApplication
+    if QApplication.instance() is not None:
+        for widget in QApplication.topLevelWidgets():
+            if not sip.isdeleted(widget):
+                widget.close()
+                sip.delete(widget)

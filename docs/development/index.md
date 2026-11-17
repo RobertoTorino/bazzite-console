@@ -20,7 +20,7 @@ apps/<name>/                  one folder per app, each with its own VERSION, CHA
 core/bazzite_console_core/    the shared Python package the apps bundle at release time (see bazzite_console_core
                               below)
 tools/                        release and CI (build_release, stage_app, check_versions, check_manifest, pin_app,
-                              tag-release.sh, ci_state, ci_matrix, check-release.sh, ci-local.sh), new_app,
+                              tag-release.sh, ci_state, ci_matrix, check-release.sh, ci-local.sh), all_tests, new_app,
                               sync_icons (the category icons), check_upstream, the screenshot and tour scripts,
                               mkdocs/ (the wiki's hooks and design panel), tests/ and installer-tests/
 dev/<name>/                   the development apps, run from the checkout and never released: dev/dash/ is Nexus
@@ -77,9 +77,35 @@ GitHub runs `ci.yml` on every push and pull request: the versions and the portal
 (`bash -n`, shellcheck, line endings, exec bits, the four files of every folder, workflows only at the root), the
 installer tests and the wiki build. A release waits for it: a commit CI did not pass gets no release.
 
-The matrices are read from the folders in a first job, `plan` (`tools/ci_matrix.py`): the pytest matrix is every
-folder with `tests/`. The installers job runs every `tools/installer-tests/*.sh` it finds. So a new app needs no
-edit to a workflow: its folder, its installer test and its `install.sh` are in CI at once.
+A push runs the jobs of what it changed. A first job, `plan` (`tools/ci_matrix.py plan`), compares the push with
+the commit before it and names them:
+
+| What changed | What runs |
+|---|---|
+| A file of a folder with `tests/` (an app, the portal, a `dev/` app) | That folder's tests |
+| Anything | The tests of `tools`, which hold the repository's rules, the versions and the shell checks |
+| `portal/apps.toml` or `icons/categories.toml` | Also the tests of every folder whose tests read that file |
+| An app, a `dev/` app, the portal or a tool | The installer tests that name it, side by side |
+| `apps/remoteplay` | Also the native job |
+| Anything but Python code | Also the wiki build |
+| `core`, a workflow, the CI tools, `requirements-dev.txt` | Every job |
+
+Every job also runs every Monday, with **Run workflow** on the CI workflow's page on GitHub, and when the commit
+before the push is not known (a new branch, a forced push). The pytest matrix and the installer tests are read from
+the folders, so a new app needs no edit to a workflow: its folder, its installer test and its `install.sh` are in
+CI at once.
+
+[All tests](all-tests.md) lists every test with what it checks and the time it took, and the installer tests.
+`tools/all_tests.py` writes that page (`ALL-TESTS.md` at the root) from the tests themselves:
+
+```bash
+python3 tools/all_tests.py            # the list as the tests are now; the times stay as they were
+python3 tools/all_tests.py --run      # run every test folder first, for each test's cases and time
+python3 tools/all_tests.py --check    # is the list what the tests are? (a test of tools asks this in CI)
+```
+
+Nexus Release Tool's **Commit** runs the first form before it adds the changes, so the list follows the tests by
+itself. By hand, run it after adding, renaming or removing a test; CI fails otherwise.
 
 `./test.sh` runs every test folder in one venv that holds everything, on whatever Python your system has. GitHub's
 CI runs each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there:
@@ -87,13 +113,14 @@ a Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh`
 GitHub does, in a container (podman, which Bazzite has, or docker):
 
 ```bash
-tools/ci-local.sh                            # every job, a minute or two once the image is built
+tools/ci-local.sh                            # the jobs of what changed since origin/main, under a minute
+tools/ci-local.sh --all                      # every job, about two minutes once the image is built
 tools/ci-local.sh shell pytest/tools         # some jobs; a matrix job by its value, pytest for all of them
 tools/ci-local.sh --list                     # the jobs
 ```
 
-It reads the jobs from the workflow itself, a matrix from the folders as the plan job does, so a new app needs no
-change. The first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's
+It reads the jobs from the workflow itself and runs its plan job as GitHub does, against what differs from
+`origin/main`, so it runs the same jobs the push will, and a new app needs no change. The first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's
 runner has) and Remote Play's FFmpeg; both are kept, with the venvs and the logs, in
 `~/.cache/bazzite-console-ci-local`. It works on a copy of the checkout with every change staged, as the commit will
 have it. The copy is named as the checkout, as GitHub's is named after the repository. One run goes at a time on a

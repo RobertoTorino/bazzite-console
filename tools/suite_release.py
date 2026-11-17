@@ -39,6 +39,26 @@ def published(tag: str) -> bool:
     return result.returncode == 0 and result.stdout.strip() == "false"
 
 
+LISTED = 1000                           # the releases one listing asks GitHub for
+
+
+def published_tags(limit: int = LISTED, run=subprocess.run) -> set[str] | None:
+    """The tags of every release on GitHub that is not a draft, from one listing: asking tag by tag took the plan
+    step forty seconds for the suite's apps. None when GitHub does not answer, or has as many releases as the
+    listing holds (one could be missing from it): the caller then asks tag by tag (published)."""
+    result = run(["gh", "release", "list", "--limit", str(limit), "--json", "tagName,isDraft"],
+                 capture_output=True, text=True)
+    if result.returncode != 0:
+        return None
+    try:
+        releases = json.loads(result.stdout)
+    except ValueError:
+        return None
+    if not isinstance(releases, list) or len(releases) >= limit:
+        return None
+    return {release["tagName"] for release in releases if not release.get("isDraft")}
+
+
 def pinned_tags(text: str) -> list[tuple[str, str]]:
     """(app, tag) of every [apps.<app>] in apps.toml that is not withdrawn, in the file's order."""
     import tomllib
@@ -112,7 +132,9 @@ def main(argv: list[str]) -> int:
     try:
         if args.step == "plan":
             version = (SUITE / "portal" / "VERSION").read_text(encoding="utf-8").strip()
-            print("\n".join(output_lines(plan(text, version, tag=args.tag))))
+            out = None if args.tag else published_tags()         # a tag pushed by hand asks nothing
+            released = published if out is None else out.__contains__
+            print("\n".join(output_lines(plan(text, version, released, args.tag))))
             return 0
         for tag in args.tags:
             sha = sha256_of((args.sums / tag / "SHA256SUMS").read_text(encoding="utf-8"), f"{tag}.tar.gz")

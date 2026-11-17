@@ -279,7 +279,7 @@ def test_a_run_that_finishes_is_told_about(repo, tmp_path):
 
 
 def test_git_button_commands():
-    assert rp.add_command() == "git add -A && tools/fix-modes.sh && git status --short"
+    assert rp.add_command() == "python3 tools/all_tests.py && git add -A && tools/fix-modes.sh && git status --short"
     assert rp.commit_command("Release alpha-v0.2.0", "origin/main") == (
         "python3 tools/check_versions.py && python3 tools/check_manifest.py --base origin/main && "
         "git commit -m 'Release alpha-v0.2.0'")                       # the checks first, the commit only after
@@ -837,7 +837,8 @@ def test_title_names_the_checkouts_commit_and_date(window, repo):
     head = subprocess.run(["git", "log", "-1", "--format=%h %ct"], cwd=repo, capture_output=True, text=True).stdout.split()
     when = rp.amsterdam_now(datetime.datetime.fromtimestamp(int(head[1]), datetime.timezone.utc))
     stamp = f"{head[0]} · {when:%d-%m-%Y %H:%M}"
-    title = next(label.text() for label in window.findChildren(QLabel) if label.text().startswith("Nexus Release Tool"))
+    title = next(label.text() for label in window.findChildren(QLabel)
+                 if label.text().startswith("Nexus Release Tool for PS5"))
     assert f">{stamp}</span>" in title and ">v" not in title
 
 

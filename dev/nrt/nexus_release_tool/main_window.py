@@ -42,7 +42,7 @@ from bazzite_console_core.updates import UpdateChecker
 from bazzite_console_core.nexus import header as nexus_header
 from bazzite_console_core.widgets import MetricBox, Pill, accent_button, same_width
 
-from . import APP_NAME, LOGO_PATH, CHECKOUT
+from . import APP_NAME, CHECKOUT, HEADER_NAME, LOGO_PATH
 from . import flow
 from . import plan as rp
 from .command_line import CommandLine
@@ -273,14 +273,14 @@ def desktop_notify(summary: str, body: str) -> bool:
     return ok
 
 
-BUILD_BUSY_MS = 30_000                  # how often to look while a build runs
+BUILD_BUSY_MS = 15_000                  # how often to look while a build runs (30 s until 17-11-2026)
 BUILD_IDLE_MS = 300_000                 # and otherwise (unchanged answers do not count against GitHub's limit)
 BUILD_SOON_MS = 10_000                  # while a pushed HEAD has no run yet: GitHub starts its CI seconds after a push
 BUILD_LOOK = {"running": (BLUE, "Building"), "passed": (GREEN, "Passed"), "failed": (RED, "Failed"),
               "": (GREY, "No builds")}
 
 class BuildIndicator(Pill):
-    """Whether GitHub built the newest push: CI, Release and Manual on its commit. Looks every 30 s while a build
+    """Whether GitHub built the newest push: CI, Release and Manual on its commit. Looks every 15 s while a build
     runs, every 10 s while the pushed HEAD has no run yet, and every 5 minutes otherwise; a run seen running that
     finishes gives a desktop notification. A click opens the run that failed (or still runs), else the Actions page. When GitHub's hourly limit is used up
     it says until when and waits till then. Requests carry the token of a gh login when there is one
@@ -702,7 +702,9 @@ class ReleaseWindow(QMainWindow):
         self.setWindowTitle(APP_NAME)
         self.resize(1100, 760)
         self.setStyleSheet(SELECTION_STYLESHEET + CHECK_STYLESHEET)
-        header = nexus_header(LOGO_PATH, APP_NAME, root)        # never released: the commit says which code runs
+        # Never released: the commit says which code runs. The name says which suite (owner, 17-11-2026: the two
+        # suites' windows looked the same).
+        header = nexus_header(LOGO_PATH, HEADER_NAME, root)
         # The header's pills, all as wide as the widest (owner, 20-10-2026).
         self.refresh_pill = Pill("Refresh", "Click to refresh", "Read the checkout and its tags again, for changes "
                                  "made in a terminal; what you entered stays")

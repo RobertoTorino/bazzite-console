@@ -67,8 +67,13 @@ def shown(docs_dir: str) -> set[str]:
     return {m.group(0) for md in Path(docs_dir).rglob("*.md") for m in _ASSET.finditer(md.read_text(encoding="utf-8"))}
 
 
+ALL_TESTS = SUITE / "ALL-TESTS.md"      # the list of every test (tools/all_tests.py), a page under Development
+
+
 def on_files(files, config):
     _webp.clear()
+    if ALL_TESTS.is_file():
+        files.append(File.generated(config, "development/all-tests.md", abs_src_path=str(ALL_TESTS)))
     wanted = shown(config["docs_dir"])
     for uri, path in pictures().items():
         files.append(File.generated(config, uri, abs_src_path=str(path)))

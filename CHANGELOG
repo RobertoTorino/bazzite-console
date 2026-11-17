@@ -1,3 +1,48 @@
+Changelog: 17-11-2026 21:54:36
+
+Fixed. The release workflow has three jobs where it had five (owner, 17-11-2026): the check that CI passed is
+part of the plan job, and the pin commit is made in the portal job, which then builds the portal from it. Every
+job waits for a runner of its own, and one of those waits alone took twenty seconds of a release. What is
+released, pinned and published, and when a run stops, is as before.
+
+Changelog: 17-11-2026 21:39:19
+
+Fixed. The release workflow's plan step (tools/suite_release.py plan) asks GitHub for the published releases in
+one listing, not once per pinned app: that step took forty of the release's hundred and twenty seconds. When the
+listing fails or is full, it asks tag by tag as before.
+
+Changelog: 17-11-2026 21:35:50
+
+Fixed. SFTP Tools' test of the error dot counted the log's handlers, and a window an earlier test left behind
+took its own away in the middle of it: the test failed, and the run then crashed, whenever pytest wrote a report
+(--junitxml, as tools/all_tests.py --run does). It follows the window's own handler now. The windows a test of SFTP
+Tools opens are closed and deleted when it ends: left to Python's garbage collector, windows of earlier tests were
+taken apart during a later test, which is what crashed the run.
+
+Changelog: 17-11-2026 21:28:02
+
+Fixed. CI's native job keeps the Rust crates and their build, and pip's downloads, between runs (actions/cache
+until Cargo.lock changes): it is the longest job of a full run, and compiled every crate each time.
+
+Changelog: 17-11-2026 21:24:17
+
+Fixed. CI runs the jobs of what a push changed, here (tools/ci-local.sh) and on GitHub, as in the twin suite (owner,
+17-11-2026: the release took too long; there, a change to one app ran all 47 jobs, and a job stalled in its
+checkout held the release for minutes). The plan job of ci.yml (tools/ci_matrix.py plan) names the test folders, the
+installer tests and the jobs of the files that differ from the commit before the push: an app's own tests and
+installer tests, tools' tests always, the folders whose tests read apps.toml when it changed, the native job for
+the app with the native core, the wiki unless only Python changed. Every job still runs when core, a workflow or
+the CI tools change, every Monday, and with Run workflow. The installer tests run side by side, shellcheck a few
+scripts at a time, the test jobs fetch the commit without its history (tools keeps the tags), and a checkout that
+stalls fails after three minutes. tools/ci_local.py runs the plan job against origin/main and skips the jobs it
+leaves out, as GitHub does. The portal's window tests no longer scan every process in /proc of the machine they run
+on.
+
+Added. ALL-TESTS.md, the list of every test with what it checks and its time, written from the tests
+(tools/all_tests.py) and kept in step with them: a test of tools fails in CI when a test was added, renamed or
+removed without it, and Nexus Release Tool's Commit writes it before it adds the changes. --run runs every test
+folder for each test's cases and time. The wiki shows the list under Development, as All tests.
+
 Changelog: 17-11-2026 12:20:40
 
 Fixed. tools/make_design.py names SFTP Tools' red and green text as DESIGN.md does: password advice not followed

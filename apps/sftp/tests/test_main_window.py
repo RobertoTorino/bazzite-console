@@ -206,16 +206,19 @@ def test_worker_is_kept_alive_until_its_thread_finishes(qapp, monkeypatch) -> No
 def test_error_dot_shows_after_an_error_and_goes_with_its_window(qapp) -> None:
     from sftp_tools.app_logging import get_logger
 
-    handlers = len(get_logger().handlers)
+    # The window's own handler, not a count: a window an earlier test left behind takes its handler away when it is
+    # collected, which could be in the middle of this test (it failed whenever pytest wrote a report, --junitxml).
+    before = list(get_logger().handlers)
     window = MainWindow()
     window.show()
-    assert len(get_logger().handlers) == handlers + 1
+    own = [handler for handler in get_logger().handlers if handler not in before]
+    assert len(own) == 1
     assert not window.error_indicator.isVisible()
     get_logger().error("boom")
     assert window.error_indicator.isVisible()
     window.close()
     sip.delete(window)
-    assert len(get_logger().handlers) == handlers
+    assert own[0] not in get_logger().handlers
     get_logger().error("after the window is gone")
 
 
