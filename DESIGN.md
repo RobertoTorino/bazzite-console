@@ -62,7 +62,7 @@ Every tint of each hue in the Bazzite Console Suite, and why it is there. *The f
 | ![#b71c1c](design/colors/block-b71c1c.svg) | `#b71c1c` | the family | A red button pressed or under the pointer (Clean up logs). |
 | ![#8b0000](design/colors/block-8b0000.svg) | `#8b0000` | the family | Active red: a toggle button while its state is on (a toggled-on state, not an error). |
 | ![#a00000](design/colors/block-a00000.svg) | `#a00000` | the family | Active red under the pointer. |
-| ![#e57373](design/colors/block-e57373.svg) | `#e57373` | text tint | Red text on a dark surface: PS5 Board Test's findings, log, in-game checks, history and error labels; SFTP Tools' password requirements not met. |
+| ![#e57373](design/colors/block-e57373.svg) | `#e57373` | text tint | Red text on a dark surface: PS5 Board Test's findings, log, in-game checks, history and error labels; SFTP Tools' password advice not followed. |
 | ![#e8505b](design/colors/block-e8505b.svg) | `#e8505b` | brand or icon | PlayStation's circle: PS5 Controller's circle button, DatStation's circle symbol. |
 | ![#ff2020](design/colors/block-ff2020.svg) | `#ff2020` | hardware | The light bar's red; `#ff0000` the color wheel's. |
 
@@ -82,7 +82,7 @@ Every tint of each hue in the Bazzite Console Suite, and why it is there. *The f
 | Color | Hex | Kind | Where and why |
 | --- | --- | --- | --- |
 | ![#2e7d32](design/colors/block-2e7d32.svg) | `#2e7d32` | the family | Ok: passed, valid, unlocked, a pressed controller button; a right answer. |
-| ![#81c784](design/colors/block-81c784.svg) | `#81c784` | text tint | Green text on a dark surface: PS5 Board Test's log success, in-game ok and a better result in its history; SFTP Tools' password requirements met. |
+| ![#81c784](design/colors/block-81c784.svg) | `#81c784` | text tint | Green text on a dark surface: PS5 Board Test's log success, in-game ok and a better result in its history; SFTP Tools' password advice followed. |
 | ![#3dbf9c](design/colors/block-3dbf9c.svg) | `#3dbf9c` | brand or icon | PlayStation's triangle: PS5 Controller's triangle button, DatStation's triangle symbol. |
 | ![#10d040](design/colors/block-10d040.svg) | `#10d040` | hardware | The light bar's green; `#00ff00` the color wheel's. |
 
@@ -545,11 +545,11 @@ Text colors:
 
   ![Sample text in #ffb74d](design/colors/text-ffb74d.svg)
 
-- `#e57373` SFTP: password requirements not met.
+- `#e57373` SFTP: password advice not followed.
 
   ![Sample text in #e57373](design/colors/text-e57373.svg)
 
-- `#81c784` SFTP: password requirements met.
+- `#81c784` SFTP: password advice followed.
 
   ![Sample text in #81c784](design/colors/text-81c784.svg)
 

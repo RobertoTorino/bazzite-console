@@ -101,3 +101,8 @@ tile = "portal/images/apps/bluetooth.webp"
 category = "utilities"
 icons = ["apps/helpers/images/ps5-helpers"]
 tile = "portal/images/apps/helpers.webp"
+
+[password]
+category = "utilities"
+icons = ["apps/password/images/ps5-password"]
+tile = "portal/images/apps/password.webp"

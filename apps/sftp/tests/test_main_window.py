@@ -346,7 +346,7 @@ def test_the_password_rules_always_show_at_the_right(qapp) -> None:
     server.close()
     fields = common.ConnectionFields(rules_beside=True)
     rules, warning = fields.password_requirements, fields.password_warning
-    assert rules.text().startswith("Password rules:") and rules.text().count("\n") == 1
+    assert rules.text().startswith("Password advice:") and rules.text().count("\n") == 1
     assert rules.parent() is None and not warning.isVisibleTo(fields)      # the tab places the rules beside the form
     tab = client_tab.SftpClientTab()
     assert tab.connection.password_requirements.parent() is tab and tab.connection.password_requirements.isVisibleTo(tab)
@@ -357,5 +357,25 @@ def test_the_password_rules_always_show_at_the_right(qapp) -> None:
     fields.password.setText("Abcdefg1!")
     assert rules.text().startswith("✓") and "#81c784" in rules.styleSheet()
     fields.key_filename.setText("/home/user/.ssh/id_ed25519")
-    assert rules.text().startswith("Password rules:") and not warning.isVisibleTo(fields)
+    assert rules.text().startswith("Password advice:") and not warning.isVisibleTo(fields)
     fields.close()
+
+
+@pytest.mark.parametrize(("password", "key", "warned"), [
+    ("abc", "", True), ("Abcdefg1!", "", False), ("abc", "/home/user/.ssh/id_ed25519", False), ("", "", False)])
+def test_an_unsafe_password_is_advice_and_the_app_connects(qapp, monkeypatch, password, key, warned) -> None:
+    """The password rules are advice: an unsafe password without a key gets one warning, and both tabs connect."""
+    shown = []
+    monkeypatch.setattr(common.PlainMessageBox, "warning", lambda parent, title, text: shown.append(text))
+    monkeypatch.setattr(server_tab, "supported", lambda: False)
+    for tab in (client_tab.SftpClientTab(), ServerManagerTab()):
+        started = []
+        tab._start_connection = started.append
+        tab.connection.host.setText("host.example")
+        tab.connection.username.setText("user")
+        tab.connection.password.setText(password)
+        tab.connection.key_filename.setText(key)
+        tab.toggle_connection()
+        assert len(started) == 1 and started[0][3] == password
+        tab.close()
+    assert shown == ([common.PASSWORD_ADVICE] * 2 if warned else [])

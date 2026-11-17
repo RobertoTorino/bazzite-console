@@ -111,6 +111,12 @@ for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; 
 mkdocs build --strict
 ```
 
+**Missing tooling is installed, not worked around** (owner, 26-10-2026): when a check needs a tool the machine lacks
+(shellcheck, fakeroot, podman, Node.js for the design panel's script), get it (`brew install` on Bazzite) and run the
+check, rather than reviewing by eye. **Frequently needed tools are installed for good** (owner, 05-11-2026): a tool
+the work needs more than once is installed permanently on the development machine (Homebrew, or a distrobox for a
+Fedora package Homebrew lacks), not run once in a throwaway container.
+
 Nexus Release Tool handles the releases (the versions from the CHANGELOG kinds): its Start new release, which runs
 `release.yml` on GitHub, or one release by hand with `tools/tag-release.sh ps5-<app>-v<x.y.z>`, which tags and pushes
 only a pushed commit that passed CI; `release.yml` builds and publishes it on GitHub (owner, 15-11-2026: the same in

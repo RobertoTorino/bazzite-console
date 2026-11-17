@@ -32,6 +32,7 @@ from PyQt6.QtWidgets import (
 
 from .app_logging import get_logger
 from .common import (
+    advise_on_password,
     connection_header,
     ConnectionFields,
     PlainMessageBox,
@@ -41,7 +42,7 @@ from .common import (
     make_file_table,
     trust_unknown_host,
 )
-from .connection import UnknownHostKeyError, connect_ssh, validate_password_requirements
+from .connection import UnknownHostKeyError, connect_ssh
 from .formatting import format_datetime, format_size
 from .settings import current_settings
 from .sound import play_beep
@@ -207,22 +208,8 @@ class SftpClientTab(QWidget):
             return
         self._connection_values = self.connection.values()
 
-        # Validate password requirements if password is being used
-        host, port, username, password, key_filename = self._connection_values
-        if password and not key_filename.strip():
-            is_valid, error_msg = validate_password_requirements(password)
-            if not is_valid:
-                PlainMessageBox.critical(
-                    self,
-                    "Password Security Requirements",
-                    f"Connection refused: {error_msg}\n\n"
-                    "Password must have:\n"
-                    "• At least 8 characters\n"
-                    "• At least 1 uppercase letter\n"
-                    "• At least 1 number\n"
-                    "• At least 1 special character (!@#$%^&*()_+-=[]{}|;:,.<>?.)"
-                )
-                return
+        _host, _port, _username, password, key_filename = self._connection_values
+        advise_on_password(self, password, key_filename)      # advice only: the connection goes on
 
         self._start_connection(self._connection_values)
 

@@ -29,6 +29,7 @@ body:
         - cec
         - bluetooth
         - helpers
+        - password
     validations:
       required: true
   - type: textarea

@@ -177,6 +177,10 @@ specifier = ">=6.11,<7"
 owner = "helpers"
 specifier = ">=6.11,<7"
 
+[[dependency.source]]
+owner = "password"
+specifier = ">=6.11,<7"
+
 [[dependency]]
 name = "PyQt6-Charts"
 description = "The Qt charts used for Board Test's graphs."
@@ -256,6 +260,10 @@ specifier = ">=3.4,<5"
 [app.helpers]
 name = "Console Helpers"
 launchers = ["~/.local/bin/ps5-helpers"]
+
+[app.password]
+name = "PS5 Password Generator"
+launchers = ["~/.local/bin/ps5-password"]
 
 [[tool]]
 name = "pkexec"

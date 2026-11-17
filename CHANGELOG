@@ -1,3 +1,20 @@
+Changelog: 17-11-2026 12:20:40
+
+Fixed. tools/make_design.py names SFTP Tools' red and green text as DESIGN.md does: password advice not followed
+and followed. The tool still said requirements, so the check that DESIGN.md is up to date failed.
+
+Changelog: 17-11-2026 12:04:47
+
+Added. PS5 Password Generator (apps/password), a new app in Utilities: a random password of 8 or 15 characters with a capital
+letter, a small letter, a number and a special character, kept nowhere, with Copy to the clipboard for 60 seconds.
+It is listed in the portal, the wiki, the README, the bug report and the Dependency Checker's catalog, and has its
+installer test.
+
+Changelog: 16-11-2026 19:11:05
+
+Fixed. CLAUDE.md has the owner's rule on tools, as its twin has: a tool a check needs is installed, not worked
+around, and a tool needed more than once is installed for good.
+
 Changelog: 16-11-2026 00:48:58
 
 Fixed. Architecture and consistency names the pill (core's ActionPill) for an app's actions, never a small

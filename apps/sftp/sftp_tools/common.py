@@ -60,6 +60,11 @@ class PlainMessageBox(QMessageBox):
         return PlainMessageBox._show(QMessageBox.Icon.Information, parent, title, text, buttons, default)
 
     @staticmethod
+    def warning(parent, title, text, buttons=QMessageBox.StandardButton.Ok,
+                default=QMessageBox.StandardButton.NoButton):
+        return PlainMessageBox._show(QMessageBox.Icon.Warning, parent, title, text, buttons, default)
+
+    @staticmethod
     def question(parent, title, text,
                  buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                  default=QMessageBox.StandardButton.NoButton):
@@ -154,8 +159,19 @@ class TaskRunner(QThread):
             self.failed.emit(str(error))
 
 
-PASSWORD_RULES = ("Password rules: 8 characters, 1 uppercase letter, 1 number, 1 special character "
+PASSWORD_RULES = ("Password advice: 8 characters, 1 uppercase letter, 1 number, 1 special character "
                   "(!@#$%^&*()_+-=[]{}|;:,.<>?.)")
+PASSWORD_ADVICE = ("Your password is unsafe. It is advised to use a password with a minimum length of 8 characters, "
+                   "at least 1 special character, at least 1 capital letter and at least 1 number.")
+
+
+def advise_on_password(parent, password: str, key_filename: str) -> None:
+    """The password rules are advice: a password without a key that misses one gets a warning, and the app
+    connects all the same."""
+    if password and not key_filename.strip() and not validate_password_requirements(password)[0]:
+        PlainMessageBox.warning(parent, "Unsafe password", PASSWORD_ADVICE)
+
+
 RULES_WIDTH = 58                # the rules, and what is missing, on two lines
 
 
@@ -238,7 +254,7 @@ class ConnectionFields(QGroupBox):
         self.password_requirements.setStyleSheet(f"color: {colour};")
 
     def _update_password_requirements(self) -> None:
-        # Beside the form: the rules in the theme's muted text until a password is typed without a key, then what
+        # The rules are advice (advise_on_password). Beside the form: the rules in the theme's muted text until a password is typed without a key, then what
         # is missing in red or a check in green. Under the password: the same, but nothing until one is typed.
         password = self.password.text()
         if password and not self.key_filename.text().strip():
@@ -247,7 +263,7 @@ class ConnectionFields(QGroupBox):
                 missing = error_msg.removeprefix("Password must have: ").replace("at least ", "")
                 self._show_rules(f"✗ Missing: {missing}", "#e57373")
             else:
-                self._show_rules("✓ The password meets the rules", "#81c784")
+                self._show_rules("✓ The password follows the advice", "#81c784")
             self.password_requirements.show()
         else:
             self._show_rules(PASSWORD_RULES, muted())

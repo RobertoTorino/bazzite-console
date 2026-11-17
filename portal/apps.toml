@@ -329,3 +329,16 @@ change to cmdline.txt changes the boot settings of PS5 Linux from the next boot:
 starting. The file stays across reboots and power offs. A line without root=, or of more than one line, is not
 saved. Nothing is written to the console's firmware. To undo it, edit the line back, or copy a backup over the file.
 """
+
+[apps.password]
+name = "PS5 Password Generator"
+summary = "Makes a random password of 8 or 15 characters with a capital letter, a small letter, a number and a special character, and keeps it nowhere."
+tag = "ps5-password-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-password"]
+launch = [["Open", "~/.local/bin/ps5-password"]]

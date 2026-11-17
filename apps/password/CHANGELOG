@@ -1,0 +1,10 @@
+Changelog: 17-11-2026 12:04:47
+
+Added. PS5 Password Generator: the first version. It makes a random password of 8 or 15 characters, a pill for each, with at least
+one capital letter, one small letter, one number and one special character, from the system's cryptographic random source, and
+never the same one twice while it runs. The password is kept nowhere: no file, no setting, no log. Copy puts it on
+the clipboard for 60 seconds, marked as a secret so Plasma's clipboard history skips it; the app takes it off again
+when the time is over, when a new password is made and when the window closes, and leaves what was copied elsewhere. The window, the
+info symbol, the README and the wiki say which standards the rules meet: the minimum of NIST SP 800-63B and OWASP,
+8 characters only for an account that also has a second sign-in step, 15 characters where the password is the only
+step.

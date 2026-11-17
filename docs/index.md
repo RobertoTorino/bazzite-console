@@ -63,8 +63,9 @@ emulator, and [PS5 DatStation](apps/datstation.md) has a PlayStation quiz and co
 
 [PS5 CEC Manager](apps/cec.md) turns the TV on and off with the PS5, [PS5 SFTP Tools](apps/sftp.md) moves files
 between computers, [PS5 Webcam](apps/webcam.md) makes a PlayStation camera a webcam,
-[PS5 Controller](apps/controller.md) manages DualSense controllers and updates their firmware, and
-[PS5 Bluetooth](apps/bluetooth.md) pairs your keyboard, mouse and controllers at boot.
+[PS5 Controller](apps/controller.md) manages DualSense controllers and updates their firmware,
+[PS5 Bluetooth](apps/bluetooth.md) pairs your keyboard, mouse and controllers at boot, and
+[PS5 Password Generator](apps/password.md) makes a random password and keeps it nowhere.
 </div>
 </div>
 

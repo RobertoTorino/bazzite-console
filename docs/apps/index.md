@@ -51,5 +51,6 @@ says, by default Escape for B.
 | ![](../assets/apps/ssd.webp){ .app-icon } [PS5 SSD Check](ssd.md) | Inspect storage health and drive information when supported. |
 | ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Use a compatible PlayStation camera as a webcam. |
 | ![](../assets/apps/helpers.webp){ .app-icon } [Console Helpers](helpers.md) | Small helpers for one job each: Board Test's extras, MangoHud's config, the memory map, the journal and the boot command line. Always installed. |
+| ![](../assets/apps/password.webp){ .app-icon } [PS5 Password Generator](password.md) | Makes a random password of 8 or 15 characters with a capital letter, a small letter, a number and a special character, and keeps it nowhere. |
 
 Apps that change the board must explain their changes and ask before applying them.

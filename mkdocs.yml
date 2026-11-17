@@ -86,6 +86,7 @@ nav:
           - PS5 Bluetooth: apps/bluetooth.md
           - PS5 CEC Manager: apps/cec.md
           - PS5 Controller: apps/controller.md
+          - PS5 Password Generator: apps/password.md
           - PS5 SFTP Tools: apps/sftp.md
           - PS5 SSD Check: apps/ssd.md
           - PS5 Webcam: apps/webcam.md

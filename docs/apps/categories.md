@@ -27,7 +27,7 @@ The categories are also the [portal's](../portal.md) categories: an app's tile i
 | ![](../assets/categories/sustainable.webp){ .app-icon } | **Sustainable** | The console itself: test it, watch it and keep it cool, so it runs well for a long time. |
 | ![](../assets/categories/graphics.webp){ .app-icon } | **Graphics** | Better pictures in games: an upscaler put into the games that can use one. |
 | ![](../assets/categories/gaming.webp){ .app-icon } | **Gaming** | Playing: emulators, Remote Play with your consoles, and PlayStation trivia. |
-| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the console: Bluetooth devices paired at boot, the controllers, a PlayStation camera as a webcam, the TV over HDMI-CEC, file transfer and the drives. |
+| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the console: Bluetooth devices paired at boot, the controllers, a PlayStation camera as a webcam, the TV over HDMI-CEC, file transfer, the drives and a password generator. |
 
 ## Apps by category
 
@@ -55,3 +55,4 @@ Every app with its icon and its category.
 | ![](../assets/apps/ssd.webp){ .app-icon } [PS5 SSD Check](ssd.md) | Utilities |
 | ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Utilities |
 | ![](../assets/apps/helpers.webp){ .app-icon } [Console Helpers](helpers.md) | Utilities |
+| ![](../assets/apps/password.webp){ .app-icon } [PS5 Password Generator](password.md) | Utilities |

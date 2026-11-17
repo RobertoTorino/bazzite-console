@@ -56,15 +56,16 @@ The app starts from the app menu, the Desktop or `~/.local/bin/ps5-sftp-tools`.
 
 The window's header shows three states: **Local**, your own system; **SFTP**, the client's connection; and
 **Bazzite SSH**, the state of `sshd` on the host the Server Manager is connected to. Beside them, **Connect**
-connects the SFTP Client (and disconnects it again). The password rules stand at the right of the password field
-and show, as you type, what is still missing. A red dot at the right of the title appears after an error was
+connects the SFTP Client (and disconnects it again). The password advice stands at the right of the password field
+and shows, as you type, what is still missing. A red dot at the right of the title appears after an error was
 logged; click it to open the log.
 
 **Profiles.** *Save profile* keeps the host, port, user name and key path under a name. Passwords and key
 passphrases are never saved. The SFTP Client and the Server Manager each have their own list.
 
-**Passwords.** A password without a key must have at least 8 characters, one capital, one number and one special
-character, or the app does not connect. An empty password is fine with a key.
+**Passwords.** The password rules are advice: at least 8 characters, one capital, one number and one special
+character. With a password without a key that misses one, the app warns that the password is unsafe and connects
+all the same. An empty password is fine with a key.
 
 ## Manage SSH servers
 

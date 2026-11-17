@@ -1,3 +1,11 @@
+Changelog: 17-11-2026 11:52:19
+
+Added. The password rules are advice (owner, 17-11-2026): a password without a key that misses one no longer stops
+the connection. The app warns once, "Your password is unsafe. It is advised to use a password with a minimum length
+of 8 characters, at least 1 special character, at least 1 capital letter and at least 1 number.", and connects. The
+label at the password field reads "Password advice" and, for a password that has it all, "The password follows the
+advice".
+
 Changelog: 15-11-2026 11:26:39
 
 Release 1.2.0.
