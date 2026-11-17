@@ -48,9 +48,9 @@ def test_the_fingerprint_follows_the_tiles_but_not_the_pins(tmp_path, monkeypatc
     portal_tour.write_stamp()
     manifest.write_text(app.replace("v1.0.0", "v1.1.0").replace('""', '"' + "ab" * 32 + '"'), encoding="utf-8")
     assert not portal_tour.stale()                          # a release
-    manifest.write_text(app + '\n[[apps.a.helpers]]\nkey = "one"\nname = "One"\n', encoding="utf-8")
+    manifest.write_text(app + '\n[[apps.a.quickfixes]]\nkey = "one"\nname = "One"\n', encoding="utf-8")
     assert portal_tour.stale()                              # a tile more
     portal_tour.write_stamp()
-    manifest.write_text(app.replace('name = "A"', 'name = "B"') + '\n[[apps.a.helpers]]\nkey = "one"\nname = "One"\n',
+    manifest.write_text(app.replace('name = "A"', 'name = "B"') + '\n[[apps.a.quickfixes]]\nkey = "one"\nname = "One"\n',
                         encoding="utf-8")
     assert portal_tour.stale()                              # a tile's name

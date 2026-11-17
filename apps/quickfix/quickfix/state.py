@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""What the helpers read, as your own user: the files and the kernel's own reports. Every reader takes its roots
+"""What the quickfixes read, as your own user: the files and the kernel's own reports. Every reader takes its roots
 (/boot, /etc, /proc, /sys, /var, the home folder) so the tests give it a folder of their own."""
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from . import system
 ROOT = Path("/")
 
 
-# ------------------------------------------------------------------------------------------------- Test Extras
+# ------------------------------------------------------------------------------------------------- Quickfix
 @dataclass(frozen=True)
 class Tool:
     command: str                # what the tests look for on PATH
@@ -30,7 +30,7 @@ class Group:
     tools: tuple[Tool, ...]
 
 
-# The groups of Board Test's development/tools/install-requirements.sh, in its order (tests/test_extras.py reads the
+# The groups of Board Test's development/tools/install-requirements.sh, in its order (tests/test_catalog.py reads the
 # script and keeps the two the same).
 GROUPS: tuple[Group, ...] = (
     Group("--rpms", "RPM packages", "Layered with rpm-ostree: active after a reboot.", (
@@ -119,7 +119,7 @@ def with_logging(text: str, folder: Path) -> str:
     if want:
         if lines and lines[-1].strip():
             lines.append("")
-        lines.append("# FPS log, read by PS5 Board Test (written by Console Helpers)")
+        lines.append("# FPS log, read by PS5 Board Test (written by PS5 Quickfix)")
         lines += [f"{key}={value}" for key, value in want.items()]
     return "\n".join(lines) + "\n"
 
@@ -154,7 +154,7 @@ def mapcount(root: Path = ROOT) -> MapCount:
 @dataclass(frozen=True)
 class Journal:
     persistent: bool            # /var/log/journal is there: journald keeps the journal on the disk
-    ours: bool                  # the helper made it
+    ours: bool                  # the quickfix made it
 
 
 def journal(root: Path = ROOT) -> Journal:
@@ -167,7 +167,7 @@ def journal(root: Path = ROOT) -> Journal:
 class Cmdline:
     path: Path                  # /boot/efi/cmdline.txt, or one of the fallback lines beside it
     text: str | None            # its text; "" when it is not there, None when your user may not read it
-    backups: int                # the helper's dated backups beside it
+    backups: int                # the quickfix's dated backups beside it
 
     @property
     def exists(self) -> bool:

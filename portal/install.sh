@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs the Bazzite Console Suite portal, PS5 Board Test and Console Helpers, from the extracted portal release:
+# Installs the Bazzite Console Suite portal, PS5 Board Test and PS5 Quickfix, from the extracted portal release:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entries only, no icons on the Desktop
-#   ./install.sh --uninstall             # remove the portal, Board Test, Helpers and (asked per app) the others;
+#   ./install.sh --uninstall             # remove the portal, Board Test, Quickfix and (asked per app) the others;
 #                                        # keeps settings, results and the wallpaper
 #   ./install.sh --uninstall --purge     # also remove settings, history and results
 #   ./install.sh --uninstall --all       # the whole suite: every other app too, without a question per app,
@@ -19,7 +19,7 @@
 #  * ~/.local/share/bazzite-console-suite/venv: the suite's shared venv with PyQt6 and pygame-ce (the portal's
 #    controller reader), removed with the last suite app that uses it.
 #  * ~/.local/bin/bazzite-console-suite, an app menu entry and a Desktop icon.
-#  * PS5 Board Test and Console Helpers, which the suite always includes, through their own installers (bundled in
+#  * PS5 Board Test and PS5 Quickfix, which the suite always includes, through their own installers (bundled in
 #    the release).
 # The other apps are installed from the portal, each with its own installer.
 set -euo pipefail
@@ -40,11 +40,11 @@ DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 DESKTOP_ICON="$DESKTOP_DIR/$APP_ID.desktop"
 BT_KEY="board"
 BT_ID="ps5-board-test"
-HELPERS_KEY="helpers"
-HELPERS_ID="ps5-helpers"
+QUICKFIX_KEY="quickfix"
+QUICKFIX_ID="ps5-quickfix"
 
 SRC=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
-# A release bundles bazzite_console_core and the pinned Board Test and Helpers; in the suite checkout they live in
+# A release bundles bazzite_console_core and the pinned Board Test and Quickfix; in the suite checkout they live in
 # core/ and apps/.
 if [ -d "$SRC/bazzite_console_core" ]; then CORE_SRC="$SRC/bazzite_console_core"; else CORE_SRC="$SRC/../core/bazzite_console_core"; fi
 bundled_app() {     # bundled_app KEY: the bundled release folder of the app, else its folder in the checkout
@@ -55,12 +55,12 @@ bundled_app() {     # bundled_app KEY: the bundled release folder of the app, el
     echo "${folder:-$SRC/../apps/$1}"
 }
 BT_SRC=$(bundled_app "$BT_KEY")
-HELPERS_SRC=$(bundled_app "$HELPERS_KEY")
+QUICKFIX_SRC=$(bundled_app "$QUICKFIX_KEY")
 release_tag() {     # release_tag FOLDER: its tag, or "local" for a folder of the checkout
     case "$1" in "$SRC/bundled/"*) basename "$1" ;; *) echo local ;; esac
 }
 BT_TAG=$(release_tag "$BT_SRC")
-HELPERS_TAG=$(release_tag "$HELPERS_SRC")
+QUICKFIX_TAG=$(release_tag "$QUICKFIX_SRC")
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
 die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
@@ -123,7 +123,7 @@ installed_apps() {
     [ -f "$PORTAL_DIR/apps.toml" ] && manifest="$PORTAL_DIR/apps.toml"
     if [ -f "$PORTAL_DIR/suite-checkout" ]; then checkout=$(cat "$PORTAL_DIR/suite-checkout")
     elif [ -f "$SRC/../tools/stage_app.py" ]; then checkout=$(cd "$SRC/.." && pwd -P); fi        # <checkout>/portal
-    python3 - "$manifest" "$STATE_DIR" "$checkout" "$1" "$DATA_DIR" "$OPT_DIR" "$APP_ID" "$BT_ID" "$HELPERS_ID" <<'PY'
+    python3 - "$manifest" "$STATE_DIR" "$checkout" "$1" "$DATA_DIR" "$OPT_DIR" "$APP_ID" "$BT_ID" "$QUICKFIX_ID" <<'PY'
 import json, os, re, subprocess, sys, tomllib
 from pathlib import Path
 manifest, state, checkout, staging = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4])
@@ -226,7 +226,7 @@ uninstall_other_apps() {
     if $ALL && [ -n "$list" ]; then
         { [ -t 0 ] || [ -n "${BAZZITE_CONSOLE_INTERACTIVE:-}" ]; } || die "--all needs a terminal to confirm; nothing was uninstalled."
         names=$(cut -f2 <<<"$list" | paste -sd, - | sed 's/,/, /g')
-        info "WARNING: --all removes the whole suite from this computer: $names, with the portal, Board Test and Helpers."
+        info "WARNING: --all removes the whole suite from this computer: $names, with the portal, Board Test and Quickfix."
         $PURGE && info "WARNING: --purge removes their settings, history and results as well."
         printf "Are you sure you want to delete everything permanently? [y/N] "
         read -r answer || answer=n
@@ -268,7 +268,7 @@ uninstall_other_apps() {
     done <<<"$list"
     [ ${#failed[@]} -eq 0 ] || info "Not uninstalled: ${failed[*]}"
     if $PURGE && [ ${#chosen[@]} -gt 0 ] && ! $ALL; then
-        info "Their own settings are kept: --purge applies to the portal, Board Test and Helpers (with --all, to every app)."
+        info "Their own settings are kept: --purge applies to the portal, Board Test and Quickfix (with --all, to every app)."
     fi
 }
 
@@ -339,10 +339,10 @@ if $UNINSTALL; then
     STAGING=$(mktemp -d)                              # where apps are staged for their uninstallers
     trap 'rm -rf "${STAGING:?}"' EXIT
     mkdir "$STAGING/check" "$STAGING/apps"
-    # Nothing of the portal, of Board Test, of Helpers or of another suite app: nothing to uninstall.
+    # Nothing of the portal, of Board Test, of Quickfix or of another suite app: nothing to uninstall.
     found=false
     installed_here "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON" "$PORTAL_DIR" "$VENV_USERS/$APP_ID" \
-        "$OPT_DIR/$BT_ID" "$DATA_DIR/$HELPERS_ID/app" && found=true
+        "$OPT_DIR/$BT_ID" "$DATA_DIR/$QUICKFIX_ID/app" && found=true
     $PURGE && installed_here "${STATE_DIR:?}" "${CONFIG_DIR:?}/$APP_ID" && found=true
     if ! $found && [ -z "$(installed_apps "$STAGING/check" 2>/dev/null)" ]; then
         info "$APP_NAME is not installed: nothing to remove."
@@ -355,11 +355,11 @@ if $UNINSTALL; then
         $PURGE && bt_args+=(--purge)
         bash "$OPT_DIR/$BT_ID/install.sh" "${bt_args[@]}"
     fi
-    if [ -f "$DATA_DIR/$HELPERS_ID/app/install.sh" ]; then
-        info "Uninstalling Console Helpers"
-        helpers_args=(--uninstall)
-        $PURGE && helpers_args+=(--purge)
-        bash "$DATA_DIR/$HELPERS_ID/app/install.sh" "${helpers_args[@]}"
+    if [ -f "$DATA_DIR/$QUICKFIX_ID/app/install.sh" ]; then
+        info "Uninstalling PS5 Quickfix"
+        quickfix_args=(--uninstall)
+        $PURGE && quickfix_args+=(--purge)
+        bash "$DATA_DIR/$QUICKFIX_ID/app/install.sh" "${quickfix_args[@]}"
     fi
     $PURGE || prune_state
     info "Removing the portal's launcher and menu entry"
@@ -387,7 +387,7 @@ done
 [ -f "$CORE_SRC/__init__.py" ] || die "bazzite_console_core is missing: run install.sh from the extracted release folder."
 CORE_SRC=$(cd "$CORE_SRC" && pwd -P)
 [ -f "$BT_SRC/install.sh" ] || die "PS5 Board Test is missing: run install.sh from the extracted release folder."
-[ -f "$HELPERS_SRC/install.sh" ] || die "Console Helpers is missing: run install.sh from the extracted release folder."
+[ -f "$QUICKFIX_SRC/install.sh" ] || die "PS5 Quickfix is missing: run install.sh from the extracted release folder."
 VERSION=$(sed -n 's/^__version__ = "\([0-9.]*\)"$/\1/p' "$SRC/bazzite_console_portal/__init__.py")
 [ -n "$VERSION" ] || die "Could not read the version from bazzite_console_portal/__init__.py."
 command -v python3 >/dev/null 2>&1 || die "python3 is not installed."
@@ -396,7 +396,7 @@ python3 -c 'import venv, ensurepip' 2>/dev/null || die "python3 has no venv/ensu
 
 info "Installing $APP_NAME $VERSION"
 
-# --- 1. PS5 Board Test and Console Helpers, always part of the suite -----------------------------------------
+# --- 1. PS5 Board Test and PS5 Quickfix, always part of the suite -----------------------------------------
 # First, while the release folder is whole: the portal's own update runs this script from a folder that the copy
 # below may replace (an earlier portal kept its downloads in what is the portal's own folder now).
 install_required() {    # install_required KEY NAME FOLDER TAG
@@ -422,7 +422,7 @@ tmp.replace(path)
 PY
 }
 install_required "$BT_KEY" "PS5 Board Test" "$BT_SRC" "$BT_TAG"
-install_required "$HELPERS_KEY" "Console Helpers" "$HELPERS_SRC" "$HELPERS_TAG"
+install_required "$QUICKFIX_KEY" "PS5 Quickfix" "$QUICKFIX_SRC" "$QUICKFIX_TAG"
 
 # --- 2. The portal's copy in the home folder -----------------------------------------------------
 info "Copying the portal to $PORTAL_DIR"

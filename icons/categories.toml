@@ -97,10 +97,10 @@ category = "utilities"
 icons = ["apps/bluetooth/images/ps5-bluetooth"]
 tile = "portal/images/apps/bluetooth.webp"
 
-[helpers]
+[quickfix]
 category = "utilities"
-icons = ["apps/helpers/images/ps5-helpers"]
-tile = "portal/images/apps/helpers.webp"
+icons = ["apps/quickfix/images/ps5-quickfix"]
+tile = "portal/images/apps/quickfix.webp"
 
 [password]
 category = "utilities"

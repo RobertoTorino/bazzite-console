@@ -54,5 +54,5 @@ Every app with its icon and its category.
 | ![](../assets/apps/sftp.webp){ .app-icon } [PS5 SFTP Tools](sftp.md) | Utilities |
 | ![](../assets/apps/ssd.webp){ .app-icon } [PS5 SSD Check](ssd.md) | Utilities |
 | ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Utilities |
-| ![](../assets/apps/helpers.webp){ .app-icon } [Console Helpers](helpers.md) | Utilities |
+| ![](../assets/apps/quickfix.webp){ .app-icon } [PS5 Quickfix](quickfix.md) | Utilities |
 | ![](../assets/apps/password.webp){ .app-icon } [PS5 Password Generator](password.md) | Utilities |

@@ -857,7 +857,7 @@ class BigPicture(Backdrop):
         return [self.tiles[key] for key, e in self.entries.items() if e.category == category]
 
     def show_app(self, key: str) -> None:
-        """Open the category of the app and put the focus on its tile (an app made of helpers: its first helper's):
+        """Open the category of the app and put the focus on its tile (an app made of quickfixes: its first quickfix's):
         a line of the notice."""
         key = next((k for k, e in self.entries.items() if k == key or e.key == key), key)
         entry = self.entries.get(key)

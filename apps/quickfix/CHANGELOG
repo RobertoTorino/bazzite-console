@@ -1,0 +1,7 @@
+Changelog: 17-11-2026 22:52:43
+
+Added. PS5 Quickfix: the first version. Small windows for one job each, which come with the suite and are each a
+tile of their own on Utilities: Quickfix (the optional tools Board Test's tests use, with their installer),
+MangoHud Config and the windows that change a setting of the system and undo it again. Every file the app writes
+carries its own name (ps5-quickfix). It takes the place of the app that held these windows before, and knows
+nothing of that app's files: what was turned on there is turned off there, or by hand.

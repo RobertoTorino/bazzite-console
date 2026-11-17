@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The helpers' windows. Each is the suite's window: the icon at 96 px, the helper's name with the version, its
+"""The quickfixes' windows. Each is the suite's window: the icon at 96 px, the quickfix's name with the version, its
 state, the info symbol with what it contains and does, and Refresh; its status boxes and controls on the second row.
-Game Memory Map and Persistent Journal are switches (SwitchWindow): Turn on when it is off, Turn off when the helper
+Game Memory Map and Persistent Journal are switches (SwitchWindow): Turn on when it is off, Turn off when the quickfix
 turned it on, one password each (pkexec, system.py); what is on already cannot be turned on again. Boot Command Line
 edits the PS5 loader's cmdline.txt one argument per row (kargs.py says what each does), and its Save changes asks
 Yes, No or Cancel first."""
@@ -28,28 +28,28 @@ from bazzite_console_core.widgets import (ActionPill, AppHeader, InfoButton, Met
                                           same_width)
 
 from . import LOGO_PATH, __version__, kargs, runner, state, system
-from .catalog import BY_KEY, Helper
+from .catalog import BY_KEY, Quickfix
 
 RootRunner = Callable[[list[str]], runner.Result]
 BOARD = ("<br><br><b>Changes the board.</b> It asks for your password once (pkexec). It never touches the console's "
          "firmware, and Turn off undoes it.")
 
 
-class HelperWindow(QMainWindow):
-    """One helper's window: the header, then the page the helper fills (self.page)."""
+class QuickfixWindow(QMainWindow):
+    """One quickfix's window: the header, then the page the quickfix fills (self.page)."""
 
-    BOARD_NOTE = BOARD                  # the info's last paragraph, for a helper that changes the board
+    BOARD_NOTE = BOARD                  # the info's last paragraph, for a quickfix that changes the board
 
-    def __init__(self, helper: Helper, info: str, run_root: RootRunner = runner.run_root,
+    def __init__(self, quickfix: Quickfix, info: str, run_root: RootRunner = runner.run_root,
                  root: Path = state.ROOT, home: Path | None = None) -> None:
         super().__init__()
-        self.helper, self.run_root, self.root, self.home = helper, run_root, root, home or Path.home()
-        self.setWindowTitle(helper.name)
+        self.quickfix, self.run_root, self.root, self.home = quickfix, run_root, root, home or Path.home()
+        self.setWindowTitle(quickfix.name)
         self.resize(820, 420)
-        self.header = AppHeader(LOGO_PATH, helper.name, __version__)
+        self.header = AppHeader(LOGO_PATH, quickfix.name, __version__)
         self.state = StatusText()
         self.header.add_state(self.state)
-        self.info = InfoButton(info + (self.BOARD_NOTE if helper.changes_board else ""))
+        self.info = InfoButton(info + (self.BOARD_NOTE if quickfix.changes_board else ""))
         self.header.add_state(self.info)
         self.refresh_button = ActionPill("Refresh", "Click to refresh")
         self.refresh_button.setToolTip("Read again")
@@ -73,8 +73,8 @@ class HelperWindow(QMainWindow):
         return not problem
 
 
-# ------------------------------------------------------------------------------------------------- Test Extras
-EXTRAS_INFO = ("<b>Test Extras</b> shows the optional tools PS5 Board Test's tests use, whether each one is "
+# ------------------------------------------------------------------------------------------------- Quickfix
+TOOLS_INFO = ("<b>Quickfix</b> shows the optional tools PS5 Board Test's tests use, whether each one is "
                "there, and which tests use it. Board Test runs without them: a test whose tool is missing says so."
                "<br><br>A group's pill (<b>Install</b>) runs Board Test's own installer, "
                "<code>install-requirements.sh</code>, for that group in a terminal: it asks for your password "
@@ -84,10 +84,10 @@ EXTRAS_INFO = ("<b>Test Extras</b> shows the optional tools PS5 Board Test's tes
                "vulkan-tools and smartmontools come with Bazzite.")
 
 
-class ExtrasWindow(HelperWindow):
+class ToolsWindow(QuickfixWindow):
     def __init__(self, launch: Callable[[str], None] = launch_in_terminal, board_test: Path = state.BOARD_TEST,
                  **kwargs) -> None:
-        super().__init__(BY_KEY["extras"], EXTRAS_INFO, **kwargs)
+        super().__init__(BY_KEY["tools"], TOOLS_INFO, **kwargs)
         self.launch, self.board_test = launch, board_test
         self.resize(900, 560)
         self.found_box = MetricBox("Tools found")
@@ -185,7 +185,7 @@ MANGOHUD_INFO = ("<b>MangoHud Config</b> opens MangoHud's own settings file, <co
 OLD_LOG_DAYS = 30
 
 
-class MangoHudWindow(HelperWindow):
+class MangoHudWindow(QuickfixWindow):
     def __init__(self, **kwargs) -> None:
         super().__init__(BY_KEY["mangohud"], MANGOHUD_INFO, **kwargs)
         self.resize(900, 640)
@@ -297,14 +297,14 @@ class MangoHudWindow(HelperWindow):
 
 
 # -------------------------------------------------------------------------------------------------- the switches
-class SwitchWindow(HelperWindow):
-    """A helper that turns one thing on or off: its status boxes, Turn on and Turn off. A subclass reads its state
+class SwitchWindow(QuickfixWindow):
+    """A quickfix that turns one thing on or off: its status boxes, Turn on and Turn off. A subclass reads its state
     in read() and returns what the window shows."""
 
     CHANGE = ""                         # system.py's change: mapcount, journal
 
-    def __init__(self, helper: Helper, info: str, boxes: tuple[str, ...], **kwargs) -> None:
-        super().__init__(helper, info, **kwargs)
+    def __init__(self, quickfix: Quickfix, info: str, boxes: tuple[str, ...], **kwargs) -> None:
+        super().__init__(quickfix, info, **kwargs)
         self.boxes = {caption: MetricBox(caption) for caption in boxes}
         for box in self.boxes.values():
             self.header.add_second(box)
@@ -353,7 +353,7 @@ class MapCountWindow(SwitchWindow):
         high = m.value >= system.MAPCOUNT
         self.show_box("vm.max_map_count", f"{m.value:,}" if m.value else "—",
                       f"{system.MAPCOUNT:,} or more is what games need", high if m.value else None)
-        self.show_box("Set by", "This helper" if m.ours else "The system" if high else "—",
+        self.show_box("Set by", "This quickfix" if m.ours else "The system" if high else "—",
                       f"/etc/{system.MAPCOUNT_CONF}" if m.ours else "Another sysctl.d file, or the image's own"
                       if high else "The kernel's default", True if high else None)
         self.on_button.setEnabled(not high)
@@ -365,7 +365,7 @@ JOURNAL_INFO = ("<b>Persistent Journal</b> keeps the system journal on the disk,
                 "Without that folder journald keeps it in memory only, and the logs of a boot that crashed or froze "
                 "are gone after it: PS5 Board Test's test 34 cannot read the previous boot's.<br><br>Turn on makes "
                 "the folder (<code>systemd-tmpfiles --create</code>) and moves the journal there "
-                "(<code>journalctl --flush</code>). Turn off works only on a folder this helper made: it moves the "
+                "(<code>journalctl --flush</code>). Turn off works only on a folder this quickfix made: it moves the "
                 "journal back to memory and removes the folder, with the logs in it. journald keeps the folder's size "
                 "within its own limits.")
 
@@ -380,7 +380,7 @@ class JournalWindow(SwitchWindow):
     def refresh(self) -> None:
         j = state.journal(self.root)
         self.show_box("Journal", "On disk" if j.persistent else "In memory", "/var/log/journal", j.persistent)
-        self.show_box("Made by", "This helper" if j.ours else "The system" if j.persistent else "—",
+        self.show_box("Made by", "This quickfix" if j.ours else "The system" if j.persistent else "—",
                       "The folder was there already" if j.persistent and not j.ours else "", True if j.persistent
                       else None)
         self.on_button.setEnabled(not j.persistent)
@@ -421,7 +421,7 @@ BOOT_PARTITION_INFO = ("The loader's partition, <code>/boot/efi</code>, holds wh
 ARGUMENT, MEANING = range(2)
 
 
-class CmdlineWindow(HelperWindow):
+class CmdlineWindow(QuickfixWindow):
     BOARD_NOTE = CMDLINE_BOARD
 
     def __init__(self, **kwargs) -> None:
@@ -666,7 +666,7 @@ class CmdlineWindow(HelperWindow):
                           f"<code>{system.CMDLINES[0]}</code>.")
 
 
-WINDOWS: dict[str, Callable[..., HelperWindow]] = {
-    "extras": ExtrasWindow, "mangohud": MangoHudWindow, "mapcount": MapCountWindow, "journal": JournalWindow,
+WINDOWS: dict[str, Callable[..., QuickfixWindow]] = {
+    "tools": ToolsWindow, "mangohud": MangoHudWindow, "mapcount": MapCountWindow, "journal": JournalWindow,
     "cmdline": CmdlineWindow,
 }

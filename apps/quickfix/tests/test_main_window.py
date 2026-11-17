@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window opens offscreen with the suite's header and every helper; the version and the icons are where the
+"""The window opens offscreen with the suite's header and every quickfix; the version and the icons are where the
 checks expect them."""
 
 from __future__ import annotations
 
-from helpers import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__
-from helpers.catalog import HELPERS
-from helpers.main_window import MainWindow
+from quickfix import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__
+from quickfix.catalog import QUICKFIXES
+from quickfix.main_window import MainWindow
 
 
 def test_version_is_the_single_source():
@@ -18,13 +18,13 @@ def test_icons_are_beside_the_package():
     assert (ROOT / "images" / f"{APP_ID}-128.png").is_file()
 
 
-def test_window_lists_every_helper_and_opens_one(qapp):
+def test_window_lists_every_quickfix_and_opens_one(qapp):
     window = MainWindow()
     window.show()
     assert window.windowTitle() == APP_NAME
-    assert list(window.buttons) == [h.key for h in HELPERS]
-    opened = window.open_helper("mangohud")
+    assert list(window.buttons) == [h.key for h in QUICKFIXES]
+    opened = window.open_quickfix("mangohud")
     assert opened.isVisible() and opened.windowTitle() == "MangoHud Config"
-    assert window.open_helper("mangohud") is opened                    # one window per helper
+    assert window.open_quickfix("mangohud") is opened                    # one window per quickfix
     opened.close()
     window.close()

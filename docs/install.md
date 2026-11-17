@@ -59,8 +59,8 @@ Remove the portal in Konsole:
 ~/.local/share/bazzite-console-suite/portal/install.sh --uninstall
 ```
 
-It removes the portal, Board Test and Helpers, and first asks about each other app that is installed: `y` uninstalls it,
-`s` keeps it, `c` cancels. Add `--purge` to remove the portal's, Board Test's and Helpers' settings too, or `--all` to remove
+It removes the portal, Board Test and Quickfix, and first asks about each other app that is installed: `y` uninstalls it,
+`s` keeps it, `c` cancels. Add `--purge` to remove the portal's, Board Test's and Quickfix' settings too, or `--all` to remove
 every app after one question. More in [Portal](portal.md).
 
 ## After a Bazzite update to a new Python

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from helpers import kargs
+from quickfix import kargs
 
 PS5 = ("root=LABEL=bazzite rw rootwait console=ttyTitania0 console=tty0 video=DP-1:1920x1080@60 mitigations=off "
        "idle=halt preempt=full hdmi.frl_4k120=0 nvme.max_host_mem_size_mb=0 nvme_core.default_ps_max_latency_us=0 "

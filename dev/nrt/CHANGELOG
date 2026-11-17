@@ -1,3 +1,8 @@
+Changelog: 17-11-2026 23:32:30
+
+Fixed. Remove suite's text says that a test over an installed suite puts that install back when the portal
+closes (check-release.sh restore by hand), as tools/check-release.sh does now.
+
 Changelog: 17-11-2026 21:31:02
 
 Fixed. The window's header reads Nexus Release Tool for PS5 (owner, 17-11-2026), so the release tools of

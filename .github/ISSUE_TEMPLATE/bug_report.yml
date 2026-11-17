@@ -28,7 +28,7 @@ body:
         - fan
         - cec
         - bluetooth
-        - helpers
+        - quickfix
         - password
     validations:
       required: true

@@ -373,7 +373,7 @@ def tiles() -> list:
         return []
     shown = ("name", "short", "category", "required", "changes_board", "withdrawn")
     return [[key, {field: app.get(field) for field in shown},
-             [[h.get("key"), h.get("name"), h.get("changes_board", False)] for h in app.get("helpers", [])]]
+             [[h.get("key"), h.get("name"), h.get("changes_board", False)] for h in app.get("quickfixes", [])]]
             for key, app in apps.items() if isinstance(app, dict)]
 
 

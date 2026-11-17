@@ -533,7 +533,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(INFO.display_name)
         self.resize(1600, 900)                          # the portal runs fullscreen; this when it is not
 
-        # A tile each: an app's, or one per helper of an app made of helpers (AppEntry.tiles); its state by its key.
+        # A tile each: an app's, or one per quickfix of an app made of quickfixes (AppEntry.tiles); its state by its key.
         self.tile_entries = [tile for entry in entries for tile in entry.tiles()]
         self.by_key = {entry.key: entry for entry in entries}
         self.states: dict[str, AppState] = {tile.tile: AppState(tile) for tile in self.tile_entries}
@@ -775,11 +775,11 @@ class MainWindow(QMainWindow):
         self.show_update_banner()
 
     def tile_states(self, entry: AppEntry) -> list[AppState]:
-        """The states of an app's tiles: its own, or one per helper."""
+        """The states of an app's tiles: its own, or one per quickfix."""
         return [self.states[tile.tile] for tile in entry.tiles() if tile.tile in self.states]
 
     def state_of(self, entry: AppEntry) -> AppState:
-        """The state of the tile *entry* is (an app's, or one helper's); for an app made of helpers, its first."""
+        """The state of the tile *entry* is (an app's, or one quickfix's); for an app made of quickfixes, its first."""
         return self.states.get(entry.tile) or self.tile_states(entry)[0]
 
     def app_of(self, entry: AppEntry) -> AppEntry:
@@ -1708,7 +1708,7 @@ class MainWindow(QMainWindow):
         install.setData(("install", entry.tile, ""))
         install.setToolTip(state.action_tip)
         install.setEnabled(not self.busy() and not entry.withdrawn)
-        if not entry.required:                          # Board Test and the helpers go with the portal (install.sh)
+        if not entry.required:                          # Board Test and the quickfixes go with the portal (install.sh)
             uninstall = menu.addAction(glyphs.uninstall(ink), "Uninstall")
             uninstall.setData(("uninstall", entry.tile, ""))
             uninstall.setEnabled(state.installed and not self.busy())
@@ -1841,7 +1841,7 @@ class MainWindow(QMainWindow):
                 return
 
     def install(self, entry: AppEntry) -> None:
-        entry = self.app_of(entry)                      # a helper's tile installs its app
+        entry = self.app_of(entry)                      # a quickfix's tile installs its app
         if self.busy() or not self._confirm_board_change(entry, f"Install {entry.name}"):
             return
         self._start(entry, "install")

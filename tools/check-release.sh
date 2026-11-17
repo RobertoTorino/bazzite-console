@@ -12,6 +12,7 @@
 #                                      # release workflow made, downloaded with gh (a draft needs the sign-in)
 #   ... --no-start                     # install only, do not start the portal
 #   ... --keep                         # keep what the test installed: it is the machine's own install from then on
+#   check-release.sh restore           # put the machine's own install back, after a test that did not get to it
 #   check-release.sh status            # what of the suite is installed here, and whether a test put it there
 #   check-release.sh remove [--purge]  # remove the suite: every app, the portal and Board Test, each with its own
 #                                      # uninstaller; --purge also removes their settings, history and results
@@ -19,8 +20,12 @@
 # A test on a machine without the suite removes everything again when the portal closes: the portal, Board Test
 # and the apps installed during the test. It marks its install (TEST-INSTALL in the suite's folder, with the time
 # of the portal's launcher, which every install writes anew: an install by hand ends the mark), which status
-# shows. A machine that had the suite installed already keeps it: the test replaces the portal there and removes
-# nothing. The release is downloaded into ~/.cache/bazzite-console-release-check/, emptied first; run ./install.sh in the
+# shows. A machine that had the suite installed already gets it back: the test saves the portal, Board Test and
+# Quickfix as they are installed (before-test in the suite's folder), installs the tested portal over them, and
+# when that portal closes puts the saved ones back with the saved portal's own installer and removes the apps
+# installed during the test. An app updated during the test stays updated. --keep makes the tested portal the
+# machine's own; restore does the putting back by hand, after --no-start or a test that was cut short.
+# The release is downloaded into ~/.cache/bazzite-console-release-check/, emptied first; run ./install.sh in the
 # checkout to go back to the portal from the checkout. PS5_RELEASE_URL overrides the download address (tests).
 set -euo pipefail
 # Homebrew's own folder (gh), which the terminal NRT opens lacks: a login shell does not read .bashrc, where brew
@@ -35,6 +40,10 @@ PORTAL="$HOME/.local/bin/bazzite-console-suite"
 SUITE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite"
 PORTAL_DIR="$SUITE_DIR/portal"          # the installed portal (portal/install.sh)
 STATE_DIR="$SUITE_DIR/state"            # what the portal remembers
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
+OPT_DIR="${PS5_BOARD_TEST_OPT_DIR:-/opt}"            # where Board Test is installed (portal/install.sh)
+SAVED="$SUITE_DIR/before-test"          # the machine's own install, while a test's portal stands in its place
+DESKTOP_ICON="$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")/bazzite-console-suite.desktop"
 MARK="$SUITE_DIR/TEST-INSTALL"          # where the test came from, and the time of the launcher it installed
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
@@ -53,11 +62,117 @@ with open(sys.argv[1], "rb") as handle:
 EOF
 }
 
+# The apps a portal always installs with itself, as its apps.toml ($1) marks them (required), one per line: key
+# and launcher, with a tab between.
+required() {
+    python3 - "$1" <<'EOF'
+import os
+import sys
+import tomllib
+
+with open(sys.argv[1], "rb") as handle:
+    for key, app in tomllib.load(handle).get("apps", {}).items():
+        if app.get("required"):
+            print(key, os.path.expanduser((app.get("detect") or [""])[0]), sep="\t")
+EOF
+}
+
 launcher_time() { stat -c %.9Y "$PORTAL" 2>/dev/null || echo none; }
 
 # Whether the portal installed is a test's: the mark is there and names the launcher as it is (an install by hand
 # writes the launcher anew, which ends the mark).
 test_install() { [ -f "$MARK" ] && [ -e "$PORTAL" ] && [ "$(sed -n 2p "$MARK")" = "$(launcher_time)" ]; }
+
+# Whether the machine's own install is saved and a test's portal stands in its place: the save is there and names the
+# launcher as it is (an install by hand since ends it), or the test's install did not get as far as naming it.
+saved_own() {
+    [ -f "$SAVED/portal/install.sh" ] || return 1
+    [ ! -f "$SAVED/launcher-time" ] || [ "$(cat "$SAVED/launcher-time")" = "$(launcher_time)" ]
+}
+
+# Saves the machine's own install before a test goes over it: the portal's folder, and the apps that portal always
+# installs with itself (Board Test, Quickfix) as its bundled releases, so the saved portal's own installer puts
+# them all back; what the portal remembers, which apps are installed and whether the Desktop icon is there.
+save_own() {
+    local key name launcher id src bundle
+    rm -rf "${SAVED:?}"
+    mkdir -p "$SAVED"
+    cp -a "$PORTAL_DIR" "$SAVED/portal"
+    rm -rf "$SAVED/portal/bundled"
+    mkdir "$SAVED/portal/bundled"
+    [ ! -f "$STATE_DIR/installed.json" ] || cp -p "$STATE_DIR/installed.json" "$SAVED/installed.json"
+    [ ! -e "$DESKTOP_ICON" ] || : > "$SAVED/desktop-icon"
+    while IFS=$'\t' read -r key name launcher; do
+        [ -z "$launcher" ] || [ ! -e "$launcher" ] || echo "$key"
+    done < <(apps) > "$SAVED/apps"
+    while IFS=$'\t' read -r key launcher; do
+        id=$(basename "$launcher")
+        src="$OPT_DIR/$id"
+        [ -d "$src" ] || src="$DATA_DIR/$id/app"
+        if [ ! -f "$src/install.sh" ] || [ ! -f "$src/VERSION" ]; then
+            rm -rf "${SAVED:?}"
+            return 1
+        fi
+        bundle="$SAVED/portal/bundled/ps5-$key-v$(tr -d '[:space:]' < "$src/VERSION")"
+        mkdir "$bundle"
+        cp -a "$src/." "$bundle"
+        echo "$key" >> "$SAVED/required"
+    done < <(required "$PORTAL_DIR/apps.toml")
+}
+
+# Puts the machine's own install back: removes the apps installed during the test, installs the saved portal with
+# its own installer (which installs the saved Board Test and Quickfix; Board Test asks for the sudo password) and
+# gives the portal back what it remembered of those. An app that was there before and was updated during the test
+# stays as it is, with its record.
+restore_own() {
+    local key name launcher failed=0 args=()
+    while IFS=$'\t' read -r key name launcher <&3; do
+        [ -n "$launcher" ] && [ -e "$launcher" ] || continue
+        ! grep -qxF "$key" "$SAVED/apps" || continue
+        info "Removing $name, installed during the test"
+        bash "$REPO/apps/$key/install.sh" --uninstall < /dev/null ||
+            { failed=1; echo "$name could not be removed." >&2; }
+    done 3< <(apps)
+    [ -f "$SAVED/desktop-icon" ] || args+=(--no-desktop-shortcut)
+    info "Putting back the portal that was installed before the test ($(tr -d '[:space:]' < "$SAVED/portal/VERSION"))"
+    bash "$SAVED/portal/install.sh" ${args[@]+"${args[@]}"} < /dev/null ||
+        die "The portal from before the test could not be installed again: it is still in $SAVED."
+    python3 - "$STATE_DIR/installed.json" "$SAVED" <<'EOF'
+import json
+import sys
+from pathlib import Path
+
+path, saved = Path(sys.argv[1]), Path(sys.argv[2])
+
+
+def read(file):
+    try:
+        data = json.loads(file.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def lines(file):
+    return file.read_text(encoding="utf-8").split() if file.is_file() else []
+
+
+now, before, there = read(path), read(saved / "installed.json"), set(lines(saved / "apps"))
+now = {key: tag for key, tag in now.items() if key in there or key in before}
+for key in lines(saved / "required"):
+    if key in before:
+        now[key] = before[key]
+    else:
+        now.pop(key, None)
+path.parent.mkdir(parents=True, exist_ok=True)
+tmp = path.with_suffix(".tmp")
+tmp.write_text(json.dumps(now, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+tmp.replace(path)
+EOF
+    rm -rf "${SAVED:?}"
+    [ "$failed" -eq 0 ] || die "Not everything the test installed could be removed: see above."
+    info "The machine's own install is back."
+}
 
 status() {
     local key name launcher version="" found=0
@@ -66,6 +181,9 @@ status() {
         [ ! -f "$PORTAL_DIR/VERSION" ] || version=$(tr -d '[:space:]' < "$PORTAL_DIR/VERSION")
         if test_install; then
             echo "Portal ${version:-?}: a test install ($(head -n 1 "$MARK"))"
+        elif saved_own; then
+            echo "Portal ${version:-?}: a test's portal, over the machine's own install" \
+                 "($(tr -d '[:space:]' < "$SAVED/portal/VERSION")): check-release.sh restore puts that back"
         else
             echo "Portal ${version:-?}: the machine's own install (by hand, or kept from a test)"
         fi
@@ -104,6 +222,7 @@ remove_suite() {
             { failed=1; echo "Board Test could not be removed." >&2; }
     fi
     rm -f "$MARK"
+    rm -rf "${SAVED:?}"
     [ "$was_test" -eq 0 ] || rm -rf "${STATE_DIR:?}"
     rmdir "$SUITE_DIR" 2>/dev/null || true
     [ "$failed" -eq 0 ] || die "Not everything could be removed: see above, and check-release.sh status."
@@ -116,8 +235,10 @@ portal_runs() { pgrep -u "$(id -u)" -f 'python.* -m bazzite_console_portal' >/de
 # portal and remove the test's install again when the portal is closed.
 finish() {
     local where=$1; shift
-    if [ "$own" -eq 1 ]; then
-        info "The suite was installed here already: this test replaced its portal, and everything stays installed."
+    if [ "$saved" -eq 1 ]; then
+        launcher_time > "$SAVED/launcher-time"
+    elif [ "$own" -eq 1 ]; then
+        info "The suite was installed here already: what this test installed stays, as the machine's own install."
     elif [ "$keep" -eq 1 ]; then
         info "Kept (--keep): what this test installed stays, as the machine's own install."
     else
@@ -126,18 +247,28 @@ finish() {
     fi
     if [ "$start" -eq 0 ]; then
         ! test_install || info "A test install: check-release.sh remove takes it away again."
+        [ "$saved" -eq 0 ] || info "The machine's own install is saved: check-release.sh restore puts it back."
         exit 0
     fi
-    if ! test_install; then
+    if [ "$saved" -eq 0 ] && ! test_install; then
         info "Starting the portal. Close it to finish."
         exec "$PORTAL" "$@"
     fi
-    info "Starting the portal. Close it to finish: the test then removes what it installed."
+    if [ "$saved" -eq 1 ]; then
+        info "Starting the portal. Close it to finish: the test then puts the machine's own install back."
+    else
+        info "Starting the portal. Close it to finish: the test then removes what it installed."
+    fi
     "$PORTAL" "$@" || true
     sleep 3                             # a portal that starts itself again (its Restart) is back within this
     while portal_runs; do sleep 2; done
-    info "The portal is closed: removing the test install"
-    remove_suite
+    if [ "$saved" -eq 1 ]; then
+        info "The portal is closed: putting the machine's own install back"
+        restore_own
+    else
+        info "The portal is closed: removing the test install"
+        remove_suite
+    fi
 }
 
 mode=${1:-}; [ $# -gt 0 ] && shift
@@ -157,10 +288,35 @@ done
 # The suite is the machine's own when a portal is installed that no test marked.
 own=0
 [ ! -e "$PORTAL" ] || test_install || own=1
+# A test over it saves it first, to put it back when the tested portal closes: not with --keep, and not again when
+# an earlier test's save still waits (that one is the machine's own).
+saved=0
+case "$mode" in
+    local|release|draft)
+        if [ "$own" -eq 1 ] && [ "$keep" -eq 1 ]; then
+            rm -rf "${SAVED:?}"
+        elif [ "$own" -eq 1 ] && saved_own; then
+            saved=1
+            info "An earlier test's portal is installed: the machine's own install is still saved, and comes back after this test."
+        elif [ "$own" -eq 1 ]; then
+            if [ -f "$PORTAL_DIR/install.sh" ] && [ -f "$PORTAL_DIR/apps.toml" ] && save_own; then
+                saved=1
+                info "The suite is installed here: saved the machine's own install, to put it back after the test."
+            else
+                info "The installed portal cannot be saved (it is not in $PORTAL_DIR, or one of its apps is missing): the tested one stays."
+            fi
+        fi
+        ;;
+esac
 
 case "$mode" in
     status)
         status
+        ;;
+    restore)
+        saved_own || die "Nothing to put back: no test's portal stands over an install of your own here."
+        ! portal_runs || die "The portal is open: close it first."
+        restore_own
         ;;
     remove)
         status
@@ -202,5 +358,5 @@ case "$mode" in
         cd "$REPO"
         finish "$mode $tag"
         ;;
-    *) die "Usage: check-release.sh local|release|draft [ps5-portal-vX.Y.Z] [--no-start] [--keep] | status | remove [--purge]" ;;
+    *) die "Usage: check-release.sh local|release|draft [ps5-portal-vX.Y.Z] [--no-start] [--keep] | status | restore | remove [--purge]" ;;
 esac

@@ -42,7 +42,7 @@ Nothing is layered with `rpm-ostree` for the app itself.
 
 **Optional tools** some tests use (stress-ng, vkpeak, memtest_vulkan, fio, speedtest and others) can be installed
 with `/opt/ps5-board-test/development/tools/install-requirements.sh`: it says what each group is for and asks per
-group. See [Requirements](#requirements). The suite's [Test Extras](helpers.md#test-extras) helper shows which ones
+group. See [Requirements](#requirements). The suite's [Quickfix](quickfix.md#quickfix) quickfix shows which ones
 are there and runs that installer for a group.
 
 > **Why `/opt`?** The test engine runs as root through sudo. A release build therefore refuses to run
@@ -262,7 +262,7 @@ No root is needed.
   `autostart_log=1` to `~/.config/MangoHud/MangoHud.conf` (and to the copy of Steam's Flatpak when there is
   one); nothing else in the file changes. The game must still run with MangoHud: use the second launch line.
   Without logging, the game's name and its CPU and GPU share are still recorded. The suite's
-  [MangoHud Config](helpers.md#mangohud-config) helper edits the same file and sets the log too.
+  [MangoHud Config](quickfix.md#mangohud-config) quickfix edits the same file and sets the log too.
 * **In-game overlay:** *Show overlay* puts a small translucent box on the screen with the live values. It never
   takes focus and lets all mouse input through. *Test overlay* shows it with sample numbers for about 45 s; drag
   it where it should sit, and the position is saved for the games. It is a normal window: it shows over windowed
@@ -375,7 +375,7 @@ end reports the overall verdict. In the app these become the button colors, the 
 | 09 | Disk Configuration               | Filesystem usage and mount points.                                                     |
 | 10 | NVMe Devices                     | Detection; PCIe link speed and width against what the drive and the slot support; DRAM cache or host memory buffer (DRAM-less); SMART health: wear, media errors, spare, temperature and time spent throttling, unsafe shutdowns. No NVMe drive is only reported: the PS5 may run from a USB drive. |
 | 14 | Memory and Swap                  | RAM usage and the full swap topology: zram, zswap, disk swap, overlaps and swappiness. |
-| 37 | Unified Memory and VRAM Pressure | VRAM and GTT usage, OOM-kill history, framebuffer pin failures, the VRAM split in `/boot/efi/vram.txt`, `vm.max_map_count` ([Game Memory Map](helpers.md#game-memory-map) helper). |
+| 37 | Unified Memory and VRAM Pressure | VRAM and GTT usage, OOM-kill history, framebuffer pin failures, the VRAM split in `/boot/efi/vram.txt`, `vm.max_map_count` ([Game Memory Map](quickfix.md#game-memory-map) quickfix). |
 | 49 | CPU Memory Bandwidth             | `stress-ng` STREAM-like bandwidth on 1 thread and all threads; shows the GDDR6 latency cost the CPU pays for the GPU's console-class bandwidth. |
 | 43 | Disk Speed (read, write, SLC cache) | **Opt-in**: run it from its button on the Storage and memory page. See below.       |
 
@@ -433,8 +433,8 @@ number of lines it covers.
 
 | #  | Test                      | Checks                                                                          |
 |----|---------------------------|---------------------------------------------------------------------------------|
-| 23 | IOMMU                     | Counts IOMMU groups. By default leave the IOMMU off. If it is on and you experience an unstable system, turn it off again with `amd_iommu=off` in `cmdline.txt` ([Boot Command Line](helpers.md#boot-command-line) helper). |
-| 24 | CPU Mitigations           | Whether `mitigations=off` is on the kernel command line (the ps5-linux default, for speed; a choice, not a fault) and what the CPU reports per vulnerability; the [Boot Command Line](helpers.md#boot-command-line) helper edits `cmdline.txt`. |
+| 23 | IOMMU                     | Counts IOMMU groups. By default leave the IOMMU off. If it is on and you experience an unstable system, turn it off again with `amd_iommu=off` in `cmdline.txt` ([Boot Command Line](quickfix.md#boot-command-line) quickfix). |
+| 24 | CPU Mitigations           | Whether `mitigations=off` is on the kernel command line (the ps5-linux default, for speed; a choice, not a fault) and what the CPU reports per vulnerability; the [Boot Command Line](quickfix.md#boot-command-line) quickfix edits `cmdline.txt`. |
 | 25 | CPU Core and Thread Count | Reports cores and threads: the PS5's CPU has 8 cores and 16 threads.            |
 | 26 | CPU Power Management      | The PS5 has no cpufreq: the CPU clock now, and the boost of ps5-linux-tools (`ps5boost.service`, 3.5 GHz) when installed. |
 
@@ -453,7 +453,7 @@ The fan's control, with a thermal guard, is [PS5 Fan Controller](fan.md).
 
 | #  | Test                                | Checks                                                                                      |
 |----|-------------------------------------|---------------------------------------------------------------------------------------------|
-| 34 | Previous Boot Shutdown Integrity    | Flags previous boots that ended with no shutdown sequence: the signature of a hard lockup; it needs the journal kept on the disk ([Persistent Journal](helpers.md#persistent-journal) helper). |
+| 34 | Previous Boot Shutdown Integrity    | Flags previous boots that ended with no shutdown sequence: the signature of a hard lockup; it needs the journal kept on the disk ([Persistent Journal](quickfix.md#persistent-journal) quickfix). |
 | 35 | GPU Hang and Reset History          | Ring timeouts, GPU resets, VM faults and soft recoveries across retained boots.             |
 | 36 | Kernel Panic, Lockup and Crash Dump | Oopses, soft/hard lockups, call traces, `coredumpctl` records and NMI watchdog state.       |
 
@@ -577,7 +577,7 @@ Both files are on the loader's partition. The app only reads them.
 
 ## Requirements
 
-The app never installs anything: it only detects what is already there. The optional helper shipped with the
+The app never installs anything: it only detects what is already there. The optional script shipped with the
 app installs the tools below. It asks per group:
 
 ```bash

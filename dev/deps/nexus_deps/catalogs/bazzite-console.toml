@@ -174,7 +174,7 @@ owner = "bluetooth"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
-owner = "helpers"
+owner = "quickfix"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
@@ -257,9 +257,9 @@ description = "SSH and SFTP support used by SFTP Tools."
 owner = "sftp"
 specifier = ">=3.4,<5"
 
-[app.helpers]
-name = "Console Helpers"
-launchers = ["~/.local/bin/ps5-helpers"]
+[app.quickfix]
+name = "PS5 Quickfix"
+launchers = ["~/.local/bin/ps5-quickfix"]
 
 [app.password]
 name = "PS5 Password Generator"
@@ -291,9 +291,9 @@ usage = "Password prompt for installing, changing and removing the search after 
 need = "required"
 
 [[tool.source]]
-owner = "helpers"
+owner = "quickfix"
 need = "required"
-usage = "Password prompt for every change of the helpers that change the board: the memory map, the journal and the boot command line (reading and saving cmdline.txt)."
+usage = "Password prompt for every change of the quickfixes that change the board: the memory map, the journal and the boot command line (reading and saving cmdline.txt)."
 
 [[tool]]
 name = "udevadm"

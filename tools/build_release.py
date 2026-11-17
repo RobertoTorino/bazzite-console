@@ -12,7 +12,7 @@ release.yml: in the folder PS5_NATIVE_WHEEL_DIR names (release.yml's, outside th
 folder NATIVE_WHEELS gives; it goes into the tarball, so the portal's checksum covers it. An app with
 development/tools/build_info.py (Board Test) gets its engine checksum recorded, which makes it a release build that
 refuses a changed engine. A portal tag needs --bundle: the folders with the pinned releases of the required apps
-(Board Test and Console Helpers; each <tag>.tar.gz with its SHA256SUMS, as published, in the folder or in a <tag>/
+(Board Test and PS5 Quickfix; each <tag>.tar.gz with its SHA256SUMS, as published, in the folder or in a <tag>/
 folder in it; --bundle again for each folder); each is verified against apps.toml and unpacked into bundled/.
 
 The tar inside is reproducible and the same on Linux and Windows: sorted entries, root:root, the commit time (or

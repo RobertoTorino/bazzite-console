@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2609 test functions (3004 cases counting the parametrized ones) in 30 test folders, and 31 installer tests.
+2609 test functions (2997 cases counting the parametrized ones) in 30 test folders, and 31 installer tests.
 
 ## Summary
 
@@ -15,11 +15,11 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/controller](#appscontroller) | 13 | 164 | 5.8 s |
 | [apps/datstation](#appsdatstation) | 7 | 39 | 2.1 s |
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
-| [apps/helpers](#appshelpers) | 6 | 37 | 0.4 s |
 | [apps/overlay](#appsoverlay) | 2 | 18 | 0.2 s |
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
 | [apps/pcsx2](#appspcsx2) | 14 | 137 | 19.0 s |
 | [apps/ppsspp](#appsppsspp) | 10 | 79 | 4.5 s |
+| [apps/quickfix](#appsquickfix) | 6 | 37 |  |
 | [apps/remoteplay](#appsremoteplay) | 25 | 240 | 9.6 s |
 | [apps/rpcs3](#appsrpcs3) | 10 | 90 | 5.6 s |
 | [apps/sftp](#appssftp) | 11 | 85 | 5.6 s |
@@ -38,7 +38,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [portal](#portal) | 17 | 216 | 30.2 s |
 | [tools](#tools) | 36 | 214 | 10.2 s |
-| **All** | | **2609** | **154 s** |
+| **All** | | **2609** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -58,7 +58,6 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `demo.sh` | Exercise dev/demo/install.sh, Nexus Demo Recorder's installer. |
 | `deps.sh` | Exercise dev/deps/install.sh, Nexus Deps' installer. |
 | `fan.sh` | Exercise apps/fan/install.sh. |
-| `helpers.sh` | Exercise apps/helpers/install.sh. |
 | `itests.sh` | Exercise dev/itests/install.sh, Nexus Installer Tests's installer. |
 | `not-installed.sh` | Every app's installer and the portal's, with --uninstall and with --uninstall --purge, on a computer where nothing of them is installed. |
 | `nrt.sh` | Exercise dev/nrt/install.sh (and tools/nrt.sh, which forwards to it). |
@@ -67,6 +66,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `pcsx2.sh` | Exercise apps/pcsx2/install.sh. |
 | `portal.sh` | Exercise portal/install.sh. |
 | `ppsspp.sh` | Exercise apps/ppsspp/install.sh. |
+| `quickfix.sh` | Exercise apps/quickfix/install.sh. |
 | `release-check.sh` | tools/check-release.sh. |
 | `release.sh` | End to end from release tarballs. |
 | `remoteplay.sh` | Exercise apps/remoteplay/install.sh. |
@@ -575,50 +575,6 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_helper_error_is_shown` |  |  | Helper error is shown. |
 | `test_main_window.py` | `test_no_question_no_change` |  |  | No question no change. |
 
-## apps/helpers
-
-37 tests in 6 files, 0.4 s in a local run.
-
-| File | Test | Cases | Time | What it checks |
-|---|---|---|---|---|
-| `test_catalog.py` | `test_the_portal_lists_every_helper` |  |  | The portal lists every helper. |
-| `test_catalog.py` | `test_the_groups_are_board_tests_installers` |  |  | The groups are board tests installers. |
-| `test_kargs.py` | `test_split_and_join_keep_the_line` |  |  | Split and join keep the line. |
-| `test_kargs.py` | `test_every_argument_of_the_ps5_lines_is_described` |  |  | Every argument of the ps5 lines is described. |
-| `test_kargs.py` | `test_the_add_menu_and_the_list` |  |  | The add menu and the list. |
-| `test_main_window.py` | `test_version_is_the_single_source` |  |  | Version is the single source. |
-| `test_main_window.py` | `test_icons_are_beside_the_package` |  |  | Icons are beside the package. |
-| `test_main_window.py` | `test_window_lists_every_helper_and_opens_one` |  | 0.1 s | Window lists every helper and opens one. |
-| `test_state.py` | `test_mangohud_logging_lines` |  |  | Mangohud logging lines. |
-| `test_state.py` | `test_log_files` |  |  | Log files. |
-| `test_state.py` | `test_mapcount_and_journal` |  |  | Mapcount and journal. |
-| `test_state.py` | `test_cmdline` |  |  | Cmdline. |
-| `test_state.py` | `test_find_tool_where_the_tests_look` |  |  | Find tool where the tests look. |
-| `test_state.py` | `test_board_tests_installer` |  |  | Board tests installer. |
-| `test_system.py` | `test_mapcount_on_and_off` |  |  | Mapcount on and off. |
-| `test_system.py` | `test_journal_on_and_off_only_its_own` |  |  | Journal on and off only its own. |
-| `test_system.py` | `test_the_command_and_its_answer` |  |  | The command and its answer. |
-| `test_system.py` | `test_cmdline_save_keeps_a_backup` |  |  | Cmdline save keeps a backup. |
-| `test_system.py` | `test_cmdline_refuses_a_line_that_would_not_boot` | 3 |  | Cmdline refuses a line that would not boot. |
-| `test_system.py` | `test_cmdline_saves_a_fallback_line` |  |  | Cmdline saves a fallback line. |
-| `test_system.py` | `test_cmdline_without_the_loaders_partition` |  |  | Cmdline without the loaders partition. |
-| `test_system.py` | `test_the_changes_take_only_their_own_states` | 3 |  | The changes take only their own states. |
-| `test_windows.py` | `test_test_extras_lists_and_installs` |  |  | Test extras lists and installs. |
-| `test_windows.py` | `test_mangohud_config_made_and_logging_set` |  |  | Mangohud config made and logging set. |
-| `test_windows.py` | `test_mangohud_deletes_only_old_logs` |  |  | Mangohud deletes only old logs. |
-| `test_windows.py` | `test_game_memory_map` |  |  | Game memory map. |
-| `test_windows.py` | `test_persistent_journal_asks_before_it_removes` |  |  | Persistent journal asks before it removes. |
-| `test_windows.py` | `test_boot_command_line_shows_every_argument_with_what_it_does` |  |  | Boot command line shows every argument with what it does. |
-| `test_windows.py` | `test_boot_command_line_edits_adds_moves_and_removes_rows` |  |  | Boot command line edits adds moves and removes rows. |
-| `test_windows.py` | `test_boot_command_line_opens_the_fallback_lines` |  |  | Boot command line opens the fallback lines. |
-| `test_windows.py` | `test_boot_command_line_no_drops_the_edits_cancel_keeps_them` |  |  | Boot command line no drops the edits cancel keeps them. |
-| `test_windows.py` | `test_boot_command_line_will_not_save_a_line_that_would_not_boot` |  |  | Boot command line will not save a line that would not boot. |
-| `test_windows.py` | `test_boot_command_line_a_failed_save_keeps_the_edits` |  |  | Boot command line a failed save keeps the edits. |
-| `test_windows.py` | `test_boot_command_line_reads_a_locked_file_with_the_password` |  |  | Boot command line reads a locked file with the password. |
-| `test_windows.py` | `test_a_canceled_password_says_so` |  |  | A canceled password says so. |
-| `test_windows.py` | `test_every_window_says_what_it_does` |  |  | Every window says what it does. |
-| `test_windows.py` | `test_the_system_part_runs_from_the_app` |  |  | The system part runs from the app. |
-
 ## apps/overlay
 
 18 tests in 2 files, 0.2 s in a local run.
@@ -902,6 +858,50 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_userdata.py` | `test_the_byte_order_mark_ppsspp_writes_is_kept` |  |  | PPSSPP writes the file with a UTF-8 byte order mark: the first section is still found behind it, and the mark stays. |
 | `test_userdata.py` | `test_ini_lines` |  |  | Ini lines. |
 | `test_userdata.py` | `test_ppsspp_running_sees_the_appimages_process` |  |  | Ppsspp running sees the appimages process. |
+
+## apps/quickfix
+
+37 tests in 6 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_catalog.py` | `test_the_portal_lists_every_quickfix` |  |  | The portal lists every quickfix. |
+| `test_catalog.py` | `test_the_groups_are_board_tests_installers` |  |  | The groups are board tests installers. |
+| `test_kargs.py` | `test_split_and_join_keep_the_line` |  |  | Split and join keep the line. |
+| `test_kargs.py` | `test_every_argument_of_the_ps5_lines_is_described` |  |  | Every argument of the ps5 lines is described. |
+| `test_kargs.py` | `test_the_add_menu_and_the_list` |  |  | The add menu and the list. |
+| `test_main_window.py` | `test_version_is_the_single_source` |  |  | Version is the single source. |
+| `test_main_window.py` | `test_icons_are_beside_the_package` |  |  | Icons are beside the package. |
+| `test_main_window.py` | `test_window_lists_every_quickfix_and_opens_one` |  |  | Window lists every quickfix and opens one. |
+| `test_state.py` | `test_mangohud_logging_lines` |  |  | Mangohud logging lines. |
+| `test_state.py` | `test_log_files` |  |  | Log files. |
+| `test_state.py` | `test_mapcount_and_journal` |  |  | Mapcount and journal. |
+| `test_state.py` | `test_cmdline` |  |  | Cmdline. |
+| `test_state.py` | `test_find_tool_where_the_tests_look` |  |  | Find tool where the tests look. |
+| `test_state.py` | `test_board_tests_installer` |  |  | Board tests installer. |
+| `test_system.py` | `test_mapcount_on_and_off` |  |  | Mapcount on and off. |
+| `test_system.py` | `test_journal_on_and_off_only_its_own` |  |  | Journal on and off only its own. |
+| `test_system.py` | `test_the_command_and_its_answer` |  |  | The command and its answer. |
+| `test_system.py` | `test_cmdline_save_keeps_a_backup` |  |  | Cmdline save keeps a backup. |
+| `test_system.py` | `test_cmdline_refuses_a_line_that_would_not_boot` |  |  | Cmdline refuses a line that would not boot. |
+| `test_system.py` | `test_cmdline_saves_a_fallback_line` |  |  | Cmdline saves a fallback line. |
+| `test_system.py` | `test_cmdline_without_the_loaders_partition` |  |  | Cmdline without the loaders partition. |
+| `test_system.py` | `test_the_changes_take_only_their_own_states` |  |  | The changes take only their own states. |
+| `test_windows.py` | `test_quickfix_lists_and_installs` |  |  | Quickfix lists and installs. |
+| `test_windows.py` | `test_mangohud_config_made_and_logging_set` |  |  | Mangohud config made and logging set. |
+| `test_windows.py` | `test_mangohud_deletes_only_old_logs` |  |  | Mangohud deletes only old logs. |
+| `test_windows.py` | `test_game_memory_map` |  |  | Game memory map. |
+| `test_windows.py` | `test_persistent_journal_asks_before_it_removes` |  |  | Persistent journal asks before it removes. |
+| `test_windows.py` | `test_boot_command_line_shows_every_argument_with_what_it_does` |  |  | Boot command line shows every argument with what it does. |
+| `test_windows.py` | `test_boot_command_line_edits_adds_moves_and_removes_rows` |  |  | Boot command line edits adds moves and removes rows. |
+| `test_windows.py` | `test_boot_command_line_opens_the_fallback_lines` |  |  | Boot command line opens the fallback lines. |
+| `test_windows.py` | `test_boot_command_line_no_drops_the_edits_cancel_keeps_them` |  |  | Boot command line no drops the edits cancel keeps them. |
+| `test_windows.py` | `test_boot_command_line_will_not_save_a_line_that_would_not_boot` |  |  | Boot command line will not save a line that would not boot. |
+| `test_windows.py` | `test_boot_command_line_a_failed_save_keeps_the_edits` |  |  | Boot command line a failed save keeps the edits. |
+| `test_windows.py` | `test_boot_command_line_reads_a_locked_file_with_the_password` |  |  | Boot command line reads a locked file with the password. |
+| `test_windows.py` | `test_a_canceled_password_says_so` |  |  | A canceled password says so. |
+| `test_windows.py` | `test_every_window_says_what_it_does` |  |  | Every window says what it does. |
+| `test_windows.py` | `test_the_system_part_runs_from_the_app` |  |  | The system part runs from the app. |
 
 ## apps/remoteplay
 
@@ -2525,8 +2525,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_first_start_detects_console_shortcuts_and_toggle_restores_them` |  | 0.2 s | First start detects console shortcuts and toggle restores them. |
 | `test_main_window.py` | `test_the_theme_pill_shows_the_next_theme_at_once_and_the_portal_stays_open` |  | 0.6 s | A click on the pill is the next theme, saved for every app and shown by the portal at once: the application's palette, the view's style sheets and the tiles' muted line are the new theme's. |
 | `test_manifest.py` | `test_required_apps_first_board_before_the_others` |  |  | Required apps first board before the others. |
-| `test_manifest.py` | `test_an_app_of_helpers_has_a_tile_per_helper` |  |  | An app of helpers has a tile per helper. |
-| `test_manifest.py` | `test_rejects_a_bad_helper` | 4 |  | Rejects a bad helper. |
+| `test_manifest.py` | `test_an_app_of_quickfixes_has_a_tile_per_quickfix` |  |  | An app of quickfixes has a tile per quickfix. |
+| `test_manifest.py` | `test_rejects_a_bad_quickfix` |  |  | Rejects a bad quickfix. |
 | `test_manifest.py` | `test_required_first_then_file_order` |  |  | Required first then file order. |
 | `test_manifest.py` | `test_rejects` | 7 |  | Rejects. |
 | `test_manifest.py` | `test_a_withdrawn_release` |  |  | A withdrawn release. |
@@ -2601,8 +2601,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_weather.py` | `test_open_meteo_down_or_unreachable_says_so` |  |  | Open meteo down or unreachable says so. |
 | `test_window.py` | `test_bazzite_test_first_without_uninstall` |  | 0.2 s | Bazzite test first without uninstall. |
 | `test_window.py` | `test_every_app_has_its_icon` |  | 0.2 s | Every app has its icon. |
-| `test_window.py` | `test_the_helpers_are_tiles_of_their_own` |  | 0.2 s | Console Helpers: a tile per helper in Utilities, none of its own (owner, 15-11-2026); each opens its helper, and the board warning names the helper that changes the board. |
-| `test_window.py` | `test_a_helpers_tile_installs_its_app` |  | 0.2 s | Reinstall on a helper's tile reinstalls Console Helpers: one install, recorded under the app's key. |
+| `test_window.py` | `test_the_quickfixes_are_tiles_of_their_own` |  |  | PS5 Quickfix: a tile per quickfix in Utilities, none of its own (owner, 15-11-2026); each opens its quickfix, and the board warning names the quickfix that changes the board. |
+| `test_window.py` | `test_a_quickfixes_tile_installs_its_app` |  |  | Reinstall on a quickfix's tile reinstalls PS5 Quickfix: one install, recorded under the app's key. |
 | `test_window.py` | `test_open_menu_shows_each_window_icon` |  | 0.2 s | Open menu shows each window icon. |
 | `test_window.py` | `test_an_app_without_an_icon_file_still_has_a_tile` |  | 0.2 s | An app without an icon file still has a tile. |
 | `test_window.py` | `test_short_names_drop_the_suite_prefix` |  | 0.2 s | Short names drop the suite prefix. |

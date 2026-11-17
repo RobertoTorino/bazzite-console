@@ -64,7 +64,8 @@ had the suite installed keeps it, and `--keep` keeps what a test installed.
 
 ```bash
 tools/check-release.sh status            # what of the suite is installed, and whether a test put it there
-tools/check-release.sh remove            # remove every app, the portal, Board Test and Helpers; settings stay
+tools/check-release.sh restore           # put back the install a test went over, when the test did not
+tools/check-release.sh remove            # remove every app, the portal, Board Test and Quickfix; settings stay
 tools/check-release.sh remove --purge    # their settings and logs too
 ```
 

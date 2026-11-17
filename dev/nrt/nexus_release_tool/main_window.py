@@ -214,7 +214,8 @@ class RemovePage(QWidget):
             "(check-release.sh status), then removes it all: every app, the portal and Board Test, each with its own "
             "uninstaller (check-release.sh remove). Settings, history and results stay; <code>check-release.sh remove "
             "--purge</code> in a terminal removes them too. A test on a console without the suite removes what it "
-            "installed when the portal closes; a console that had the suite keeps it."))
+            "installed when the portal closes; a console that had the suite gets its own install back then "
+            "(<code>check-release.sh restore</code> does it by hand)."))
         lay.addLayout(row)
         lay.addStretch(1)
 

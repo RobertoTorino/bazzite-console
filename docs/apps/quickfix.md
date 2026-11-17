@@ -1,29 +1,29 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Console Helpers](../assets/helpers/ps5-helpers.webp){ .app-logo }
+![PS5 Quickfix](../assets/quickfix/ps5-quickfix.webp){ .app-logo }
 
-# Console Helpers
+# PS5 Quickfix
 
 Small windows for one job each, which come with the suite: the portal installs them with itself, with Board Test,
-and keeps them. In the portal's **Utilities** tab each helper is a tile of its own; the app's menu entry,
-**Console Helpers**, lists them all in one window.
+and keeps them. In the portal's **Utilities** tab each quickfix is a tile of its own; the app's menu entry,
+**PS5 Quickfix**, lists them all in one window.
 
-Every helper's window has the suite's header: the helper's name with the version, its state, and **Refresh**. The
-small round **i** beside the state says what the helper contains and does. The helpers that change the board say so
+Every quickfix's window has the suite's header: the quickfix's name with the version, its state, and **Refresh**. The
+small round **i** beside the state says what the quickfix contains and does. The quickfixes that change the board say so
 on their tile; the portal asks before it opens one. Each of those asks for your password (pkexec) for every change,
 turns on only what is off, and turns off only what it turned on itself.
 
-| Helper | What it does | Changes the board |
+| Quickfix | What it does | Changes the board |
 |--------|--------------|-------------------|
-| [Test Extras](#test-extras) | The optional tools Board Test's tests use: which are there, and their installer. | No |
+| [Quickfix](#quickfix) | The optional tools Board Test's tests use: which are there, and their installer. | No |
 | [MangoHud Config](#mangohud-config) | Open or create MangoHud's config, edit and save it; turn on the FPS log Board Test reads. | No |
 | [Game Memory Map](#game-memory-map) | Raise vm.max_map_count, the number of memory areas a game may map. | Yes |
 | [Persistent Journal](#persistent-journal) | Keep the system journal on the disk, so the logs of a boot that crashed can be read after it. | Yes |
 | [Boot Command Line](#boot-command-line) | Edit cmdline.txt, the kernel command line the PS5 loader starts Linux with. | Yes |
 
-## Test Extras
+## Quickfix
 
-Board Test runs without extra tools: a test whose tool is missing says so. **Test Extras** lists the tools the tests
+Board Test runs without extra tools: a test whose tool is missing says so. **Quickfix** lists the tools the tests
 use when they are there, with a dot for each one that is found and the tests that use it, and the **Tools found**
 box counts them. It looks where the tests look: on `PATH`, in `~/.local/bin` and in Homebrew.
 
@@ -57,14 +57,14 @@ GPU share.
 ## Game Memory Map
 
 !!! warning "Changes the board"
-    Turn on writes vm.max_map_count = 2147483642 to /etc/sysctl.d/90-ps5-helpers-max-map-count.conf and sets it now: the
+    Turn on writes vm.max_map_count = 2147483642 to /etc/sysctl.d/90-ps5-quickfix-max-map-count.conf and sets it now: the
     number of memory areas one program may map. The file stays across reboots and power offs. Nothing is written to the
     console's firmware or the kernel's arguments. Turn off removes the file and reads the system's settings again, so
     the value the other settings files give, else the kernel's own, is back.
 
 `vm.max_map_count` is the number of memory areas one program may map. Some games, and Proton, need far more than
 the kernel's default and crash without them; SteamOS and Bazzite set 2147483642. The boxes show the value now and
-what set it: the helper, or the system (another file in `/etc/sysctl.d` or the image's own). **Turn on** is offered
+what set it: the quickfix, or the system (another file in `/etc/sysctl.d` or the image's own). **Turn on** is offered
 only when the value is lower. Board Test's test 37 reports it.
 
 ## Persistent Journal
@@ -72,7 +72,7 @@ only when the value is lower. Board Test's test 37 reports it.
 !!! warning "Changes the board"
     Turn on makes the folder /var/log/journal, with systemd-tmpfiles, and moves the journal there: journald then keeps
     the system's logs on the disk, within its own size limits, instead of in memory only. The folder stays across
-    reboots and power offs. Nothing is written to the console's firmware. Turn off works only on a folder this helper
+    reboots and power offs. Nothing is written to the console's firmware. Turn off works only on a folder this quickfix
     made: it moves the journal back to memory and removes the folder, with the logs in it.
 
 Without `/var/log/journal`, journald keeps the system journal in memory only, and the logs of a boot that crashed or
@@ -95,12 +95,12 @@ command line in `cmdline.txt`: one line of kernel arguments. [PS5 Linux boot par
 describes the partition, its files and every argument of the PS5 Linux command lines. Board Test's test 54 checks the
 file, and its hints say which arguments to add there.
 
-The table shows the line one argument per row, in its order, with what each argument does; an argument the helper
+The table shows the line one argument per row, in its order, with what each argument does; an argument the quickfix
 does not know says so. A double click edits a row. **Add** puts a known argument (or an empty row for your own) under
 the selected row; **Remove**, **Up** and **Down** work on the selected row; the line below the table is what **Save
 changes** writes. **All settings** lists every argument the PS5 Linux command lines use, with its values; the info
 symbol beside it links the [PS5 Linux boot partition](../boot-partition.md) chapter. The boxes show whether the file
-is there, how many arguments the line has, and how many backups the helper kept.
+is there, how many arguments the line has, and how many backups the quickfix kept.
 
 The list beside the boxes opens the fallback lines when they are on the partition: `cmdline.txt.m2` and
 `cmdline.txt.usb`, the lines you copy over `cmdline.txt` to start the system on the M.2 SSD or the USB drive. Save
@@ -123,28 +123,28 @@ FAT, so any computer can open the USB drive.
 
 ## Install
 
-The portal installs the helpers with itself, and its uninstall removes them; the portal lists no Uninstall for them.
+The portal installs the quickfixes with itself, and its uninstall removes them; the portal lists no Uninstall for them.
 From a checkout of the repository:
 
 ```bash
-apps/helpers/install.sh                         # the app, its launcher, a menu entry and a Desktop icon
-apps/helpers/install.sh --no-desktop-shortcut   # without the Desktop icon
-apps/helpers/install.sh --uninstall             # remove it; --purge removes its settings too
+apps/quickfix/install.sh                         # the app, its launcher, a menu entry and a Desktop icon
+apps/quickfix/install.sh --no-desktop-shortcut   # without the Desktop icon
+apps/quickfix/install.sh --uninstall             # remove it; --purge removes its settings too
 ```
 
-The launcher is `~/.local/bin/ps5-helpers`: without an argument it opens the list, with a helper's key the helper's
-own window (`ps5-helpers extras`, `mangohud`, `mapcount`, `journal`, `cmdline`). The app runs on the
+The launcher is `~/.local/bin/ps5-quickfix`: without an argument it opens the list, with a quickfix's key the quickfix's
+own window (`ps5-quickfix tools`, `mangohud`, `mapcount`, `journal`, `cmdline`). The app runs on the
 suite's shared Python environment.
 
 ## Files
 
 - `~/.config/MangoHud/MangoHud.conf` and `~/mangohud-logs/`: MangoHud's own settings file and its log folder.
-- `/etc/sysctl.d/90-ps5-helpers-max-map-count.conf` and `/var/log/journal/.ps5-helpers`: what Game Memory Map and
+- `/etc/sysctl.d/90-ps5-quickfix-max-map-count.conf` and `/var/log/journal/.ps5-quickfix`: what Game Memory Map and
   Persistent Journal turned on, while it is on.
 - `/boot/efi/cmdline.txt`, the fallback lines `cmdline.txt.m2` and `cmdline.txt.usb`, and their `.bak-*` backups: the
   kernel command lines Boot Command Line saved, and the files it replaced.
 
-Uninstalling the app leaves all of them as they are: turn a helper off first to undo it.
+Uninstalling the app leaves all of them as they are: turn a quickfix off first to undo it.
 
 ## License
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# tools/check-release.sh: a test's install is marked and removed again, the machine's own install is kept; status and
-# remove, with and without --purge.
+# tools/check-release.sh: a test's install is marked and removed again, a test over an install of your own puts that
+# back; status, restore and remove, with and without --purge.
 # Runs with the shims from shims.sh (CI).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
@@ -43,22 +43,45 @@ check "the test ends well" "[ $rc -eq 0 ] && grep -q 'The portal is closed: remo
 check "nothing of the suite is left" \
     "[ ! -e $BIN/bazzite-console-suite ] && [ ! -e $BIN/ps5-board-test ] && [ ! -e $XDG_DATA_HOME/bazzite-console-suite ]"
 
-echo "== 4. the machine's own install stays"
+echo "== 4. a test over the machine's own install puts it back"
+OWN=$XDG_DATA_HOME/bazzite-console-suite/portal
+SAVED=$XDG_DATA_HOME/bazzite-console-suite/before-test
 run local --no-start --keep
 check "--keep leaves no mark" "[ -x $BIN/bazzite-console-suite ] && [ ! -e $MARK ]"
-run local --no-start
-check "a test over the machine's own install leaves no mark" "[ ! -e $MARK ]"
-check "and says that it stays" "grep -q 'everything stays installed' $T/out.log"
+echo 0.0.1 > "$OWN/VERSION"                                    # the machine's own portal: an earlier one
+mkdir -p "$STATE" && echo '{"board": "own-tag"}' > "$STATE/installed.json"
+run local --no-start; rc=$?
+check "a test over the machine's own install leaves no mark and saves it" \
+    "[ $rc -eq 0 ] && [ ! -e $MARK ] && [ \"\$(cat $SAVED/portal/VERSION)\" = 0.0.1 ]"
+check "the tested portal is installed" "[ \"\$(cat $OWN/VERSION)\" != 0.0.1 ]"
+check "and says how it comes back" "grep -q 'check-release.sh restore puts it back' $T/out.log"
+run status
+check "status says a test's portal stands over it" "grep -q \"a test's portal, over the machine's own install (0.0.1)\" $T/out.log"
+bash "$SUITE/apps/ssd/install.sh" --no-desktop-shortcut > "$T/ssd.log" 2>&1     # an app installed during the test
+run restore; rc=$?
+check "restore puts the machine's own portal back" \
+    "[ $rc -eq 0 ] && [ \"\$(cat $OWN/VERSION)\" = 0.0.1 ] && [ -x $BIN/bazzite-console-suite ] && [ ! -e $SAVED ]"
+check "and removes the app installed during the test" "[ ! -e $BIN/ps5-ssd-check ]"
+check "and gives the portal back what it remembered" "grep -q '\"board\": \"own-tag\"' $STATE/installed.json"
 run status
 check "status says it is the machine's own" "grep -q \"the machine's own install\" $T/out.log"
-rm -f "$MARK"; run local --no-start --keep; run status
+run restore; rc=$?
+check "restore with nothing saved says so" "[ $rc -ne 0 ] && grep -q 'Nothing to put back' $T/out.log"
 echo "the checkout, 01-01-2026 00:00" > "$MARK"; echo 1 >> "$MARK"   # a mark an install by hand made stale
 run status
 check "a mark that no longer names the launcher is no test install" "grep -q \"the machine's own install\" $T/out.log"
+rm -f "$MARK"
 
-run local; rc=$?
-check "a test over it starts the portal and keeps everything" "[ $rc -eq 0 ] && [ -x $BIN/bazzite-console-suite ] &&
-    ! grep -q 'removing the test install' $T/out.log"
+run local; rc=$?                         # the shims' portal starts and closes at once
+check "a test over it puts the machine's own install back when the portal closes" \
+    "[ $rc -eq 0 ] && grep -q \"The machine's own install is back\" $T/out.log && [ \"\$(cat $OWN/VERSION)\" = 0.0.1 ] &&
+    [ ! -e $SAVED ] && ! grep -q 'removing the test install' $T/out.log"
+run local --no-start; (cd "$SUITE" && ./install.sh --no-desktop-shortcut) > "$T/hand.log" 2>&1
+run status
+check "an install by hand ends the save" "grep -q \"the machine's own install (by hand\" $T/out.log"
+echo 0.0.1 > "$OWN/VERSION"
+run local --no-start --keep
+check "--keep makes the tested portal the machine's own" "[ \"\$(cat $OWN/VERSION)\" != 0.0.1 ] && [ ! -e $SAVED ]"
 
 echo "== 5. options"
 run local --purge

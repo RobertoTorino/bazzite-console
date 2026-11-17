@@ -1,3 +1,14 @@
+Changelog: 18-11-2026 00:30:07
+
+Release 4.0.0. Pins ps5-quickfix-v0.1.0.
+
+Changelog: 17-11-2026 22:52:43
+
+Breaking. apps.toml lists PS5 Quickfix (quickfix, always installed with the portal) where the earlier app of
+small windows stood, and its windows as [[apps.<key>.quickfixes]] tables, which is the tables' name from now on.
+The portal installs, bundles and removes PS5 Quickfix with itself; it no longer installs or removes the earlier
+app.
+
 Changelog: 17-11-2026 20:41:01
 
 Release 3.2.1. Pins ps5-helpers-v0.2.1.

@@ -6,13 +6,13 @@
 
 The PS5 Linux loader is sent to the PS5 as a payload. It starts Linux from a FAT32 partition on a USB drive or SSD.
 Linux mounts this partition at `/boot/efi`. The loader takes four files from it: `bzImage`, `initrd.img`,
-`cmdline.txt` and `vram.txt`. The other files on the partition are backups of these files, helpers, or files Windows
+`cmdline.txt` and `vram.txt`. The other files on the partition are backups of these files, quickfixes, or files Windows
 leaves behind when the drive is opened on a PC.
 
 The partition is FAT, so any computer can open the drive. When Linux does not start after a change, you can fix the
 files on another computer.
 
-[Boot Command Line](apps/helpers.md#boot-command-line) in Console Helpers edits `cmdline.txt` and the fallback lines.
+[Boot Command Line](apps/quickfix.md#boot-command-line) in PS5 Quickfix edits `cmdline.txt` and the fallback lines.
 PS5 Board Test's test 54 checks the partition: where it is, that the loader's files are there, that `root=` points at
 a drive that is there, `vram.txt` and the free space.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Console Helpers as a desktop app, from a clone or the extracted release tarball:
+# Installs PS5 Quickfix as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -8,15 +8,15 @@
 #   ./install.sh --uninstall --purge     # also remove its settings
 #
 # Run it as your own user; it needs no root.
-#  * ~/.local/share/ps5-helpers/app: the app, with the bazzite_console_core it was tested with (bundled in the release; taken from
+#  * ~/.local/share/ps5-quickfix/app: the app, with the bazzite_console_core it was tested with (bundled in the release; taken from
 #    the suite checkout when run from there).
 #  * ~/.local/share/bazzite-console-suite/venv, the Bazzite Console Suite's shared venv with PyQt6 (the wheels bundle Qt; nothing is
 #    layered). It is removed with the last suite app that uses it.
-#  * ~/.local/bin/ps5-helpers to start it from a terminal, plus an app menu entry and a Desktop icon.
+#  * ~/.local/bin/ps5-quickfix to start it from a terminal, plus an app menu entry and a Desktop icon.
 set -euo pipefail
 
-APP_ID="ps5-helpers"
-APP_NAME="Console Helpers"
+APP_ID="ps5-quickfix"
+APP_NAME="PS5 Quickfix"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 APP_DIR="$DATA_DIR/$APP_ID/app"
@@ -29,7 +29,7 @@ DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 DESKTOP_ICON="$DESKTOP_DIR/$APP_ID.desktop"
 
 SRC=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
-# bazzite_console_core: bundled next to helpers in a release; in the suite checkout it lives in core/ at the root.
+# bazzite_console_core: bundled next to quickfix in a release; in the suite checkout it lives in core/ at the root.
 if [ -d "$SRC/bazzite_console_core" ]; then CORE_SRC="$SRC/bazzite_console_core"; else CORE_SRC="$SRC/../../core/bazzite_console_core"; fi
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
@@ -94,7 +94,7 @@ fi
 
 # --- Checks ------------------------------------------------------------------------------------
 [ "$(uname -s)" = Linux ] || die "This app runs on Linux (Bazzite) only."
-for f in requirements.txt VERSION helpers/__main__.py "images/$APP_ID.webp" "images/$APP_ID-128.png"; do
+for f in requirements.txt VERSION quickfix/__main__.py "images/$APP_ID.webp" "images/$APP_ID-128.png"; do
     [ -f "$SRC/$f" ] || die "$f is missing: run install.sh from a clone or the extracted release folder."
 done
 [ -f "$CORE_SRC/__init__.py" ] || die "bazzite_console_core is missing: run install.sh from a clone or the extracted release folder."
@@ -140,9 +140,9 @@ mkdir -p "$(dirname "$LAUNCHER")"
 cat >"$LAUNCHER" <<LAUNCH
 #!/usr/bin/env bash
 # $APP_NAME launcher, written by install.sh. Starts from the app folder, so python -m never picks up a
-# helpers folder from the current directory, and imports the bazzite_console_core bundled there.
+# quickfix folder from the current directory, and imports the bazzite_console_core bundled there.
 cd "$APP_DIR" || { echo "$APP_NAME is not installed in $APP_DIR; run install.sh again." >&2; exit 1; }
-exec "$VENV/bin/python" -m helpers "\$@"
+exec "$VENV/bin/python" -m quickfix "\$@"
 LAUNCH
 chmod 755 "$LAUNCHER"
 
@@ -150,13 +150,13 @@ DESKTOP_FILE_CONTENT="[Desktop Entry]
 Type=Application
 Version=1.0
 Name=$APP_NAME
-GenericName=Console Helpers
-Comment=Small helpers for one job each: Board Test's extras, MangoHud's config, the memory map, the journal and the boot command line. Always installed.
+GenericName=PS5 Quickfix
+Comment=Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal and the boot command line. Always installed.
 Exec=$LAUNCHER
 Icon=$APP_DIR/images/$APP_ID-128.png
 Terminal=false
 Categories=Utility;
-Keywords=PS5;Bazzite;helpers;
+Keywords=PS5;Bazzite;quickfixes;
 StartupNotify=true
 StartupWMClass=$APP_ID"
 

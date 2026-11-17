@@ -1,3 +1,22 @@
+Changelog: 17-11-2026 23:32:30
+
+Fixed. A release test over a suite that is installed already (tools/check-release.sh local, release and draft:
+Nexus Release Tool's Device test and Test withdrawal) puts that install back (owner, 17-11-2026): it saves the
+portal, Board Test and Quickfix before it installs the tested portal, and when that portal closes installs the
+saved ones again with the saved portal's own installer, removes the apps installed during the test and gives the
+portal back what it remembered. Before, the tested portal stayed as the installed one, also when the test failed.
+An app updated during the test stays updated; --keep keeps the tested portal; the new check-release.sh restore
+does the putting back by hand, and status says when a test's portal stands over the saved install.
+
+Changelog: 17-11-2026 22:52:43
+
+Breaking. PS5 Quickfix takes the place of the app that held the suite's small windows (owner, 17-11-2026): a new
+app, apps/quickfix with the package quickfix, the launcher ps5-quickfix and its own releases (ps5-quickfix-v),
+from 0.1.0. The windows are the same; the window of Board Test's optional tools is named Quickfix. The earlier
+app, its launcher, its tile keys and its name are gone from the suite, the wiki, the tools and the tests, and
+nothing is carried over from it: a setting it turned on on a board is not Quickfix's to turn off, and its
+installed copy is removed with its own installer.
+
 Changelog: 17-11-2026 21:54:36
 
 Fixed. The release workflow has three jobs where it had five (owner, 17-11-2026): the check that CI passed is

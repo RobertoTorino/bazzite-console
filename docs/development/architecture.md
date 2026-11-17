@@ -396,9 +396,9 @@ for an app that does not fit the template (the owner's decision):
 6. Add the app to `portal/apps.toml` (name, summary, `changes_board`, `category` (its icon's: the portal's tab for
    it), install, uninstall, detect, launch). An app that changes the console also gets a `board_change`: what it
    touches, what stays after a reboot or a power off, what it never touches and how it is undone, in a few plain
-   sentences; the tile's popup shows it. An app made of small helpers, as Console Helpers, lists each one as an
-   `[[apps.<name>.helpers]]` table instead (key, name, summary, launch, and the same `changes_board` and
-   `board_change` per helper): the portal shows a tile per helper. A new helper of Console Helpers is a window in
+   sentences; the tile's popup shows it. An app made of small quickfixes, as PS5 Quickfix, lists each one as an
+   `[[apps.<name>.quickfixes]]` table instead (key, name, summary, launch, and the same `changes_board` and
+   `board_change` per quickfix): the portal shows a tile per quickfix. A new quickfix of PS5 Quickfix is a window in
    its `windows.py`, an entry in its `catalog.py` and a table in `apps.toml`, kept the same by its tests.
 7. Add the app to Nexus Deps' catalog of the suite (`[app.<name>]` with its launchers), its Python packages and
    the external tools it runs, with the Homebrew formula (`brew`) or Fedora package (`rpm`) that installs a tool

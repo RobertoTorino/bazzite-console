@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""What the helpers read, from folders that stand in for /etc, /proc, /sys and /var: Bazzite's own max_map_count and
+"""What the quickfixes read, from folders that stand in for /etc, /proc, /sys and /var: Bazzite's own max_map_count and
 journal, the PS5 loader's cmdline.txt, and a system that has none of them."""
 
 from __future__ import annotations
@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from helpers import state, system
+from quickfix import state, system
 
 
 def put(root: Path, path: str, text: str = "") -> Path:

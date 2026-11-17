@@ -90,7 +90,7 @@ explanation.
    the release, so the CI that passed on your commit in step 4 counts for it, and CI does not have to run again
    first ([below](#the-releases-on-github)). The run builds the new app releases side by side and publishes them,
    writes their checksums into `apps.toml` in a commit *Pin ...* on top of yours, and builds the portal from that
-   commit as a **draft**, with the pinned releases of the required apps (Board Test and Console Helpers) bundled
+   commit as a **draft**, with the pinned releases of the required apps (Board Test and PS5 Quickfix) bundled
    in it, each checked against its pin: a draft has no tag yet, so no installed portal sees it. The line links the run; a run that
    ends badly gives a notification and lights **Resume run** (what is out already is skipped, the draft is made
    anew). **Stop run** stops a run that must not go on; stopping is safe until the portal is published. When the
@@ -134,12 +134,15 @@ withdrawal, [below](#withdrawing-a-release)), **Remove suite** and **Commands**.
 
 - **Remove suite**, on a PS5, opens a terminal that lists what of the suite is installed on the console and
   whether a test put it there (`tools/check-release.sh status`), then removes it all: every app, the portal,
-  Board Test and Helpers, each with its own uninstaller (`tools/check-release.sh remove`). Board Test asks for the sudo
+  Board Test and Quickfix, each with its own uninstaller (`tools/check-release.sh remove`). Board Test asks for the sudo
   password. Settings, history and results stay; `tools/check-release.sh remove --purge` removes them too.
 - **Device test** and the other tests of `tools/check-release.sh` clean up after themselves: on a PS5 without the
   suite, what the test installs is marked as a test's and removed again when the portal closes (the portal, Board
-  Test and the apps installed during the test). A PS5 that had the suite installed keeps it, and `--keep` keeps
-  what a test installed.
+  Test and the apps installed during the test). On a PS5 that had the suite installed, the test saves the portal,
+  Board Test and Quickfix first and puts them back when the tested portal closes, with the saved portal's own
+  installer (Board Test asks for the sudo password); the apps installed during the test are removed, and an app
+  updated during the test stays updated. `--keep` keeps what a test installed, and
+  `tools/check-release.sh restore` puts the saved install back by hand, after a test that was cut short.
 - What a step writes (the release, Retract, Test withdrawal, Remove suite) shows in **Commands**, under a line that
   names the step, with the output of the commands: one output tab. A step that writes its log opens Commands; open the step
   again to go on. The steps' logs go into the day's command log too (below).
@@ -230,7 +233,7 @@ The release stays on GitHub, so its history is kept, but nothing installs it any
    is not released again. The portal's CHANGELOG entry names the withdrawal. A portal that updates to it removes
    the app; the portal update button says so beforehand ("withdraws ...").
 
-Board Test and Helpers, which are always installed, cannot be withdrawn.
+Board Test and Quickfix, which are always installed, cannot be withdrawn.
 
 ## Checking a release
 

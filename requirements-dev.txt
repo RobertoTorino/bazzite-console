@@ -12,11 +12,11 @@
 -r apps/controller/requirements-dev.txt
 -r apps/datstation/requirements-dev.txt
 -r apps/fan/requirements-dev.txt
--r apps/helpers/requirements-dev.txt
 -r apps/overlay/requirements-dev.txt
 -r apps/password/requirements-dev.txt
 -r apps/pcsx2/requirements-dev.txt
 -r apps/ppsspp/requirements-dev.txt
+-r apps/quickfix/requirements-dev.txt
 -r apps/remoteplay/requirements-dev.txt
 -r apps/rpcs3/requirements-dev.txt
 -r apps/sftp/requirements-dev.txt       # paramiko: its tests import it

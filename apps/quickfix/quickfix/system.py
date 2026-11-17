@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The system part of the helpers: what runs as root. The app runs this file through pkexec with the system python3
+"""The system part of the quickfixes: what runs as root. The app runs this file through pkexec with the system python3
 in isolated mode (-I), one change per call, and it needs only the standard library:
 
     system.py mapcount on | off                 vm.max_map_count in /etc/sysctl.d (MAPCOUNT_CONF)
@@ -22,10 +22,10 @@ import sys
 from pathlib import Path
 
 SYSTEM_PYTHON = "/usr/bin/python3"
-MAPCOUNT_CONF = "sysctl.d/90-ps5-helpers-max-map-count.conf"      # in /etc
+MAPCOUNT_CONF = "sysctl.d/90-ps5-quickfix-max-map-count.conf"      # in /etc
 MAPCOUNT = 2147483642                                             # what SteamOS and Bazzite set
 JOURNAL_DIR = "log/journal"                                       # in /var
-JOURNAL_MARK = ".ps5-helpers"                                     # in it: the helper made the folder
+JOURNAL_MARK = ".ps5-quickfix"                                     # in it: the quickfix made the folder
 CMDLINE_DIR = "efi"                                               # in /boot: the PS5 loader's partition
 CMDLINES = ("cmdline.txt", "cmdline.txt.m2", "cmdline.txt.usb")   # the line it starts Linux with; the fallback lines
 CMDLINE = f"{CMDLINE_DIR}/{CMDLINES[0]}"
@@ -68,7 +68,7 @@ def write(path: Path, text: str) -> None:
 def mapcount(etc: Path, on: bool) -> int:
     conf = etc / MAPCOUNT_CONF
     if on:
-        write(conf, f"# Written by Console Helpers (Game Memory Map): the memory areas a game may map.\n"
+        write(conf, f"# Written by PS5 Quickfix (Game Memory Map): the memory areas a game may map.\n"
                     f"vm.max_map_count = {MAPCOUNT}\n")
         return run(["sysctl", "-w", f"vm.max_map_count={MAPCOUNT}"])
     conf.unlink(missing_ok=True)
@@ -80,11 +80,11 @@ def journal(var: Path, on: bool) -> int:
     folder = var / JOURNAL_DIR
     if on:
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / JOURNAL_MARK).write_text("Made by Console Helpers (Persistent Journal).\n", encoding="utf-8")
+        (folder / JOURNAL_MARK).write_text("Made by PS5 Quickfix (Persistent Journal).\n", encoding="utf-8")
         code = run(["systemd-tmpfiles", "--create", "--prefix", str(folder)])
         return code or run(["journalctl", "--flush"])
     if not (folder / JOURNAL_MARK).is_file():
-        print(f"{folder} was not made by Console Helpers: it stays.")
+        print(f"{folder} was not made by PS5 Quickfix: it stays.")
         return 1
     run(["journalctl", "--relinquish-var"])
     shutil.rmtree(folder)
@@ -144,7 +144,7 @@ def cmdline_save(boot: Path, source: Path, name: str = CMDLINES[0]) -> int:
 
 def main(argv: list[str] | None = None, etc: Path = Path("/etc"), var: Path = Path("/var"),
          boot: Path = Path("/boot")) -> int:
-    parser = argparse.ArgumentParser(prog="system.py", description="Console Helpers, the part that runs as root")
+    parser = argparse.ArgumentParser(prog="system.py", description="PS5 Quickfix, the part that runs as root")
     parser.add_argument("change", choices=("mapcount", "journal", "cmdline"))
     parser.add_argument("state", choices=("on", "off", "show", "save"))
     parser.add_argument("--text", type=Path, help="cmdline save: the file with the new line")
