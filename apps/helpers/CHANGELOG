@@ -1,3 +1,9 @@
+Changelog: 17-11-2026 20:10:33
+
+Fixed. Test Extras: Refresh stands beside Install all, and each group's heading is its pill, the group's name
+with Install under it (Installed when everything in the group is there, Included for With Bazzite). All the
+window's pills are the same width.
+
 Changelog: 17-11-2026 14:53:55
 
 Release 0.2.0.

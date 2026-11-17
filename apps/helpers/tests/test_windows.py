@@ -48,6 +48,11 @@ def test_test_extras_lists_and_installs(qapp, tmp_path, monkeypatch):
     assert window.found_box.value.text() == f"1/{sum(len(g.tools) for g in state.GROUPS) + len(state.BUILT_IN)}"
     assert window.rows["vkpeak"].toolTip() == str(tool)
     assert window.buttons["--bins"].isEnabled()                         # memtest_vulkan is still missing
+    assert window.buttons["--bins"].text() == "Binaries" and window.buttons["--bins"].caption.text() == "Install"
+    assert window.header.second_row.indexOf(window.refresh_button) > 0  # beside Install all
+    assert not window.built_in.isEnabled()                              # with Bazzite: nothing to install
+    pills = [window.found_box, window.all_button, window.refresh_button, *window.buttons.values(), window.built_in]
+    assert len({pill.minimumWidth() for pill in pills}) == 1            # all as wide as the widest
     window.buttons["--speedtest"].click()
     window.all_button.click()
     assert launched == [f"{script} --speedtest", f"{script} --all"]

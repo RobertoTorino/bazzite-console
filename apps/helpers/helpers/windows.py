@@ -24,7 +24,8 @@ from bazzite_console_core import window_title
 from bazzite_console_core.appinfo import SUITE_MANUAL_URL
 from bazzite_console_core.platform import launch_in_terminal, show_in_folder
 from bazzite_console_core.theme import GREEN, GREY, ORANGE
-from bazzite_console_core.widgets import ActionPill, AppHeader, InfoButton, MetricBox, StatusText, hint_label
+from bazzite_console_core.widgets import (ActionPill, AppHeader, InfoButton, MetricBox, StatusText, hint_label,
+                                          same_width)
 
 from . import LOGO_PATH, __version__, kargs, runner, state, system
 from .catalog import BY_KEY, Helper
@@ -75,9 +76,10 @@ class HelperWindow(QMainWindow):
 # ------------------------------------------------------------------------------------------------- Test Extras
 EXTRAS_INFO = ("<b>Test Extras</b> shows the optional tools PS5 Board Test's tests use, whether each one is "
                "there, and which tests use it. Board Test runs without them: a test whose tool is missing says so."
-               "<br><br><b>Install…</b> runs Board Test's own installer, <code>install-requirements.sh</code>, "
-               "for one group in a terminal: it asks for your password where it layers packages and skips what is "
-               "there already. <b>Install all</b> installs every group but the development extras.<br><br>"
+               "<br><br>A group's pill (<b>Install</b>) runs Board Test's own installer, "
+               "<code>install-requirements.sh</code>, for that group in a terminal: it asks for your password "
+               "where it layers packages and skips what is there already. <b>Install all</b> installs every group "
+               "but the development extras.<br><br>"
                "Layered RPM packages are active after a reboot (<code>systemctl reboot</code>). glmark2, "
                "vulkan-tools and smartmontools come with Bazzite.")
 
@@ -94,32 +96,33 @@ class ExtrasWindow(HelperWindow):
         self.all_button.setToolTip("Every group but the development extras, in a terminal (--all)")
         self.all_button.clicked.connect(lambda: self.install("--all"))
         self.header.add_second(self.all_button)
+        self.header.title_row.removeWidget(self.refresh_button)         # here beside Install all, not top right
+        self.header.add_second(self.refresh_button)
         self.header.add_second(QWidget(), 1)
         self.grid = QGridLayout()
         self.grid.setColumnStretch(2, 1)
         self.page.addLayout(self.grid)
         self.page.addStretch(1)
         self.rows: dict[str, QLabel] = {}
-        self.buttons: dict[str, QPushButton] = {}
+        self.buttons: dict[str, ActionPill] = {}
         row = 0
         for group in state.GROUPS:
-            title = QLabel(f"<b>{group.name}</b>")
-            title.setToolTip(group.what)
-            self.grid.addWidget(title, row, 0, 1, 3)
-            button = ActionPill("Install…", "This group")
-            button.setToolTip(f"{group.what} ({group.option})")
+            # The group's heading is its Install pill (owner, 17-11-2026): the name, and what a click does under it.
+            button = ActionPill(group.name, "Install")
             button.clicked.connect(lambda _=False, o=group.option: self.install(o))
-            self.grid.addWidget(button, row, 3)
+            self.grid.addWidget(button, row, 0, 1, 3, Qt.AlignmentFlag.AlignLeft)
             self.buttons[group.option] = button
             row += 1
             for tool in group.tools:
                 row = self._tool_row(tool, row)
-        title = QLabel("<b>With Bazzite</b>")
-        title.setToolTip("Already on Bazzite: nothing to install.")
-        self.grid.addWidget(title, row, 0, 1, 4)
+        self.built_in = ActionPill("With Bazzite", "Included")
+        self.built_in.setToolTip("Already on Bazzite: nothing to install.")
+        self.built_in.setEnabled(False)
+        self.grid.addWidget(self.built_in, row, 0, 1, 3, Qt.AlignmentFlag.AlignLeft)
         row += 1
         for tool in state.BUILT_IN:
             row = self._tool_row(tool, row)
+        same_width([self.found_box, self.all_button, self.refresh_button, *self.buttons.values(), self.built_in])
         self.refresh()
 
     def _tool_row(self, tool: state.Tool, row: int) -> int:
@@ -128,7 +131,7 @@ class ExtrasWindow(HelperWindow):
         self.grid.addWidget(mark, row, 0)
         self.grid.addWidget(QLabel(tool.package), row, 1)
         self.grid.addWidget(hint_label(f"Tests {tool.used_by}" if tool.used_by[0].isdigit() else tool.used_by),
-                            row, 2, 1, 2)
+                            row, 2)
         return row + 1
 
     def refresh(self) -> None:
@@ -147,9 +150,12 @@ class ExtrasWindow(HelperWindow):
         for button in (*self.buttons.values(), self.all_button):
             button.setEnabled(script is not None)
         for group in state.GROUPS:
-            if all(state.find_tool(t.command, self.home) for t in group.tools):
-                self.buttons[group.option].setEnabled(False)
-                self.buttons[group.option].setToolTip("Everything in this group is there.")
+            button = self.buttons[group.option]
+            complete = all(state.find_tool(t.command, self.home) for t in group.tools)
+            button.caption.setText("Installed" if complete else "Install")
+            button.setToolTip("Everything in this group is there." if complete else f"{group.what} ({group.option})")
+            if complete:
+                button.setEnabled(False)
         if script is None:
             self.state.set_status("Board Test not found", "warn",
                                   f"Its installer is not in {self.board_test}: install Board Test from the portal.")

@@ -27,10 +27,10 @@ Board Test runs without extra tools: a test whose tool is missing says so. **Tes
 use when they are there, with a dot for each one that is found and the tests that use it, and the **Tools found**
 box counts them. It looks where the tests look: on `PATH`, in `~/.local/bin` and in Homebrew.
 
-**Install…** beside a group runs Board Test's own installer for that group in a terminal,
-`/opt/ps5-board-test/development/tools/install-requirements.sh` with the group's option; it is off when everything
-in the group is there. **Install all** installs every group but the development extras (`--all`). The groups and
-their tools are listed in [PS5 Board Test](board.md#requirements). Layered RPM
+Each group's heading is a pill: a click on it (**Install**) runs Board Test's own installer for that group in a
+terminal, `/opt/ps5-board-test/development/tools/install-requirements.sh` with the group's option; it reads
+**Installed** and is off when everything in the group is there. **Install all** installs every group but
+the development extras (`--all`), and **Refresh** beside it reads the tools again. The groups and their tools are listed in [PS5 Board Test](board.md#requirements). Layered RPM
 packages are active after a reboot (`systemctl reboot`); until then the tools of that group still show as missing.
 
 ## MangoHud Config
