@@ -1,3 +1,7 @@
+Changelog: 17-11-2026 14:53:55
+
+Release 0.2.0.
+
 Changelog: 16-11-2026 00:48:58
 
 Fixed. Every action in the helpers is the suite's pill (core's ActionPill), as in the other apps, instead of a small

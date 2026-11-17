@@ -4,7 +4,7 @@ and, at a critical temperature, shuts the console down cleanly. Nothing changes 
 
 APP_NAME = "PS5 Fan Controller"
 APP_ID = "ps5-fan-controller"
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 from pathlib import Path
 

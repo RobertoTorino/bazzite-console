@@ -4,7 +4,7 @@ temperatures."""
 
 APP_NAME = "PS5 System Overlay"
 APP_ID = "ps5-system-overlay"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 from pathlib import Path
 

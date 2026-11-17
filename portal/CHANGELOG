@@ -1,3 +1,7 @@
+Changelog: 17-11-2026 14:53:56
+
+Release 3.2.0. Pins ps5-board-v0.3.0, ps5-helpers-v0.2.0, ps5-upscaler-v0.3.0, ps5-rpcs3-v1.2.0, ps5-remoteplay-v1.2.0, ps5-clb-v1.2.0, ps5-shadps4-v1.2.0, ps5-datstation-v1.2.0, ps5-ppsspp-v1.2.0, ps5-pcsx2-v1.2.0, ps5-vita3k-v1.2.0, ps5-xenia-v1.2.0, ps5-sftp-v1.3.0, ps5-webcam-v1.3.0, ps5-controller-v1.3.0, ps5-ssd-v1.3.0, ps5-overlay-v1.2.0, ps5-fan-v2.2.0, ps5-cec-v2.2.0, ps5-bluetooth-v0.3.0.
+
 Changelog: 17-11-2026 12:04:47
 
 Added. PS5 Password Generator is in the portal's list (portal/apps.toml), in Utilities.
