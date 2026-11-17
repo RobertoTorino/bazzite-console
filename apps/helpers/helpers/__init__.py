@@ -4,7 +4,7 @@ the journal and the boot command line."""
 
 APP_NAME = "Console Helpers"
 APP_ID = "ps5-helpers"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from pathlib import Path
 

@@ -267,8 +267,8 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 [apps.helpers]
 name = "Console Helpers"
 summary = "Small helpers for one job each: Board Test's extras, MangoHud's config, the memory map, the journal and the boot command line. Always installed."
-tag = "ps5-helpers-v0.2.0"
-sha256 = "0802377d1851f3d4126dcf380ba64d9e94a49bd0ea5ad50ee52eb17d53c4f944"
+tag = "ps5-helpers-v0.2.1"
+sha256 = ""
 required = true
 changes_board = false
 category = "utilities"
