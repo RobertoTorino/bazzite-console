@@ -15,6 +15,7 @@ The release workflow tars this tree; the portal uses the same function to instal
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import sys
@@ -35,8 +36,16 @@ def _ignore(folder: str, names: list[str]) -> set[str]:
 
 
 def uses_core(src: Path) -> bool:
-    return any(_USES_CORE.search(p.read_text(encoding="utf-8", errors="replace")) for p in src.rglob("*.py")
-               if not (set(p.relative_to(src).parts) & SKIP_DIRS))
+    """Whether a Python file of *src* imports bazzite_console_core. The skipped folders are not entered: cargo's
+    target holds thousands of folders that come and go while it builds, and a walk through them failed on one that
+    was gone again (FileNotFoundError in tools/nrt.sh --list while CI's native job built beside it, 17-11-2026)."""
+    for folder, dirs, files in os.walk(src):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".venv")]
+        for name in files:
+            if name.endswith(".py") and _USES_CORE.search(
+                    Path(folder, name).read_text(encoding="utf-8", errors="replace")):
+                return True
+    return False
 
 
 def source_dir(name: str, suite: Path = SUITE) -> Path:

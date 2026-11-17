@@ -36,3 +36,24 @@ def test_stage_keeps_sources_and_drops_build_output(tmp_path):
     assert not (dest / "native" / "target").exists()                # cargo's build output does not
     assert not (dest / "tests").exists()
     assert (dest / "bazzite_console_core" / "__init__.py").is_file()
+
+
+def test_uses_core_stays_out_of_the_skipped_folders(tmp_path, monkeypatch):
+    """cargo's target is not walked: its folders come and go during a build, and one that was gone failed the walk."""
+    suite = _suite(tmp_path)
+    app = suite / "apps" / "example"
+    (app / "native" / "target" / "release" / "gen.py").write_text("import bazzite_console_core\n")
+    (app / "example_pkg" / "__main__.py").write_text("print()\n")
+    entered: list[str] = []
+    walk = stage_app.os.walk
+
+    def spy(top):
+        for folder, dirs, files in walk(top):
+            entered.append(Path(folder).name)
+            yield folder, dirs, files
+
+    monkeypatch.setattr(stage_app.os, "walk", spy)
+    assert not stage_app.uses_core(app)                             # the import in target and in tests does not count
+    assert "target" not in entered and "tests" not in entered
+    (app / "example_pkg" / "__main__.py").write_text("from bazzite_console_core import AppInfo\n")
+    assert stage_app.uses_core(app)

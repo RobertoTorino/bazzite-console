@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2608 test functions (3003 cases counting the parametrized ones) in 30 test folders, and 31 installer tests.
+2609 test functions (3004 cases counting the parametrized ones) in 30 test folders, and 31 installer tests.
 
 ## Summary
 
@@ -37,8 +37,8 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/nrt](#devnrt) | 4 | 123 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [portal](#portal) | 17 | 216 | 30.2 s |
-| [tools](#tools) | 36 | 213 | 10.2 s |
-| **All** | | **2608** | **154 s** |
+| [tools](#tools) | 36 | 214 | 10.2 s |
+| **All** | | **2609** | **154 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -2680,7 +2680,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-213 tests in 36 files, 10.2 s in a local run.
+214 tests in 36 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2854,6 +2854,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_script_help.py` | `test_the_release_and_tour_scripts_have_help` |  |  | The release and tour scripts have help. |
 | `test_stage.py` | `test_readme_and_wiki_follow_the_portal_stage` |  |  | Readme and wiki follow the portal stage. |
 | `test_stage_app.py` | `test_stage_keeps_sources_and_drops_build_output` |  |  | Stage keeps sources and drops build output. |
+| `test_stage_app.py` | `test_uses_core_stays_out_of_the_skipped_folders` |  |  | cargo's target is not walked: its folders come and go during a build, and one that was gone failed the walk. |
 | `test_suite_release.py` | `test_a_tag_pushed_by_hand_is_that_release_published_at_once` |  |  | A tag pushed by hand is that release published at once. |
 | `test_suite_release.py` | `test_a_nexus_release_brings_the_unreleased_pins_and_a_draft_portal` |  |  | A nexus release brings the unreleased pins and a draft portal. |
 | `test_suite_release.py` | `test_a_withdrawn_app_is_not_built` |  |  | A withdrawn app is not built. |
