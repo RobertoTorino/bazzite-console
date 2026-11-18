@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# LanguageTool's server, for tools/text_check.py. The script downloads LanguageTool's release zip, checks its
+# SHA-256 and builds this image with the zip beside this file. The server listens on port 8081, on the host's
+# 127.0.0.1 only.
+FROM registry.fedoraproject.org/fedora:44
+RUN dnf -y install --setopt=install_weak_deps=False java-25-openjdk-headless unzip && dnf clean all
+ARG LT_VERSION
+COPY LanguageTool-${LT_VERSION}.zip /tmp/lt.zip
+RUN unzip -q /tmp/lt.zip -d /opt && mv /opt/LanguageTool-${LT_VERSION} /opt/languagetool && rm /tmp/lt.zip
+WORKDIR /opt/languagetool
+EXPOSE 8081
+CMD ["java", "-Xmx2g", "-cp", "languagetool-server.jar", "org.languagetool.server.HTTPServer", \
+     "--port", "8081", "--public", "--allow-origin"]

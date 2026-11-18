@@ -26,7 +26,7 @@ tools/                        release and CI (build_release, stage_app, check_ve
 dev/<name>/                   the development apps, run from the checkout and never released: dev/dash/ is Nexus
                               Dashboard (the door to the others), dev/nrt/ Nexus Release Tool, dev/demo/ Nexus
                               Demo Recorder, dev/itests/ Nexus Installer Tests, dev/sounds/ Nexus Sound Lab,
-                              dev/deps/ Nexus Deps
+                              dev/deps/ Nexus Deps, dev/text/ Text to Speech, dev/studio/ Nexus Remix Studio
 docs/ mkdocs.yml              this wiki (MkDocs Material)
 icons/                        the category icons
 DESIGN.md design/colors/      every color of the suite and its samples (tools/make_design.py writes them)

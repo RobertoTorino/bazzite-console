@@ -1,3 +1,13 @@
+Changelog: 18-11-2026 16:36:28
+
+Added. The dashboard has a tile for Nexus Remix Studio (dev/studio/, owner 18-11-2026), after Nexus Installer Tests.
+Its info text and its README name the app.
+
+Changelog: 18-11-2026 15:27:51
+
+Added. The dashboard has a tile for Text to Speech (dev/text/, owner 18-11-2026), after Nexus Sound Lab. Its info
+text and its README name the app.
+
 Changelog: 15-11-2026 10:17:45
 
 Added. The tiles Convert icons (the category icons from your images, with tools/sync_icons.py) and Close issues (the

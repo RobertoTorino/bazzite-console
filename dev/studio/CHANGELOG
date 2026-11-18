@@ -1,0 +1,28 @@
+Changelog: 18-11-2026 16:36:28
+
+Added. Nexus Remix Studio, a Nexus app in dev/studio/ (owner, 18-11-2026: a small remix studio, a voice track
+combined with a synthesized background and saved). Nexus Dashboard has its tile. The window has three parts.
+
+- Voice. A sound file of any rate, or a text that Text to Speech's engine speaks (From a text). The engine is Text to
+  Speech's own, found in dev/text of the checkout, and nothing of it is copied.
+- Background. A sustained sound made in the app. It has six presets (Warm pad, Soft strings, Drone, Glass, Choir,
+  Dark), a key, an octave, a chord and the sliders Tone, Movement and Space. Try background plays 12 s of it alone.
+- Mix. The volume of each track, the lead-in, the tail, the fade and, without a voice, the length. The mix is drawn
+  below the sliders.
+
+The pills at the top work on the mix. Play (Ctrl+Enter) makes the mix and plays it, Stop (Esc) ends it, and Save as
+writes it as an Ogg Vorbis, MP3, FLAC or WAV file, 48 kHz stereo. Reset puts the background and the mix back on the
+values the app starts with. With a voice, Length is the lead-in, the voice and the tail, and moving it changes the
+tail. The mix is made in a thread, and a minute of it takes about five seconds. A mix that was
+just played is saved without making it again. A mix too loud for the file is turned down as a whole, and the window
+says by how much. The same settings always give the same sound.
+
+How the background is made (remix_studio/pad.py). Each note of the chord is a few oscillators, a little out of tune
+and spread left and right. An oscillator reads one cycle from a table built from harmonics, so nothing above 16 kHz is
+in it. Movement fades each oscillator between a dark and a bright cycle and lets it swell. Space is a reverb, the
+sound convolved in blocks with three seconds of fading noise.
+
+A voice file is brought to 48 kHz with a windowed sinc (remix_studio/audio.py). A file is written a second at a
+time to a .part file, as Text to Speech writes its speech. The app runs from the checkout with the dev venv, takes
+Nexus's design and icon, and is never released (.checkout-only). install.sh writes the launcher, the menu entry and
+the Desktop icon for this checkout.

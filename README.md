@@ -43,6 +43,17 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/quickfix.webp" width="20" height="20" alt=""/> **[PS5 Quickfix](apps/quickfix)**: Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal and the boot command line. Always installed.
 - <img src="portal/images/apps/password.webp" width="20" height="20" alt=""/> **[PS5 Password Generator](apps/password)**: Makes a random password of 8 or 15 characters with a capital letter, a small letter, a number and a special character, and keeps it nowhere.
 
+The tools for working on the suite run from a checkout of the repository. They are not in the portal.
+**[Nexus Dashboard](dev/dash)** opens them all.
+
+- Nexus Release Tool
+- Nexus Installer Tests
+- Nexus Demo Recorder
+- Nexus Sound Lab
+- Text to Speech
+- Nexus Remix Studio
+- The video tours and the icons
+
 ## Install
 
 You install one thing, the portal; it installs the apps. The

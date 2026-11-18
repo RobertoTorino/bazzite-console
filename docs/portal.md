@@ -128,6 +128,18 @@ nothing in the portal. There are two ways to get every button:
   table). The back buttons can take any of these keys too. The layout is Steam's and applies to every program
   outside a game.
 
+The tools for working on the suite are not in the portal. They are in `dev/` of the repository, run from a
+checkout and have no release. [Nexus Dashboard](development/dashboard.md) opens them all. Start it from the
+checkout, or give it a menu entry with its `install.sh`.
+
+- **Nexus Release Tool** prepares and starts a release.
+- **Nexus Installer Tests** runs the installer tests one at a time.
+- **Nexus Demo Recorder** records a portal installation.
+- **Nexus Sound Lab** makes short sound effects for the windows.
+- **Text to Speech** speaks a text aloud.
+- **Nexus Remix Studio** mixes a voice with a synthesized background.
+- The video tours and the icons have a tile each.
+
 - Install, update and uninstall run **the app's own installer** in a terminal window, which opens over the portal,
   because installers may ask for the sudo password and print what they do. The portal watches for the result and
   refreshes. A terminal whose installer ended well closes by itself; one that failed stays open with what happened

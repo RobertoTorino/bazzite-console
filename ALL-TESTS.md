@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2680 test functions (3068 cases counting the parametrized ones) in 30 test folders, and 31 installer tests.
+2782 test functions (3170 cases counting the parametrized ones) in 32 test folders, and 33 installer tests.
 
 ## Summary
 
@@ -36,9 +36,11 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
 | [dev/nrt](#devnrt) | 4 | 123 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
+| [dev/studio](#devstudio) | 6 | 58 |  |
+| [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
 | [tools](#tools) | 36 | 214 | 10.2 s |
-| **All** | | **2680** | **153 s** |
+| **All** | | **2782** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -75,6 +77,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `shadps4.sh` | Exercise apps/shadps4/install.sh. |
 | `sounds.sh` | Exercise dev/sounds/install.sh, Nexus Sound Lab's installer. |
 | `ssd.sh` | Exercise apps/ssd/install.sh. |
+| `studio.sh` | Exercise dev/studio/install.sh, Nexus Remix Studio's installer. |
+| `text.sh` | Exercise dev/text/install.sh, Text to Speech's installer. |
 | `upscaler.sh` | Exercise apps/upscaler/install.sh. |
 | `vita3k.sh` | Exercise apps/vita3k/install.sh. |
 | `webcam.sh` | Exercise apps/webcam/install.sh. |
@@ -2524,6 +2528,122 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_synth.py` | `test_clamp_keeps_every_number_in_its_range_and_the_waveform_known` |  |  | Clamp keeps every number in its range and the waveform known. |
 | `test_synth.py` | `test_values_round_trip_through_strings_as_the_settings_keep_them` |  |  | Values round trip through strings as the settings keep them. |
 | `test_synth.py` | `test_write_wav_is_16_bit_mono_at_44100` |  |  | Write wav is 16 bit mono at 44100. |
+
+## dev/studio
+
+58 tests in 6 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_audio.py` | `test_another_rate_becomes_the_mixes_rate_with_the_same_sound` |  |  | Another rate becomes the mixes rate with the same sound. |
+| `test_audio.py` | `test_going_down_drops_what_the_new_rate_cannot_hold` |  |  | Going down drops what the new rate cannot hold. |
+| `test_audio.py` | `test_the_same_rate_and_an_empty_sound_stay_as_they_are` |  |  | The same rate and an empty sound stay as they are. |
+| `test_audio.py` | `test_one_channel_goes_to_both_sides_and_more_than_two_lose_the_rest` |  |  | One channel goes to both sides and more than two lose the rest. |
+| `test_audio.py` | `test_a_voice_file_loads_as_stereo_at_the_mixes_rate` |  |  | A voice file loads as stereo at the mixes rate. |
+| `test_audio.py` | `test_what_is_no_sound_file_says_so` |  |  | What is no sound file says so. |
+| `test_audio.py` | `test_every_format_is_written_and_read_back` |  |  | Every format is written and read back. |
+| `test_audio.py` | `test_an_unknown_format_and_a_failed_write_leave_nothing` |  |  | An unknown format and a failed write leave nothing. |
+| `test_audio.py` | `test_the_output_gets_16_bit_samples_that_never_wrap` |  |  | The output gets 16 bit samples that never wrap. |
+| `test_audio.py` | `test_a_drawing_gets_the_lowest_and_highest_sample_of_each_part` |  |  | A drawing gets the lowest and highest sample of each part. |
+| `test_main_window.py` | `test_the_icons_are_nexus_at_512_and_128_px` |  |  | The icons are nexus at 512 and 128 px. |
+| `test_main_window.py` | `test_the_window_opens_on_the_warm_pad_without_a_voice` |  |  | The window opens on the warm pad without a voice. |
+| `test_main_window.py` | `test_without_an_output_the_status_line_says_so` |  |  | Without an output the status line says so. |
+| `test_main_window.py` | `test_a_preset_fills_the_controls_and_a_moved_control_says_custom` |  |  | A preset fills the controls and a moved control says custom. |
+| `test_main_window.py` | `test_the_sliders_show_their_value_with_its_unit` |  |  | The sliders show their value with its unit. |
+| `test_main_window.py` | `test_a_sound_file_becomes_the_voice` |  |  | A sound file becomes the voice. |
+| `test_main_window.py` | `test_the_top_row_is_four_pills_of_one_width` |  |  | The top row is four pills of one width. |
+| `test_main_window.py` | `test_without_a_voice_length_sets_how_long_the_mix_lasts` |  |  | Without a voice length sets how long the mix lasts. |
+| `test_main_window.py` | `test_with_a_voice_length_is_lead_in_voice_and_tail_and_moving_it_sets_the_tail` |  |  | With a voice length is lead in voice and tail and moving it sets the tail. |
+| `test_main_window.py` | `test_reset_puts_the_background_and_the_mix_on_their_defaults_and_keeps_the_voice` |  |  | Reset puts the background and the mix on their defaults and keeps the voice. |
+| `test_main_window.py` | `test_the_open_dialog_remembers_its_folder_and_cancel_changes_nothing` |  |  | The open dialog remembers its folder and cancel changes nothing. |
+| `test_main_window.py` | `test_what_is_no_sound_file_is_said_and_the_voice_stays` |  |  | What is no sound file is said and the voice stays. |
+| `test_main_window.py` | `test_a_spoken_text_becomes_the_voice_and_cancel_changes_nothing` |  |  | A spoken text becomes the voice and cancel changes nothing. |
+| `test_main_window.py` | `test_play_makes_the_mix_draws_it_and_plays_it` |  |  | Play makes the mix draws it and plays it. |
+| `test_main_window.py` | `test_a_mix_is_made_again_only_after_a_change` |  |  | A mix is made again only after a change. |
+| `test_main_window.py` | `test_a_mix_too_loud_says_it_was_turned_down` |  |  | A mix too loud says it was turned down. |
+| `test_main_window.py` | `test_try_background_plays_it_alone_and_leaves_the_mix` |  |  | Try background plays it alone and leaves the mix. |
+| `test_main_window.py` | `test_save_writes_the_mix_that_was_heard_without_making_it_again` |  |  | Save writes the mix that was heard without making it again. |
+| `test_main_window.py` | `test_save_makes_the_mix_first_when_it_was_not_played` |  |  | Save makes the mix first when it was not played. |
+| `test_main_window.py` | `test_the_save_dialog_offers_the_last_format_and_adds_the_suffix` |  |  | The save dialog offers the last format and adds the suffix. |
+| `test_main_window.py` | `test_an_unknown_format_and_a_failed_write_are_said` |  |  | An unknown format and a failed write are said. |
+| `test_main_window.py` | `test_the_remix_is_remembered` |  |  | The remix is remembered. |
+| `test_main_window.py` | `test_a_voice_file_that_is_gone_is_left_out` |  |  | A voice file that is gone is left out. |
+| `test_main_window.py` | `test_in_a_thread_the_buttons_wait_and_the_mix_arrives` |  |  | In a thread the buttons wait and the mix arrives. |
+| `test_mix.py` | `test_without_a_voice_the_background_lasts_the_length_set` |  |  | Without a voice the background lasts the length set. |
+| `test_mix.py` | `test_with_a_voice_it_is_the_lead_in_the_voice_and_the_tail` |  |  | With a voice it is the lead in the voice and the tail. |
+| `test_mix.py` | `test_the_volumes_scale_each_track` |  |  | The volumes scale each track. |
+| `test_mix.py` | `test_the_background_fades_in_and_out` |  |  | The background fades in and out. |
+| `test_mix.py` | `test_a_mix_too_loud_is_turned_down_as_a_whole` |  |  | A mix too loud is turned down as a whole. |
+| `test_mix.py` | `test_values_of_another_version_become_valid` |  |  | Values of another version become valid. |
+| `test_pad.py` | `test_every_preset_has_its_sound_and_starts_from_valid_numbers` |  |  | Every preset has its sound and starts from valid numbers. |
+| `test_pad.py` | `test_the_chords_notes_are_in_tune` |  |  | The chords notes are in tune. |
+| `test_pad.py` | `test_a_cycle_holds_only_harmonics_below_16_khz_and_peaks_at_one` |  |  | A cycle holds only harmonics below 16 khz and peaks at one. |
+| `test_pad.py` | `test_a_background_is_stereo_as_long_as_asked_and_as_loud_as_level` |  |  | A background is stereo as long as asked and as loud as level. |
+| `test_pad.py` | `test_the_same_numbers_give_the_same_sound` |  |  | The same numbers give the same sound. |
+| `test_pad.py` | `test_the_note_that_sounds_is_the_key` |  |  | The note that sounds is the key. |
+| `test_pad.py` | `test_tone_makes_it_brighter` |  |  | Tone makes it brighter. |
+| `test_pad.py` | `test_movement_makes_the_tone_drift_over_time` |  |  | Movement makes the tone drift over time. |
+| `test_pad.py` | `test_space_lets_the_sound_ring_on` |  |  | Space lets the sound ring on. |
+| `test_pad.py` | `test_convolving_in_blocks_is_convolving` |  |  | Convolving in blocks is convolving. |
+| `test_pad.py` | `test_values_of_another_version_become_valid` |  |  | Values of another version become valid. |
+| `test_player.py` | `test_without_an_output_nothing_plays_and_the_end_is_said_at_once` |  |  | Without an output nothing plays and the end is said at once. |
+| `test_player.py` | `test_play_without_an_output_says_so` |  |  | Play without an output says so. |
+| `test_speak_dialog.py` | `test_text_to_speech_is_found_in_the_checkout_and_missed_elsewhere` |  |  | Text to speech is found in the checkout and missed elsewhere. |
+| `test_speak_dialog.py` | `test_a_text_is_spoken_saved_and_the_dialog_accepts` |  |  | A text is spoken saved and the dialog accepts. |
+| `test_speak_dialog.py` | `test_a_failure_is_shown_and_make_works_again` |  |  | A failure is shown and make works again. |
+| `test_speak_dialog.py` | `test_without_the_engine_the_dialog_says_where_to_set_it_up` |  |  | Without the engine the dialog says where to set it up. |
+| `test_speak_dialog.py` | `test_without_text_to_speech_the_dialog_says_so` |  |  | Without text to speech the dialog says so. |
+
+## dev/text
+
+44 tests in 5 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_engine.py` | `test_a_text_is_cut_after_each_sentence` |  |  | A text is cut after each sentence. |
+| `test_engine.py` | `test_an_abbreviation_an_initial_and_a_lower_case_word_end_no_sentence` |  |  | An abbreviation an initial and a lower case word end no sentence. |
+| `test_engine.py` | `test_an_empty_line_is_a_paragraph_and_a_line_break_a_space` |  |  | An empty line is a paragraph and a line break a space. |
+| `test_engine.py` | `test_only_the_english_female_voices_are_offered_american_first` |  |  | Only the english female voices are offered american first. |
+| `test_engine.py` | `test_a_text_with_letters_of_another_script_is_not_english` |  |  | A text with letters of another script is not english. |
+| `test_engine.py` | `test_the_pinned_files_are_the_half_precision_model_and_the_voices` |  |  | The pinned files are the half precision model and the voices. |
+| `test_engine.py` | `test_fetch_downloads_what_is_missing_and_checks_it` |  |  | Fetch downloads what is missing and checks it. |
+| `test_engine.py` | `test_fetch_keeps_no_file_that_is_not_the_pinned_one` |  |  | Fetch keeps no file that is not the pinned one. |
+| `test_engine.py` | `test_a_text_is_spoken_a_sentence_at_a_time` |  |  | A text is spoken a sentence at a time. |
+| `test_engine.py` | `test_the_voice_and_the_speed_have_defaults_and_limits` |  |  | The voice and the speed have defaults and limits. |
+| `test_engine.py` | `test_a_cancel_ends_a_speech_at_the_next_sentence` |  |  | A cancel ends a speech at the next sentence. |
+| `test_engine.py` | `test_a_new_speak_takes_the_place_of_the_one_being_made` |  |  | A new speak takes the place of the one being made. |
+| `test_engine.py` | `test_what_cannot_be_spoken_is_said_and_the_loop_goes_on` |  |  | What cannot be spoken is said and the loop goes on. |
+| `test_engine.py` | `test_only_english_is_spoken` |  |  | A voice of another language and a male voice, though the model has them, and a text in another script are all refused. |
+| `test_engine.py` | `test_the_last_speech_is_saved_in_each_format` |  |  | The last speech is saved in each format. |
+| `test_engine.py` | `test_a_long_speech_is_written_a_second_at_a_time` |  |  | A long speech is written a second at a time. |
+| `test_engine.py` | `test_a_save_that_cannot_be_done_is_said` |  |  | A save that cannot be done is said. |
+| `test_engine.py` | `test_the_reader_takes_commands_and_ends_with_a_quit` |  |  | The reader takes commands and ends with a quit. |
+| `test_engine.py` | `test_a_save_while_a_text_is_spoken_is_refused_and_the_speech_goes_on` |  |  | A save while a text is spoken is refused and the speech goes on. |
+| `test_engine_setup.py` | `test_the_engine_lives_in_the_data_folder_outside_the_checkout` |  |  | The engine lives in the data folder outside the checkout. |
+| `test_engine_setup.py` | `test_installed_needs_the_python_the_packages_and_the_model_files` |  |  | Installed needs the python the packages and the model files. |
+| `test_engine_setup.py` | `test_uv_makes_the_venv_with_a_python_of_its_own` |  |  | Uv makes the venv with a python of its own. |
+| `test_engine_setup.py` | `test_without_uv_the_newest_fitting_python_makes_it` |  |  | Without uv the newest fitting python makes it. |
+| `test_engine_setup.py` | `test_with_neither_the_message_says_what_to_install` |  |  | With neither the message says what to install. |
+| `test_main_window.py` | `test_the_info_text_links_to_the_apps_place_in_the_wiki` |  |  | The info text links to the apps place in the wiki. |
+| `test_main_window.py` | `test_the_icons_are_nexus_at_512_and_128_px` |  |  | The icons are nexus at 512 and 128 px. |
+| `test_main_window.py` | `test_the_window_opens_on_the_engine_and_lists_its_voices` |  |  | The window opens on the engine and lists its voices. |
+| `test_main_window.py` | `test_without_an_audio_output_the_window_says_so` |  |  | Without an audio output the window says so. |
+| `test_main_window.py` | `test_speak_plays_the_parts_as_they_arrive` |  |  | Speak plays the parts as they arrive. |
+| `test_main_window.py` | `test_nothing_is_spoken_without_a_text` |  |  | Nothing is spoken without a text. |
+| `test_main_window.py` | `test_a_text_in_another_script_is_not_spoken_or_saved` |  |  | A text in another script is not spoken or saved. |
+| `test_main_window.py` | `test_stop_cancels_the_speech_and_the_sound` |  |  | Stop cancels the speech and the sound. |
+| `test_main_window.py` | `test_a_spoken_text_is_saved_without_making_it_again` |  |  | A spoken text is saved without making it again. |
+| `test_main_window.py` | `test_an_unspoken_or_changed_text_is_made_first_without_playing` |  |  | An unspoken or changed text is made first without playing. |
+| `test_main_window.py` | `test_save_as_asks_for_the_file_and_adds_the_suffix_of_the_chosen_format` |  |  | Save as asks for the file and adds the suffix of the chosen format. |
+| `test_main_window.py` | `test_a_failure_is_shown_and_the_next_speak_clears_it` |  |  | A failure is shown and the next speak clears it. |
+| `test_main_window.py` | `test_speak_starts_an_engine_that_stopped_and_then_speaks` |  |  | Speak starts an engine that stopped and then speaks. |
+| `test_main_window.py` | `test_the_text_and_the_choices_are_remembered` |  |  | The text and the choices are remembered. |
+| `test_main_window.py` | `test_without_the_engine_the_window_sets_it_up` |  |  | Without the engine the window sets it up. |
+| `test_main_window.py` | `test_a_setup_step_that_fails_ends_the_setup_and_can_be_tried_again` |  |  | A setup step that fails ends the setup and can be tried again. |
+| `test_player.py` | `test_without_an_output_nothing_plays_and_the_end_is_said_at_once` |  |  | Without an output nothing plays and the end is said at once. |
+| `test_speech.py` | `test_the_engine_starts_speaks_saves_and_quits` |  |  | The engine starts speaks saves and quits. |
+| `test_speech.py` | `test_an_engine_that_ends_by_itself_is_said` |  |  | An engine that ends by itself is said. |
+| `test_speech.py` | `test_an_engine_that_cannot_start_is_said` |  |  | An engine that cannot start is said. |
 
 ## portal
 

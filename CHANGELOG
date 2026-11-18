@@ -1,3 +1,62 @@
+Changelog: 18-11-2026 17:29:15
+
+Fixed. DECISION-TABLE.md was looked at again (owner, 18-11-2026: "check what is new and remove what is definitely
+not interesting"). Each kept row has a column with what is new since 07-11-2026, read from the projects' releases,
+pull requests and issues. Nine rows are out, listed with the reason: the boot foundation, the Bazzite image, the
+Pro's GPU and firmware, FSR4 INT8 for the Pro, VCN, M.2 and USB-free boot, frame generation, Kodi and the generic
+Bazzite tools. Two rows are new: desktop apps for hardware control, and the org's own tools. No row is decided.
+
+Changelog: 18-11-2026 17:26:52
+
+Fixed. CROSS-REFERENCE.md lists only what differs between this suite and its twin (owner, 18-11-2026: "only keep the
+differences in that table"). It was a table of every app from 10-11-2026 with names that have changed since. It now
+has the eleven apps only the twin has, each with what it does and what it relies on, and the quickfixes that
+differ. The owner judges what is suitable to port.
+
+Changelog: 18-11-2026 17:25:09
+
+Added. One generic CLAUDE.md (owner, 18-11-2026: "one generic CLAUDE.md that can be used in whatever suite we are
+working on"). The file is now the same, word for word, in every suite's repository, and names no suite, board or
+app of one suite. What only this suite has moved to .claude/suite.md, which CLAUDE.md reads: its name, repository,
+packages, folders, apps, licenses, the apps that change the board and the rules that hold for it alone. No rule was
+dropped. New in it: the word "board" is always used in "changes the board" (owner, 18-11-2026), and an app's actions
+are pills. tools/all_tests.py takes the suite's name for ALL-TESTS.md from the title of .claude/suite.md, where it
+took it from CLAUDE.md's.
+
+Changelog: 18-11-2026 16:41:03
+
+Added. tools/text_check.py lists what is wrong with the text people read (owner, 18-11-2026: "also add the
+text_check"). It reads the wiki, the READMEs, the text in the apps' windows, the portal's texts in portal/apps.toml
+and the messages the apps' scripts print. It checks the text against the writing standard in .claude/writing.md,
+with LanguageTool (spelling, grammar and American English, in a podman container) and with Vale (style and
+readability, the rule sets in tools/text_check/styles/). It is no test and no CI check. In Claude Code,
+/rewrite-text rewrites the text with it and checks every changed sentence against the code. The owner's decisions on
+the text are in .claude/text-decisions.md. The tool came from its twin. The badge check
+(tools/tests/test_readme_badges.py) leaves out the READMEs of the pinned Vale styles, which are their makers' own
+files.
+
+Added. The README, the wiki's Apps page and its Portal chapter name the tools for working on the suite (owner,
+18-11-2026): Nexus Dashboard opens them all, from Nexus Release Tool to Text to Speech and Nexus Remix Studio. They
+run from a checkout and are not in the portal.
+
+Changelog: 18-11-2026 16:36:28
+
+Added. Nexus Remix Studio, a development app in dev/studio/ (owner, 18-11-2026). It mixes a voice with a synthesized
+background and saves the result as an Ogg Vorbis, MP3, FLAC or WAV file. The voice is a sound file or a text spoken
+by Text to Speech's engine, and the background is a pad or a drone made in the app. Nexus Dashboard has its tile, and
+its installer test is tools/installer-tests/studio.sh. The root requirements-dev.txt takes in its requirements. The
+wiki's Dashboard chapter describes it under Remix Studio. The app came from its twin, where the owner tried it first.
+
+Changelog: 18-11-2026 15:27:51
+
+Added. Text to Speech, a development app in dev/text/ (owner, 18-11-2026). It speaks an English text in a natural
+English voice with the Kokoro model on the machine itself, and saves the speech as an Ogg Vorbis, MP3, FLAC or WAV
+file. Nexus Dashboard has its tile, and its installer test is tools/installer-tests/text.sh. The root
+requirements-dev.txt takes in its requirements, which add numpy and soundfile for its tests. The wiki's Dashboard
+chapter describes it under Text to Speech. Its speech engine has a venv of its own outside the checkout, set up from
+the app's window, because onnxruntime has no wheel for the dev venv's Python. The app came from its twin, where the
+owner tried it first.
+
 Changelog: 18-11-2026 04:05:17
 
 Fixed. CI's pytest jobs install Bazzite's font (fonts-noto-core) before the tests, as tools/ci-local.sh's image has

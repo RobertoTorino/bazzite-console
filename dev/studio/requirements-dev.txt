@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The app runs in the checkout's dev venv (requirements-dev.txt in the root), so it has no requirements.txt.
+PyQt6>=6.11,<7
+pytest>=8
+numpy>=2.0.2                    # the background and the mix are made with it
+soundfile>=0.13,<1              # reads the voice file and writes the mix

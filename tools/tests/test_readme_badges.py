@@ -23,8 +23,13 @@ CI_BADGE = re.compile(r"^\[!\[[^\]]+\]\(https://github\.com/RobertoTorino/bazzit
                       r"\(https://github\.com/RobertoTorino/bazzite-console/actions/workflows/([\w.-]+)\)$")
 
 
+THIRD_PARTY = ("tools/text_check/styles/",)       # the text tool's pinned Vale styles: their makers' own files
+
+
 def readmes() -> list[str]:
-    return subprocess.run(["git", "ls-files", "*README.md"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+    """The suite's own READMEs: the tracked ones, without the files of others kept as they came."""
+    names = subprocess.run(["git", "ls-files", "*README.md"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+    return [name for name in names if not name.startswith(THIRD_PARTY)]
 
 
 def family(license_file: Path) -> tuple[str, ...]:

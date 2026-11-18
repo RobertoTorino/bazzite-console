@@ -1,0 +1,34 @@
+Changelog: 18-11-2026 15:27:51
+
+Added. Text to Speech, a Nexus app in dev/text/ (owner, 18-11-2026). It grew from a small Gradio example into a full
+app, and Nexus Dashboard has its tile. The window speaks a text with the Kokoro model on the machine itself and saves
+the speech. It has a voice list (the model's 15 English female voices, American and British, Heart by default), a
+speed (0.50 to 2.00, 0.85 by default), Speak (Ctrl+Enter), Stop (Esc) and Save as (Ogg Vorbis, MP3, FLAC or WAV, 24 kHz
+mono).
+
+What it does better than the example:
+
+- The text is spoken a sentence at a time, and played while the rest is made. On the test machine the first sound
+  comes after 0.7 s. The example played nothing until all of it was made.
+- The engine is a process that stays, so the model loads once and the window never waits on it.
+- Stop and a new Speak take effect at the next sentence.
+- A text that was just spoken is saved in any format without making it again. An unspoken text is made without
+  playing.
+- The half-precision model (164 MB) takes the place of the full one (326 MB). On a CPU both made 13 s of speech in
+  4.3 s. The 8-bit model took 9.8 s.
+- Each model file is downloaded to a .part file and kept only when its SHA-256 is the pinned one.
+- A long speech is written a second at a time. libsndfile's Ogg writer crashed on two minutes handed over in one
+  piece.
+- An abbreviation, an initial and a lower-case word end no sentence. An empty line is a longer pause.
+
+English female voices only (owner, 18-11-2026). The model's male voices and its voices in other languages are not
+offered, and the engine refuses them. A text with letters of another script is not spoken, and the status line says
+so. Another language in Latin letters cannot be told from English, and is read with English sounds.
+
+The speech engine (textspeech/engine.py) has a venv of its own in ~/.local/share/nexus-text-to-speech/, beside its
+model files. The reason is that onnxruntime has no wheel for the dev venv's Python 3.15. The window's Set up the
+speech engine makes that venv with uv, or with a Python from 3.10 to 3.13 on the PATH. It then installs
+engine-requirements.txt and fetches the model, and shows each step's output. The app runs from the checkout with the
+dev venv, takes Nexus's design and icon, and is never released (.checkout-only). install.sh writes the launcher, the
+menu entry and the Desktop icon for this checkout. install.sh --uninstall --purge removes the speech engine and the
+settings.

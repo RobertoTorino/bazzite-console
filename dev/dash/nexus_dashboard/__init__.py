@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Nexus Dashboard: the one door to the tools for working on the suites (owner, 02-11-2026: they were spread over
 the suites and the root). It starts the Nexus apps of the checkout (Nexus Release Tool, Nexus Installer Tests,
-Nexus Demo Recorder, Nexus Sound Lab) and opens the tours and the icons of the suite chosen in its header. A Nexus app (dev/), run
-from the checkout and never released."""
+Nexus Demo Recorder, Nexus Sound Lab, Text to Speech, Nexus Remix Studio) and opens the tours and the icons of the
+suite chosen in its header. A Nexus app (dev/), run from the checkout and never released."""
 
 from pathlib import Path
 

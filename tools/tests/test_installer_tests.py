@@ -28,7 +28,8 @@ def test_every_app_has_an_installer_test():
 
 def _from_the_checkout() -> set[str]:
     """The tools that run from the checkout, outside the portal: the Nexus apps in dev/ (Nexus Dashboard, Nexus
-    Release Tool, Nexus Demo Recorder, Nexus Installer Tests, Nexus Sound Lab), each with an install.sh."""
+    Release Tool, Nexus Demo Recorder, Nexus Installer Tests, Nexus Sound Lab, Text to Speech, Nexus Remix Studio), each
+    with an install.sh."""
     return {path.parent.name for path in (SUITE / "dev").glob("*/install.sh")}
 
 
@@ -37,7 +38,7 @@ def test_every_portal_entry_and_checkout_tool_has_an_installer_test():
     names = set(manifest.get("apps", {})) | _from_the_checkout()
     missing = sorted(name for name in names if not (TESTS / f"{name}.sh").is_file())
     assert not missing, f"no tools/installer-tests/<name>.sh for: {', '.join(missing)}"
-    assert {"dash", "demo", "itests", "nrt", "sounds"} <= _from_the_checkout()
+    assert {"dash", "demo", "itests", "nrt", "sounds", "studio", "text"} <= _from_the_checkout()
 
 
 def test_every_installer_test_is_for_something_that_exists():

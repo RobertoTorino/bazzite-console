@@ -50,7 +50,9 @@ of its own that keeps running when the dashboard closes.
 | **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)). |
 | **Nexus Deps** | The suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). |
 | **Nexus Installer Tests** | The suite's installer tests, one at a time ([below](#installer-tests)). |
+| **Nexus Remix Studio** | Mixes a voice with a synthesized background and saves the result ([below](#remix-studio)). |
 | **Nexus Sound Lab** | Short sound effects for the suite's windows, made from sliders ([below](#sound-lab)). |
+| **Text to Speech** | Speaks an English text in a natural voice and saves it as a sound file ([below](#text-to-speech)). |
 
 The other tiles work on the suite:
 
@@ -191,6 +193,108 @@ the stream stops and needs time to unmute when it starts again, so a 50 ms tick 
 preset Tick after silence shows the same from the other side: with the link asleep, only its tick comes through. A
 window that plays such sounds needs the same loop while it is open. `dev/sounds/run.sh` and
 `dev/sounds/install.sh` start and install it on their own, and the dashboard's tile does the same.
+
+## Text to Speech
+
+**Text to Speech** speaks an English text in a natural voice and saves the speech as a sound file. Use it for a video's
+voice-over or a spoken note. The voices run on the machine itself, and nothing of your text leaves it. The app is in
+`dev/text/`.
+
+Type or paste the text, choose a **Voice** and a **Speed**, and click **Speak**. Ctrl+Enter does the same. The first
+sentence plays while the app makes the next ones. An empty line in the text gives a longer pause. **Stop** ends the
+speech, and so does Esc.
+
+- **Voice** lists the 15 English female voices of the Kokoro model. Each one shows whether it is American or
+  British. The list opens on Heart. The model's male voices and its voices in other languages are not offered.
+- **Speed** goes from 0.50 to 2.00. At 1.00 the voice speaks at its own pace. The app opens on 0.85.
+- **Save as…** writes the speech as an Ogg Vorbis, MP3, FLAC or WAV file, at 24 kHz mono. The file's suffix sets the
+  format. You do not have to click **Speak** first. A text you just heard is saved as you heard it.
+
+The text must be English. The app does not speak a text with letters of another script, such as Cyrillic or
+Chinese, and says so in the status line. It cannot tell another language in Latin letters from English, and reads
+such a text with English sounds.
+
+The app remembers the text, the voice, the speed, the save folder and the format.
+
+### The speech engine
+
+The speech engine is the program that makes the speech. It is not in the repository, so the app downloads it once.
+The first time, the window shows **Set up the speech engine** in place of the text. Click it, and the window shows
+each step. The download is about 350 MB, and it goes to `~/.local/share/nexus-text-to-speech/`. After that, the
+window opens on the text.
+
+The setup needs one of these:
+
+- [uv](https://docs.astral.sh/uv/), which brings the right Python by itself. Install it with `brew install uv`.
+- A Python from 3.10 to 3.13 on the PATH
+
+The engine has its own Python because onnxruntime, one of its packages, has no build for the Python of the
+checkout's venv. The app checks each model file against its SHA-256 before it keeps the file. When a step fails, the
+window says so. Click **Set up the speech engine** again to retry.
+
+The app uses the half-precision model, `kokoro-v1.0.fp16.onnx`, a file of 164 MB. On the test machine it makes speech
+about three times faster than the voice speaks it. It is as fast as the full model, at half the download. The engine
+starts with the window and stays, so the model loads once. When the engine stops by itself, the window says so, and
+**Speak** starts it again. The engine's own messages are in the app's log. The dashboard names that log when it
+starts the app.
+
+`dev/text/run.sh` starts the app without the dashboard, and `dev/text/install.sh` gives it a menu entry.
+`dev/text/install.sh --uninstall --purge` removes the speech engine and the settings.
+
+## Remix Studio
+
+**Nexus Remix Studio** mixes a voice with a synthesized background and saves the result as a sound file. Use it to
+put a soft pad under a voice-over. Everything is made on the machine itself. The app is in `dev/studio/`.
+
+The window has three parts, from top to bottom.
+
+### Voice
+
+- **Open a sound file…** takes a WAV, Ogg Vorbis, FLAC or MP3 file as the voice.
+- **From a text…** opens a small window. Type an English text, choose a voice and a speed, and click **Make the
+  voice**. [Text to Speech](#text-to-speech) speaks it, so its speech engine must be set up first.
+- **Remove** takes the voice out. The mix is then the background alone.
+
+The voice is drawn below the buttons.
+
+### Background
+
+The background is a sustained sound, a pad or a drone, that the app makes itself.
+
+- **Preset** is a sound to start from. There are six: Warm pad, Soft strings, Drone, Glass, Choir and Dark. The box
+  says Custom once you change a control.
+- **Key**, **Octave** and **Chord** set the notes that sound together.
+- **Tone** goes from dark and soft to bright.
+- **Movement** sets how much the sound drifts and swells over time. With the slider at 0, the sound stands still.
+- **Space** is the reverb, from a dry sound to a large hall.
+
+**Try background** plays 12 seconds of it alone.
+
+### Mix
+
+- **Voice volume** and **Background volume** set how loud each track is. The app opens with the background at 40 %,
+  so the voice stays clear.
+- **Lead-in** is how long the background plays before the voice starts, and **Tail** how long it goes on after.
+- **Fade** is the background's fade in at the start and its fade out at the end.
+- **Length** is how long the mix lasts. Without a voice you set it freely, from 5 to 600 seconds. With a voice it
+  is the lead-in, the voice and the tail together, and moving it changes the tail.
+
+The pills at the top work on the mix. **Play** makes the mix and plays it. Ctrl+Enter does the same. **Stop** ends
+it, and so does Esc. The mix is drawn
+below the sliders, with its length. A minute of mix takes about five seconds to make.
+
+**Save as…** writes the mix as an Ogg Vorbis, MP3, FLAC or WAV file, at 48 kHz stereo. The file's suffix sets the
+format. You do not have to click **Play** first. A mix you just heard is saved as you heard it. The same settings
+always give the same sound.
+
+**Reset** puts the background and the mix back on the values the app starts with. The voice stays.
+
+When both tracks together are too loud for the file, the app turns the whole mix down. It says by how much under
+the drawing. Nothing is clipped.
+
+The app remembers the voice file, the background, the mix, the save folder and the format.
+
+`dev/studio/run.sh` starts the app without the dashboard, and `dev/studio/install.sh` gives it a menu entry.
 
 ## Deps
 

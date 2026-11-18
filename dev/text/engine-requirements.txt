@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The speech engine's own venv (~/.local/share/nexus-text-to-speech/venv, Python 3.10 to 3.13), set up by the app's
+# Set up the speech engine; never the checkout's dev venv, whose Python onnxruntime has no wheel for.
+kokoro-onnx>=0.6.1,<0.7         # the Kokoro model on onnxruntime, with eSpeak NG for the phonemes
+soundfile>=0.13,<1              # libsndfile: the saved OGG, MP3, FLAC and WAV
