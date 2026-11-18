@@ -1,3 +1,21 @@
+Changelog: 18-11-2026 03:13:06
+
+Added. RPCN, RPCS3's online service, as shadPS4 Manager has shadNet: an RPCN Account pill opens a window that
+creates an account on an RPCN server, tries a sign-in, has the token mailed again and saves the account in RPCS3's
+own files, so RPCS3 signs in when a game starts. An RPCN line names the account that signs in, and beside the app's
+state stands RPCN Off, Online or Offline. The password is kept and sent as RPCS3 derives it, never as typed.
+
+Changelog: 18-11-2026 02:32:46
+
+Added. The managers' new design, as PPSSPP Manager's and PCSX2 Manager's: a Memory cards tab with the saves on
+RPCS3's hard disk (export to a .zip, import, delete). Clear logs, a tab beside Log that is a button, empties the
+app's log file and the Log tab and removes the older log files. Start game stands beside Your games. The six tabs
+share the window's whole width and are pills as the ones above them. Play time moved from the header to the row
+of action pills. Under the header's pills only the links to RPCS3's release notes and the wiki are left, in the
+type of a pill's caption; the introduction went. RPCS3's state is one line, and the Firmware line is the version alone, or Uninstalled. Under the games an info symbol stands
+in for the line of text about Steam. The window opens 900 wide (it was 980), which is its narrowest, and 606 high
+(it was 800); the Settings tab scrolls when it is higher than the window.
+
 Changelog: 17-11-2026 14:53:56
 
 Release 1.2.0.

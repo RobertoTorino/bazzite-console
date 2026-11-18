@@ -1,27 +1,27 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The main window, built as PCSX2 Manager's and RPCS3 Manager's (owner, 24-10-2026: the manager that works is the
-pattern for the others): the header with the Refresh pill and the state boxes, a row of action pills (Install and
-Uninstall for shadPS4, Install for the system modules, Install (Extract PKG) for the games, Account
-for shadNet; the owner's order, 24-10-2026) in place of the four numbered steps with buttons, the state of each
-(shadPS4, the system modules, the game folders, shadNet) in a short line, then three tabs: the games found, each
-with a box for Steam; shadPS4's settings (settings_page.py); and the app's log. Downloading shadPS4, asking GitHub
-for a newer one and changing Steam's files run off the GUI thread; nothing here needs root. The look is the app's
-own blue (style.py). Games Install (or a package dropped on the window, or given to the app) opens the package
-extractor (extract_dialog.py) on the game folders. Steam artwork… takes the suite's SteamGridDB API key, with which
-Update Steam looks up a cover for each game's portrait first (core's covers).
+"""The main window, built as PCSX2 Manager's and RPCS3 Manager's (owner, 24-10-2026: the manager that works is the pattern
+for the others): the header with the Refresh pill and the state boxes, a row of action pills (Install and Uninstall for
+shadPS4, Install for the system modules, Install (Extract PKG) for the games, Account for shadNet; the owner's order,
+24-10-2026) in place of the four numbered steps with buttons, the state of each (shadPS4, the system modules, the game
+folders, shadNet) in a short line, then the tabs: the games found, each with a box for Steam; shadPS4's settings
+(settings_page.py); the saves it keeps (Memory cards, saves_page.py); and the app's log, with Clear logs beside it.
+Downloading shadPS4, asking GitHub for a newer one and changing Steam's files run off the GUI thread; nothing here
+needs root. The look is the app's own blue (style.py). Games Install (or a package dropped on the window, or given to
+the app) opens the package extractor (extract_dialog.py) on the game folders. Steam artwork… takes the suite's
+SteamGridDB API key, with which Update Steam looks up a cover for each game's portrait first (core's covers).
 
-A game runs from Steam: the last tab, Start game, starts the chosen one there (owner, 12-11-2026). The window keeps what
-the app owns in shadPS4's files (userdata.py): the quit hotkeys. shadPS4's own window (Big Picture, shadPS4 settings
-under the games) stays for what the Settings tab does not set. The window also reads the volume Bazzite remembers for
-shadPS4 and says when it is muted (seen on the console). What the window says it also writes to the app's log (core's
-applog), shown in the Log tab.
+A game runs from Steam: the tab beside Your games, Start game, starts the chosen one there (owner, 12-11-2026). The
+window keeps what the app owns in shadPS4's files (userdata.py): the quit hotkeys. shadPS4's own window (Big Picture,
+shadPS4 settings under the games) stays for what the Settings tab does not set. The window also reads the volume
+Bazzite remembers for shadPS4 and says when it is muted (seen on the console). What the window says it also writes to
+the app's log (core's applog), shown in the Log tab.
 
-Packages (owner, 05-11-2026): a .pkg put in a game
-folder is a row of its own in Your games, "PKG" or "PKG update", until it is unpacked (extract.py). Unpack takes the
-chosen one, Unpack all every one, the games first; each update goes beside its game and replaces an older one there.
-The packages unpacked whole are remembered (path, size and time), so they are no longer rows, and offered for
-deletion in the keep window: a package takes as much room as its game. Remove game… on a package row offers the
-package itself (one that cannot be unpacked, a broken download, otherwise stays a row; owner, 11-11-2026)."""
+Packages (owner, 05-11-2026): a .pkg put in a game folder is a row of its own in Your games, "PKG" or "PKG update",
+until it is unpacked (extract.py). Unpack takes the chosen one, Unpack all every one, the games first; each update goes
+beside its game and replaces an older one there. The packages unpacked whole are remembered (path, size and time), so
+they are no longer rows, and offered for deletion in the keep window: a package takes as much room as its game. Remove
+game… on a package row offers the package itself (one that cannot be unpacked, a broken download, otherwise stays a
+row; owner, 11-11-2026)."""
 
 from __future__ import annotations
 
@@ -34,9 +34,9 @@ from pathlib import Path
 
 from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent, QResizeEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-                             QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem,
-                             QTabWidget, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QHeaderView,
+                             QLabel, QMainWindow, QMessageBox, QPushButton, QScrollArea, QSizePolicy, QTabWidget,
+                             QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from bazzite_console_core import SUITE_MANUAL_URL, applog, covers, sound, steam, window_title
 from bazzite_console_core import __version__ as CORE_VERSION
@@ -52,6 +52,7 @@ from bazzite_console_core.widgets import AppHeader, InfoButton, MetricBox, Statu
 from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, extract, library,
                settings_page, shadnet, shortcuts, style, userdata)
 from .games import MAX_DEPTH, Game, scan
+from .saves_page import SavesPage
 from .settings_page import SettingsPage
 from .shadnet_dialog import ShadNetDialog
 
@@ -60,14 +61,17 @@ FOLDER_TIMEOUT = 60
 SHADNET_WATCH_MS = 5000
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
+CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the Log tab"
 RUNNING = "shadPS4 is running: close it first, it writes its own settings over the change when it closes."
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER = range(5)             # the table's columns
-GAMES, SETTINGS, LOG = range(3)                             # the tabs
+WIDTH = 900                             # the window opens this wide, and is never narrower (owner, 18-11-2026)
+HEIGHT = 606                            # the window opens this high (owner, 18-11-2026); it was 800
+GAMES, START, SETTINGS, SAVES, LOG = range(5)               # the tabs
 # The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
 # advice are in its tip.
-NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
-INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
+NOT_INSTALLED = "Not installed. Install it with the Install button."
+INSTALLED = "Installed. Uninstall with the Uninstall button."
 _NUMBERED = re.compile(r"\d+(\.\d+)*")
 
 
@@ -126,7 +130,8 @@ class MainWindow(QMainWindow):
         WirePlumber's file with the volume the desktop remembers for shadPS4 (tests pass their own); *user_home*: the home folder with the app's own game
         folder, Games/PS4 (library.fixed); *drives*: the removable drives looked at for one."""
         super().__init__()
-        self.resize(980, 800)
+        self.setMinimumWidth(WIDTH)                     # never narrower (owner, 18-11-2026)
+        self.resize(WIDTH, HEIGHT)
         self.home = home or emulator.emulator_home()
         self.shad_home = shad_home or userdata.shadps4_home()
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
@@ -202,19 +207,17 @@ class MainWindow(QMainWindow):
         self.emulator_box = MetricBox("shadPS4 version", style.BLUE)
         self.games_box = MetricBox("Your games", style.BLUE)
         self.steam_box = MetricBox("Available in Steam", style.BLUE)
-        self.time_box = MetricBox("Play time", style.BLUE)      # all games together, as shadPS4 counts it
         # The header's pills spread over the window's width in equal parts, as the action pills below (owner,
         # 24-10-2026). (The System modules box went: the System modules line below says how many there are.)
-        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box, self.time_box]
+        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box]
         for box in self.header_pills:
             box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             header.add_second(box, 1)
-        self.intro = hint_label(
-            "PS4 games on the system with the shadPS4 emulator. The app installs the shadPS4 release it was tried "
-            "with, finds your games (or unpacks them from .pkg files) and puts them in Steam, so a game starts "
-            "straight away, also from Steam's Big Picture Mode. Games, saves and system modules come from your own "
-            "PS4; the app never downloads them. " + style.link(self, emulator.RELEASE_PAGE, "shadPS4's release notes")
-            + " · " + style.link(self, MANUAL_URL, "Wiki"), follow_height=True)   # its lines count in the minimum
+        # The two links alone (owner, 18-11-2026), in the type of a pill's caption (Click to refresh): what the
+        # app is for is in the wiki.
+        self.intro = hint_label(style.caption_link(self, emulator.RELEASE_PAGE, "shadPS4's release notes")
+                                + " · " + style.caption_link(self, MANUAL_URL, "Wiki"), follow_height=True)
+        self.intro.setStyleSheet(style.CAPTION)
 
         # What there is to do, as pills the size of the header's, spread over the window's width (owner,
         # 24-10-2026): what it is for in large type (shadPS4, Games, shadNet), what the pill does under it. The games
@@ -236,9 +239,11 @@ class MainWindow(QMainWindow):
                                                                     "have shadPS4 sign in with it")
         self.account_pill.clicked.connect(self.on_shadnet)
         self.actions = [self.install_pill, self.remove_pill, self.package_pill, self.account_pill]
+        # Play time beside them (owner, 18-11-2026: the header is full): all games together, as shadPS4 counts it
+        self.time_box = MetricBox("Play time", style.BLUE)
         actions = QHBoxLayout()
         actions.setSpacing(8)
-        for pill in self.actions:                       # each a sixth of the width, whatever the window's
+        for pill in (*self.actions, self.time_box):     # each a fifth of the width, whatever the window's
             pill.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             actions.addWidget(pill, 1)
 
@@ -293,10 +298,11 @@ class MainWindow(QMainWindow):
         self.steam_button = style.primary_button("Update Steam", STEAM_TIP)
         self.steam_button.clicked.connect(self.on_update_steam)
         buttons = QHBoxLayout()
-        self.steam_hint = hint_label(f"Tick a game to put it in Steam. A game is started from "
-                                     f"{style.link(self, STEAM_URL, 'Steam')}.")
-        self.steam_hint.setOpenExternalLinks(False)      # the app opens Steam itself (open_steam)
-        self.steam_hint.linkActivated.connect(lambda _url: self.open_steam())
+        # What the boxes and Start game do, behind an info symbol (owner, 18-11-2026, in place of a line of text)
+        self.steam_info = InfoButton("A checkmark before a game adds the game to Steam. When the Start game button "
+                                     f"is clicked the game starts from {style.link(self, STEAM_URL, 'Steam')}.",
+                                     "About the games and Steam")
+        self.steam_info.opens = lambda _url: self.open_steam()      # the app opens Steam itself (open_steam)
         self.unpack_button = QPushButton("Unpack")
         self.unpack_button.setToolTip("Unpack the chosen package (a PKG row) into its game folder")
         self.unpack_button.clicked.connect(self.on_unpack)
@@ -304,7 +310,8 @@ class MainWindow(QMainWindow):
         self.unpack_all_button.setToolTip("Unpack every package that waits, one after the other: the games first, "
                                           "then their updates")
         self.unpack_all_button.clicked.connect(self.on_unpack_all)
-        buttons.addWidget(self.steam_hint, 1)
+        buttons.addWidget(self.steam_info)
+        buttons.addStretch(1)
         buttons.addWidget(self.unpack_button)
         buttons.addWidget(self.unpack_all_button)
         buttons.addWidget(self.shad_button)
@@ -330,11 +337,28 @@ class MainWindow(QMainWindow):
                                  f"the same lines are in {escape(private(self.log_path))}, which turns over at 1 MB."))
         log.addWidget(self.output, 1)
         self.tabs = QTabWidget()
+        # The six tabs share the whole width, the last one up to the window\'s margin (owner, 18-11-2026)
+        self.tabs.setDocumentMode(True)
+        self.tabs.tabBar().setExpanding(True)
+        self.tabs.tabBar().setDrawBase(False)           # no line over the tabs, which that mode draws
         self.tabs.addTab(games_page, "Your games")
-        self.tabs.addTab(self.settings_page, "Settings")
-        self.tabs.addTab(log_page, "Log")
-        # Start game (owner, 12-11-2026): the last tab is a button, which starts the chosen game in Steam
+        # Start game (owner, 12-11-2026): a tab that is a button, which starts the chosen game in Steam; beside
+        # Your games, where the game is chosen (owner, 18-11-2026)
         self.start_tab = ActionTab(self.tabs, "Start game", START_TIP, self.on_start_game)
+        # The Settings tab scrolls when it is higher than the window (owner, 18-11-2026): it never makes the window
+        # higher than it opens.
+        self.settings_scroll = QScrollArea()
+        self.settings_scroll.setWidgetResizable(True)
+        self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.settings_scroll.setWidget(self.settings_page)
+        self.tabs.addTab(self.settings_scroll, "Settings")
+        # Memory cards (owner, 18-11-2026): the saves shadPS4 keeps, each under its game's title (saves_page.py)
+        self.saves_page = SavesPage(self.shad_home, lambda: {g.title_id: g.title for g in self.games if g.title_id},
+                                    self.shad_running, self.log)
+        self.tabs.addTab(self.saves_page, "Memory cards")
+        self.tabs.addTab(log_page, "Log")
+        # Clear logs (owner, 18-11-2026): beside the Log tab, a tab that is a button and empties the log
+        self.clear_tab = ActionTab(self.tabs, "Clear logs", CLEAR_TIP, self.on_clear_logs)
 
         self.running = WrappedLabel()
         self.running.setStyleSheet("font-weight:600;")
@@ -410,6 +434,7 @@ class MainWindow(QMainWindow):
             self.say(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
                      "Update Steam brings the shortcut in Steam up to date.")
         self.settings_page.load()
+        self.saves_page.load()
         self.show_controller()
         self.show_sound()
 
@@ -462,6 +487,16 @@ class MainWindow(QMainWindow):
         (self.log.info if ok else self.log.error)(text)
         stamp = time.strftime(applog.DATE)
         self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
+
+    def on_clear_logs(self) -> None:
+        """Clear logs (owner, 18-11-2026): the app's log file emptied, with the older ones kept beside it, and the
+        Log tab with them. Said in the line under the tabs only, so the log stays empty."""
+        if not applog.clear(APP_ID, self.log_path):
+            self.say(f"The log could not be cleared: {private(self.log_path)}", ok=False)
+            return
+        self.output.clear()
+        self.running.setStyleSheet("font-weight:600;")
+        self.running.setText("The log was cleared.")
 
     def sync_folders(self) -> None:
         """shadPS4's own game folders (config.json) made the app's (owner, 03-11-2026), so shadPS4's own window lists
@@ -1107,7 +1142,7 @@ class MainWindow(QMainWindow):
 
     def place_states(self) -> None:
         """The states end at the middle of the last header pill: the spacer after them is half its width."""
-        self.states_spacer.setFixedWidth(max(0, self.time_box.width() // 2))
+        self.states_spacer.setFixedWidth(max(0, self.steam_box.width() // 2))
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
         if self.worker.running and not self._ask("Close", "A download or a change to Steam is still running. "

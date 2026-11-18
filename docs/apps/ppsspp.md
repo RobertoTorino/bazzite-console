@@ -47,13 +47,17 @@ log go too.
 ## Use it
 
 The header shows the **PPSSPP version**, **Your games** (the games found) and those **Available in Steam**.
-**Refresh** reads everything again. Beside the title stands the app's state: **Not installed**, **No games** or
-**Ready**. Under the introduction, which links to **PPSSPP's release notes** and to this wiki, a row of three pills
+**Refresh** reads everything again. Beside the title, next to the app's state, stands the controller's:
+**Controller connected**, or **No controller** when none is, looked at again every few seconds. A game started
+from Steam reads the controller that is connected when it starts, so switch yours on first. Beside the title stands the app's state: **Not installed**, **No games** or
+**Ready**. Under the links to **PPSSPP's release notes** and to this wiki, a row of three pills
 does the setting up, each with what it is for on top and what it does under it: **PPSSPP Install**, **PPSSPP
-Uninstall** and **Games Rename**. Two lines below the pills say where each stands, and then come three tabs: **Your
-games**, **Settings** and **Log**, and **Start game**, a tab that is a button.
+Uninstall** and **Games Rename**. The fourth pill in that row is **Play time**: the time spent in all your games
+together, as PPSSPP counts it, with each game's time in the tooltip. Two lines below the pills say where each stands, and then comes a row of six tabs: **Your games**, **Settings**,
+**Memory cards** and **Log**, and two that are buttons: **Start game**, beside Your games, and **Clear logs**,
+beside Log.
 
-- **PPSSPP**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which
+- **PPSSPP**: **Not installed.** or **Installed.**, with the button to use after it, on one line. The tooltip says which
   release is installed, or what Install takes, and when a newer PPSSPP is out. **Install** asks first, then
   downloads PPSSPP from its GitHub release (about 48 MB) and checks it against the checksum pinned in this version
   of the app before installing it; a file that differs is not installed. When another release is installed, the
@@ -101,7 +105,8 @@ Tick the games you want in Steam and press **Update Steam**. The app adds them t
 the game's own icon and background (from inside the image) as their pictures and its icon (`ICON0.PNG`) as the
 logo on the banner, and takes out the games you unticked and games it no longer finds. Steam keeps these files in
 memory, so it closes for the change and starts again in the background. PPSSPP has to be installed first: the games
-in Steam start it.
+in Steam start it. The info symbol under the list
+says in short what the boxes and **Start game** do; **Steam** in its text opens Steam's library.
 
 In Steam each game's name starts with its system, for example **[PSP] Lumines**, so it stands apart from the same
 title on Steam or on another system in Steam's menus. Two games with the same title get their ID after the name.
@@ -131,12 +136,14 @@ stay in use.
 
 #### Start game
 
-The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+The tab beside Your games, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
 as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
 ### Settings
+
+The tab scrolls when it is higher than the window.
 
 PPSSPP's settings that matter for playing, each written into PPSSPP's own settings file the moment you change
 it. Everything else is in PPSSPP's own window (**PPSSPP settings**, under the games).
@@ -157,12 +164,27 @@ Each setting shows what PPSSPP's settings file holds, or PPSSPP's own default wh
 value set in PPSSPP that the app does not offer is shown as it is. Nothing is written while PPSSPP runs: PPSSPP
 writes its settings back when it closes, over any change.
 
+### Memory cards
+
+A PSP game keeps each save as a folder on the memory stick, not on a card file. This tab lists the saves on
+PPSSPP's memory stick (`~/.config/ppsspp/PSP/SAVEDATA`): the game, the save's title, its folder, its size and when
+it was last written. Select a save to see its picture and what the game says is in it.
+
+- **Export…** writes the selected saves to one `.zip`, each as its folder, to keep or to share.
+- **Import…** puts the saves from a `.zip` on the memory stick. A `.zip` exported here goes back as it is; a `.zip`
+  with a save's files at the top is taken in under the `.zip`'s own name. A save that is there already is replaced
+  only after the app asks.
+- **Delete…** deletes the selected saves after it asks. A deleted save is gone: export it first to keep a copy.
+
+Nothing is imported or deleted while PPSSPP runs: close it first.
+
 ### Log
 
 Everything the app said and did, with the time: PPSSPP installed or removed, what the app set up in PPSSPP, files
 renamed, games deleted, every change to Steam, and every error. The same lines are in
 `~/.local/share/ps5-ppsspp-manager/ps5-ppsspp-manager.log`, which turns over at 1 MB (the three older files are
-kept). The log holds what the app did, with your home folder written as `~`, and not your SteamGridDB key.
+kept). **Clear logs**, the tab beside Log, empties
+the file and the Log tab and removes the three older files. The log holds what the app did, with your home folder written as `~`, and not your SteamGridDB key.
 `install.sh --uninstall` keeps it; `--purge` removes it.
 
 ## Renaming the files

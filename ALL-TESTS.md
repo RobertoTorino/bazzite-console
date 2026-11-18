@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2609 test functions (2997 cases counting the parametrized ones) in 30 test folders, and 31 installer tests.
+2680 test functions (3068 cases counting the parametrized ones) in 30 test folders, and 31 installer tests.
 
 ## Summary
 
@@ -17,28 +17,28 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
 | [apps/overlay](#appsoverlay) | 2 | 18 | 0.2 s |
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
-| [apps/pcsx2](#appspcsx2) | 14 | 137 | 19.0 s |
-| [apps/ppsspp](#appsppsspp) | 10 | 79 | 4.5 s |
+| [apps/pcsx2](#appspcsx2) | 14 | 141 | 19.0 s |
+| [apps/ppsspp](#appsppsspp) | 11 | 91 | 4.5 s |
 | [apps/quickfix](#appsquickfix) | 6 | 37 |  |
 | [apps/remoteplay](#appsremoteplay) | 25 | 240 | 9.6 s |
-| [apps/rpcs3](#appsrpcs3) | 10 | 90 | 5.6 s |
+| [apps/rpcs3](#appsrpcs3) | 12 | 114 | 5.6 s |
 | [apps/sftp](#appssftp) | 11 | 85 | 5.6 s |
-| [apps/shadps4](#appsshadps4) | 16 | 138 | 7.7 s |
+| [apps/shadps4](#appsshadps4) | 17 | 147 | 7.7 s |
 | [apps/ssd](#appsssd) | 4 | 50 | 0.8 s |
 | [apps/upscaler](#appsupscaler) | 10 | 98 | 1.6 s |
-| [apps/vita3k](#appsvita3k) | 8 | 62 | 4.9 s |
+| [apps/vita3k](#appsvita3k) | 9 | 72 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
-| [apps/xenia](#appsxenia) | 7 | 58 | 4.2 s |
-| [core](#core) | 25 | 172 | 3.5 s |
+| [apps/xenia](#appsxenia) | 8 | 67 | 4.2 s |
+| [core](#core) | 25 | 174 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 92 | 2.1 s |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
 | [dev/nrt](#devnrt) | 4 | 123 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
-| [portal](#portal) | 17 | 216 | 30.2 s |
+| [portal](#portal) | 17 | 217 | 30.2 s |
 | [tools](#tools) | 36 | 214 | 10.2 s |
-| **All** | | **2609** | **153 s** |
+| **All** | | **2680** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -631,7 +631,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/pcsx2
 
-137 tests in 14 files, 19.0 s in a local run.
+141 tests in 14 files, 19.0 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -682,6 +682,10 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_blue_look` |  | 0.1 s | The blue look. |
 | `test_main_window.py` | `test_a_newer_pcsx2_is_mentioned` |  | 0.1 s | A newer pcsx2 is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  | 0.1 s | What the window says goes to the Log tab with the time, after what the log file held already; the Settings and Memory cards tabs write there too. |
+| `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes, Screen setting and Start game do, and Steam in it is a link the app opens itself. |
+| `test_main_window.py` | `test_pcsx2s_window` |  |  | PCSX2 settings, left of Remove game… (owner, 18-11-2026, as PPSSPP Manager's): PCSX2's own window, through the run wrapper and without a game; off until PCSX2 is installed. |
 | `test_main_window.py` | `test_pcsx2s_last_run_is_logged_once` |  | 0.2 s | PCSX2's own log of its last run (the game, the play time, the controller) goes into the app's log the next time the window looks, once per run; a run without a game is nothing to say. |
 | `test_main_window.py` | `test_the_tabs_follow_pcsx2s_folder` |  | 0.2 s | The Settings and Memory cards tabs read PCSX2's folder when the window refreshes, and nothing of theirs is written while PCSX2 runs. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 1.0 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts all four pictures in place of the drawn ones, and a game in Steam not looked up yet makes the button do something again. |
@@ -775,7 +779,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/ppsspp
 
-79 tests in 10 files, 4.5 s in a local run.
+91 tests in 11 files, 4.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -812,7 +816,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_chd_is_marked` |  |  | A chd is marked. |
 | `test_main_window.py` | `test_install_runs_off_the_window` |  | 0.1 s | Install runs off the window. |
 | `test_main_window.py` | `test_ppsspps_window` |  | 0.1 s | PPSSPP settings opens PPSSPP's own window, through the run wrapper and without a game. |
-| `test_main_window.py` | `test_the_steam_link` |  |  | The steam link. |
+| `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes and Start game do, and Steam in it is a link the app opens itself. |
 | `test_main_window.py` | `test_steam_added_and_taken_out` |  | 0.3 s | Steam added and taken out. |
 | `test_main_window.py` | `test_a_shortcut_named_before_the_system_prefix_is_renamed` |  | 0.3 s | A shortcut named by the title alone, as before "[PSP] ": Update Steam is on for it and renames it, with its play time; the artwork under its old number goes. |
 | `test_main_window.py` | `test_a_shortcut_of_a_game_no_longer_found_is_taken_out` |  |  | A shortcut of a game no longer found is taken out. |
@@ -821,10 +825,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_newer_ppsspp_is_mentioned` |  | 0.1 s | A newer ppsspp is mentioned. |
 | `test_main_window.py` | `test_another_ppsspp_is_installed` |  |  | Another release than the app brings: the line stays the state, the tip says Install puts the app's in, and the log says it once. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
+| `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
+| `test_main_window.py` | `test_the_play_time_ppsspp_counts` |  |  | Play time, the last pill of the second row (owner, 18-11-2026: the header is full): all games together, from [PlayTime] in PPSSPP's settings, each game's time in the tip under its title. |
+| `test_main_window.py` | `test_the_window_keeps_its_width` |  |  | The window's width (owner, 18-11-2026): 900 when it opens, which is also its narrowest, and what is in it asks for no more than the header's four pills do; the six tabs share the whole width, the last one up to the margin; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.5 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts the cover on the portrait, and a game in Steam not looked up yet makes the button do something again. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.1 s | Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_the_settings_tab` |  |  | The Settings tab holds PPSSPP's settings in the app (core's settings_page): the values as ppsspp.ini holds them, a change written into it at once, and nothing while PPSSPP runs. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
+| `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
 | `test_ppsspp_settings.py` | `test_the_values_as_ppsspp_writes_them` |  |  | The values as ppsspp writes them. |
 | `test_ppsspp_settings.py` | `test_the_defaults_without_a_file` |  |  | The defaults without a file. |
 | `test_ppsspp_settings.py` | `test_other_forms_of_a_value` |  |  | Other forms of a value. |
@@ -848,6 +856,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_run_wrapper.py` | `test_without_fusermount_it_unpacks_itself` |  |  | Without fusermount it unpacks itself. |
 | `test_run_wrapper.py` | `test_not_installed` |  |  | Not installed. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
+| `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
+| `test_saves.py` | `test_a_zip_with_the_files_at_the_top_takes_its_own_name` |  |  | A zip with the files at the top takes its own name. |
+| `test_saves.py` | `test_what_is_no_save_is_refused` |  |  | What is no save is refused. |
+| `test_saves.py` | `test_delete` |  |  | Delete. |
+| `test_saves.py` | `test_the_tab_lists_the_saves_with_the_picture` |  |  | The tab lists the saves with the picture. |
+| `test_saves.py` | `test_the_tab_exports_imports_and_deletes` |  |  | The tab exports imports and deletes. |
+| `test_saves.py` | `test_nothing_is_changed_while_ppsspp_runs` |  |  | Nothing is changed while ppsspp runs. |
 | `test_shortcuts.py` | `test_the_launch_line_and_whose_shortcut_it_is` |  |  | The launch line and whose shortcut it is. |
 | `test_shortcuts.py` | `test_names_are_unique` |  |  | Names are unique. |
 | `test_shortcuts.py` | `test_add_then_take_out` |  | 0.4 s | Add then take out. |
@@ -1152,7 +1168,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/rpcs3
 
-90 tests in 10 files, 5.6 s in a local run.
+114 tests in 12 files, 5.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1186,7 +1202,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_bazzites_volume_for_rpcs3` |  |  | The volume Bazzite remembers for RPCS3 (WirePlumber's stream-properties): in the Settings tab's Sound box, and said once while RPCS3 is muted there (found on the console, 24-10-2026). |
 | `test_main_window.py` | `test_each_games_screen` |  |  | The Screen setting column: 16:9 (RPCS3's default), 4:3 or Fill screen, kept in the game's own settings in RPCS3 (custom_configs); a file RPCS3 wrote keeps its other lines; nothing is written while RPCS3 runs. |
 | `test_main_window.py` | `test_the_settings_tab_follows_rpcs3s_file` |  |  | The settings tab follows rpcs3s file. |
-| `test_main_window.py` | `test_the_steam_link` |  |  | The hint under the games links to Steam: the app opens Steam's library (Steam starts when it does not run). |
+| `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes, Screen setting and Start game do, and Steam in it is a link the app opens itself (Steam starts when it does not run). |
 | `test_main_window.py` | `test_the_controller_state` |  |  | Beside the title: whether a controller is connected, from the kernel's list, looked at again every few seconds (owner, 24-10-2026: a controller switched off by its idle timer left a game without one). |
 | `test_main_window.py` | `test_the_play_time_in_the_header` |  |  | The time spent in all games together, as RPCS3 counts it in persistent_settings.dat (milliseconds per serial), with each game in the tip; a dash while there is none. |
 | `test_main_window.py` | `test_rpcs3_updated_itself` |  |  | Rpcs3 updated itself. |
@@ -1203,12 +1219,28 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_blue_look` |  | 0.1 s | The blue look. |
 | `test_main_window.py` | `test_a_newer_rpcs3_is_mentioned` |  | 0.1 s | A newer rpcs3 is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
+| `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_rpcn_off_online_offline` |  |  | RPCN (owner, 18-11-2026: as shadPS4 Manager's shadNet): the Account pill, the RPCN line with the name that signs in, and beside the app's state RPCN Off, Online when the server answers (asked, not signed in) or Offline. |
+| `test_main_window.py` | `test_rpcn_from_rpcs3_while_it_runs` |  |  | While RPCS3 runs its log says whether it signed in; the server is not asked then. |
+| `test_main_window.py` | `test_rpcn_set_up_from_the_window` |  |  | Rpcn set up from the window. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.5 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts the cover on the portrait, and a game in Steam not looked up yet makes the button do something again. |
 | `test_main_window.py` | `test_another_build_installed_than_the_app_brings` |  |  | The RPCS3 line shows the state alone (owner, 07-11-2026), the box the installed version's landmark (owner, 24-10-2026: the box is not wide enough for the build), the advice in the tooltip and the log. |
 | `test_main_window.py` | `test_the_settings_tab_is_not_squeezed_under_the_introduction` |  | 0.1 s | The introduction wraps to several lines and the state lines may too; their minimum heights count, so the tabs below get their minimum and the Sound box's rows keep their height (owner, 24-10-2026: squeezed unreadable on the console). |
 | `test_main_window.py` | `test_unmute_bazzites_volume` |  | 0.1 s | Unmute beside Bazzite's volume (owner, 24-10-2026): shown while RPCS3 is muted there only; a click runs core's unmute off the window and the row follows what WirePlumber stored; a failure is said in red. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.1 s | Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.2 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
+| `test_rpcn.py` | `test_the_password_as_rpcs3_derives_it` |  |  | The password as rpcs3 derives it. |
+| `test_rpcn.py` | `test_create_an_account` |  |  | Create an account. |
+| `test_rpcn.py` | `test_the_server_refuses_an_account` |  |  | The server refuses an account. |
+| `test_rpcn.py` | `test_try_a_sign_in` |  |  | Try a sign in. |
+| `test_rpcn.py` | `test_the_token_asked_for_again` |  |  | The token asked for again. |
+| `test_rpcn.py` | `test_not_rpcn_another_version_or_no_server` |  |  | Not rpcn another version or no server. |
+| `test_rpcn.py` | `test_a_packet_as_rpcs3_builds_it` |  |  | A packet as rpcs3 builds it. |
+| `test_rpcn.py` | `test_server_address_name_and_token` |  |  | Server address name and token. |
+| `test_rpcn.py` | `test_the_account_in_rpcs3s_own_files` |  |  | The account in rpcs3s own files. |
+| `test_rpcn.py` | `test_what_rpcs3s_log_says_of_its_session` |  |  | What rpcs3s log says of its session. |
+| `test_rpcn.py` | `test_the_account_window` |  |  | RPCN Account: the account as RPCS3 has it, a sign-in tried with the kept password, an account created with the typed one (derived, never as typed), and Save into RPCS3's own files, not while RPCS3 runs. |
 | `test_rpcs3_settings.py` | `test_the_defaults_without_a_file` |  |  | The defaults without a file. |
 | `test_rpcs3_settings.py` | `test_a_line_written_and_the_rest_kept` |  |  | A line written and the rest kept. |
 | `test_rpcs3_settings.py` | `test_every_setting_is_one_of_rpcs3s` |  |  | The keys, sections and defaults as RPCS3 0.0.43 writes them (system_config.h); a CHOICE's default is one of its choices. |
@@ -1220,6 +1252,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_run_wrapper.py` | `test_the_game_started_goes_to_the_apps_log` |  |  | One line in the app's log file, in its form, with the game's folder name (the disc's, or the installed game's ID; not its path) and from where; a start without a game (RPCS3's window, the firmware, the packages) says nothing. |
 | `test_run_wrapper.py` | `test_not_installed` |  |  | Not installed. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
+| `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
+| `test_saves.py` | `test_a_zip_with_the_files_at_the_top_takes_its_own_name` |  |  | A zip with the files at the top takes its own name. |
+| `test_saves.py` | `test_what_is_no_save_is_refused` |  |  | What is no save is refused. |
+| `test_saves.py` | `test_delete` |  |  | Delete. |
+| `test_saves.py` | `test_the_tab_lists_the_saves_with_the_picture` |  |  | The tab lists the saves with the picture. |
+| `test_saves.py` | `test_the_tab_exports_imports_and_deletes` |  |  | The tab exports imports and deletes. |
+| `test_saves.py` | `test_nothing_is_changed_while_rpcs3_runs` |  |  | Nothing is changed while rpcs3 runs. |
 | `test_settings_page.py` | `test_the_defaults_and_a_change` |  |  | The defaults and a change. |
 | `test_settings_page.py` | `test_a_value_the_app_does_not_know_is_shown_as_it_is` |  |  | A value the app does not know is shown as it is. |
 | `test_settings_page.py` | `test_nothing_written_while_rpcs3_runs` |  |  | Nothing written while rpcs3 runs. |
@@ -1341,7 +1381,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/shadps4
 
-138 tests in 16 files, 7.7 s in a local run.
+147 tests in 17 files, 7.7 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1424,9 +1464,11 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_play_time_in_the_header` |  |  | The time spent in all games together, as shadPS4 counts it in play_time.txt (H:MM:SS and the last start per Id), with each game in the tip; a dash while there is none. |
 | `test_main_window.py` | `test_the_controller_state` |  |  | Beside the title: whether a controller is connected, from the kernel's list, looked at again every few seconds (owner, 24-10-2026: a controller switched off by its idle timer left a game without one). |
 | `test_main_window.py` | `test_the_quit_hotkeys_are_set_up_and_logged` |  |  | The quit hotkeys are set up and logged. |
-| `test_main_window.py` | `test_the_steam_link` |  |  | The steam link. |
+| `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes and Start game do, and Steam in it is a link the app opens itself. |
 | `test_main_window.py` | `test_shadps4s_window` |  |  | shadPS4 settings opens shadPS4's own window (Big Picture) through the run wrapper. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
+| `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
 | `test_main_window.py` | `test_the_blue_look` |  | 0.1 s | The blue look. |
 | `test_main_window.py` | `test_the_settings_tab_is_not_squeezed` |  |  | The introduction and the state lines may wrap; their minimum heights count, so the tabs below get their minimum and the Settings tab's rows keep their height (as RPCS3 Manager's). |
 | `test_main_window.py` | `test_a_newer_shadps4_is_mentioned` |  | 0.1 s | A newer shadps4 is mentioned. |
@@ -1452,6 +1494,13 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_run_wrapper.py` | `test_started_by_steam_on_a_wayland_desktop` |  |  | Started by steam on a wayland desktop. |
 | `test_run_wrapper.py` | `test_the_game_started_goes_to_the_apps_log` |  |  | One line in the app's log file, in its form, with the game's folder name (its ID as Extract PKG names it; not its path) and from where; a start without a game (shadPS4's own window) says nothing. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
+| `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
+| `test_saves.py` | `test_what_is_no_save_is_refused` |  |  | What is no save is refused. |
+| `test_saves.py` | `test_delete_takes_the_games_folder_with_its_last_save` |  |  | Delete takes the games folder with its last save. |
+| `test_saves.py` | `test_the_tab_lists_the_saves_under_their_games` |  |  | The tab lists the saves under their games. |
+| `test_saves.py` | `test_the_tab_exports_imports_and_deletes` |  |  | The tab exports imports and deletes. |
+| `test_saves.py` | `test_nothing_is_changed_while_shadps4_runs` |  |  | Nothing is changed while shadps4 runs. |
 | `test_shadnet.py` | `test_create_an_account` |  |  | Create an account. |
 | `test_shadnet.py` | `test_the_server_refuses_an_account` | 4 |  | The server refuses an account. |
 | `test_shadnet.py` | `test_try_a_sign_in` |  |  | Try a sign in. |
@@ -1648,7 +1697,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/vita3k
 
-62 tests in 8 files, 4.9 s in a local run.
+72 tests in 9 files, 4.9 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1679,23 +1728,33 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_package_installed_through_vita3k` |  | 0.1 s | A package installed through vita3k. |
 | `test_main_window.py` | `test_a_vpk_installed_in_vita3ks_window` |  | 0.1 s | A vpk installed in vita3ks window. |
 | `test_main_window.py` | `test_vita3ks_window` |  | 0.1 s | Vita3K settings opens Vita3K's own window, through the run wrapper and without a game. |
-| `test_main_window.py` | `test_the_steam_link` |  |  | The steam link. |
+| `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes and Start game do, and Steam in it is a link the app opens itself. |
 | `test_main_window.py` | `test_steam_added_and_taken_out` |  | 0.3 s | Steam added and taken out. |
 | `test_main_window.py` | `test_a_shortcut_of_a_game_no_longer_installed_is_taken_out` |  |  | A shortcut of a game no longer installed is taken out. |
 | `test_main_window.py` | `test_no_steam_game_mode_or_no_wrapper` |  | 0.1 s | No steam game mode or no wrapper. |
 | `test_main_window.py` | `test_the_blue_look` |  |  | RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, the tabs; Games Install opens the menu of what to install from. |
 | `test_main_window.py` | `test_a_newer_vita3k_is_mentioned` |  | 0.1 s | A newer vita3k is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
+| `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_the_play_time_in_the_second_row` |  |  | Play time, the last pill of the second row (owner, 18-11-2026): all games together, as Vita3K counts it in its time.xml, each game's time in the tip under its title. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.6 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts the cover on the portrait, and a game in Steam not looked up yet makes the button do something again. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.2 s | Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_the_settings_tab` |  |  | The Settings tab holds Vita3K's settings in the app (core's settings_page): the values as config.yml holds them, a change written into it at once, and nothing while Vita3K runs. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
+| `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
 | `test_run_wrapper.py` | `test_started_by_steam_on_a_wayland_desktop` |  |  | Started by steam on a wayland desktop. |
 | `test_run_wrapper.py` | `test_without_fusermount_it_unpacks_itself` |  |  | Without fusermount it unpacks itself. |
 | `test_run_wrapper.py` | `test_help_and_not_installed` |  |  | Help and not installed. |
+| `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
+| `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
+| `test_saves.py` | `test_what_is_no_save_is_refused` |  |  | What is no save is refused. |
+| `test_saves.py` | `test_the_tab_lists_exports_imports_and_deletes` |  |  | The tab lists exports imports and deletes. |
+| `test_saves.py` | `test_nothing_is_changed_while_vita3k_runs` |  |  | Nothing is changed while vita3k runs. |
+| `test_saves.py` | `test_the_play_time_vita3k_counts` |  |  | The play time vita3k counts. |
 | `test_shortcuts.py` | `test_the_launch_line_and_whose_shortcut_it_is` |  |  | The launch line and whose shortcut it is. |
 | `test_shortcuts.py` | `test_names_are_unique` |  |  | Names are unique. |
 | `test_shortcuts.py` | `test_add_then_take_out` |  | 0.4 s | Add then take out. |
@@ -1837,7 +1896,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/xenia
 
-58 tests in 7 files, 4.2 s in a local run.
+67 tests in 8 files, 4.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1870,7 +1929,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_failed_install_says_so` |  |  | A failed install says so. |
 | `test_main_window.py` | `test_remove` |  |  | Remove. |
 | `test_main_window.py` | `test_xenias_window` |  |  | Xenia settings opens Xenia's own window, through the run wrapper and without a game. |
-| `test_main_window.py` | `test_the_steam_link` |  |  | The steam link. |
+| `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes and Start game do, and Steam in it is a link the app opens itself. |
 | `test_main_window.py` | `test_steam_added_and_taken_out` |  | 0.3 s | Steam added and taken out. |
 | `test_main_window.py` | `test_a_shortcut_of_a_game_no_longer_found_is_taken_out` |  |  | A shortcut of a game no longer found is taken out. |
 | `test_main_window.py` | `test_games_need_xenia_for_game_mode` |  |  | Games need xenia for game mode. |
@@ -1878,16 +1937,25 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_blue_look` |  | 0.1 s | RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, a third of the width each, the tabs. |
 | `test_main_window.py` | `test_a_newer_build_is_mentioned` |  |  | A newer build is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
+| `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more (no Play time: Xenia counts none); the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.9 s | Steam artwork… keeps the suite's key; Update Steam then looks up the game by its title and puts SteamGridDB's pictures in place of all four drawn ones, and a game in Steam not looked up yet makes the button do something again. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.1 s | Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_the_settings_tab` |  |  | The Settings tab holds Xenia's settings in the app (core's settings_page): Xenia's defaults while there is no file, a change written into Xenia's own folder at once, and nothing while Xenia runs. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
+| `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
 | `test_run_wrapper.py` | `test_without_fusermount_it_unpacks_itself` |  |  | Without fusermount it unpacks itself. |
 | `test_run_wrapper.py` | `test_not_installed` |  |  | Not installed. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
+| `test_saves.py` | `test_export_and_import_again_with_the_headers` |  |  | Export and import again with the headers. |
+| `test_saves.py` | `test_what_is_no_save_or_has_no_profile_is_refused` |  |  | What is no save or has no profile is refused. |
+| `test_saves.py` | `test_delete_takes_the_header_too` |  |  | Delete takes the header too. |
+| `test_saves.py` | `test_the_tab_lists_exports_imports_and_deletes` |  |  | The tab lists exports imports and deletes. |
+| `test_saves.py` | `test_no_profile_yet_and_nothing_changed_while_xenia_runs` |  |  | No profile yet and nothing changed while xenia runs. |
 | `test_shortcuts.py` | `test_the_launch_line_and_whose_shortcut_it_is` |  |  | The launch line and whose shortcut it is. |
 | `test_shortcuts.py` | `test_names_are_unique` |  |  | Names are unique. |
 | `test_shortcuts.py` | `test_add_then_take_out` |  | 0.5 s | Add then take out. |
@@ -1902,7 +1970,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## core
 
-172 tests in 25 files, 3.5 s in a local run.
+174 tests in 25 files, 3.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1910,6 +1978,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_action_tab.py` | `test_a_click_acts_and_the_open_page_stays` |  |  | A click acts and the open page stays. |
 | `test_action_tab.py` | `test_the_keyboard_passes_it_by` |  |  | The keyboard passes it by. |
 | `test_action_tab.py` | `test_a_press_beside_the_tabs_does_nothing` |  |  | A press beside the tabs does nothing. |
+| `test_action_tab.py` | `test_two_action_tabs_in_one_row` |  |  | Clear logs beside Start game (owner, 18-11-2026): each acts on its own click, and neither sends the tabs to the other. |
 | `test_app_help.py` | `test_create_app_sets_names_and_current` |  |  | Create app sets names and current. |
 | `test_app_help.py` | `test_org_only_when_declared` |  |  | Org only when declared. |
 | `test_app_help.py` | `test_help_view` |  |  | Help view. |
@@ -1920,6 +1989,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_applog.py` | `test_an_uncaught_error_is_logged` |  |  | An uncaught error is logged. |
 | `test_applog.py` | `test_without_a_folder_the_log_goes_to_stderr` |  |  | Without a folder the log goes to stderr. |
 | `test_applog.py` | `test_a_private_log_masks_the_users_folders` |  |  | private=True (owner, 29-10-2026): no user name in a line. |
+| `test_applog.py` | `test_clear_empties_the_log_and_the_older_ones` |  |  | Clear logs (owner, 18-11-2026): the file emptied while it stays the app's log, the older ones removed. |
 | `test_covers.py` | `test_the_key_for_the_whole_suite` |  |  | The key for the whole suite. |
 | `test_covers.py` | `test_the_key_dialog` |  |  | The key dialog. |
 | `test_covers.py` | `test_names_and_titles` |  |  | Names and titles. |
@@ -2457,7 +2527,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## portal
 
-216 tests in 17 files, 30.2 s in a local run.
+217 tests in 17 files, 30.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2555,6 +2625,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_portal_update.py` | `test_check_reads_the_tarballs_sha256_and_the_running_build` |  |  | The newest release's SHA256SUMS tells a new build of this version (owner, 03-11-2026); build.sha256 beside the program is what this portal came from. |
 | `test_shortcuts.py` | `test_steam_and_the_file_manager` |  |  | Steam and the file manager. |
 | `test_shortcuts.py` | `test_youtube_needs_brave_browsers_flatpak` |  |  | Youtube needs brave browsers flatpak. |
+| `test_shortcuts.py` | `test_github_opens_in_the_desktops_own_browser` |  |  | github.com with xdg-open; the browser's window is the one KWin brings to the front, when it can be asked. |
 | `test_shortcuts.py` | `test_the_settings_of_the_desktop_that_is_there` | 4 |  | KDE Plasma's System Settings, else the module alone, else GNOME's Settings (not only the owner's desktop). |
 | `test_sources.py` | `test_expected_sha256` |  |  | Expected sha256. |
 | `test_sources.py` | `test_release_download_verified_with_sha256sums` |  |  | Release download verified with sha256sums. |
@@ -2634,7 +2705,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_a_download_counts_its_megabytes` |  | 0.2 s | The tile says how far a download is (owner, 03-11-2026: Downloading… for a 90 MB release looked like a hang): the part file's size, read every PROGRESS_MS while the job runs. |
 | `test_window.py` | `test_the_exit_asks_nothing` |  | 0.2 s | Escape (B) and the close symbol close the portal without a question (owner, 12-11-2026). |
 | `test_window.py` | `test_the_desktops_close_asks_only_while_something_runs` |  | 0.2 s | The desktops close asks only while something runs. |
-| `test_window.py` | `test_a_shortcut_starts_its_program` |  | 0.2 s | The header's shortcuts (owner, 12-11-2026): the file manager, Steam, YouTube in Brave Browser, and the desktop's Bluetooth, network, sound and display settings. |
+| `test_window.py` | `test_a_shortcut_starts_its_program` |  | 0.2 s | The header's shortcuts (owner, 12-11-2026): the file manager, Steam, YouTube in Brave Browser, GitHub, and the desktop's Bluetooth, network, sound and display settings. |
 | `test_window.py` | `test_a_key_for_each_controller_action` |  | 0.2 s | Steam's desktop layout turns a pad's buttons into keys (owner, 05-11-2026): U, S, K and M do what Y, ☰, R3 and X do, for the buttons it gives no key of their own. |
 | `test_window.py` | `test_the_s_key_opens_the_settings` |  | 0.2 s | The s key opens the settings. |
 | `test_window.py` | `test_the_arrow_keys_move_between_a_questions_buttons` |  | 0.2 s | With Steam's desktop layout a controller is the arrow keys and Enter: Qt's questions take them as they are. |
@@ -2661,7 +2732,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_restart_that_cannot_start` |  | 0.2 s | Restart that cannot start. |
 | `test_window.py` | `test_no_restart_from_a_checkout` |  | 0.2 s | No restart from a checkout. |
 | `test_window.py` | `test_one_theme_for_every_app` |  | 0.7 s | The theme pill shows the chosen theme; a click takes the next one, for every app; its tooltip says when it shows. |
-| `test_window.py` | `test_the_header_is_an_apps_header_with_symbols` |  | 0.2 s | The suite's icon, spanning the name, ☰ and the close symbol at the top right and the row of big symbols (owner, 05-11-2026, in place of the pills): Refresh, Sys info, Install all apps and Install all updates, then the shortcuts (owner, 12-11-2026): Files, Steam, YouTube, Bluetooth, Network, Volume and Screen, what each does in its tooltip; on their right the installed count over the status. |
+| `test_window.py` | `test_the_header_is_an_apps_header_with_symbols` |  | 0.2 s | The suite's icon, spanning the name, ☰ and the close symbol at the top right and the row of big symbols (owner, 05-11-2026, in place of the pills): Refresh, Sys info, Install all apps and Install all updates, then the shortcuts (owner, 12-11-2026): Files, Steam, YouTube, GitHub, Bluetooth, Network, Volume and Screen, what each does in its tooltip; on their right the installed count over the status. |
 | `test_window.py` | `test_the_sys_info_symbol_opens_one_window_read_each_time` |  | 0.2 s | Sys info (owner, 20-10-2026): a small window with what the system reports, read again each time it opens; Copy puts it on the clipboard as text. |
 | `test_window.py` | `test_the_wallpaper` |  | 0.4 s | A picture of at least 1920 x 1080 in 16:9 becomes the wallpaper (a copy in the portal's state folder); another is refused, with the rules (owner, 20-10-2026). |
 | `test_window.py` | `test_the_example_wallpaper` |  | 0.5 s | The portal ships an example wallpaper (owner, 20-10-2026) and starts with it (owner, 15-11-2026): it is the wallpaper until the user chooses a picture of their own or none, and No wallpaper is remembered. |

@@ -361,6 +361,7 @@ class InfoButton(QToolButton):
         super().__init__(parent)
         self.text_ = text
         self.popup: QWidget | None = None
+        self.opens = None                   # a function taking a link's URL: the app opens it itself then
         self.setText("i")
         self.setToolTip(tooltip)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -390,12 +391,14 @@ class InfoButton(QToolButton):
         box.setContentsMargins(0, 0, 0, 0)
         label = QLabel(self.text_)
         label.setWordWrap(True)
-        label.setOpenExternalLinks(True)
+        label.setOpenExternalLinks(self.opens is None)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         label.setStyleSheet(
             f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {accent()}; "
             "border-radius:6px; padding:8px 10px; }")
         label.setFixedWidth(min(self.MAX_WIDTH, max(label.sizeHint().width(), 200)))
+        if self.opens is not None:
+            label.linkActivated.connect(self.opens)
         label.linkActivated.connect(lambda _url: self.popup.close())
         box.addWidget(label)
         self.popup.adjustSize()

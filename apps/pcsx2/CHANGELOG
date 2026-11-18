@@ -1,3 +1,16 @@
+Changelog: 18-11-2026 02:02:00
+
+Added. The managers' new design, as PPSSPP Manager's: Clear logs, a tab beside Log that is a button, empties the
+app's log file and the Log tab and removes the older log files. Start game stands beside Your games. The six tabs
+share the window's whole width and are pills as the ones above them. Play time moved from the header to the row
+of action pills. Under the header's pills only the links to PCSX2's release notes and the wiki are left, in the
+type of a pill's caption; the introduction went. PCSX2's state is one line. Under the games an info symbol stands
+in for the line of text about Steam; Steam in its text opens Steam. The window opens 900 wide (it was 980, and
+the Settings tab made it 1129 at its narrowest), and that is its narrowest: the Settings tab has two columns
+in place of three and scrolls when it is higher than the window, which opens 606 high (it was 800). The BIOS line
+is the dump's name alone, or Not installed.; other dumps there are named in its tooltip. PCSX2 settings,
+a button left of Remove game…, opens PCSX2's own window for what the Settings tab does not set.
+
 Changelog: 17-11-2026 14:53:55
 
 Release 1.2.0.

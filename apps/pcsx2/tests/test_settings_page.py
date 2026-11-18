@@ -105,17 +105,20 @@ def test_nothing_written_while_pcsx2_runs(qapp, tmp_path):
 def test_every_setting_has_a_widget_of_its_kind(qapp, tmp_path):
     page = SettingsPage(tmp_path, running=lambda: False)
     assert PLAYER2 in OWN
-    # Each box is in its own place: the picture's on the left, the three others in the right column (a box over
-    # another hid its rows; owner, 24-10-2026).
+    # Each box is in its own place, in two columns that fit a window 900 wide (owner, 18-11-2026): the picture and
+    # the emulation on the left, the three others on the right (a box over another hid its rows; owner, 24-10-2026).
     from PyQt6.QtWidgets import QGroupBox
     boxes = {b.title(): b for b in page.findChildren(QGroupBox)}
     page.resize(900, 600)
     page.show()
     page.layout().activate()
     geometry = {name: box.geometry() for name, box in boxes.items()}
-    assert geometry["Picture"].right() < geometry["Emulation"].left()
-    assert geometry["Emulation"].bottom() < geometry["Sound"].top() < geometry["Controllers"].top()
-    assert geometry["Sound"].left() == geometry["Emulation"].left()
+    assert geometry["Picture"].bottom() < geometry["Emulation"].top()
+    assert geometry["Picture"].left() == geometry["Emulation"].left() < geometry["Picture"].right()
+    assert geometry["Picture"].right() < geometry["Sound"].left()
+    assert geometry["Sound"].bottom() < geometry["Controllers"].top()
+    assert geometry["Controllers"].bottom() < geometry["On screen"].top()
+    assert geometry["Sound"].left() == geometry["On screen"].left() and page.minimumSizeHint().width() <= 882
     page.close()
     for setting in (*pcsx2_settings.SETTINGS, *OWN):
         widget = page.widgets[setting.key]

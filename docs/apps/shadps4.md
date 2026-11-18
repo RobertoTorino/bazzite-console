@@ -47,19 +47,18 @@ stay. The games in Steam then no longer start: take them out first by unticking 
 
 ## Use it
 
-The header shows the **shadPS4 version**, **Your games** (the games found), those **Available in Steam** and the
-**Play time**: the time spent in all your games together, as shadPS4 counts it, with each game's time and when it
-was last played in the tooltip. **Refresh** reads everything again. Beside the title, next to the app's state,
+The header shows the **shadPS4 version**, **Your games** (the games found) and those **Available in Steam**. **Refresh** reads everything again. Beside the title, next to the app's state,
 stand shadNet's state (see [shadNet](#shadnet)) and the controller's: **Controller connected**, or **No
 controller** when none is, looked at again every few seconds. A game started from Steam reads the controller that
 is connected when it starts, so switch yours on, or press its PS button to wake it, before starting a game. When
-Steam starts a game without one, the app also says so in a desktop notification. Under the introduction, which
-links to **shadPS4's release notes** and to this wiki, a row of four pills does the setting up, each with what it is
+Steam starts a game without one, the app also says so in a desktop notification. Under the links to **shadPS4's release notes** and to this wiki, a row of four pills does the setting up, each with what it is
 for on top and what it does under it: **shadPS4 Install** and **shadPS4 Uninstall**, **Games Install** and
-**shadNet Account**. Your games and the system modules go into the app's own folder (see [Where your games
+**shadNet Account**. The last pill in that row is **Play time**: the time spent in all your games together, as shadPS4
+counts it, with each game's time in the tooltip. Your games and the system modules go into the app's own folder (see [Where your games
 go](#where-your-games-go)); nothing is chosen or browsed to for them. Four lines below the pills say where each
-stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and **Log**, and
-**Start game**, a tab that is a button.
+stands, short, with more in their tooltips, and then comes a row of six tabs: **Your games**, **Settings**,
+**Memory cards** and **Log**, and two that are buttons: **Start game**, beside Your games, and **Clear logs**,
+beside Log.
 
 - **shadPS4**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
   shows the version installed. The tooltip says which version is installed, or what Install takes, and when a newer
@@ -128,7 +127,8 @@ has the update in it: it needs no `-UPDATE` folder and is listed with the update
 Tick the games you want in Steam and press **Update Steam**. The app adds them to Steam as non-Steam games, with
 the game's own icon and background as their pictures and its icon (`sce_sys/icon0.png`) as the logo on the
 banner, and takes out the games you unticked and games it no longer finds. Steam keeps these files in memory, so it
-closes for the change and starts again in the background.
+closes for the change and starts again in the background. The info symbol under the list
+says in short what the boxes and **Start game** do; **Steam** in its text opens Steam's library.
 
 In Steam each game's name starts with its system, for example **[PS4] Lumines**, so it stands apart from the same
 title on Steam or on another system in Steam's menus. A game whose name in Steam differs from its title in the app
@@ -159,7 +159,7 @@ controller's buttons, a game's own settings and shadPS4's game list.
 
 #### Start game
 
-The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+The tab beside Your games, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
 as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
@@ -209,6 +209,8 @@ one, compares two extractions and renames a package to its content ID.
 
 ### Settings
 
+The tab scrolls when it is higher than the window.
+
 shadPS4's settings that matter for playing, each written into shadPS4's own settings file (`config.json`) the
 moment you change it, while shadPS4 does not run (it writes its own settings back when it ends); shadPS4 reads them
 when a game starts, and a game's own settings in shadPS4 (made in its own window) come before them. They are the
@@ -230,13 +232,28 @@ settings shadPS4's own window offers for every game; the tooltips say what each 
 A value shadPS4 knows and the app does not is shown as it is. Everything else shadPS4 can set stays in its own
 window (**shadPS4 settings**).
 
+### Memory cards
+
+A PS4 game keeps each save as a folder, not on a card file. This tab lists the saves in shadPS4's own folder
+(`~/.local/share/shadPS4/home/1000/savedata`, and every other user's): the game, the save's title, its folder, its
+size and when it was last written. Select a save to see its picture and what the game says is in it.
+
+- **Export…** writes the selected saves to one `.zip`, each as its game's code and its folder under it, to keep or
+  to share.
+- **Import…** puts the saves from such a `.zip` in the first user's save folder. A save that is there already is
+  replaced only after the app asks.
+- **Delete…** deletes the selected saves after it asks. A deleted save is gone: export it first to keep a copy.
+
+Nothing is imported or deleted while shadPS4 runs: close it first.
+
 ### Log
 
 Everything the app said and did, with the time: shadPS4 installed or removed, what the app set up in shadPS4, the
 system modules copied, the game folders added and taken out, the settings changed, shadNet saved, every change to
 Steam, and every error. Each game started from Steam is logged by its folder's name when it starts, with whether a
 controller was connected. The same lines are in `~/.local/share/ps5-shadps4-manager/ps5-shadps4-manager.log`,
-which turns over at 1 MB (the three older files are kept). The log holds what the app did, not your SteamGridDB key,
+which turns over at 1 MB (the three older files are kept). **Clear logs**, the tab beside Log, empties
+the file and the Log tab and removes the three older files. The log holds what the app did, not your SteamGridDB key,
 your shadNet password or anything else personal. `install.sh --uninstall` keeps it; `--purge` removes it.
 
 ## shadNet

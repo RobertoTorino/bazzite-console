@@ -61,3 +61,24 @@ def test_a_press_beside_the_tabs_does_nothing(qapp):
     QTest.mouseClick(tabs.tabBar(), Qt.MouseButton.LeftButton, pos=QPoint(tabs.tabBar().width() + 5, 5))
     assert pressed == [] and tabs.currentIndex() == 0
     tabs.close()
+
+
+def test_two_action_tabs_in_one_row(qapp):
+    """Clear logs beside Start game (owner, 18-11-2026): each acts on its own click, and neither sends the tabs to
+    the other."""
+    cleared, started = [], []
+    tabs = QTabWidget()
+    for name in ("Your games", "Log"):
+        tabs.addTab(QWidget(), name)
+    tabs.setCurrentIndex(1)
+    clear = ActionTab(tabs, "Clear logs", "Empty the log", lambda: cleared.append(1))
+    start = ActionTab(tabs, "Start game", "Start the chosen game", lambda: started.append(1))
+    assert (clear.index, start.index) == (2, 3)
+    for action in (clear, start, clear, start):
+        tabs.tabBarClicked.emit(action.index)
+        tabs.setCurrentIndex(action.index)
+        assert tabs.currentIndex() == 1                 # the Log page stays open
+    assert (len(cleared), len(started)) == (2, 2)
+    tabs.setCurrentIndex(0)
+    tabs.setCurrentIndex(start.index)
+    assert tabs.currentIndex() == 0 and (len(cleared), len(started)) == (2, 2)   # moved to, not clicked

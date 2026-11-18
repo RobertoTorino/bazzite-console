@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The main window, built as RPCS3 Manager's (owner, 07-11-2026: RPCS3 Manager's design is every manager's): the header
 with the Refresh pill and the state boxes, a row of action pills (Install and Uninstall for Vita3K, Install for the
-games), the state of each (Vita3K, the PS Vita firmware, the games) in a line, then three tabs: the games Vita3K has
-installed, each with a box for Steam; Vita3K's settings (core's settings_page over vita3k_settings); and the app's
-log. Downloading Vita3K, asking GitHub for a newer one, installing the firmware or a package through Vita3K and
-changing Steam's files run off the GUI thread; nothing here needs root. The look is the app's own blue (style.py).
+games), the state of each (Vita3K, the PS Vita firmware, the games) in a line, then the tabs: the games Vita3K has
+installed, each with a box for Steam; Vita3K's settings (core's settings_page over vita3k_settings); the saves it keeps
+(Memory cards, saves_page.py); and the app's log, with Clear logs beside it. Downloading Vita3K, asking GitHub for a
+newer one, installing the firmware or a package through Vita3K and changing Steam's files run off the GUI thread;
+nothing here needs root. The look is the app's own blue (style.py).
 
-A game runs from Steam: the last tab, Start game, starts the chosen one there (owner, 12-11-2026). Vita3K's own window
-(Vita3K settings, under the games) stays for what the Settings tab does not set. What the window says it also writes to
-the app's log (core's applog), shown in the Log tab."""
+A game runs from Steam: the tab beside Your games, Start game, starts the chosen one there (owner, 12-11-2026).
+Vita3K's own window (Vita3K settings, under the games) stays for what the Settings tab does not set. What the window
+says it also writes to the app's log (core's applog), shown in the Log tab."""
 
 from __future__ import annotations
 
@@ -20,9 +21,10 @@ from pathlib import Path
 
 from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtGui import QCloseEvent, QResizeEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView,
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QHeaderView,
                              QInputDialog, QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox, QPushButton,
-                             QSizePolicy, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
+                             QScrollArea, QSizePolicy, QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout,
+                             QWidget)
 
 from bazzite_console_core import SUITE_MANUAL_URL, applog, covers, steam, window_title
 from bazzite_console_core import __version__ as CORE_VERSION
@@ -35,9 +37,10 @@ from bazzite_console_core.settings_page import SettingsPage
 from bazzite_console_core.updates import ReleaseInfo, UpdateChecker
 from bazzite_console_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
-from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, library, shortcuts, style, userdata,
-               vita3k_settings)
+from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, shortcuts, style,
+               userdata, vita3k_settings)
 from .games import Game, installed, names
+from .saves_page import SavesPage
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/vita3k/"
 INSTALL_WATCH_MS = 2000
@@ -45,13 +48,16 @@ INSTALL_WATCH_LIMIT = 300               # checks, so 10 minutes: Vita3K's own wi
 INSTALL_TIMEOUT = 900                   # seconds for Vita3K to install a firmware file or a package without a window
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
+CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the Log tab"
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER = range(5)             # the table's columns
-GAMES, SETTINGS, LOG = range(3)                             # the tabs
+WIDTH = 900                             # the window opens this wide, and is never narrower (owner, 18-11-2026)
+HEIGHT = 606                            # the window opens this high (owner, 18-11-2026); it was 800
+GAMES, START, SETTINGS, SAVES, LOG = range(5)               # the tabs
 # The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
 # advice are in its tip.
-NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
-INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
+NOT_INSTALLED = "Not installed. Install it with the Install button."
+INSTALLED = "Installed. Uninstall with the Uninstall button."
 
 RUNNING_REMOVE = "Vita3K is running: close it first, then remove the game."
 
@@ -75,6 +81,8 @@ def _with_info(state: QLabel, info: InfoButton) -> QWidget:
 
 
 class MainWindow(QMainWindow):
+    CONTROLLER_POLL = 3000                  # ms: how often the window looks for a controller
+
     def __init__(self, home: Path | None = None, vita3k_config: Path | None = None, steam_dir: Path | None = None,
                  run: Path | None = None, fetch: emulator.Download = emulator.download,
                  steam_closed=steam.with_steam_closed, steam_running=steam.steam_running,
@@ -82,7 +90,8 @@ class MainWindow(QMainWindow):
                  covers_get: covers.Get = covers._get, covers_key: Path | None = None,
                  vita3k_running=emulator.running, user_home: Path | None = None,
                  drives: Callable[[], list[Path]] = library.removable_drives, log_path: Path | None = None,
-                 open_url=xdg_open):
+                 open_url=xdg_open,
+                 devices: Path = controllers.DEVICES):
         """*home*: where the app installs Vita3K; *vita3k_config*: Vita3K's settings folder (its config.yml says
         where its storage is); *steam_dir*: Steam's folder (None: looked up); *run*: the run wrapper the shortcuts
         start; *fetch*: the download; *steam_closed* and *steam_running*: closing Steam for a change and asking
@@ -93,7 +102,8 @@ class MainWindow(QMainWindow):
         for one; *log_path*: the app's log file, as the Log tab shows it (__main__ set it up); *open_url*: opens a
         URL on the desktop (the Steam link)."""
         super().__init__()
-        self.resize(980, 800)
+        self.setMinimumWidth(WIDTH)                     # never narrower (owner, 18-11-2026)
+        self.resize(WIDTH, HEIGHT)
         self.home = home or emulator.emulator_home()
         self.vita3k_config = vita3k_config or userdata.config_dir()
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
@@ -110,6 +120,8 @@ class MainWindow(QMainWindow):
         self.covers_key = covers_key
         self.log_path = log_path or applog.log_file(APP_ID)
         self.open_url = open_url
+        self.devices = devices                          # the kernel's list of input devices, for the controller state
+        self.controllers: list[str] | None = None       # the controllers last seen; None before the first look
         self.log = applog.logger(APP_ID)
         self._pin_noted = False                         # another build installed than the app brings: logged once
         self.newer: ReleaseInfo | None = None           # Vita3K's newest build, when newer than the pinned one
@@ -136,26 +148,30 @@ class MainWindow(QMainWindow):
         # Manager: a spacer of half that pill's width after it, set whenever the window's size changes.
         self.pill = StatusText()
         header.add_action(self.pill)
+        self.controller = StatusText()                  # beside it: whether a controller is connected (owner,
+        header.add_action(self.controller)              # 18-11-2026: as the other managers show it)
+        self.controller_timer = QTimer(self)
+        self.controller_timer.setInterval(self.CONTROLLER_POLL)
+        self.controller_timer.timeout.connect(self.show_controller)
+        self.controller_timer.start()
         self.states_spacer = QWidget()
         self.states_spacer.setFixedSize(0, 1)
         header.add_action(self.states_spacer)
         self.refresh_pill = style.action_pill("Refresh", "Click to refresh", "Read the state again and look for games")
         self.refresh_pill.clicked.connect(self.refresh)
         self.emulator_box = MetricBox("Vita3K version", style.BLUE)
-        self.firmware_box = MetricBox("Firmware", style.BLUE)
         self.games_box = MetricBox("Your games", style.BLUE)
         self.steam_box = MetricBox("Available in Steam", style.BLUE)
         # The header's pills spread over the window's width in equal parts, as the action pills below.
-        self.header_pills = [self.refresh_pill, self.emulator_box, self.firmware_box, self.games_box, self.steam_box]
+        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box]
         for box in self.header_pills:
             box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             header.add_second(box, 1)
-        self.intro = hint_label(
-            "PS Vita games on the system with the Vita3K emulator. The app installs the Vita3K build it was tried "
-            "with, installs the firmware and your games through it and puts the games in Steam, so a game starts "
-            "straight away, also from Steam's Big Picture Mode. Games and the PS Vita's firmware come from you; the "
-            "app never downloads them. " + style.link(self, emulator.RELEASE_PAGE, "Vita3K's release notes") + " · "
-            + style.link(self, MANUAL_URL, "Wiki"), follow_height=True)       # its lines count in the minimum
+        # The two links alone (owner, 18-11-2026), in the type of a pill's caption (Click to refresh): what the
+        # app is for is in the wiki.
+        self.intro = hint_label(style.caption_link(self, emulator.RELEASE_PAGE, "Vita3K's release notes") + " · "
+                                + style.caption_link(self, MANUAL_URL, "Wiki"), follow_height=True)
+        self.intro.setStyleSheet(style.CAPTION)
 
         # What there is to do, as pills the size of the header's, spread over the window's width: what it is for in
         # large type (Vita3K, Games), what the pill does under it (Install, Uninstall). Games Install opens the menu
@@ -175,9 +191,11 @@ class MainWindow(QMainWindow):
         self.game_pill.clicked.connect(
             lambda: self.game_menu.popup(self.game_pill.mapToGlobal(self.game_pill.rect().bottomLeft())))
         self.actions = [self.install_pill, self.remove_pill, self.game_pill]
+        # Play time beside them (owner, 18-11-2026): all games together, as Vita3K counts it
+        self.time_box = MetricBox("Play time", style.BLUE)
         actions = QHBoxLayout()
         actions.setSpacing(8)
-        for pill in self.actions:                       # each a third of the width, whatever the window's
+        for pill in (*self.actions, self.time_box):     # each a quarter of the width, whatever the window's
             pill.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             actions.addWidget(pill, 1)
 
@@ -230,11 +248,13 @@ class MainWindow(QMainWindow):
         self.steam_button = style.primary_button("Update Steam", STEAM_TIP)
         self.steam_button.clicked.connect(self.on_update_steam)
         buttons = QHBoxLayout()
-        self.steam_hint = hint_label(f"Tick a game to put it in Steam. A game is started from "
-                                     f"{style.link(self, STEAM_URL, 'Steam')}.")
-        self.steam_hint.setOpenExternalLinks(False)      # the app opens Steam itself (open_steam)
-        self.steam_hint.linkActivated.connect(lambda _url: self.open_steam())
-        buttons.addWidget(self.steam_hint, 1)
+        # What the boxes and Start game do, behind an info symbol (owner, 18-11-2026, in place of a line of text)
+        self.steam_info = InfoButton("A checkmark before a game adds the game to Steam. When the Start game button "
+                                     f"is clicked the game starts from {style.link(self, STEAM_URL, 'Steam')}.",
+                                     "About the games and Steam")
+        self.steam_info.opens = lambda _url: self.open_steam()      # the app opens Steam itself (open_steam)
+        buttons.addWidget(self.steam_info)
+        buttons.addStretch(1)
         buttons.addWidget(self.vita3k_button)
         buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
@@ -260,11 +280,28 @@ class MainWindow(QMainWindow):
                                  f"{escape(private(self.log_path))}, which turns over at 1 MB."))
         log.addWidget(self.output, 1)
         self.tabs = QTabWidget()
+        # The six tabs share the whole width, the last one up to the window\'s margin (owner, 18-11-2026)
+        self.tabs.setDocumentMode(True)
+        self.tabs.tabBar().setExpanding(True)
+        self.tabs.tabBar().setDrawBase(False)           # no line over the tabs, which that mode draws
         self.tabs.addTab(games_page, "Your games")
-        self.tabs.addTab(self.settings_page, "Settings")
-        self.tabs.addTab(log_page, "Log")
-        # Start game (owner, 12-11-2026): the last tab is a button, which starts the chosen game in Steam
+        # Start game (owner, 12-11-2026): a tab that is a button, which starts the chosen game in Steam; beside
+        # Your games, where the game is chosen (owner, 18-11-2026)
         self.start_tab = ActionTab(self.tabs, "Start game", START_TIP, self.on_start_game)
+        # The Settings tab scrolls when it is higher than the window (owner, 18-11-2026): it never makes the window
+        # higher than it opens.
+        self.settings_scroll = QScrollArea()
+        self.settings_scroll.setWidgetResizable(True)
+        self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.settings_scroll.setWidget(self.settings_page)
+        self.tabs.addTab(self.settings_scroll, "Settings")
+        # Memory cards (owner, 18-11-2026): the saves Vita3K keeps, each under its game's title (saves_page.py)
+        self.saves_page = SavesPage(lambda: self.vita_fs, lambda: {g.name: g.title for g in self.games},
+                                    self.vita3k_running, self.log)
+        self.tabs.addTab(self.saves_page, "Memory cards")
+        self.tabs.addTab(log_page, "Log")
+        # Clear logs (owner, 18-11-2026): beside the Log tab, a tab that is a button and empties the log
+        self.clear_tab = ActionTab(self.tabs, "Clear logs", CLEAR_TIP, self.on_clear_logs)
 
         self.running = WrappedLabel()
         self.running.setStyleSheet("font-weight:600;")
@@ -303,6 +340,7 @@ class MainWindow(QMainWindow):
     # --- State ------------------------------------------------------------------------------------------------
 
     def refresh(self) -> None:
+        self.show_controller()
         self.version = emulator.installed_version(self.home)
         self.replaced = bool(self.version) and emulator.replaced(self.home)
         self.prepare_vita3k()
@@ -321,6 +359,7 @@ class MainWindow(QMainWindow):
         self._show_state()
         self._fill_table()
         self.settings_page.load()
+        self.saves_page.load()
 
     def prepare_vita3k(self) -> None:
         """The lines of config.yml the app owns (userdata.prepare), once Vita3K is installed and while it does not
@@ -335,6 +374,22 @@ class MainWindow(QMainWindow):
         if done:
             self.note("Vita3K set up: " + ", ".join(done) + ".")
 
+    def show_controller(self) -> None:
+        """The controller state beside the title: a game started from Steam reads the controller that is there
+        when it starts, so the window says when none is (switched off, asleep, not paired)."""
+        found = controllers.connected(self.devices)
+        if found == self.controllers:
+            return
+        self.controllers = found
+        if found:
+            self.controller.set_status("Controller connected" if len(found) == 1 else f"{len(found)} controllers",
+                                       "ok", "Connected: " + ", ".join(found) + ". A game started from Steam "
+                                       "reads it.")
+        else:
+            self.controller.set_status("No controller", "warn",
+                                       "No controller is connected: switch it on, or press its PS button to wake "
+                                       "it, before starting a game from Steam.")
+
     def say(self, text: str, ok: bool = True) -> None:
         """What the window has to say: the line under the tabs, the Log tab and the log file."""
         self.running.setStyleSheet("font-weight:600;" + ("" if ok else "color:#c62828;"))
@@ -346,6 +401,30 @@ class MainWindow(QMainWindow):
         (self.log.info if ok else self.log.error)(text)
         stamp = time.strftime(applog.DATE)
         self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
+
+    def on_clear_logs(self) -> None:
+        """Clear logs (owner, 18-11-2026): the app's log file emptied, with the older ones kept beside it, and the
+        Log tab with them. Said in the line under the tabs only, so the log stays empty."""
+        if not applog.clear(APP_ID, self.log_path):
+            self.say(f"The log could not be cleared: {private(self.log_path)}", ok=False)
+            return
+        self.output.clear()
+        self.running.setStyleSheet("font-weight:600;")
+        self.running.setText("The log was cleared.")
+
+    def _show_play_time(self) -> None:
+        """The time spent in all games together, as Vita3K counts it (its time.xml); per game in the tip."""
+        times = userdata.play_times(self.vita_fs)
+        total = sum(seconds for seconds, _ in times.values())
+        if not total:
+            self.time_box.set_value("—", "Vita3K counts the time spent in each game; none yet.")
+            return
+        titles = {g.name: g.title for g in self.games}
+        lines = [f"{titles.get(name, name)}: {userdata.played(seconds)}"
+                 + (f", last played {time.strftime('%d-%m-%Y %H:%M', time.localtime(last))}" if last else "")
+                 for name, (seconds, last) in sorted(times.items(), key=lambda t: -t[1][0]) if seconds]
+        self.time_box.set_value(userdata.played(total), "The time spent in each game, as Vita3K counts it:\n"
+                                + "\n".join(lines))
 
     def _show_state(self) -> None:
         pinned = emulator.VERSION
@@ -379,19 +458,20 @@ class MainWindow(QMainWindow):
         official = style.link(self, userdata.FIRMWARE_PAGE, "here")
         fonts = style.link(self, userdata.FONTS_URL, "here")
         preinstall = style.link(self, userdata.PREINSTALL_URL, "here")
-        lines = ["Installed" if fw.ready else "Not installed"]
-        lines += [f"{part}: {'installed' if there else 'not installed'}"
-                  for part, there in (("System software", fw.system), ("Font package", fw.fonts),
-                                      ("Preinstalled apps", fw.preinstalled))]
-        self.firmware_state.setText("<br>".join(lines))
+        # The state alone (owner, 18-11-2026: a short line, as the other managers'); each part in the tip
+        parts = [f"{part}: {'installed' if there else 'not installed'}"
+                 for part, there in (("System software", fw.system), ("Font package", fw.fonts),
+                                     ("Preinstalled apps", fw.preinstalled))]
+        self.firmware_state.setText("Installed." if fw.ready else "Partly installed." if fw.system or fw.fonts
+                                    else "Not installed.")
         self.firmware_info.set_text("Drop your own firmware and font package in "
                                     f"{escape(private(library.firmware_home(self.user_home)))}. System software can "
                                     f"be downloaded from its official page {official}. Font package can be "
                                     f"downloaded from {fonts}. Preinstalled apps can be downloaded {preinstall}.")
-        self.firmware_state.setToolTip("Vita3K needs the system software and the font package to start most games; "
+        self.firmware_state.setToolTip("\n".join(parts)
+                                       + "\nVita3K needs the system software and the font package to start most games; "
                                        "the preinstalled apps are optional. The app gives the PSP2UPDAT.PUP files to "
                                        f"Vita3K, which installs them in {private(self.vita_fs)}.")
-        self.firmware_box.set_value("Ready" if fw.ready else "Partly" if fw.system or fw.fonts else "—")
 
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
         where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
@@ -402,6 +482,7 @@ class MainWindow(QMainWindow):
                                       + f"\n{len(self.games)} game(s) installed in Vita3K's storage, "
                                       f"{private(self.vita_fs)}.")
         self.games_box.set_value(str(len(self.games)))
+        self._show_play_time()
         found = {g.name for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
 
@@ -787,6 +868,7 @@ class MainWindow(QMainWindow):
             return
         self.worker.stop()
         self.release_check.stop()
+        self.controller_timer.stop()
         self.install_watch.stop()
         self.settings.set_window_state("geometry", self.saveGeometry())
         self.settings.sync()

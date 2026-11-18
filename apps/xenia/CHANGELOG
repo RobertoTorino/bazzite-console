@@ -1,3 +1,19 @@
+Changelog: 18-11-2026 03:30:14
+
+Added. The controller's state beside the title, as the other managers show it: Controller connected, or No
+controller when none is, looked at again every few seconds.
+
+Changelog: 18-11-2026 03:27:50
+
+Added. The managers' new design, as the other managers': a Memory cards tab with the saved games Xenia keeps,
+each under its game's title (export to a .zip, import, delete). Clear logs, a tab beside Log that is a button,
+empties the app's log file and the Log tab and removes the older log files. Start game stands beside Your games.
+The six tabs share the window's whole width and are pills as the ones above them. Under the header's pills only
+the links to Xenia's release notes and the wiki are left, in the type of a pill's caption; the introduction went.
+Xenia's state is one line. Under the games an info symbol stands in for the line of text about Steam. The window
+opens 900 wide (it was 980), which is its narrowest, and 606 high (it was 800); the Settings tab scrolls when it
+is higher than the window. There is no Play time pill: Xenia counts none.
+
 Changelog: 17-11-2026 14:53:56
 
 Release 1.2.0.

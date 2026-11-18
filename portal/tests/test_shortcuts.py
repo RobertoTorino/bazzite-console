@@ -43,6 +43,24 @@ def test_youtube_needs_brave_browsers_flatpak():
         shortcuts.youtube(flatpak(error=subprocess.TimeoutExpired("flatpak", 5)))
 
 
+def test_github_opens_in_the_desktops_own_browser():
+    """github.com with xdg-open; the browser's window is the one KWin brings to the front, when it can be asked."""
+    def browser(code=0, out="org.mozilla.firefox.desktop\n", error=None):
+        def run(argv, **kwargs):
+            assert argv == ["xdg-settings", "get", "default-web-browser"] and kwargs["timeout"] == 5
+            if error is not None:
+                raise error
+            return subprocess.CompletedProcess(argv, code, out, "")
+        return run
+    start = shortcuts.github(has("xdg-open"), browser())
+    assert start.argv == ["xdg-open", "https://github.com/"] and start.app_ids == ("org.mozilla.firefox",)
+    for unknown in (browser(1), browser(out=""), browser(error=FileNotFoundError()),
+                    browser(error=subprocess.TimeoutExpired("xdg-settings", 5))):
+        assert shortcuts.github(has("xdg-open"), unknown) == shortcuts.Start(["xdg-open", "https://github.com/"], ())
+    with pytest.raises(shortcuts.Missing, match="GitHub could not be opened"):
+        shortcuts.github(has())
+
+
 @pytest.mark.parametrize("page, kcm, panel", [("bluetooth", "kcm_bluetooth", "bluetooth"),
                                               ("network", "kcm_networkmanagement", "network"),
                                               ("sound", "kcm_pulseaudio", "sound"),

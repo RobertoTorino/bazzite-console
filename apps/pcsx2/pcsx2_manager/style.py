@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The app's look: one blue, #0A55B0, the blue of the app's icon (owner, 17-10-2026), on core's widgets. The style
 sheet goes on the main window, so everything in it takes the blue and the rest of the suite keeps core's purple.
-The tabs are the size of the pills above them, the chosen one filled blue, and the choice boxes (the table's
-screen settings, the Settings tab) are flat, outlined like the buttons, on no background of their own (owner,
+The tabs are pills as the ones above them (owner, 18-11-2026), the chosen one filled blue, and the choice boxes (the
+table's screen settings, the Settings tab) are flat, outlined like the buttons, on no background of their own (owner,
 24-10-2026)."""
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QLabel, QPushButton, QWidget
 
-from bazzite_console_core.theme import THEME
+from bazzite_console_core.theme import THEME, header_font
 from bazzite_console_core.widgets import Pill
 from bazzite_console_core.theme import OUTLINE
 
@@ -25,6 +25,22 @@ BLUE_TINT = "#1A0A55B0"                 # #AARRGGBB: 10 % blue, for hover and ev
 BLUE_LINE = "#590A55B0"                 # 35 % blue, for outlines
 LINK_ON_DARK = "#5B93DA"                # #0A55B0 is too dark to read as a link on a dark window
 DISABLED = "#80808080"                  # 50 % gray: a disabled button, readable as such on light and dark
+
+def tinted(colour: str, amount: float = 0.1) -> str:
+    """*color* with *amount* of the blue mixed in, opaque: a tint that keeps the surface it is on."""
+    base, blue = QColor(colour), QColor(BLUE)
+    mixed = QColor.fromRgbF(*(b * (1 - amount) + a * amount for a, b in zip(blue.getRgbF()[:3], base.getRgbF()[:3])))
+    return mixed.name()
+
+
+# A pill's surface, as core draws it (theme's sheen), for the tabs, which are pills too (owner, 18-11-2026)
+SHEEN = (f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {THEME.button}, "
+         f"stop:1 {THEME.button_low})")
+# The pill's surface under the mouse: the theme's sheen with the blue tint mixed into both of its stops, so it
+# stays a sheen (a translucent tint over the pill showed the window behind it instead; owner, 24-10-2026).
+HOVER_SHEEN = (f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {tinted(THEME.button)}, "
+               f"stop:1 {tinted(THEME.button_low)})")
+
 
 STYLESHEET = f"""
 QPushButton {{ border:1px solid {BLUE_LINE}; border-radius:6px; padding:5px 14px; background:palette(button); }}
@@ -51,17 +67,19 @@ QComboBox::down-arrow {{ image:url({ARROW}); width:10px; height:10px; }}
 QComboBox QAbstractItemView {{ border:1px solid {BLUE_LINE}; selection-background-color:{BLUE};
                                selection-color:white; }}
 QTabWidget::pane {{ border:none; }}
-QTabBar::tab {{ padding:17px 26px; min-width:120px; font-size:17px; font-weight:700; border:1px solid {BLUE_LINE};
-                border-bottom:none; border-top-left-radius:8px; border-top-right-radius:8px; margin-right:6px;
-                background:palette(button); }}
-QTabBar::tab:selected {{ background:{BLUE}; color:white; border-color:{OUTLINE}; }}
-QTabBar::tab:hover:!selected {{ background:{BLUE_TINT}; border-color:{OUTLINE}; }}
+QTabBar::tab {{ padding:17px 6px; min-width:80px; min-height:24px; font-size:17px; font-weight:800; margin-right:8px;
+                background:{SHEEN}; color:{THEME.text}; border:1px solid {THEME.edge};
+                border-left:4px solid {BLUE}; border-radius:8px; }}
+QTabBar::tab:last {{ margin-right:0; }}
+QTabBar::tab:selected {{ background:{BLUE}; color:white; }}
+QTabBar::tab:hover:!selected {{ background:{HOVER_SHEEN}; }}
 """
 
 
 def apply(window: QWidget) -> None:
     """The style sheet, and the blue as the window's selection color."""
-    window.setStyleSheet(STYLESHEET)
+    # The tabs in the pills' own type (core's header font, known once the application runs)
+    window.setStyleSheet(STYLESHEET + f"QTabBar::tab {{ {header_font()} }}")
     palette = window.palette()
     palette.setColor(QPalette.ColorRole.Highlight, QColor(BLUE))
     palette.setColor(QPalette.ColorRole.HighlightedText, QColor("white"))
@@ -75,6 +93,16 @@ def link(widget: QWidget, url: str, text: str) -> str:
     return f"<a href='{url}' style='color:{LINK_ON_DARK if dark else BLUE};'>{text}</a>"
 
 
+CAPTION = "font-size:12px; font-weight:600;"        # a pill's caption (core's MetricBox): Click to refresh
+
+
+def caption_link(widget: QWidget, url: str, text: str) -> str:
+    """A link that reads as a pill's caption (owner, 18-11-2026: the release notes and the wiki as Click to
+    refresh): the window's own text color and no underline; a click still opens it. For a label styled CAPTION."""
+    colour = widget.palette().color(QPalette.ColorRole.WindowText).name()
+    return f"<a href='{url}' style='color:{colour}; text-decoration:none;'>{text}</a>"
+
+
 def primary_button(text: str, tooltip: str = "") -> QPushButton:
     """A main action, filled blue (in place of core's accent_button, outlined in the suite's purple)."""
     button = QPushButton(text)
@@ -82,19 +110,6 @@ def primary_button(text: str, tooltip: str = "") -> QPushButton:
     button.setProperty("primary", True)
     button.setCursor(Qt.CursorShape.PointingHandCursor)
     return button
-
-
-def tinted(colour: str, amount: float = 0.1) -> str:
-    """*color* with *amount* of the blue mixed in, opaque: a tint that keeps the surface it is on."""
-    base, blue = QColor(colour), QColor(BLUE)
-    mixed = QColor.fromRgbF(*(b * (1 - amount) + a * amount for a, b in zip(blue.getRgbF()[:3], base.getRgbF()[:3])))
-    return mixed.name()
-
-
-# The pill's surface under the mouse: the theme's sheen with the blue tint mixed into both of its stops, so it
-# stays a sheen (a translucent tint over the pill showed the window behind it instead; owner, 24-10-2026).
-HOVER_SHEEN = (f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {tinted(THEME.button)}, "
-               f"stop:1 {tinted(THEME.button_low)})")
 
 
 def action_pill(value: str, caption: str, tooltip: str) -> Pill:

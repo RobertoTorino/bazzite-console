@@ -412,6 +412,14 @@ def test_info_button_opens_its_text_below_it(qapp):
     qapp.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     assert sip.isdeleted(first) and button.popup.findChild(QLabel).text() == "Shorter."
     button.popup.close()
+    taken = []
+    button.opens = taken.append                                    # the app opens a link itself
+    button.set_text("Start it from <a href='steam://open/games'>Steam</a>.")
+    button.click()
+    label = button.popup.findChild(QLabel)
+    assert not label.openExternalLinks()
+    label.linkActivated.emit("steam://open/games")
+    assert taken == ["steam://open/games"] and not button.popup.isVisible()
     qapp.processEvents()
     owner.close()
 

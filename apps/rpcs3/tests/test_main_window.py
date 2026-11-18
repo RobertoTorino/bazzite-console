@@ -95,17 +95,18 @@ def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
     # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
-    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button." and "No firmware" in window.firmware_state.text()
+    assert window.emulator_state.text() == "Not installed. Install it with the Install button." and window.firmware_state.text() == "Uninstalled."
     assert f"Install downloads RPCS3 {emulator.VERSION}" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.rpcs3_button.isEnabled()
     assert window.refresh_pill.isEnabled()
     assert not window.package_pill.isEnabled()
     assert [window.table.item(r, 1).text() for r in range(window.table.rowCount())] == ["One", "Two"]   # Games/PS3 and RPCS3's own
-    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log",
-                                                                            "Start game"]
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
+                                                                            "Settings", "Memory cards", "Log",
+                                                                            "Clear logs"]
     assert [b.caption.text() for b in window.header_pills[1:]] == ["RPCS3 version", "Your games",
-                                                                    "Available in Steam", "Play time"]
+                                                                    "Available in Steam"]
     for name in ("play_button", "firmware_box", "refresh_button", "install_button", "remove_button",
                  "firmware_button", "folder_button", "forget_button", "forget_pill", "folders_state",
                  "firmware_pill", "folder_pill"):                                   # the last two: fixed folders
@@ -113,23 +114,23 @@ def test_before_installing(qapp, folders):
     # The action pills: what it is for in large type, what the pill does under it, the header pills' size and all
     # one width (owner, 24-10-2026: Games Install in place of Remove folder, which is a link in the Disc games line).
     assert [(p.value.text(), p.caption.text()) for p in window.actions] == [
-        ("RPCS3", "Install"), ("RPCS3", "Uninstall"), ("Games", "Install")]
+        ("RPCS3", "Install"), ("RPCS3", "Uninstall"), ("Games", "Install"), ("RPCN", "Account")]
     assert all(p.sizeHint().height() == window.refresh_pill.sizeHint().height() for p in window.actions)
     window.show()                                       # spread over the width: all one width, no gap at the end
     window.centralWidget().layout().activate()
     assert len({p.width() for p in window.actions}) <= 2            # equal but for a pixel of rounding
     assert abs(window.tabs.tabBar().tabRect(0).height() - window.install_pill.height()) <= 2   # tabs as big
-    assert window.package_pill.geometry().right() >= window.tabs.geometry().right() - 1
+    assert window.time_box.geometry().right() >= window.tabs.geometry().right() - 1    # Play time, the row's last
     assert len({p.width() for p in window.header_pills}) <= 2       # the header's pills spread the same way
-    assert window.time_box.geometry().right() >= window.tabs.geometry().right() - 1
+    assert window.steam_box.geometry().right() >= window.tabs.geometry().right() - 1
     window.place_states()                               # the states end at the middle of the last pill (owner)
     window.centralWidget().layout().activate()
-    centre = window.time_box.mapTo(window, window.time_box.rect().center()).x()
+    centre = window.steam_box.mapTo(window, window.steam_box.rect().center()).x()
     right = window.controller.mapTo(window, window.controller.rect().topRight()).x()
-    assert abs(right - centre) <= 8 and window.pill.x() < window.controller.x()
+    assert abs(right - centre) <= 8 and window.pill.x() < window.rpcn_pill.x() < window.controller.x()
     assert "RPCS3's release notes" in window.intro.text() and emulator.RELEASE_PAGE in window.intro.text()
     assert ">Wiki</a>" in window.intro.text() and "Manual" not in window.intro.text()
-    assert "Game Mode" not in window.intro.text() and "Big Picture Mode" in window.intro.text()
+    assert "Game Mode" not in window.intro.text()
     window.close()
 
 
@@ -139,7 +140,7 @@ def test_installed_with_firmware_and_games(qapp, folders):
     assert window.pill.text() == "No firmware"
     assert window.rpcs3_button.isEnabled()
     # The state alone, what to do behind the info symbol (owner, 11-11-2026).
-    assert window.firmware_state.text() == "No firmware detected"
+    assert window.firmware_state.text() == "Uninstalled."
     assert "playstation.com" in window.firmware_info.text_
     assert ">PlayStation's firmware page</a>" in window.firmware_info.text_
     assert "Download PS3UPDAT.PUP" in window.firmware_info.text_ and "Games/PS3/Firmware" in window.firmware_info.text_
@@ -147,11 +148,11 @@ def test_installed_with_firmware_and_games(qapp, folders):
     window.refresh()
     assert window.pill.text() == "Ready"
     # The state lines are short (owner, 11-11-2026), the rest in the tips.
-    assert window.firmware_state.text() == "Firmware 4.92 is installed."
+    assert window.firmware_state.text() == "<b>4.92</b>"
     assert window.firmware_state.toolTip().startswith("PS3 firmware 4.92 in RPCS3's firmware folder: ")
     assert str(folders["rpcs3_home"] / "dev_flash") in window.firmware_state.toolTip()     # the path as the tip
     assert window.emulator_box.value.text() == emulator.LANDMARK
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert window.emulator_state.toolTip() == f"RPCS3 {emulator.VERSION}, the build this version of the app was tried with"
     # PKG games: RPCS3's games folder within its own folder, the count in the tip (owner, 24-10-2026).
     assert window.pkg_state.text() == "<b>dev_hdd0/game/</b>"
@@ -369,11 +370,21 @@ def test_the_settings_tab_follows_rpcs3s_file(qapp, folders):
 
 
 def test_the_steam_link(qapp, folders):
-    """The hint under the games links to Steam: the app opens Steam's library (Steam starts when it does not run)."""
+    """The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the
+    boxes, Screen setting and Start game do, and Steam in it is a link the app opens itself (Steam starts when it
+    does not run)."""
+    import re
     opened = []
     window = _window(folders, open_url=lambda url: (opened.append(url), True)[1])
-    assert f"href='{STEAM_URL}'" in window.steam_hint.text()
-    window.steam_hint.linkActivated.emit(STEAM_URL)
+    assert not hasattr(window, "steam_hint")
+    window.show()
+    window.steam_info.click()
+    label = window.steam_info.popup.findChild(QLabel)
+    assert re.sub(r"<[^>]+>", "", label.text()) == ("A checkmark before a game adds the game to Steam. Screen setting "
+                                                    "sets how it fills the screen. When the Start game button is "
+                                                    "clicked the game starts from Steam.")
+    assert f"href='{STEAM_URL}'" in label.text() and not label.openExternalLinks()
+    label.linkActivated.emit(STEAM_URL)
     assert opened == [STEAM_URL] and "Steam was opened." in window.output.toPlainText()
     window.close()
     window = _window(folders, open_url=lambda url: False)
@@ -427,7 +438,7 @@ def test_rpcs3_updated_itself(qapp, folders):
     _install(folders["home"])
     emulator.appimage(folders["home"]).write_bytes(b"another build")
     window = _window(folders)
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert "updated itself" in window.emulator_state.toolTip() and window.emulator_box.value.text() == "other"
     assert window.install_pill.isEnabled()                                    # puts the pinned build back
     window.close()
@@ -545,7 +556,7 @@ esac
     window.install_firmware(good)
     _wait(window, qapp)
     assert window.firmware == "4.92" and window.running.text() == "PS3 firmware 4.92 is installed."
-    assert window.firmware_state.text() == "Firmware 4.92 is installed."
+    assert window.firmware_state.text() == "<b>4.92</b>"
     window.close()
 
 
@@ -655,7 +666,6 @@ def test_the_blue_look(qapp, folders):
     assert window.covers_button.property("primary") is None and window.steam_button.property("primary")
     assert window.rpcs3_button.property("primary") is None
     assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
-    assert f"color:{style.BLUE}" in window.intro.text()                             # the release link
     for pill in (window.refresh_pill, *window.actions):
         sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
@@ -689,7 +699,7 @@ def test_a_newer_rpcs3_is_mentioned(qapp, folders):
         qapp.processEvents()
         time.sleep(0.01)
     tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert "RPCS3 0.0.44 is out (2026-11-30)" in tip and "releases/tag/v0.0.44" in tip
     assert "RPCS3 0.0.44 is out (2026-11-30)" in window.output.toPlainText()
     assert window.install_pill.isEnabled() is False                                # it never installs that one
@@ -709,8 +719,133 @@ def test_the_log_tab(qapp, folders, tmp_path):
     lines = window.output.toPlainText().splitlines()
     assert lines[-1][:19].count("-") == 2 and lines[-1][10] == " "               # DD-MM-YYYY HH:MM:SS
     assert lines[-1].endswith(" ERROR Steam was not changed: no Steam") and "c62828" in window.running.styleSheet()
-    assert str(folders["log_path"]) in window.tabs.widget(2).findChildren(QLabel)[0].text()
+    assert str(folders["log_path"]) in window.tabs.widget(4).findChildren(QLabel)[0].text()
     window.close()
+
+
+def test_clear_logs_empties_the_log(qapp, folders):
+    """Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones
+    beside it removed and the Log tab emptied with them, the open page kept."""
+    log = folders["log_path"]
+    log.write_text("18-11-2026 10:00:00 INFO RPCS3 Manager started\n")
+    older = log.with_name(log.name + ".1")
+    older.write_text("17-11-2026 10:00:00 INFO older\n")
+    window = _window(folders)
+    tabs, clear = window.tabs, window.clear_tab.index
+    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "Log"
+    assert clear == tabs.count() - 1 and "Manager started" in window.output.toPlainText()
+    tabs.setCurrentIndex(clear - 1)
+    tabs.tabBarClicked.emit(clear)
+    tabs.setCurrentIndex(clear)
+    assert tabs.currentIndex() == clear - 1                                     # the Log tab stays open
+    assert log.read_text() == "" and not older.exists() and window.output.toPlainText() == ""
+    assert window.running.text() == "The log was cleared."
+    window.close()
+
+
+def test_the_blueprint_layout(qapp, folders):
+    """The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also
+    its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs
+    share the whole width, the last one up to the margin, with no line over them; under the header's pills the two
+    links alone, in the type of a pill's caption, each still a link."""
+    import re
+    window = _window(folders)
+    window.show()
+    qapp.processEvents()
+    bar = window.tabs.tabBar()
+    assert window.width() == 900 == window.minimumWidth()
+    assert window.centralWidget().minimumSizeHint().width() <= 900 and window.height() == 606
+    assert window.tabs.widget(2) is window.settings_scroll                      # the Settings tab scrolls: no higher
+    assert window.settings_scroll.widget() is window.settings_page and window.settings_scroll.widgetResizable()
+    assert window.tabs.tabText(3) == "Memory cards" and window.tabs.widget(3) is window.saves_page
+    assert window.time_box.caption.text() == "Play time" and window.time_box.y() == window.account_pill.y()
+    assert window.time_box.x() > window.account_pill.x() and abs(window.time_box.width()
+                                                                 - window.install_pill.width()) <= 1
+    assert bar.count() == 6 and len({bar.tabRect(i).width() for i in range(6)}) <= 2    # equal but for a pixel
+    assert not bar.drawBase()
+    assert bar.tabRect(0).left() <= 1 and abs(bar.tabRect(5).right() - (window.tabs.width() - 1)) <= 1
+    assert re.sub(r"<[^>]+>", "", window.intro.text()) == "RPCS3's release notes · Wiki"
+    assert window.intro.styleSheet() == window.refresh_pill.caption.styleSheet() == style.CAPTION
+    assert f"href='{emulator.RELEASE_PAGE}'" in window.intro.text() and "text-decoration:none" in window.intro.text()
+    assert style.BLUE not in window.intro.text() and window.intro.openExternalLinks()
+    window.close()
+
+
+def _rpcn_on(folders) -> None:
+    from rpcs3_manager import rpcn
+    rpcn.save_account(folders["rpcs3_home"], rpcn.Server("np.example"), "Player_1", "A" * 64, "0123456789ABCDEF", True)
+
+
+def _rpcn_pill(window, qapp, text: str) -> bool:
+    deadline = time.monotonic() + 10
+    while window.rpcn_pill.text() != text and time.monotonic() < deadline:
+        qapp.processEvents()
+        time.sleep(0.01)
+    return window.rpcn_pill.text() == text
+
+
+def test_rpcn_off_online_offline(qapp, folders):
+    """RPCN (owner, 18-11-2026: as shadPS4 Manager's shadNet): the Account pill, the RPCN line with the name that
+    signs in, and beside the app's state RPCN Off, Online when the server answers (asked, not signed in) or
+    Offline."""
+    from conftest import FakeRpcn
+    window = _window(folders)
+    assert (window.account_pill.value.text(), window.account_pill.caption.text()) == ("RPCN", "Account")
+    assert window.account_pill.isEnabled() and window.rpcn_state.text() == "Off"
+    assert window.rpcn_pill.text() == "RPCN Off" and window.rpcn_pill.kind == "neutral"
+    window.close()
+    _rpcn_on(folders)
+    fake = FakeRpcn()
+    window = _window(folders, rpcn_connect=fake.connect)
+    assert window.rpcn_state.text() == "<b>Player_1</b>"
+    assert window.rpcn_state.toolTip() == "Player_1 signs in to np.example when a game starts."
+    assert _rpcn_pill(window, qapp, "RPCN Online") and window.rpcn_pill.kind == "ok"
+    assert "signs in as Player_1" in window.rpcn_pill.toolTip() and fake.requests == []         # no sign-in
+    window.close()
+
+    def refused(address, timeout):
+        raise ConnectionRefusedError(111, "Connection refused")
+    window = _window(folders, rpcn_connect=refused)
+    assert _rpcn_pill(window, qapp, "RPCN Offline") and window.rpcn_pill.kind == "bad"
+    assert "could not be reached: Connection refused" in window.rpcn_pill.toolTip()
+    window.close()
+
+
+def test_rpcn_from_rpcs3_while_it_runs(qapp, folders, tmp_path):
+    """While RPCS3 runs its log says whether it signed in; the server is not asked then."""
+    _rpcn_on(folders)
+    log = tmp_path / "RPCS3.log"
+    log.write_text("·S 0:00:05.4 rpcn: You are now logged in RPCN(Player_1 | Player_1)!\n")
+
+    def nowhere(address, timeout):
+        raise AssertionError("the server is not asked while RPCS3 runs")
+    window = _window(folders, rpcs3_running=lambda: True, rpcn_connect=nowhere, rpcs3_log=log)
+    assert window.rpcn_pill.text() == "RPCN Online"
+    assert "signed in to np.example as Player_1" in window.rpcn_pill.toolTip()
+    log.write_text("·E 0:00:05.4 rpcn: Login error: invalid token!\n")
+    window._watch_rpcn()
+    assert window.rpcn_pill.text() == "RPCN Offline" and "invalid token" in window.rpcn_pill.toolTip()
+    window.close()
+
+
+def test_rpcn_set_up_from_the_window(qapp, folders, monkeypatch):
+    from rpcs3_manager import rpcn, rpcn_dialog
+
+    def fill_in(dialog):
+        dialog.npid.setText("Player_1")
+        dialog.password.setText("secret")
+        dialog.use.setChecked(True)
+        dialog.on_save()
+        return dialog.result()
+    monkeypatch.setattr(rpcn_dialog.RpcnDialog, "exec", fill_in)
+    from conftest import FakeRpcn
+    window = _window(folders, rpcn_connect=FakeRpcn().connect)
+    window.on_rpcn()
+    assert window.running.text() == "RPCN settings saved in RPCS3's own files."
+    assert window.rpcn_state.text() == "<b>Player_1</b>" and rpcn.read_account(folders["rpcs3_home"]).signs_in
+    assert "secret" not in window.output.toPlainText()
+    window.close()
+
 
 
 def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
@@ -764,7 +899,7 @@ def test_another_build_installed_than_the_app_brings(qapp, folders):
     (folders["home"] / "0.0.43-20133" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("0.0.43-20133")
     window = _window(folders)
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button." and window.emulator_box.value.text() == "0.0.43"
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button." and window.emulator_box.value.text() == "0.0.43"
     assert window.emulator_state.toolTip() == (f"RPCS3 0.0.43-20133 is installed; this version of the app brings "
                                                f"{emulator.VERSION}: Install puts it in.")
     assert window.install_pill.isEnabled()
@@ -779,7 +914,7 @@ def test_the_settings_tab_is_not_squeezed_under_the_introduction(qapp, folders):
     unreadable on the console)."""
     _install(folders["home"])
     window = _window(folders)
-    window.tabs.setCurrentIndex(1)
+    window.tabs.setCurrentIndex(2)
     window.show()
     qapp.processEvents()
     assert window.intro.minimumHeight() == window.intro.heightForWidth(window.intro.width()) > 0
@@ -798,7 +933,7 @@ def test_unmute_bazzites_volume(qapp, folders, tmp_path):
     state.write_text('[stream-properties]\nOutput/Audio:application.name:RPCS3={"volume":1.000000, "mute":true}\n')
     window = _window(folders, sound_state=state)
     page = window.settings_page
-    window.tabs.setCurrentIndex(1)
+    window.tabs.setCurrentIndex(2)
     window.show()
     qapp.processEvents()
     assert page.sound_path == state and page.unmute_button.isVisible()
@@ -880,7 +1015,7 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     opened = []
     window = _window(folders, open_url=lambda url: opened.append(url) or True)
     tabs, start = window.tabs, window.start_tab.index
-    assert start == tabs.count() - 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
+    assert start == 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
     window.table.clearSelection()
     tabs.tabBarClicked.emit(start)                                           # no game chosen
     assert opened == [] and window.running.text().startswith("Choose a game under Your games first")
@@ -894,12 +1029,12 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     _wait(window, qapp)
     window.table.selectRow(0)
     (name,) = shortcuts.in_steam(folders["steam_dir"]).values()
-    tabs.setCurrentIndex(1)
+    tabs.setCurrentIndex(2)
     tabs.tabBarClicked.emit(start)                                           # a click on the tab
     tabs.setCurrentIndex(start)                                              # as the click goes on to select it
     assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
     assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
-    assert tabs.currentIndex() == 1                                          # Settings is still open
+    assert tabs.currentIndex() == 2                                          # Settings is still open
     window.open_url = lambda url: False
     window.on_start_game()
     assert window.running.text() == f"{title} could not be started: xdg-open is missing."

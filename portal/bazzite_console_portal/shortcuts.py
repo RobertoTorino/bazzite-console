@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The header's shortcuts (owner, 12-11-2026): the file manager, Steam, YouTube, and the desktop's Bluetooth,
-network, sound and display settings, each a symbol that starts a program outside the suite. What to start is found here, from what the
+"""The header's shortcuts (owner, 12-11-2026): the file manager, Steam, YouTube, GitHub (owner, 18-11-2026), and
+the desktop's Bluetooth, network, sound and display settings, each a symbol that starts a program outside the
+suite. What to start is found here, from what the
 machine has: Steam's own launcher, the desktop's file manager on the home folder (xdg-open, whichever desktop),
-YouTube fullscreen in Brave Browser's kiosk mode (its Flatpak, which must be installed), and the settings of KDE
+YouTube fullscreen in Brave Browser's kiosk mode (its Flatpak, which must be installed), GitHub in the desktop's
+own browser (xdg-open), and the settings of KDE
 Plasma (System Settings, else the module alone) or of GNOME. A shortcut whose program is missing raises Missing
 with the line the window shows."""
 
@@ -16,6 +18,7 @@ from pathlib import Path
 
 BRAVE_ID, BRAVE_NAME = "com.brave.Browser", "Brave Browser"
 YOUTUBE_URL = "https://www.youtube.com/"
+GITHUB_URL = "https://github.com/"
 # The settings page of each desktop, the first whose program is there: (program, its arguments, its window's id).
 SETTINGS = {
     "bluetooth": (("systemsettings", ("kcm_bluetooth",), "systemsettings"),
@@ -76,6 +79,24 @@ def youtube(run: Run | None = None) -> Start:
     if not flatpak_installed(BRAVE_ID, run):
         raise Missing(f"{BRAVE_NAME} is required. Install its Flatpak ({BRAVE_ID}) to open YouTube.")
     return Start(["flatpak", "run", BRAVE_ID, "--kiosk", YOUTUBE_URL], (BRAVE_ID, "brave-browser"))
+
+
+def default_browser(run: Run | None = None) -> tuple[str, ...]:
+    """The id of the desktop's browser window (its desktop file's name), for KWin; none when it cannot be asked."""
+    try:
+        result = (run or subprocess.run)(["xdg-settings", "get", "default-web-browser"], capture_output=True,
+                                         text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return ()
+    name = (result.stdout or "").strip().removesuffix(".desktop")
+    return (name,) if result.returncode == 0 and name else ()
+
+
+def github(which: Which | None = None, run: Run | None = None) -> Start:
+    """GitHub in the desktop's own browser: a window with its tabs and address bar, not a kiosk."""
+    if (which or shutil.which)("xdg-open") is None:
+        raise Missing("GitHub could not be opened: xdg-open is not on this system.")
+    return Start(["xdg-open", GITHUB_URL], default_browser(run))
 
 
 def settings(page: str, which: Which | None = None) -> Start:

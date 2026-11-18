@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A tab that acts (owner, 12-11-2026: Start game in the game managers): it stands in the row of
-tabs as the last one, and a click on it does something instead of opening a page. The page that was open stays
+tabs after the ones there, and a click on it does something instead of opening a page (Clear logs beside the Log
+tab, owner 18-11-2026; several of them may stand in one row). The page that was open stays
 open. Reached with the keyboard (the arrow keys on the tabs, Ctrl+Tab) it does nothing: the tabs go on to the page
 they came from, so a game never starts from a key that only moves."""
 
@@ -13,7 +14,7 @@ from PyQt6.QtWidgets import QTabWidget, QWidget
 
 
 class ActionTab(QObject):
-    """The last tab of *tabs*, named *label* with *tooltip*: a click on it calls *pressed*. index is its place."""
+    """A tab added to *tabs*, named *label* with *tooltip*: a click on it calls *pressed*. index is its place."""
 
     def __init__(self, tabs: QTabWidget, label: str, tooltip: str, pressed: Callable[[], None]):
         super().__init__(tabs)
@@ -32,5 +33,5 @@ class ActionTab(QObject):
     def _changed(self, index: int) -> None:
         if index == self.index:
             self.tabs.setCurrentIndex(self.last)
-        else:
-            self.last = index
+        elif all(index != action.index for action in self.tabs.findChildren(ActionTab)):
+            self.last = index                       # a page: another action tab is not somewhere to stay

@@ -23,6 +23,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from xml.etree import ElementTree
 
 from bazzite_console_core.platform import config_home, data_home
 
@@ -155,3 +156,35 @@ def firmware_written(vita_fs: Path, since: float) -> Firmware:
     """The parts of the firmware Vita3K wrote at *since* (a time.time()) or later: what one --firmware installed."""
     return Firmware(_written(vita_fs / "vs0", since) or _written(vita_fs / "os0", since),
                     _written(vita_fs / "sa0", since), _written(vita_fs / "pd0", since))
+
+
+def play_times(vita_fs: Path) -> dict[str, tuple[int, int]]:
+    """The time Vita3K counts per app (its ux0/user/time.xml, written by app/src/apps_list.cpp: under <time>, per
+    <user id>, an <app last-time-used="Unix time" time-used="seconds"> with the app's folder name as its text): the
+    folder name to (seconds used, when it was last used), all users together."""
+    try:
+        root = ElementTree.parse(vita_fs / "ux0" / "user" / "time.xml").getroot()
+    except (OSError, ElementTree.ParseError):
+        return {}
+    times: dict[str, tuple[int, int]] = {}
+    for app in root.iterfind("./user/app"):
+        name = (app.text or "").strip()
+        try:
+            used, last = int(app.get("time-used", "0")), int(app.get("last-time-used", "0"))
+        except ValueError:
+            continue
+        if name:
+            before = times.get(name, (0, 0))
+            times[name] = (before[0] + max(used, 0), max(before[1], last))
+    return times
+
+
+def played(seconds: int) -> str:
+    """A play time in words: "3 h 5 min", "12 min", "40 s"."""
+    hours, rest = divmod(seconds, 3600)
+    minutes, secs = divmod(rest, 60)
+    if hours:
+        return f"{hours} h {minutes} min"
+    if minutes:
+        return f"{minutes} min" + (f" {secs} s" if secs else "")
+    return f"{secs} s"

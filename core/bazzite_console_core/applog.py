@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A log file per app (owner, 24-10-2026): ~/.local/share/<app id>/<app id>.log, one line per thing the app says or
 does, with the time, and every uncaught error with its traceback. The file turns over at 1 MB, with three older
-ones kept, so it never grows past a few MB. An app calls setup() once at start and logger() wherever it logs; what
-the file holds the app also shows in its window, so the log is what happened in words, not a debug trace.
+ones kept, so it never grows past a few MB; clear() empties it. An app calls setup() once at start and logger()
+wherever it logs; what the file holds the app also shows in its window, so the log is what happened in words, not
+a debug trace.
 
 Personal data stays out of it as it stays out of everything else the suite writes: an app logs what it did, not
 keys or account details."""
@@ -63,6 +64,32 @@ def setup(app_id: str, path: Path | None = None, private: bool = False) -> Path:
         previous(kind, error, trace)
     sys.excepthook = excepthook
     return path
+
+
+def clear(app_id: str, path: Path | None = None) -> bool:
+    """The app's log emptied (owner, 18-11-2026: Clear Logs): the file itself, *path* (log_file(app_id) when not
+    given), and the older ones kept beside it. The file stays open and in use: the next line the app logs is its
+    first. False when a file could not be emptied or removed."""
+    path = path or log_file(app_id)
+    done = True
+    for handler in logger(app_id).handlers:
+        if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename) == path.absolute():
+            handler.acquire()
+            try:
+                if handler.stream is not None:      # opened to append: after this the next line is the first
+                    handler.stream.truncate(0)
+            except OSError:
+                done = False
+            finally:
+                handler.release()
+    try:
+        if path.exists():
+            path.write_text("", encoding="utf-8")
+        for number in range(1, KEPT + 1):
+            path.with_name(f"{path.name}.{number}").unlink(missing_ok=True)
+    except OSError:
+        done = False
+    return done
 
 
 def tail(path: Path, lines: int = 200) -> str:

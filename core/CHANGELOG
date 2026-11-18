@@ -1,3 +1,10 @@
+Changelog: 18-11-2026 01:11:04
+
+Added. clear() in applog: an app's log file emptied while it stays in use, and the older ones kept beside it
+removed. ActionTab: several of them may stand in one row of tabs (PPSSPP Manager's Clear logs beside Start
+game); a tab that acts is never the page another one goes back to. InfoButton: opens, a function the app sets to
+open a link in the text itself.
+
 Changelog: 17-11-2026 14:53:56
 
 Version 4.2.0.

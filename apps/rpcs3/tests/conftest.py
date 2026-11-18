@@ -111,3 +111,40 @@ def settings_dir(tmp_path, monkeypatch):
 @pytest.fixture
 def rpcs3_files(tmp_path):
     return write_rpcs3_files(tmp_path / "rpcs3")
+
+
+class FakeRpcn:
+    """An RPCN server on one end of a socket pair (no TLS: connect() stands in for the app's own): sends ServerInfo
+    (*version*), then answers each request with *error* after a notification, and keeps what it got, the command
+    and its texts. connect() is what rpcn.request() takes."""
+
+    def __init__(self, error: int = 0, version: int = 34, first: int = 3):
+        self.error, self.version, self.first = error, version, first
+        self.requests: list[tuple[int, list[str]]] = []
+        self.addresses: list[tuple[str, int]] = []
+
+    def connect(self, address, timeout):
+        import socket
+        import threading
+        self.addresses.append(address)
+        mine, theirs = socket.socketpair()
+        threading.Thread(target=self._serve, args=(mine,), daemon=True).start()
+        return theirs
+
+    def _serve(self, sock) -> None:
+        header = struct.Struct("<BHIQ")
+        with sock:
+            sock.sendall(header.pack(self.first, 0, 19, 0) + struct.pack("<I", self.version))
+            data = b""
+            while len(data) < header.size:
+                chunk = sock.recv(64)
+                if not chunk:
+                    return
+                data += chunk
+            kind, command, total, number = header.unpack(data[:header.size])
+            while len(data) < total:
+                data += sock.recv(total - len(data))
+            self.requests.append((command, [t.decode() for t in data[header.size:total].split(b"\0")[:-1]]))
+            sock.sendall(header.pack(2, 7, header.size + 1, 0) + b"\0")             # a notification first
+            sock.sendall(header.pack(1, command, header.size + 1, number) + bytes([self.error]))
+            sock.recv(64)                                                         # until the client closes

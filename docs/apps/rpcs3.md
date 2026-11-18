@@ -48,19 +48,17 @@ your games stay. The games in Steam then no longer start: take them out first by
 
 ## Use it
 
-The header shows the **RPCS3 version**, **Your games** (the games found), those **Available in Steam** and the
-**Play time**: the time spent in all your games together, as RPCS3 counts it, with each game's time in the
-tooltip. **Refresh** reads everything again. Beside the title, next to the app's state, stands the controller's:
+The header shows the **RPCS3 version**, **Your games** (the games found) and those **Available in Steam**. **Refresh** reads everything again. Beside the title, next to the app's state, stands the controller's:
 **Controller connected**, or **No controller** when none is, looked at again every few seconds. A game started
 from Steam reads the controller that is connected when it starts, so switch yours on, or press its PS button to
 wake it, before starting a game. When Steam starts a game without one, the app also says so in a desktop
-notification. Under
-the introduction, which links to **RPCS3's release notes** and to this wiki, a row of three pills does the setting
-up, each with what it is for on top and what it does under it: **RPCS3 Install**, **RPCS3 Uninstall** and **Games
-Install**. Your disc games and the firmware go into the app's own folder (see [Where your games
-go](#where-your-games-go)); nothing is chosen or browsed to for them. Four lines below the pills say where each
-stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and **Log**, and
-**Start game**, a tab that is a button.
+notification. Under the links to **RPCS3's release notes** and to this wiki, a row of pills does the setting
+up, each with what it is for on top and what it does under it: **RPCS3 Install**, **RPCS3 Uninstall**, **Games Install** and **RPCN Account** (see [RPCN](#rpcn)). The last pill in that row is **Play time**: the time spent in all your games together, as RPCS3
+counts it, with each game's time in the tooltip. Your disc games and the firmware go into the app's own folder (see [Where your games
+go](#where-your-games-go)); nothing is chosen or browsed to for them. Five lines below the pills say where each
+stands, short, with more in their tooltips, and then comes a row of six tabs: **Your games**, **Settings**,
+**Memory cards** and **Log**, and two that are buttons: **Start game**, beside Your games, and **Clear logs**,
+beside Log.
 
 - **RPCS3**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
   shows the version installed. The tooltip says which build is installed, or what Install takes, and when a newer
@@ -69,7 +67,7 @@ stands, short, with more in their tooltips, and then come three tabs: **Your gam
   newer RPCS3 also go to the log, once. **Install** downloads RPCS3 from GitHub (about 80 MB): the pinned build,
   checked against its checksum before it is installed. **Uninstall** takes it out again; RPCS3's own folder, with
   the firmware, your saves, settings and installed games, stays.
-- **Firmware**: *No firmware detected*, or *Firmware 4.93 is installed.* with the version RPCS3 has (the folder's
+- **Firmware**: **Uninstalled.**, or the version RPCS3 has and nothing else, such as **4.93** (the folder's
   path is in the tooltip; the **i** beside it says where the firmware comes from). Put the `PS3UPDAT.PUP` you
   downloaded in `~/Games/PS3/Firmware`: once RPCS3 is installed, the app gives it to RPCS3 by itself, when the
   window opens and on **Refresh**, and RPCS3 installs it without opening its window. The line under the tabs says
@@ -144,7 +142,8 @@ closes, over any change made meanwhile). A game is started full screen from Stea
 Tick the games you want in Steam and press **Update Steam**. The app adds them to Steam as non-Steam games, with
 the game's own icon and background as their pictures and its icon (`ICON0.PNG`) as the logo on the banner, and
 takes out the games you unticked and games it no longer finds. Steam keeps these files in memory, so it closes for
-the change and starts again in the background.
+the change and starts again in the background. The info symbol under the list
+says in short what the boxes and **Start game** do; **Steam** in its text opens Steam's library.
 
 In Steam each game's name starts with its system, for example **[PS3] Lumines**, so it stands apart from the same
 title on Steam or on another system in Steam's menus. A game whose name in Steam differs from its title in the app
@@ -175,12 +174,14 @@ game's own.
 
 #### Start game
 
-The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+The tab beside Your games, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
 as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
 ### Settings
+
+The tab scrolls when it is higher than the window.
 
 RPCS3's settings that matter for playing, each written into RPCS3's own settings file (`config.yml`) the moment
 you change it, while RPCS3 does not run; RPCS3 reads them when a game starts, and a game's own settings in RPCS3
@@ -219,6 +220,20 @@ settings?**: the two builds know different settings. That happens after RPCS3 up
 with its update check off it does not. Answer **Yes** to let RPCS3 tidy its file for the build that runs; the app's
 settings are not in it.
 
+### Memory cards
+
+A PS3 game keeps each save as a folder, not on a card file. This tab lists the saves on RPCS3's hard disk (`~/.config/rpcs3/dev_hdd0/home/00000001/savedata`, and every other user's): the game, the
+save's title, its folder, its size and when it was last written. Select a save to see its picture and what the game
+says is in it.
+
+- **Export…** writes the selected saves to one `.zip`, each as its folder, to keep or to share.
+- **Import…** puts the saves from a `.zip` there. A `.zip` exported here goes back as it is; a `.zip` with a save's
+  files at the top is taken in under the `.zip`'s own name. A save that is there already is replaced only after the
+  app asks.
+- **Delete…** deletes the selected saves after it asks. A deleted save is gone: export it first to keep a copy.
+
+Nothing is imported or deleted while RPCS3 runs: close it first.
+
 ### Log
 
 Everything the app said and did, with the time: RPCS3 installed or removed, what the app set up in RPCS3, the
@@ -226,8 +241,33 @@ firmware, the packages (what RPCS3's own log, `~/.cache/rpcs3/RPCS3.log`, says e
 folders chosen, every change to Steam, and every error. Each game started from Steam is logged by its folder's name
 when it starts, with whether a controller was connected. The same lines are in
 `~/.local/share/ps5-rpcs3-manager/ps5-rpcs3-manager.log`, which turns over at 1 MB (the three older files are
-kept). The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
+kept). **Clear logs**, the tab beside Log, empties
+the file and the Log tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
 keeps it; `--purge` removes it.
+
+## RPCN
+
+RPCN is RPCS3's online service: online play, friends and scores, in the games RPCS3 supports online. RPCS3 signs in
+by itself when a game starts, once it knows your account. **RPCN Account** opens a window for it:
+
+- **Server**: the RPCN server, `np.rpcs3.net` (RPCS3's own) unless you use another one.
+- **RPCN name** and **Password**: your account. The name has 3 to 16 letters, digits, `-` or `_`, and is
+  case-sensitive when you sign in. A password RPCS3 has already is not shown: leave the field empty to keep it.
+- **Email**: needed to create an account, and only then.
+- **Token**: the 16 characters the server mails you after it creates the account.
+
+**Create account** makes a new account on the server with that name, password and email; the server mails the
+token. **Try sign-in** signs in once and out again, to check the name, password and token. **Resend token** has the server
+mail the token again, which it does once every 24 hours. **Save** keeps it all in
+RPCS3's own files, with **Sign in to RPCN when a game starts** ticked to use it, or unticked to stop. Close RPCS3
+before you save.
+
+The **RPCN** line under the pills names the account that signs in, or says **Off**. Beside the app's state in the
+header stands **RPCN Off**, **RPCN Online** or **RPCN Offline**: while RPCS3 runs, whether it signed in, as its log
+says; otherwise whether the server answers.
+
+The password is kept and sent as RPCS3 does it, scrambled, never as you typed it. The email address is sent to the
+server once and is not kept.
 
 ## From a terminal
 

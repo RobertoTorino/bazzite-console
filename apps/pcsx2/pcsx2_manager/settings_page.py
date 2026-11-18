@@ -15,7 +15,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel,
                              QPushButton, QSpinBox, QVBoxLayout, QWidget)
 
 from bazzite_console_core import sound
@@ -65,26 +65,23 @@ class SettingsPage(QWidget):
         self.status.setWordWrap(True)
         self.status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
-        # The picture's box on the left, the whole height; the emulation, the sound and the controllers under each
-        # other in the middle; the on-screen box on the right, the whole height. (A box placed under the picture's
-        # span lay over it and hid its lower rows; owner, 24-10-2026.)
+        # Two columns, so the tab fits a window 900 wide (owner, 18-11-2026; three columns took 1107): the picture
+        # and the emulation on the left, the sound, the controllers and the on-screen box on the right, each column
+        # its own stack, so no box lies over another.
         groups: dict[str, QFormLayout] = {}
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(14)
-        middle = (pcsx2_settings.EMULATION, pcsx2_settings.SOUND, pcsx2_settings.CONTROLLERS)
-        for name in (pcsx2_settings.PICTURE, *middle, pcsx2_settings.ON_SCREEN):
-            box = QGroupBox(name)
-            form = QFormLayout(box)
-            form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-            groups[name] = form
-            if name == pcsx2_settings.PICTURE:
-                grid.addWidget(box, 0, 0, len(middle), 1, Qt.AlignmentFlag.AlignTop)
-            elif name == pcsx2_settings.ON_SCREEN:
-                grid.addWidget(box, 0, 2, len(middle), 1, Qt.AlignmentFlag.AlignTop)
-            else:
-                grid.addWidget(box, middle.index(name), 1, Qt.AlignmentFlag.AlignTop)
-        for column in range(3):
-            grid.setColumnStretch(column, 1)
+        grid = QHBoxLayout()
+        grid.setSpacing(14)
+        for names in ((pcsx2_settings.PICTURE, pcsx2_settings.EMULATION),
+                      (pcsx2_settings.SOUND, pcsx2_settings.CONTROLLERS, pcsx2_settings.ON_SCREEN)):
+            column = QVBoxLayout()
+            for name in names:
+                box = QGroupBox(name)
+                form = QFormLayout(box)
+                form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+                groups[name] = form
+                column.addWidget(box)
+            column.addStretch(1)
+            grid.addLayout(column, 1)
         self.system_sound = QLabel("—")             # Bazzite's volume for PCSX2, read only (show_sound)
         self.system_sound.setToolTip(sound.tip(STREAM))
         for setting in (*pcsx2_settings.SETTINGS, *OWN):

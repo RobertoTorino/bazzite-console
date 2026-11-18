@@ -15,10 +15,11 @@ to skip it.
 **The header**: the suite's icon, as large as a tile's (click it to watch the [Portal Tour](portal-tour.md) over the whole screen: **A** or Space pauses it, **B** or Esc closes it, and without a connection it opens in the browser), its name (click it to open this wiki) with the version,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
 for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal. Under
-them, in a row, eleven big symbols. Four act on the apps: **Refresh** (two
+them, in a row, twelve big symbols. Four act on the apps: **Refresh** (two
 circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install All apps** (a grid of
-apps with an arrow down) and **Install All updates** (a circular arrow around an arrow down). Seven are shortcuts
+apps with an arrow down) and **Install All updates** (a circular arrow around an arrow down). Eight are shortcuts
 to what is outside the suite: **Files** (a folder), **Steam**, **YouTube** (a screen with a play triangle),
+**GitHub** (a cat in a disc),
 **Bluetooth**, **Network**, **Volume** (a loudspeaker) and **Screen** (a screen on its foot). Each is described
 below. Hover a symbol to see what it does. The one with the focus is framed in silver, as a tile is; a symbol that
 has nothing to do is grayed out. On a screen 1280 pixels wide the symbols are drawn smaller when the row would not
@@ -194,6 +195,8 @@ nothing in the portal. There are two ways to get every button:
 - **YouTube**, a symbol at the top: opens YouTube fullscreen in Brave Browser's kiosk mode; Alt+F4 closes it. Brave
   Browser must be installed as a Flatpak (`com.brave.Browser`, from Bazzite's software store or with
   `flatpak install flathub com.brave.Browser`); without it the portal says so and opens nothing.
+- **GitHub**, a symbol at the top: opens github.com in the desktop's own browser, in a normal window with its tabs
+  and address bar; a browser that runs already comes to the front with a new tab.
 - **Bluetooth**, **Network**, **Volume** and **Screen**, four symbols at the top: open the desktop's Bluetooth
   settings (pair or remove a controller, a headset), its network settings (the connections, Wi-Fi), its sound
   settings (the volume, the output and the input) and its display settings (the resolution, the refresh rate, the

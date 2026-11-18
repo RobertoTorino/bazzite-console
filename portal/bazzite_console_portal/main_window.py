@@ -5,7 +5,8 @@ icon (a click plays the Portal Tour), spanning the name with the version and the
 category is for, ☰ and the close symbol at the top right, and under them a row of big symbols (owner, 05-11-2026: in
 place of the pills): Refresh, Sys info (a small window with what the system reports about the console, sysinfo.py),
 Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
-shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, YouTube (in Brave Browser), and the
+shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, YouTube (in Brave Browser), GitHub
+(in the desktop's browser; owner, 18-11-2026), and the
 desktop's Bluetooth, Network, Volume (sound) and Screen (display) settings. On the right of the symbols
 how many apps are installed (installed / listed), and under it the status, a line each (owner, 12-11-2026): the
 CPU's and the GPU's load and temperature, the date and time (status.py: the loads every 2 s, the clock every
@@ -118,7 +119,7 @@ EXIT_QUESTION = "Do you really want to exit the Portal?"
 BACK_GRACE_S = 0.5
 # The header's shortcuts (owner, 12-11-2026): what a message calls each one, and what finds its program.
 SHORTCUTS = {"files": ("The file manager", shortcuts.files), "steam": ("Steam", shortcuts.steam),
-             "youtube": ("YouTube", shortcuts.youtube),
+             "youtube": ("YouTube", shortcuts.youtube), "github": ("GitHub", shortcuts.github),
              "bluetooth": ("The Bluetooth settings", shortcuts.bluetooth_settings),
              "network": ("The network settings", shortcuts.network_settings),
              "sound": ("The sound settings", shortcuts.sound_settings),
@@ -593,13 +594,15 @@ class MainWindow(QMainWindow):
         self.steam_button = SymbolButton(glyphs.steam, "Steam: open Steam.")
         self.youtube_button = SymbolButton(glyphs.youtube, "YouTube: open YouTube fullscreen in Brave Browser, which "
                                            "must be installed as a Flatpak. Alt+F4 closes it.")
+        self.github_button = SymbolButton(glyphs.github, "GitHub: open github.com in your browser.")
         self.bluetooth_button = SymbolButton(glyphs.bluetooth, "Bluetooth: open the desktop's Bluetooth settings.")
         self.network_button = SymbolButton(glyphs.network, "Network: open the desktop's network settings.")
         self.volume_button = SymbolButton(glyphs.volume, "Volume: open the desktop's sound settings.")
         self.screen_button = SymbolButton(glyphs.screen, "Screen: open the desktop's display settings.")
-        # In the row's order: Files before Steam (owner, 12-11-2026)
+        # In the row's order: Files before Steam (owner, 12-11-2026), GitHub after YouTube (owner, 18-11-2026)
         self.shortcuts = {self.files_button: "files", self.steam_button: "steam", self.youtube_button: "youtube",
-                          self.bluetooth_button: "bluetooth", self.network_button: "network",
+                          self.github_button: "github", self.bluetooth_button: "bluetooth",
+                          self.network_button: "network",
                           self.volume_button: "sound", self.screen_button: "display"}
         for button in self.shortcuts:
             button.clicked.connect(self._shortcut_clicked)      # a bound method: no lambda keeps self

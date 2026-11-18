@@ -72,3 +72,22 @@ def test_a_private_log_masks_the_users_folders(tmp_path, monkeypatch):
     for handler in list(log.handlers):
         handler.close()
         log.removeHandler(handler)
+
+
+def test_clear_empties_the_log_and_the_older_ones(tmp_path):
+    """Clear logs (owner, 18-11-2026): the file emptied while it stays the app's log, the older ones removed."""
+    path = applog.setup("ps5-test-clear", tmp_path / "app.log")
+    log = applog.logger("ps5-test-clear")
+    log.info("before")
+    older = [tmp_path / f"app.log.{number}" for number in range(1, applog.KEPT + 1)]
+    for file in older:
+        file.write_text("older\n")
+    assert applog.clear("ps5-test-clear", path)
+    assert path.read_text() == "" and not any(file.exists() for file in older)
+    log.info("after")                                   # still the app's log: its first line now
+    lines = path.read_text().splitlines()
+    assert len(lines) == 1 and lines[0].endswith(" INFO after")
+    assert applog.clear("ps5-test-none", tmp_path / "none.log") and not (tmp_path / "none.log").exists()
+    for handler in list(log.handlers):
+        handler.close()
+        log.removeHandler(handler)

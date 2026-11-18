@@ -1,3 +1,9 @@
+Changelog: 18-11-2026 00:33:00
+
+Added. A GitHub symbol in the header's row, after YouTube (owner, 18-11-2026): a cat in a disc that opens
+github.com in the desktop's own browser (xdg-open), in a normal window with its tabs and address bar. A browser
+that runs already comes to the front (its window's id asked from xdg-settings). The row holds twelve symbols now.
+
 Changelog: 18-11-2026 00:30:07
 
 Release 4.0.0. Pins ps5-quickfix-v0.1.0.

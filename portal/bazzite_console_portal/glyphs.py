@@ -191,6 +191,26 @@ def youtube(color: str) -> QIcon:
     return _icon(color, draw, BIG)
 
 
+def github(color: str) -> QIcon:
+    """GitHub: a disc with a cat cut out of it, its head with two ears, its body and its tail."""
+    def draw(p: QPainter) -> None:
+        p.setBrush(QColor(color))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawEllipse(QPointF(32, 32), 27, 27)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+        p.drawEllipse(QPointF(32, 29.5), 14.5, 11.5)        # the head
+        for x, inner in ((18.5, 27.5), (45.5, 36.5)):       # the ears
+            p.drawPolygon(QPolygonF([QPointF(x, 14.5), QPointF(x, 28), QPointF(inner, 19.5)]))
+        p.drawRect(QRectF(26, 38, 12, 22))                  # the body, down to the disc's edge
+        cut = QPen(QColor(color), 3.5)
+        cut.setCapStyle(Qt.PenCapStyle.RoundCap)
+        cut.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        p.setPen(cut)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        _line(p, (26, 48.5), (21, 48.5), (15.5, 43.5))      # the tail
+    return _icon(color, draw, BIG)
+
+
 def bluetooth(color: str) -> QIcon:
     """The Bluetooth rune."""
     def draw(p: QPainter) -> None:

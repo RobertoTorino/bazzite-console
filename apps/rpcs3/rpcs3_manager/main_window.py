@@ -1,22 +1,21 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The main window, built as PCSX2 Manager's (owner, 24-10-2026: the manager that works is the pattern for the
-others): the header with the Refresh pill and the state boxes, a row of action pills (Install and Uninstall for
-RPCS3, Install for the firmware, Install for the games) in place of the three numbered steps with
-buttons, the state of each (RPCS3, the firmware, the disc games, the PKG games) in a line, then three tabs: the
-games found, each with a box for Steam and how it fills the screen; RPCS3's settings (settings_page.py); and the
-app's log. Downloading RPCS3, asking
-GitHub for a newer one and changing Steam's files run off the GUI thread; nothing here needs root. The look is the
-app's own blue (style.py). Steam artwork… takes the suite's SteamGridDB API key, with which Update Steam looks up
-the cover for each game first (core's covers).
+"""The main window, built as PCSX2 Manager's (owner, 24-10-2026: the manager that works is the pattern for the others):
+the header with the Refresh pill and the state boxes, a row of action pills (Install and Uninstall for RPCS3, Install
+for the firmware, Install for the games, Account for RPCN) in place of the three numbered steps with buttons, the state of each (RPCS3,
+the firmware, the disc games, the PKG games) in a line, then the tabs: the games found, each with a box for Steam and
+how it fills the screen; RPCS3's settings (settings_page.py); the saves on its hard disk (Memory cards, saves_page.py);
+and the app's log, with Clear logs beside it. Downloading RPCS3, asking GitHub for a newer one and changing Steam's
+files run off the GUI thread; nothing here needs root. The look is the app's own blue (style.py). Steam artwork… takes
+the suite's SteamGridDB API key, with which Update Steam looks up the cover for each game first (core's covers).
 
-A game runs from Steam: the last tab, Start game, starts the chosen one there (owner, 12-11-2026). While RPCS3 is
-installed and not running, the window keeps what the app owns in RPCS3's files (userdata.py): its welcome dialog and
-update check off, player 1 on the first controller. RPCS3's own window is opened only for RPCS3's settings (RPCS3
-settings, under the games). The packages RPCS3 installs without its window (--headless --installpkg, one run per file,
-the window's job meanwhile; owner, 24-10-2026), and the firmware too (--headless --installfw; owner, 11-11-2026: RPCS3's
-window and its Success! box came up when the firmware was dropped in its folder); the result is read from RPCS3's log.
-The window also reads the volume Bazzite remembers for RPCS3 and says when it is muted (found on the console). What the
-window says it also writes to the app's log (core's applog), shown in the Log tab."""
+A game runs from Steam: the tab beside Your games, Start game, starts the chosen one there (owner, 12-11-2026). While
+RPCS3 is installed and not running, the window keeps what the app owns in RPCS3's files (userdata.py): its welcome
+dialog and update check off, player 1 on the first controller. RPCS3's own window is opened only for RPCS3's settings
+(RPCS3 settings, under the games). The packages RPCS3 installs without its window (--headless --installpkg, one run per
+file, the window's job meanwhile; owner, 24-10-2026), and the firmware too (--headless --installfw; owner, 11-11-2026:
+RPCS3's window and its Success! box came up when the firmware was dropped in its folder); the result is read from
+RPCS3's log. The window also reads the volume Bazzite remembers for RPCS3 and says when it is muted (found on the
+console). What the window says it also writes to the app's log (core's applog), shown in the Log tab."""
 
 from __future__ import annotations
 
@@ -28,9 +27,9 @@ from pathlib import Path
 
 from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtGui import QBrush, QCloseEvent, QColor, QResizeEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QComboBox, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView,
-                             QLabel, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTableWidget,
-                             QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QAbstractItemView, QComboBox, QDialog, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
+                             QHeaderView, QLabel, QMainWindow, QMessageBox, QPushButton, QScrollArea, QSizePolicy,
+                             QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from bazzite_console_core import SUITE_MANUAL_URL, applog, covers, sound, steam, window_title
 from bazzite_console_core import __version__ as CORE_VERSION
@@ -42,24 +41,31 @@ from bazzite_console_core.settings import SettingsStore
 from bazzite_console_core.updates import ReleaseInfo, UpdateChecker
 from bazzite_console_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
-from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, shortcuts, style, userdata
+from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, rpcn, shortcuts,
+               style, userdata)
 from .games import Game, installed, scan
 from . import settings_page
 from .settings_page import SettingsPage
+from .rpcn_dialog import RpcnDialog
+from .saves_page import SavesPage
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/rpcs3/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
+RPCN_WATCH_MS = 5000
+CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the Log tab"
 NO_SFB = "PS3_DISC.SFB is missing or damaged in this disc game's folder: RPCS3 does not start it without"
 RUNNING = "RPCS3 is running: close it first, it writes its own settings over the change when it closes."
 RUNNING_INSTALL = "RPCS3 is running: close it first; packages are installed while RPCS3 is closed."
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER, SCREEN = range(6)     # the table's columns (the screen last; owner)
-GAMES, SETTINGS, LOG = range(3)                             # the tabs
+WIDTH = 900                             # the window opens this wide, and is never narrower (owner, 18-11-2026)
+HEIGHT = 606                            # the window opens this high (owner, 18-11-2026); it was 800
+GAMES, START, SETTINGS, SAVES, LOG = range(5)               # the tabs
 # The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
 # advice are in its tip.
-NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
-INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
+NOT_INSTALLED = "Not installed. Install it with the Install button."
+INSTALLED = "Installed. Uninstall with the Uninstall button."
 
 
 def _packages_in(hdd0_game: Path) -> tuple[set[str], set[str]]:
@@ -129,7 +135,8 @@ class MainWindow(QMainWindow):
     def __init__(self, home: Path | None = None, rpcs3_home: Path | None = None, steam_dir: Path | None = None,
                  run: Path | None = None, fetch: emulator.Download = emulator.download,
                  steam_closed=steam.with_steam_closed, steam_running=steam.steam_running,
-                 newer_release=emulator.newer_release, covers_home: Path | None = None,
+                 newer_release=emulator.newer_release, rpcn_connect: rpcn.Connect = rpcn._connect,
+                 covers_home: Path | None = None,
                  covers_get: covers.Get = covers._get, covers_key: Path | None = None,
                  log_path: Path | None = None, devices: Path = controllers.DEVICES,
                  rpcs3_running=userdata.rpcs3_running, sdl_names=controllers.sdl_names, open_url=xdg_open,
@@ -148,7 +155,8 @@ class MainWindow(QMainWindow):
         folder with the app's own game folder, Games/PS3 (library.fixed); *drives*: the removable drives looked at
         for one."""
         super().__init__()
-        self.resize(980, 800)
+        self.setMinimumWidth(WIDTH)                     # never narrower (owner, 18-11-2026)
+        self.resize(WIDTH, HEIGHT)
         self.home = home or emulator.emulator_home()
         self.rpcs3_home = rpcs3_home or userdata.rpcs3_home()
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
@@ -175,6 +183,14 @@ class MainWindow(QMainWindow):
         self.log = applog.logger(APP_ID)
         self._newer_release = newer_release
         self.newer: ReleaseInfo | None = None           # RPCS3's newest landmark, when newer than the pinned one
+        self.rpcn_connect = rpcn_connect                # opens a connection to an RPCN server (tests pass fakes)
+        self.rpcn_account = rpcn.Account()
+        self._rpcs3_was_running = False
+        self.rpcn_check = UpdateChecker(self)           # whether the RPCN server answers, off the GUI thread
+        self.rpcn_check.finished.connect(self._rpcn_checked)
+        self.rpcn_watch = QTimer(self)                  # while RPCS3 runs: its log says whether it signed in
+        self.rpcn_watch.setInterval(RPCN_WATCH_MS)
+        self.rpcn_watch.timeout.connect(self._watch_rpcn)
         self.release_check = UpdateChecker(self)        # apart from the worker: it runs while the window opens
         self.release_check.finished.connect(self._release_found)
         self.settings = RpcsSettings(INFO, self)
@@ -196,6 +212,8 @@ class MainWindow(QMainWindow):
         # 24-10-2026): a spacer of half that pill's width after them, set whenever the window's size changes.
         self.pill = StatusText()
         header.add_action(self.pill)
+        self.rpcn_pill = StatusText()                   # RPCN Online, Offline or Off (owner, 18-11-2026)
+        header.add_action(self.rpcn_pill)
         self.controller = StatusText()                  # beside it: whether a controller is connected
         header.add_action(self.controller)
         self.states_spacer = QWidget()
@@ -210,19 +228,17 @@ class MainWindow(QMainWindow):
         self.emulator_box = MetricBox("RPCS3 version", style.BLUE)
         self.games_box = MetricBox("Your games", style.BLUE)
         self.steam_box = MetricBox("Available in Steam", style.BLUE)
-        self.time_box = MetricBox("Play time", style.BLUE)      # all games together, as RPCS3 counts it
         # The header's pills spread over the window's width in equal parts, as the action pills below (owner,
         # 24-10-2026). (The Firmware box went: the Firmware line below says which version.)
-        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box, self.time_box]
+        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box]
         for box in self.header_pills:
             box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             header.add_second(box, 1)
-        self.intro = hint_label(
-            "PS3 games on the system with the RPCS3 emulator. The app installs the RPCS3 build it was tried with, "
-            "takes the PS3's firmware, finds your games and puts them in Steam, so a game starts straight away, also "
-            "from Steam's Big Picture Mode. Games and the PS3's firmware come from you; the app never downloads "
-            "them. " + style.link(self, emulator.RELEASE_PAGE, "RPCS3's release notes") + " · "
-            + style.link(self, MANUAL_URL, "Wiki"), follow_height=True)       # its lines count in the minimum
+        # The two links alone (owner, 18-11-2026), in the type of a pill's caption (Click to refresh): what the
+        # app is for is in the wiki.
+        self.intro = hint_label(style.caption_link(self, emulator.RELEASE_PAGE, "RPCS3's release notes") + " · "
+                                + style.caption_link(self, MANUAL_URL, "Wiki"), follow_height=True)
+        self.intro.setStyleSheet(style.CAPTION)
 
         # What there is to do, as pills the size of the header's, spread over the window's width (owner,
         # 24-10-2026): what it is for in large type (RPCS3, Games), what the pill does under it (Install, Uninstall).
@@ -239,10 +255,16 @@ class MainWindow(QMainWindow):
                                                                   "the .rap license of a PSN game); RPCS3 installs "
                                                                   "them, without opening its window")
         self.package_pill.clicked.connect(self.on_install_packages)
-        self.actions = [self.install_pill, self.remove_pill, self.package_pill]
+        # RPCN Account (owner, 18-11-2026: RPCS3 has RPCN as shadPS4 has shadNet)
+        self.account_pill = style.action_pill("RPCN", "Account", "Your RPCN account: create one, try it, and "
+                                                                "have RPCS3 sign in with it")
+        self.account_pill.clicked.connect(self.on_rpcn)
+        self.actions = [self.install_pill, self.remove_pill, self.package_pill, self.account_pill]
+        # Play time beside them (owner, 18-11-2026: the header is full): all games together, as RPCS3 counts it
+        self.time_box = MetricBox("Play time", style.BLUE)
         actions = QHBoxLayout()
         actions.setSpacing(8)
-        for pill in self.actions:                       # each a fifth of the width, whatever the window's
+        for pill in (*self.actions, self.time_box):     # each a fifth of the width, whatever the window's
             pill.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             actions.addWidget(pill, 1)
 
@@ -250,15 +272,16 @@ class MainWindow(QMainWindow):
         grid.setColumnStretch(1, 1)
         grid.setHorizontalSpacing(14)
         grid.setVerticalSpacing(6)
-        self.emulator_state, self.firmware_state, self.disc_state, self.pkg_state = (self._state_label()
-                                                                                     for _ in range(4))
+        self.emulator_state, self.firmware_state, self.disc_state, self.pkg_state, self.rpcn_state = (
+            self._state_label() for _ in range(5))
         self.disc_state.setOpenExternalLinks(False)     # a folder's name is a link that takes it out
         # The firmware's state and the game folders by name, what to do behind the info symbol (owner, 11-11-2026).
         self.firmware_info = InfoButton("", "About the firmware")
         self.disc_info = InfoButton("", "About the game folders")
         infos = {id(self.firmware_state): self.firmware_info, id(self.disc_state): self.disc_info}
         for row, (name, state) in enumerate((("RPCS3", self.emulator_state), ("Firmware", self.firmware_state),
-                                             ("Disc games", self.disc_state), ("PKG games", self.pkg_state))):
+                                             ("Disc games", self.disc_state), ("PKG games", self.pkg_state),
+                                             ("RPCN", self.rpcn_state))):
             label = QLabel(name)
             label.setStyleSheet("font-weight:700;")
             label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
@@ -299,11 +322,14 @@ class MainWindow(QMainWindow):
         self.steam_button = style.primary_button("Update Steam", STEAM_TIP)
         self.steam_button.clicked.connect(self.on_update_steam)
         buttons = QHBoxLayout()
-        self.steam_hint = hint_label("Tick a game to put it in Steam; Screen setting sets how it fills the screen. "
-                                     f"A game is started from {style.link(self, STEAM_URL, 'Steam')}.")
-        self.steam_hint.setOpenExternalLinks(False)      # the app opens Steam itself (open_steam)
-        self.steam_hint.linkActivated.connect(lambda _url: self.open_steam())
-        buttons.addWidget(self.steam_hint, 1)
+        # What the boxes, Screen setting and Start game do, behind an info symbol (owner, 18-11-2026, in place of a
+        # line of text)
+        self.steam_info = InfoButton("A checkmark before a game adds the game to Steam. Screen setting sets how it "
+                                     "fills the screen. When the Start game button is clicked the game starts from "
+                                     f"{style.link(self, STEAM_URL, 'Steam')}.", "About the games and Steam")
+        self.steam_info.opens = lambda _url: self.open_steam()      # the app opens Steam itself (open_steam)
+        buttons.addWidget(self.steam_info)
+        buttons.addStretch(1)
         buttons.addWidget(self.rpcs3_button)
         buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
@@ -327,11 +353,28 @@ class MainWindow(QMainWindow):
                                  f"the same lines are in {escape(private(self.log_path))}, which turns over at 1 MB."))
         log.addWidget(self.output, 1)
         self.tabs = QTabWidget()
+        # The six tabs share the whole width, the last one up to the window\'s margin (owner, 18-11-2026)
+        self.tabs.setDocumentMode(True)
+        self.tabs.tabBar().setExpanding(True)
+        self.tabs.tabBar().setDrawBase(False)           # no line over the tabs, which that mode draws
         self.tabs.addTab(games_page, "Your games")
-        self.tabs.addTab(self.settings_page, "Settings")
-        self.tabs.addTab(log_page, "Log")
-        # Start game (owner, 12-11-2026): the last tab is a button, which starts the chosen game in Steam
+        # Start game (owner, 12-11-2026): a tab that is a button, which starts the chosen game in Steam; beside
+        # Your games, where the game is chosen (owner, 18-11-2026)
         self.start_tab = ActionTab(self.tabs, "Start game", START_TIP, self.on_start_game)
+        # The Settings tab scrolls when it is higher than the window (owner, 18-11-2026): it never makes the window
+        # higher than it opens.
+        self.settings_scroll = QScrollArea()
+        self.settings_scroll.setWidgetResizable(True)
+        self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.settings_scroll.setWidget(self.settings_page)
+        self.tabs.addTab(self.settings_scroll, "Settings")
+        # Memory cards (owner, 18-11-2026): the saves on RPCS3's hard disk (saves_page.py)
+        self.saves_page = SavesPage(lambda: getattr(self, "hdd0_game", self.rpcs3_home / "dev_hdd0" / "game").parent,
+                                    self.rpcs3_running, self.log)
+        self.tabs.addTab(self.saves_page, "Memory cards")
+        self.tabs.addTab(log_page, "Log")
+        # Clear logs (owner, 18-11-2026): beside the Log tab, a tab that is a button and empties the log
+        self.clear_tab = ActionTab(self.tabs, "Clear logs", CLEAR_TIP, self.on_clear_logs)
 
         self.running = WrappedLabel()
         self.running.setStyleSheet("font-weight:600;")
@@ -404,6 +447,7 @@ class MainWindow(QMainWindow):
             self.say(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
                      "Update Steam brings the shortcut in Steam up to date.")
         self.settings_page.load()
+        self.saves_page.load()
         self.show_controller()
         self.show_sound()
 
@@ -494,6 +538,16 @@ class MainWindow(QMainWindow):
         stamp = time.strftime(applog.DATE)
         self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
 
+    def on_clear_logs(self) -> None:
+        """Clear logs (owner, 18-11-2026): the app's log file emptied, with the older ones kept beside it, and the
+        Log tab with them. Said in the line under the tabs only, so the log stays empty."""
+        if not applog.clear(APP_ID, self.log_path):
+            self.say(f"The log could not be cleared: {private(self.log_path)}", ok=False)
+            return
+        self.output.clear()
+        self.running.setStyleSheet("font-weight:600;")
+        self.running.setText("The log was cleared.")
+
     def _show_state(self) -> None:
         pinned = emulator.VERSION
         # The state alone in the line (owner, 07-11-2026), the version and the advice in the tip and the log once.
@@ -522,8 +576,8 @@ class MainWindow(QMainWindow):
         self.emulator_state.setOpenExternalLinks(True)
 
         page = style.link(self, userdata.FIRMWARE_PAGE, "PlayStation's firmware page")
-        self.firmware_state.setText(f"Firmware {escape(self.firmware)} is installed." if self.firmware
-                                    else "No firmware detected")
+        # The version alone (owner, 18-11-2026), as PCSX2 Manager's BIOS line is the dump's name alone
+        self.firmware_state.setText(f"<b>{escape(self.firmware)}</b>" if self.firmware else "Uninstalled.")
         self.firmware_info.set_text(f"Download PS3UPDAT.PUP from {page} and drop it in "
                                     f"<b>{escape(private(library.firmware_home(self.user_home)))}</b>: the app "
                                     "installs it. RPCS3 needs the PS3's firmware to start any game.")
@@ -553,6 +607,7 @@ class MainWindow(QMainWindow):
         found = {str(g.eboot) for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
         self._show_play_time()
+        self._show_rpcn()
 
         if not self.version:
             self.pill.set_status("Not installed", "warn", "Install RPCS3 first.")
@@ -833,6 +888,73 @@ class MainWindow(QMainWindow):
         run = self.run_path if self.run_path.is_file() else ROOT / shortcuts.RUN_NAME
         return [str(run), *args]
 
+    def _show_rpcn(self) -> None:
+        """The name that signs in alone, as shadPS4 Manager's shadNet line; the rest in the tooltip."""
+        self.rpcn_account = rpcn.read_account(self.rpcs3_home)
+        account = self.rpcn_account
+        if account.signs_in:
+            self.rpcn_state.setText(f"<b>{escape(account.npid)}</b>")
+            self.rpcn_state.setToolTip(f"{account.npid} signs in to {account.host} when a game starts.")
+        else:
+            self.rpcn_state.setText("Off")
+            self.rpcn_state.setToolTip("RPCS3's online service, for online play, friends and scores in the games it "
+                                       "supports: RPCN Account sets it up.")
+        self._show_rpcn_pill()
+
+    def _show_rpcn_pill(self) -> None:
+        """RPCN Online, Offline or Off. While RPCS3 runs, from its log: whether it signed in. Otherwise whether the
+        server answers (without signing in), so that RPCS3 can sign in."""
+        account = self.rpcn_account
+        if not account.signs_in:
+            self.rpcn_watch.stop()
+            self.rpcn_pill.set_status("RPCN Off", "neutral", "RPCN is off: set it up with RPCN Account.")
+            return
+        self.rpcn_watch.start()
+        self._rpcs3_was_running = self.rpcs3_running()
+        if self._rpcs3_was_running:
+            state, detail = rpcn.session(self.rpcs3_log)
+            if state == "online":
+                self.rpcn_pill.set_status("RPCN Online", "ok", f"RPCS3 is signed in to {account.host} as {detail}.")
+            elif state == "offline":
+                self.rpcn_pill.set_status("RPCN Offline", "bad", f"{detail}.")
+            else:
+                self.rpcn_pill.set_status("RPCN …", "neutral",
+                                          f"RPCS3 runs; it signs in as {account.npid} when a game starts.")
+            return
+        try:
+            target = rpcn.parse_server(account.host)
+        except rpcn.RpcnError as error:
+            self.rpcn_pill.set_status("RPCN Offline", "bad", str(error))
+            return
+        connect, npid = self.rpcn_connect, account.npid
+
+        def job() -> tuple[bool, str]:
+            try:
+                rpcn.server_answers(target, connect)
+            except rpcn.RpcnError as error:
+                return False, f"{error} RPCS3 cannot sign in now."
+            return True, f"{target} answers: RPCS3 signs in as {npid} when a game starts."
+        if self.rpcn_check.start(job) and self.rpcn_pill.kind not in ("ok", "bad"):
+            self.rpcn_pill.set_status("RPCN …", "neutral", f"Asking {target}…")
+
+    def _rpcn_checked(self, result: tuple[bool, str]) -> None:
+        if self._rpcs3_was_running or not self.rpcn_account.signs_in:
+            return                                      # RPCS3's own session says more, or RPCN is off now
+        ok, detail = result
+        self.rpcn_pill.set_status("RPCN Online" if ok else "RPCN Offline", "ok" if ok else "bad", detail)
+
+    def _watch_rpcn(self) -> None:
+        """While RPCS3 runs, and once when it has ended (then the server again)."""
+        if self.rpcs3_running() or self._rpcs3_was_running:
+            self._show_rpcn_pill()
+
+    def on_rpcn(self) -> None:
+        """RPCN Account: the account window; what it saved shows in the RPCN line and the header."""
+        dialog = RpcnDialog(self.rpcs3_home, self, self.rpcn_connect, self.rpcs3_running)
+        if dialog.exec():
+            self.refresh()
+            self.say("RPCN settings saved in RPCS3's own files.")
+
     def on_open_rpcs3(self) -> None:
         self.prepare_rpcs3()                    # RPCS3's window opens: its welcome dialog off first
         command = self.rpcs3_command()
@@ -973,7 +1095,7 @@ class MainWindow(QMainWindow):
 
     def place_states(self) -> None:
         """The states end at the middle of the last header pill: the spacer after them is half its width."""
-        self.states_spacer.setFixedWidth(max(0, self.time_box.width() // 2))
+        self.states_spacer.setFixedWidth(max(0, self.steam_box.width() // 2))
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
         if self.worker.running and not self._ask("Close", "A download, an install of packages or a change to "
@@ -983,6 +1105,8 @@ class MainWindow(QMainWindow):
         self.worker.stop()
         self.release_check.stop()
         self.controller_timer.stop()
+        self.rpcn_watch.stop()
+        self.rpcn_check.stop()
         self.settings_page.unmuting.stop()
         self.settings.set_window_state("geometry", self.saveGeometry())
         self.settings.sync()

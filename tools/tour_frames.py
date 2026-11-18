@@ -162,8 +162,16 @@ class Recorder:
         if stride != self.width * 3:
             data = b"".join(data[row * stride: row * stride + self.width * 3] for row in range(self.height))
         assert self.ffmpeg.stdin is not None
-        for _ in range(count):
-            self.ffmpeg.stdin.write(data)
+        try:
+            for _ in range(count):
+                self.ffmpeg.stdin.write(data)
+        except BrokenPipeError:                     # ffmpeg is gone: say how, instead of a traceback about a pipe
+            code = self.ffmpeg.wait()
+            how = f"crashed (signal {-code})" if code < 0 else f"stopped (exit code {code})"
+            print(f"ffmpeg {how} after {self.frames / self.fps:.0f} s of video; nothing was recorded. "
+                  "Record it again: when it crashes each time, the fault is in ffmpeg (coredumpctl info ffmpeg).",
+                  file=sys.stderr)
+            raise SystemExit(1) from None
         self.frames += count
 
     def hold(self, seconds: float) -> None:
@@ -250,5 +258,8 @@ class Recorder:
 
     def finish(self) -> int:
         assert self.ffmpeg.stdin is not None
-        self.ffmpeg.stdin.close()
+        try:
+            self.ffmpeg.stdin.close()
+        except BrokenPipeError:                     # ffmpeg is gone already: emit() said so
+            pass
         return self.ffmpeg.wait()

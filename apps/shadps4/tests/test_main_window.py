@@ -84,16 +84,17 @@ def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
     # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
-    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button."
+    assert window.emulator_state.text() == "Not installed. Install it with the Install button."
     assert f"Install downloads shadPS4 {emulator.VERSION}" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.shad_button.isEnabled()
     assert window.refresh_pill.isEnabled() and window.package_pill.isEnabled()
     assert window.table.rowCount() == 2                                         # the folders are read all the same
-    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log",
-                                                                            "Start game"]
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
+                                                                            "Settings", "Memory cards", "Log",
+                                                                            "Clear logs"]
     assert [b.caption.text() for b in window.header_pills[1:]] == ["shadPS4 version", "Your games",
-                                                                    "Available in Steam", "Play time"]
+                                                                    "Available in Steam"]
     for name in ("play_button", "nightly_check", "refresh_button", "install_button", "remove_button",
                  "modules_button", "folder_button", "extract_button", "shadnet_button", "modules_box", "latest",
                  "extract_pill", "modules_pill", "folder_pill"):                     # the last two: fixed folders
@@ -107,17 +108,17 @@ def test_before_installing(qapp, folders):
     window.centralWidget().layout().activate()
     assert len({p.width() for p in window.actions}) <= 2            # equal but for a pixel of rounding
     assert abs(window.tabs.tabBar().tabRect(0).height() - window.install_pill.height()) <= 2   # tabs as big
-    assert window.account_pill.geometry().right() >= window.tabs.geometry().right() - 1
+    assert window.time_box.geometry().right() >= window.tabs.geometry().right() - 1    # Play time, the row's last
     assert len({p.width() for p in window.header_pills}) <= 2       # the header's pills spread the same way
-    assert window.time_box.geometry().right() >= window.tabs.geometry().right() - 1
+    assert window.steam_box.geometry().right() >= window.tabs.geometry().right() - 1
     window.place_states()                               # the states end at the middle of the last pill (owner)
     window.centralWidget().layout().activate()
-    centre = window.time_box.mapTo(window, window.time_box.rect().center()).x()
+    centre = window.steam_box.mapTo(window, window.steam_box.rect().center()).x()
     right = window.controller.mapTo(window, window.controller.rect().topRight()).x()
     assert abs(right - centre) <= 8 and window.pill.x() < window.shadnet_pill.x() < window.controller.x()
     assert "shadPS4's release notes" in window.intro.text() and emulator.RELEASE_PAGE in window.intro.text()
     assert ">Wiki</a>" in window.intro.text() and "Manual" not in window.intro.text()
-    assert "Game Mode" not in window.intro.text() and "Big Picture Mode" in window.intro.text()
+    assert "Game Mode" not in window.intro.text()
     window.close()
 
 
@@ -126,7 +127,7 @@ def test_installed_with_games(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Modules missing"
     assert window.emulator_box.value.text() == emulator.VERSION
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."           # the state alone (owner)
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."           # the state alone (owner)
     assert window.emulator_state.toolTip() == (f"shadPS4 {emulator.VERSION}, the release this version of the app "
                                                "was tried with")
     # Ok in green or Missing sys modules in red (owner, 24-10-2026), the count and the folder in the tooltip.
@@ -206,7 +207,7 @@ def test_another_version_installed_than_the_app_brings(qapp, folders):
     (folders["home"] / "2026-10-15-b2d7ec7" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("2026-10-15-b2d7ec7")
     window = _window(folders)
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button." and window.emulator_box.value.text() == "other"
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button." and window.emulator_box.value.text() == "other"
     assert window.emulator_state.toolTip() == (f"shadPS4 2026-10-15-b2d7ec7 is installed; this version of the app "
                                                f"brings {emulator.VERSION}: Install puts it in.")
     assert window.install_pill.isEnabled()
@@ -462,10 +463,19 @@ def test_the_quit_hotkeys_are_set_up_and_logged(qapp, folders):
 
 
 def test_the_steam_link(qapp, folders):
+    """The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the
+    boxes and Start game do, and Steam in it is a link the app opens itself."""
+    import re
     opened = []
     window = _window(folders, open_url=lambda url: (opened.append(url), True)[1])
-    assert f"href='{STEAM_URL}'" in window.steam_hint.text()
-    window.steam_hint.linkActivated.emit(STEAM_URL)
+    assert not hasattr(window, "steam_hint")
+    window.show()
+    window.steam_info.click()
+    label = window.steam_info.popup.findChild(QLabel)
+    assert re.sub(r"<[^>]+>", "", label.text()) == ("A checkmark before a game adds the game to Steam. When the Start "
+                                                    "game button is clicked the game starts from Steam.")
+    assert f"href='{STEAM_URL}'" in label.text() and not label.openExternalLinks()
+    label.linkActivated.emit(STEAM_URL)
     assert opened == [STEAM_URL] and "Steam was opened." in window.output.toPlainText()
     window.close()
 
@@ -496,8 +506,57 @@ def test_the_log_tab(qapp, folders, tmp_path):
     lines = window.output.toPlainText().splitlines()
     assert lines[-1].endswith(" ERROR Steam was not changed: no Steam") and "c62828" in window.running.styleSheet()
     assert lines[-1][:19].count("-") == 2 and lines[-1][10] == " "               # DD-MM-YYYY HH:MM:SS
-    assert str(folders["log_path"]) in window.tabs.widget(2).findChildren(QLabel)[0].text()
+    assert str(folders["log_path"]) in window.tabs.widget(4).findChildren(QLabel)[0].text()
     window.close()
+
+
+def test_clear_logs_empties_the_log(qapp, folders):
+    """Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones
+    beside it removed and the Log tab emptied with them, the open page kept."""
+    log = folders["log_path"]
+    log.write_text("18-11-2026 10:00:00 INFO shadPS4 Manager started\n")
+    older = log.with_name(log.name + ".1")
+    older.write_text("17-11-2026 10:00:00 INFO older\n")
+    window = _window(folders)
+    tabs, clear = window.tabs, window.clear_tab.index
+    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "Log"
+    assert clear == tabs.count() - 1 and "Manager started" in window.output.toPlainText()
+    tabs.setCurrentIndex(clear - 1)
+    tabs.tabBarClicked.emit(clear)
+    tabs.setCurrentIndex(clear)
+    assert tabs.currentIndex() == clear - 1                                     # the Log tab stays open
+    assert log.read_text() == "" and not older.exists() and window.output.toPlainText() == ""
+    assert window.running.text() == "The log was cleared."
+    window.close()
+
+
+def test_the_blueprint_layout(qapp, folders):
+    """The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also
+    its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs
+    share the whole width, the last one up to the margin, with no line over them; under the header's pills the two
+    links alone, in the type of a pill's caption, each still a link."""
+    import re
+    window = _window(folders)
+    window.show()
+    qapp.processEvents()
+    bar = window.tabs.tabBar()
+    assert window.width() == 900 == window.minimumWidth()
+    assert window.centralWidget().minimumSizeHint().width() <= 900 and window.height() == 606
+    assert window.tabs.widget(2) is window.settings_scroll                      # the Settings tab scrolls: no higher
+    assert window.settings_scroll.widget() is window.settings_page and window.settings_scroll.widgetResizable()
+    assert window.tabs.tabText(3) == "Memory cards" and window.tabs.widget(3) is window.saves_page
+    assert window.time_box.caption.text() == "Play time" and window.time_box.y() == window.account_pill.y()
+    assert window.time_box.x() > window.account_pill.x() and abs(window.time_box.width()
+                                                                     - window.install_pill.width()) <= 1
+    assert bar.count() == 6 and len({bar.tabRect(i).width() for i in range(6)}) <= 2    # equal but for a pixel
+    assert not bar.drawBase()
+    assert bar.tabRect(0).left() <= 1 and abs(bar.tabRect(5).right() - (window.tabs.width() - 1)) <= 1
+    assert re.sub(r"<[^>]+>", "", window.intro.text()) == "shadPS4's release notes · Wiki"
+    assert window.intro.styleSheet() == window.refresh_pill.caption.styleSheet() == style.CAPTION
+    assert f"href='{emulator.RELEASE_PAGE}'" in window.intro.text() and "text-decoration:none" in window.intro.text()
+    assert style.BLUE not in window.intro.text() and window.intro.openExternalLinks()
+    window.close()
+
 
 
 def test_the_blue_look(qapp, folders):
@@ -507,7 +566,6 @@ def test_the_blue_look(qapp, folders):
     assert style.BLUE in window.styleSheet()
     assert window.covers_button.property("primary") is None and window.steam_button.property("primary")
     assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
-    assert f"color:{style.BLUE}" in window.intro.text()                             # the release link
     for pill in (window.refresh_pill, *window.actions):
         sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
@@ -532,7 +590,7 @@ def test_the_settings_tab_is_not_squeezed(qapp, folders):
     minimum and the Settings tab's rows keep their height (as RPCS3 Manager's)."""
     _install(folders["home"])
     window = _window(folders)
-    window.tabs.setCurrentIndex(1)
+    window.tabs.setCurrentIndex(2)
     window.show()
     qapp.processEvents()
     assert window.tabs.height() >= window.tabs.minimumSizeHint().height()
@@ -553,7 +611,7 @@ def test_a_newer_shadps4_is_mentioned(qapp, folders):
         qapp.processEvents()
         time.sleep(0.01)
     tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert "shadPS4 0.21.0 is out (2026-11-20)" in tip and "releases/tag/v.0.21.0" in tip
     assert "shadPS4 0.21.0 is out (2026-11-20)" in window.output.toPlainText()
     assert window.install_pill.isEnabled() is False                                # it never installs that one
@@ -718,7 +776,7 @@ def test_unmute_bazzites_volume(qapp, folders, tmp_path):
     state.write_text('[stream-properties]\nOutput/Audio:application.name:shadPS4={"volume":1.000000, "mute":true}\n')
     window = _window(folders, sound_state=state)
     page = window.settings_page
-    window.tabs.setCurrentIndex(1)
+    window.tabs.setCurrentIndex(2)
     window.show()
     qapp.processEvents()
     assert page.sound_path == state and page.unmute_button.isVisible()
@@ -879,7 +937,7 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     opened = []
     window = _window(folders, open_url=lambda url: opened.append(url) or True)
     tabs, start = window.tabs, window.start_tab.index
-    assert start == tabs.count() - 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
+    assert start == 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
     window.table.clearSelection()
     tabs.tabBarClicked.emit(start)                                           # no game chosen
     assert opened == [] and window.running.text().startswith("Choose a game under Your games first")
@@ -893,12 +951,12 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     _wait(window, qapp)
     window.table.selectRow(0)
     (name,) = shortcuts.in_steam(folders["steam_dir"]).values()
-    tabs.setCurrentIndex(1)
+    tabs.setCurrentIndex(2)
     tabs.tabBarClicked.emit(start)                                           # a click on the tab
     tabs.setCurrentIndex(start)                                              # as the click goes on to select it
     assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
     assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
-    assert tabs.currentIndex() == 1                                          # Settings is still open
+    assert tabs.currentIndex() == 2                                          # Settings is still open
     window.open_url = lambda url: False
     window.on_start_game()
     assert window.running.text() == f"{title} could not be started: xdg-open is missing."

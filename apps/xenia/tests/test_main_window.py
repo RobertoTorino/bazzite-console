@@ -52,6 +52,7 @@ def _wait(window, qapp) -> None:
 
 def _window(folders, **kwargs) -> MainWindow:
     closed = kwargs.pop("closed", [])
+    kwargs.setdefault("devices", folders["user_home"] / "no-devices")         # no controller, no file
     kwargs.setdefault("newer_release", lambda: None)                         # never GitHub in a test
     return MainWindow(**folders, steam_closed=lambda change: (closed.append(1), change())[0] and False,
                       steam_running=lambda: False, **kwargs)
@@ -65,7 +66,7 @@ def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
     # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
-    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button."
+    assert window.emulator_state.text() == "Not installed. Install it with the Install button."
     assert "Install downloads Xenia 838850f" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.xenia_button.isEnabled() and not hasattr(window, "play_button")
@@ -80,7 +81,7 @@ def test_installed_with_games(qapp, folders, tmp_path):
     window = _window(folders)
     assert window.pill.text() == "Ready"                                       # the games in Games/XBOX360
     assert window.pill.text() == "Ready" and window.emulator_box.value.text() == emulator.VERSION
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert "experimental on Linux" in window.emulator_state.toolTip()
     assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
     assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled()
@@ -98,7 +99,7 @@ def test_an_older_build_is_offered_the_pinned_one(qapp, folders):
     (folders["home"] / "f42147a" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("f42147a")
     window = _window(folders)
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert "Xenia f42147a is installed; this version of the app brings 838850f" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled()
     window.refresh()
@@ -174,10 +175,20 @@ def test_xenias_window(qapp, folders, tmp_path):
 
 
 def test_the_steam_link(qapp, folders):
+    """The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the
+    boxes and Start game do, and Steam in it is a link the app opens itself."""
+    import re
     opened = []
     window = _window(folders, open_url=lambda url: opened.append(url) or True)
-    window.steam_hint.linkActivated.emit("steam://open/games")
-    assert opened == ["steam://open/games"]
+    assert not hasattr(window, "steam_hint")
+    window.show()
+    window.steam_info.click()
+    label = window.steam_info.popup.findChild(QLabel)
+    assert re.sub(r"<[^>]+>", "", label.text()) == ("A checkmark before a game adds the game to Steam. When the Start "
+                                                    "game button is clicked the game starts from Steam.")
+    assert ">Steam</a>" in label.text() and not label.openExternalLinks()
+    label.linkActivated.emit("steam://open/games")
+    assert opened == ["steam://open/games"] and "Steam was opened." in window.output.toPlainText()
     window.close()
 
 
@@ -256,7 +267,6 @@ def test_the_blue_look(qapp, folders):
     assert window.covers_button.property("primary") is None and window.steam_button.property("primary")
     assert window.xenia_button.property("primary") is None
     assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
-    assert f"color:{style.BLUE}" in window.intro.text()                             # the release link
     assert [(p.value.text(), p.caption.text()) for p in window.actions] == [("Xenia", "Install"),
                                                                            ("Xenia", "Uninstall")]
     for pill in (window.refresh_pill, *window.actions):
@@ -264,8 +274,9 @@ def test_the_blue_look(qapp, folders):
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
     assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
-    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log",
-                                                                            "Start game"]
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
+                                                                            "Settings", "Memory cards", "Log",
+                                                                            "Clear logs"]
     window.show()
     qapp.processEvents()
     third = window.centralWidget().width() // 3
@@ -284,7 +295,7 @@ def test_a_newer_build_is_mentioned(qapp, folders):
         qapp.processEvents()
         time.sleep(0.01)
     tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
-    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert "Xenia 0a1b2c3 is out (2026-11-30)" in tip and "releases/tag/0a1b2c3" in tip
     assert "Xenia 0a1b2c3 is out (2026-11-30)" in window.output.toPlainText()
     assert window.install_pill.isEnabled() is False                                # it never installs that one
@@ -300,8 +311,55 @@ def test_the_log_tab(qapp, folders):
     lines = window.output.toPlainText().splitlines()
     assert lines[-1][:19].count("-") == 2 and lines[-1][10] == " "               # DD-MM-YYYY HH:MM:SS
     assert lines[-1].endswith(" ERROR Steam was not changed: no Steam") and "c62828" in window.running.styleSheet()
-    assert str(folders["log_path"]) in window.tabs.widget(2).findChildren(QLabel)[0].text()
+    assert str(folders["log_path"]) in window.tabs.widget(4).findChildren(QLabel)[0].text()
     window.close()
+
+
+def test_clear_logs_empties_the_log(qapp, folders):
+    """Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones
+    beside it removed and the Log tab emptied with them, the open page kept."""
+    log = folders["log_path"]
+    log.write_text("18-11-2026 10:00:00 INFO Xenia Manager started\n")
+    older = log.with_name(log.name + ".1")
+    older.write_text("17-11-2026 10:00:00 INFO older\n")
+    window = _window(folders)
+    tabs, clear = window.tabs, window.clear_tab.index
+    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "Log"
+    assert clear == tabs.count() - 1 and "Manager started" in window.output.toPlainText()
+    tabs.setCurrentIndex(clear - 1)
+    tabs.tabBarClicked.emit(clear)
+    tabs.setCurrentIndex(clear)
+    assert tabs.currentIndex() == clear - 1                                     # the Log tab stays open
+    assert log.read_text() == "" and not older.exists() and window.output.toPlainText() == ""
+    assert window.running.text() == "The log was cleared."
+    window.close()
+
+
+def test_the_blueprint_layout(qapp, folders):
+    """The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also
+    its narrowest, and what is in it asks for no more (no Play time: Xenia counts none); the six tabs
+    share the whole width, the last one up to the margin, with no line over them; under the header's pills the two
+    links alone, in the type of a pill's caption, each still a link."""
+    import re
+    window = _window(folders)
+    window.show()
+    qapp.processEvents()
+    bar = window.tabs.tabBar()
+    assert window.width() == 900 == window.minimumWidth()
+    assert window.centralWidget().minimumSizeHint().width() <= 900 and window.height() == 606
+    assert window.tabs.widget(2) is window.settings_scroll                      # the Settings tab scrolls: no higher
+    assert window.settings_scroll.widget() is window.settings_page and window.settings_scroll.widgetResizable()
+    assert window.tabs.tabText(3) == "Memory cards" and window.tabs.widget(3) is window.saves_page
+    assert not hasattr(window, "time_box")
+    assert bar.count() == 6 and len({bar.tabRect(i).width() for i in range(6)}) <= 2    # equal but for a pixel
+    assert not bar.drawBase()
+    assert bar.tabRect(0).left() <= 1 and abs(bar.tabRect(5).right() - (window.tabs.width() - 1)) <= 1
+    assert re.sub(r"<[^>]+>", "", window.intro.text()) == "Xenia's release notes · Wiki"
+    assert window.intro.styleSheet() == window.refresh_pill.caption.styleSheet() == style.CAPTION
+    assert f"href='{emulator.RELEASE_PAGE}'" in window.intro.text() and "text-decoration:none" in window.intro.text()
+    assert style.BLUE not in window.intro.text() and window.intro.openExternalLinks()
+    window.close()
+
 
 
 def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
@@ -401,7 +459,7 @@ def test_the_settings_tab(qapp, folders, tmp_path):
     running = [False]
     window = _window(folders, xenia_home=xenia_home, xenia_running=lambda: running[0])
     page = window.settings_page
-    assert window.tabs.widget(1) is page and page.widgets["gpu"].currentText() == "Automatic (Vulkan)"
+    assert window.tabs.widget(2).widget() is page and page.widgets["gpu"].currentText() == "Automatic (Vulkan)"
     assert page.widgets["letterbox"].isChecked() and page.widgets["license"].currentData() == "0"
     page.widgets["scale"].setCurrentIndex(page.widgets["scale"].findData("2"))
     text = (xenia_home / emulator.CONFIG).read_text()
@@ -422,7 +480,7 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     opened = []
     window = _window(folders, open_url=lambda url: opened.append(url) or True)
     tabs, start = window.tabs, window.start_tab.index
-    assert start == tabs.count() - 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
+    assert start == 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
     window.table.clearSelection()
     tabs.tabBarClicked.emit(start)                                           # no game chosen
     assert opened == [] and window.running.text().startswith("Choose a game under Your games first")
@@ -436,13 +494,36 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     _wait(window, qapp)
     window.table.selectRow(1)
     (name,) = shortcuts.in_steam(folders["steam_dir"]).values()
-    tabs.setCurrentIndex(1)
+    tabs.setCurrentIndex(2)
     tabs.tabBarClicked.emit(start)                                           # a click on the tab
     tabs.setCurrentIndex(start)                                              # as the click goes on to select it
     assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
     assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
-    assert tabs.currentIndex() == 1                                          # Settings is still open
+    assert tabs.currentIndex() == 2                                          # Settings is still open
     window.open_url = lambda url: False
     window.on_start_game()
     assert window.running.text() == f"{title} could not be started: xdg-open is missing."
     window.close()
+
+
+def test_the_controller_state_beside_the_title(qapp, folders, tmp_path):
+    """Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's
+    list of input devices, looked at again every few seconds; Steam's own virtual controller does not count."""
+    devices = tmp_path / "devices"
+    window = _window(folders, devices=devices)
+    assert window.controller.text() == "No controller" and window.controller.kind == "warn"
+    assert window.controller_timer.isActive() and window.controller_timer.interval() == window.CONTROLLER_POLL
+    devices.write_text('I: Bus=0003 Vendor=28de Product=11ff Version=0001\nN: Name="Steam Virtual Gamepad"\n'
+                       'H: Handlers=event9 js0\n\n'
+                       'I: Bus=0005 Vendor=054c Product=0ce6 Version=8100\nN: Name="DualSense Wireless Controller"\n'
+                       'H: Handlers=event10 js1\n\n'
+                       'I: Bus=0005 Vendor=054c Product=0ce6 Version=8100\n'
+                       'N: Name="DualSense Wireless Controller Motion Sensors"\nH: Handlers=event11 js2\n')
+    window.show_controller()
+    assert window.controller.text() == "Controller connected" and window.controller.kind == "ok"
+    assert "DualSense Wireless Controller." in window.controller.toolTip()
+    window.show()
+    qapp.processEvents()
+    assert window.pill.x() < window.controller.x()                              # after the app's own state
+    window.close()
+    assert not window.controller_timer.isActive()

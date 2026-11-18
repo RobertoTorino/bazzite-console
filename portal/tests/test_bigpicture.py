@@ -435,7 +435,7 @@ def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     on a handheld's screen."""
     window, _ = made()
     symbols = window.header_buttons
-    assert len(symbols) == 11 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
+    assert len(symbols) == 12 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
     window.show()
     window.resize(1920, 1080)
     QApplication.processEvents()
@@ -456,7 +456,7 @@ def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     window.resize(1280, 720)
     QApplication.processEvents()
     QApplication.processEvents()
-    # Scaled with the view, or smaller still where eleven symbols and the status would not fit 1280 px (the width
+    # Scaled with the view, or smaller still where twelve symbols and the status would not fit 1280 px (the width
     # of the status depends on the font), all the same size
     sides = {s.width() for s in symbols}
     assert big.scale < 1 and len(sides) == 1
@@ -822,7 +822,7 @@ def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
         big.set_weather(place, "-12°C  Thunderstorm, hail" if place else "", glyphs.weather("cloudy"), True, "")
         big.fit_symbols()
         symbols = [s for s in window.header_buttons if not s.isHidden()]
-        assert len(symbols) == 11
+        assert len(symbols) == 12
         assert big.status.weather.isHidden() is (not place)                   # the third line only with a place
         row = (sum(s.width() for s in symbols) + len(symbols) * big.symbol_row.spacing()
                + big.status.minimumSizeHint().width())

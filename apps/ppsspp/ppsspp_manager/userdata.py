@@ -100,3 +100,32 @@ def prepare(memstick: Path) -> list[str]:
     if done:
         write_lines(path, lines, bom)
     return done
+
+
+def play_times(memstick: Path) -> dict[str, tuple[int, int]]:
+    """The play time PPSSPP counts per game (its PlayTimeTracker, [PlayTime] in ppsspp.ini): the game's code to
+    (seconds played, when it was last played, a Unix time), as PPSSPP writes "ULUS10521 = 5400,1795000000"."""
+    lines, _ = read_lines(settings_path(memstick))
+    times: dict[str, tuple[int, int]] = {}
+    inside = False
+    for line in lines:
+        text = line.strip()
+        if text.startswith("[") and text.endswith("]"):
+            inside = text[1:-1].strip().lower() == "playtime"
+        elif inside and "=" in text:
+            code, value = (part.strip().strip('"') for part in text.split("=", 1))
+            seconds, _, last = value.partition(",")
+            if code and seconds.strip().isdigit():
+                times[code] = (int(seconds), int(last) if last.strip().isdigit() else 0)
+    return times
+
+
+def played(seconds: int) -> str:
+    """A play time in words: "3 h 5 min", "12 min", "40 s"."""
+    hours, rest = divmod(seconds, 3600)
+    minutes, secs = divmod(rest, 60)
+    if hours:
+        return f"{hours} h {minutes} min"
+    if minutes:
+        return f"{minutes} min" + (f" {secs} s" if secs else "")
+    return f"{secs} s"
