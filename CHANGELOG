@@ -1,3 +1,10 @@
+Changelog: 18-11-2026 04:05:17
+
+Fixed. CI's pytest jobs install Bazzite's font (fonts-noto-core) before the tests, as tools/ci-local.sh's image has
+it. The tests that measure a window (the emulator managers' tabs as tall as the pills, the portal's twelve symbols
+beside the status) follow the system's font; on GitHub's runner, with its wider and lower font, they failed while
+they passed here and in ci-local.
+
 Changelog: 17-11-2026 23:32:30
 
 Fixed. A release test over a suite that is installed already (tools/check-release.sh local, release and draft:
