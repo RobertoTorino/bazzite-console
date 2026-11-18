@@ -1,3 +1,7 @@
+Changelog: 18-11-2026 04:15:16
+
+Version 4.3.0.
+
 Changelog: 18-11-2026 01:11:04
 
 Added. clear() in applog: an app's log file emptied while it stays in use, and the older ones kept beside it

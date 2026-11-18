@@ -1,3 +1,7 @@
+Changelog: 18-11-2026 04:15:16
+
+Release 4.0.0. Pins ps5-board-v0.4.0, ps5-upscaler-v0.4.0, ps5-rpcs3-v1.3.0, ps5-remoteplay-v1.3.0, ps5-clb-v1.3.0, ps5-shadps4-v1.3.0, ps5-datstation-v1.3.0, ps5-ppsspp-v1.3.0, ps5-pcsx2-v1.3.0, ps5-vita3k-v1.3.0, ps5-xenia-v1.3.0, ps5-sftp-v1.4.0, ps5-webcam-v1.4.0, ps5-controller-v1.4.0, ps5-ssd-v1.4.0, ps5-overlay-v1.3.0, ps5-fan-v2.3.0, ps5-cec-v2.3.0, ps5-bluetooth-v0.4.0, ps5-password-v0.2.0.
+
 Changelog: 18-11-2026 00:33:00
 
 Added. A GitHub symbol in the header's row, after YouTube (owner, 18-11-2026): a cat in a disc that opens
