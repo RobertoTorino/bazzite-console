@@ -267,8 +267,8 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 [apps.quickfix]
 name = "PS5 Quickfix"
 summary = "Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal and the boot command line. Always installed."
-tag = "ps5-quickfix-v0.1.1"
-sha256 = "b84a9321e8845de34f7e9ff13954453891ef782c4b2fd83d46bfd978f577bc8c"
+tag = "ps5-quickfix-v0.1.2"
+sha256 = ""
 required = true
 changes_board = false
 category = "utilities"
