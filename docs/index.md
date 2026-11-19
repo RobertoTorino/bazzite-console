@@ -93,8 +93,9 @@ Apps that **change the board** are marked, and the portal asks before it install
 ## Get started
 
 Ready to set up your PlayStation 5? One download installs the **portal**: a fullscreen app library for the
-controller, the keyboard and the mouse. It installs Board Test with it, and from it you install, open, update and
-remove every other app of the suite. You never download an app yourself.
+controller, the keyboard and the mouse. It installs Board Test and Quickfix with it. Each fix of Quickfix,
+such as MangoHud Config, Game Memory Map or Persistent Journal, is a tile on Utilities. From the portal you install,
+open, update and remove every other app of the suite. You never download an app yourself.
 
 [:material-download: Install the portal](install.md){ .md-button .md-button--primary }
 [How the portal works](portal.md){ .md-button }

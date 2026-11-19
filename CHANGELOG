@@ -1,3 +1,9 @@
+Changelog: 19-11-2026 10:05:34
+
+Fixed. The wiki's Home page, under Get started, said the portal installs only Board Test with it. It installs
+Quickfix as well, whose fixes (MangoHud Config, Game Memory Map, Persistent Journal and more) are tiles on
+Utilities; the page says so now.
+
 Changelog: 18-11-2026 17:29:15
 
 Fixed. DECISION-TABLE.md was looked at again (owner, 18-11-2026: "check what is new and remove what is definitely
