@@ -5,7 +5,8 @@
 #
 # Usage:
 #   ./development/tools/install-requirements.sh            # interactive: asks per group
-#   ./development/tools/install-requirements.sh --rpms     # layer RPM packages (rpm-ostree, needs a reboot)
+#   ./development/tools/install-requirements.sh --rpms     # RPM packages: dnf on a flattened image (the PS5's),
+#                                                          # rpm-ostree on an Atomic one (needs a reboot)
 #   ./development/tools/install-requirements.sh --bins     # vkpeak + memtest_vulkan into ~/.local/bin
 #   ./development/tools/install-requirements.sh --speedtest# Ookla speedtest CLI into ~/.local/bin
 #   ./development/tools/install-requirements.sh --dev      # development extras (sqlite, to inspect the GUI history DB)
@@ -15,6 +16,9 @@ set -euo pipefail
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
 RPMS=(stress-ng lm_sensors vkmark nvme-cli fio)
 SPEEDTEST_VERSION="${SPEEDTEST_VERSION:-1.2.0}"
+# A flattened image (the PS5's own) has no ostree and masks rpm-ostree: dnf installs there, at once. An Atomic
+# Bazzite (booted from an ostree deployment) layers with rpm-ostree, active after a reboot.
+OSTREE_BOOTED="${OSTREE_BOOTED:-/run/ostree-booted}"
 
 GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RED='\033[0;31m'; NC='\033[0m'
 say()  { echo -e "${GREEN}==>${NC} $*"; }
@@ -28,8 +32,20 @@ ask() {  # ask "question" -> 0 on yes
 }
 
 # ---------------------------------------------------------------- RPM packages
+install_packages() {  # install_packages pkg...: dnf on a flattened image, rpm-ostree on an Atomic one
+    if [ -e "$OSTREE_BOOTED" ]; then
+        command -v rpm-ostree >/dev/null 2>&1 || die "rpm-ostree not found, on a system booted from ostree."
+        say "Layering with rpm-ostree: $*"
+        sudo rpm-ostree install "$@"
+        warn "Layered packages become active after a reboot: systemctl reboot"
+    else
+        command -v dnf >/dev/null 2>&1 || die "dnf not found: this system has no ostree and no dnf."
+        say "Installing with dnf (a flattened image, no ostree): $*"
+        sudo dnf install -y "$@"
+    fi
+}
+
 install_rpms() {
-    command -v rpm-ostree >/dev/null 2>&1 || die "rpm-ostree not found: this group is for Bazzite/Fedora Atomic."
     local missing=()
     for pkg in "${RPMS[@]}"; do
         rpm -q "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
@@ -38,9 +54,8 @@ install_rpms() {
         say "All RPM packages are already installed: ${RPMS[*]}"
         return
     fi
-    say "Layering: ${missing[*]} (glmark2, vulkan-tools and smartmontools are usually already on Bazzite)"
-    sudo rpm-ostree install "${missing[@]}"
-    warn "Layered packages become active after a reboot: systemctl reboot"
+    say "Missing: ${missing[*]} (glmark2, vulkan-tools and smartmontools are usually already on Bazzite)"
+    install_packages "${missing[@]}"
 }
 
 # ------------------------------------------------- GitHub release binaries
@@ -108,10 +123,8 @@ install_dev() {
         say "sqlite3 is already installed (view the GUI history: sqlite3 ~/.local/share/ps5-board-test/history.db)"
         return
     fi
-    command -v rpm-ostree >/dev/null 2>&1 || die "rpm-ostree not found."
-    say "Layering sqlite (development only: inspect the GUI's history database)"
-    sudo rpm-ostree install sqlite
-    warn "Active after a reboot: systemctl reboot"
+    say "sqlite: development only, to inspect the GUI's history database"
+    install_packages sqlite
 }
 
 # ------------------------------------------------------------------------ main
@@ -136,8 +149,9 @@ case "$MODE" in
         echo "    vkmark: GPU load in test 41 when memtest_vulkan and vkpeak are missing"
         echo "    nvme-cli: SMART health in test 10"
         echo "    fio: random 4K read in test 43"
-        echo "    Layered with rpm-ostree; active after a reboot."
-        ask "Layer the RPM packages?" && install_rpms
+        if [ -e "$OSTREE_BOOTED" ]; then echo "    Layered with rpm-ostree; active after a reboot."
+        else echo "    Installed with dnf (a flattened image); ready at once."; fi
+        ask "Install the RPM packages?" && install_rpms
         echo
         say "Binaries: vkpeak and memtest_vulkan, the latest GitHub releases, into $BIN_DIR"
         echo "    memtest_vulkan: GPU load and a VRAM error check in test 41"
@@ -149,7 +163,7 @@ case "$MODE" in
         ask "Install the Ookla speedtest CLI?" && install_speedtest
         echo
         say "Development extras: sqlite"
-        echo "    sqlite3: look into the GUI's history database (no test uses it); layered, active after a reboot"
+        echo "    sqlite3: look into the GUI's history database (no test uses it)"
         ask "Install the development extras?" && install_dev
         ;;
     *) die "Unknown option: $MODE (use --rpms, --bins, --speedtest, --dev, --all or no option)" ;;

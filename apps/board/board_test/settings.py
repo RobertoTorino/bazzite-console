@@ -127,7 +127,8 @@ class PrivacyPage(QWidget):
         layout.addWidget(_text(
             "<b>Tests that do contact the internet</b> (only when you run them):<ul>"
             "<li>04–06 network tests: ping and resolve <code>google.com</code>, open <code>https://www.example.com</code>.</li>"
-            "<li>33 updates: <code>rpm-ostree upgrade --check</code> asks Bazzite's image registry for a newer image.</li>"
+            "<li>33 updates: <code>dnf check-update</code> asks the package repositories on a flattened image, "
+            "<code>rpm-ostree upgrade --check</code> asks Bazzite's image registry on an Atomic one.</li>"
             "<li>44 internet speed test: Ookla's (or speedtest.net's) servers see your public IP address, and the "
             "result is stored on speedtest.net; their privacy policy applies. The GUI asks before it runs.</li></ul>"))
         layout.addWidget(_text(

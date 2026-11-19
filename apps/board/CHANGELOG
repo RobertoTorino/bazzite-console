@@ -1,3 +1,11 @@
+Changelog: 19-11-2026 21:18:19
+
+Fixed. The settings' privacy text says test 33 asks dnf for updates on a flattened image and rpm-ostree on an Atomic one, as the test does.
+
+Changelog: 19-11-2026 21:14:53
+
+Fixed. install-requirements.sh installs the RPM packages and the development extras with dnf on a flattened image (no /run/ostree-booted, such as a PS5 image, where rpm-ostree is masked and failed with "not booted via libostree"); an Atomic image still layers them with rpm-ostree. The HINT lines of the tests name the same command (install_cmd), and the NVMe power-saving hint points to cmdline.txt instead of rpm-ostree kargs.
+
 Changelog: 19-11-2026 11:37:01
 
 Release 0.4.1.

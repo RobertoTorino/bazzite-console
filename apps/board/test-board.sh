@@ -232,6 +232,12 @@ log_howto() {
     if [ "$GUI_MODE" = true ]; then log_result "$2"; else log_result "$1"; fi
 }
 
+# How to install a package, for a HINT: dnf on a flattened image (the PS5's own: no ostree, rpm-ostree masked),
+# rpm-ostree on an Atomic Bazzite, where a layered package is active after a reboot.
+install_cmd() {
+    if [ -e /run/ostree-booted ]; then echo "rpm-ostree install $*   (then reboot)"; else echo "sudo dnf install -y $*"; fi
+}
+
 # Function to filter log results with exclusions
 filter_logs() {
     local log_content="$1"
@@ -254,9 +260,9 @@ LOG_ADVICE=(
   "flip_done timed out|commit wait timed out"
   "Display update timed out: try another cable, port or refresh rate. A GPU hang (test 35) causes it too."
   "Direct firmware load for .* failed|failed to load firmware"
-  "Missing firmware file: harmless if the device it names works; otherwise update Bazzite (rpm-ostree upgrade)."
+  "Missing firmware file: harmless if the device it names works; otherwise update Bazzite (sudo dnf upgrade on a flattened image, ujust update on an Atomic one)."
   "nvme.*(timeout|I/O error|resetting controller|controller is down)"
-  "NVMe timeout or reset, often the drive's power saving (APST): sudo rpm-ostree kargs --append-if-missing=nvme_core.default_ps_max_latency_us=0, reboot, and check test 10."
+  "NVMe timeout or reset, often the drive's power saving (APST): add nvme_core.default_ps_max_latency_us=0 to the kernel command line (cmdline.txt; Quickfix's Boot Command Line edits it), reboot, and check test 10."
   "I/O error, dev|Buffer I/O error|EXT4-fs error|BTRFS (error|critical)|critical medium error"
   "Disk read or write errors: back up your data now and check the drive health (test 10, sudo smartctl -a /dev/nvme0n1)."
   "Machine check|mce: \[Hardware Error\]"
@@ -730,7 +736,7 @@ for k in ("hmpre", "hmmin", "wctemp", "cctemp"):
             log_result "INFO: DRAM cache: none. The kernel gave /dev/$n a ${HMB_ALLOC} host memory buffer, so it is a DRAM-less drive."
         else
             log_result "INFO: DRAM cache: probably yes. No host memory buffer was allocated for /dev/$n in this boot (install nvme-cli to confirm)."
-            log_result "HINT: rpm-ostree install nvme-cli   (then reboot)"
+            log_result "HINT: $(install_cmd nvme-cli)"
         fi
 
         # ---- SMART / health log ----
@@ -785,7 +791,7 @@ for out, names in keys.items():
         fi
         if [ ${#SM[@]} -eq 0 ]; then
             log_result "INFO: No SMART data for /dev/$n (needs nvme-cli or smartctl)."
-            log_result "HINT: rpm-ostree install nvme-cli   (then reboot)"
+            log_result "HINT: $(install_cmd nvme-cli)"
         else
             HEALTH_OK=true
             if [ -n "${SM[warn]:-}" ] && [ "${SM[warn]}" -ne 0 ]; then
@@ -2579,7 +2585,7 @@ if find_tool stress-ng; then
     fi
 else
     log_result "WARNING: stress-ng is not installed; no CPU score."
-    log_result "HINT: rpm-ostree install stress-ng   (then reboot), or: brew install stress-ng"
+    log_result "HINT: $(install_cmd stress-ng), or: brew install stress-ng"
     WARN_FOUND=true
 fi
 
@@ -2836,7 +2842,7 @@ fi
 FIO_FOUND=false; find_tool fio && FIO_FOUND=true
 if $FIO_FOUND && $TOOL_AS_USER; then
     log_result "INFO: Random 4K read skipped: $TOOL is user-installed, and it is never run as root."
-    log_result "HINT: For this test install fio system-wide: rpm-ostree install fio   (then reboot)"
+    log_result "HINT: For this test install fio system-wide: $(install_cmd fio)"
 elif $FIO_FOUND; then
     FIO_BIN=$TOOL
     for qd in 1 32; do
@@ -2862,7 +2868,7 @@ except Exception:
     fi
 else
     log_result "INFO: Random 4K read skipped: fio is not installed."
-    log_result "HINT: rpm-ostree install fio   (then reboot). A Homebrew fio is not used: it would have to run as root."
+    log_result "HINT: $(install_cmd fio). A Homebrew fio is not used: it would have to run as root."
 fi
 
 # ---- sequential write + SLC cache: temporary file, removed afterwards -------
@@ -3139,7 +3145,7 @@ if command -v vulkaninfo >/dev/null 2>&1; then
     fi
 else
     log_result "WARNING: vulkaninfo is not installed; the feature matrix needs it."
-    log_result "HINT: rpm-ostree install vulkan-tools   (then reboot)"
+    log_result "HINT: $(install_cmd vulkan-tools)"
     WARN_FOUND=true
 fi
 VRAM_B=$(read_num_g "$GPU_DEV/mem_info_vram_total")
@@ -3263,7 +3269,7 @@ if find_tool stress-ng; then
     fi
 else
     log_result "INFO: stress-ng is not installed; skipping the bandwidth measurement."
-    log_result "HINT: rpm-ostree install stress-ng   (then reboot), or: brew install stress-ng"
+    log_result "HINT: $(install_cmd stress-ng), or: brew install stress-ng"
 fi
 echo
 fi  # TEST 49
@@ -3317,13 +3323,13 @@ if command -v vainfo >/dev/null 2>&1; then
         VA_DRV_FOUND=$(ls /usr/lib64/dri/radeonsi_drv_video.so 2>/dev/null)
         if [ -z "$VA_DRV_FOUND" ]; then
             log_result "HINT: /usr/lib64/dri/radeonsi_drv_video.so is missing. Fedora strips H.264/HEVC from its Mesa"
-            log_result "HINT: VA-API driver; install the freeworld build: rpm-ostree install mesa-va-drivers-freeworld"
+            log_result "HINT: VA-API driver; install the freeworld build: $(install_cmd mesa-va-drivers-freeworld)"
         fi
         WARN_FOUND=true
     fi
 else
     log_result "INFO: vainfo is not installed; the codec matrix needs it."
-    log_result "HINT: rpm-ostree install libva-utils   (then reboot)"
+    log_result "HINT: $(install_cmd libva-utils)"
 fi
 echo
 fi  # TEST 50
@@ -3338,7 +3344,7 @@ if [ -z "$CEC_DEVS" ]; then
     WARN_FOUND=true
 elif ! command -v cec-ctl >/dev/null 2>&1; then
     log_result "INFO: CEC adapter: $(echo $CEC_DEVS), but cec-ctl is not installed to read it."
-    log_result "HINT: rpm-ostree install v4l-utils   (then reboot)"
+    log_result "HINT: $(install_cmd v4l-utils)"
 else
     # cec-ctl -d DEV with no message only prints the adapter's state; the poll below is the one message sent.
     cec_field() { sed -n "s/^[[:space:]]*$1[[:space:]]*: //p" <<<"$CEC_INFO" | head -1; }

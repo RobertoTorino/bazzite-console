@@ -31,4 +31,14 @@ def test_the_groups_are_board_tests_installers():
     options = re.findall(r"^\s+(--[a-z]+)\)", script, re.M)
     assert [g.option for g in state.GROUPS] + ["--all"] == options
     assert "install_vkpeak; install_memtest_vulkan" in script and "install_speedtest" in script
-    assert "sudo rpm-ostree install sqlite" in script
+    assert 'sudo rpm-ostree install "$@"' in script and 'sudo dnf install -y "$@"' in script
+    assert "install_packages sqlite" in script
+
+
+def test_how_follows_ostree(tmp_path):
+    rpms, bins = state.GROUPS[0], state.GROUPS[1]
+    assert state.how(rpms, tmp_path) == state.WITH_DNF                    # flattened: no /run/ostree-booted
+    assert state.how(bins, tmp_path) == bins.what
+    (tmp_path / "run").mkdir()
+    (tmp_path / state.OSTREE_BOOTED).touch()
+    assert state.how(rpms, tmp_path) == state.LAYERED

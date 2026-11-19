@@ -99,7 +99,8 @@ and the reboot after it is yours.
 On the Bazzite host, once, in a terminal (or with **Start sshd here** in the app on the host itself):
 
 ```sh
-rpm -q openssh-server                       # if it is missing: sudo rpm-ostree install openssh-server, then reboot
+rpm -q openssh-server                       # if it is missing: sudo dnf install -y openssh-server
+                                            # (on an Atomic image: sudo rpm-ostree install openssh-server, then reboot)
 sudo systemctl enable --now sshd
 systemctl is-active sshd                    # prints "active"
 sudo firewall-cmd --list-services           # ssh must be in the list

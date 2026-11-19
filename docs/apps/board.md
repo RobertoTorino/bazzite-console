@@ -585,8 +585,9 @@ app installs the tools below. It asks per group:
 /opt/ps5-board-test/development/tools/install-requirements.sh --all    # everything, no questions
 ```
 
-It layers the packages `stress-ng`, `lm_sensors`, `vkmark`, `nvme-cli` and `fio` with `rpm-ostree` (active after
-a reboot; this group needs an Atomic image) and downloads `vkpeak`, `memtest_vulkan` and Ookla's `speedtest`
+It installs the packages `stress-ng`, `lm_sensors`, `vkmark`, `nvme-cli` and `fio`: with `dnf` on a flattened
+image (no ostree, such as a PS5 image; ready at once), with `rpm-ostree` on an Atomic one (active after a reboot).
+It downloads `vkpeak`, `memtest_vulkan` and Ookla's `speedtest`
 into `~/.local/bin`.
 
 | Tool                                 | Used by             | Without it                                                              |

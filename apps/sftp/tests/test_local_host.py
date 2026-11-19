@@ -45,7 +45,14 @@ def test_status_without_firewalld_or_openssh_server(monkeypatch, tools) -> None:
     state = local_host.local_status()
 
     assert not state.installed and state.firewall_open is None
-    assert local_host.INSTALL_HINT in local_host.describe(state)
+    assert local_host.install_hint() in local_host.describe(state)
+
+
+def test_install_hint_follows_ostree(tmp_path) -> None:
+    booted = tmp_path / "ostree-booted"
+    assert local_host.install_hint(booted) == local_host.INSTALL_DNF            # flattened image: dnf, at once
+    booted.touch()
+    assert local_host.install_hint(booted) == local_host.INSTALL_LAYERED        # Atomic: rpm-ostree, then reboot
 
 
 def test_start_enables_sshd_and_opens_the_firewall_through_pkexec() -> None:

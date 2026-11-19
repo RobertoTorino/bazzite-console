@@ -30,8 +30,18 @@ box counts them. It looks where the tests look: on `PATH`, in `~/.local/bin` and
 Each group's heading is a pill: a click on it (**Install**) runs Board Test's own installer for that group in a
 terminal, `/opt/ps5-board-test/development/tools/install-requirements.sh` with the group's option; it reads
 **Installed** and is off when everything in the group is there. **Install all** installs every group but
-the development extras (`--all`), and **Refresh** beside it reads the tools again. The groups and their tools are listed in [PS5 Board Test](board.md#requirements). Layered RPM
-packages are active after a reboot (`systemctl reboot`); until then the tools of that group still show as missing.
+the development extras (`--all`), and **Refresh** beside it reads the tools again. The groups and their tools are
+listed in [PS5 Board Test](board.md#requirements). The RPM packages are installed with `dnf` on a flattened image
+(one that does not boot from ostree, such as a PS5 image) and are there at once. On an Atomic image they are
+layered with `rpm-ostree` and are active after a reboot (`systemctl reboot`); until then the tools of that group
+still show as missing. The tooltip of a group's pill says which one this console uses.
+
+A tool you put in `~/.local/bin` yourself counts when the file has the tool's own name and may be run. Ookla's
+download is a `.tgz` archive: unpack `speedtest` from it and make it executable, then press **Refresh**:
+
+```bash
+cd ~/.local/bin && tar -xzf ookla-speedtest-*.tgz speedtest && chmod +x speedtest
+```
 
 ## MangoHud Config
 

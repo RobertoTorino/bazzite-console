@@ -1,3 +1,7 @@
+Changelog: 19-11-2026 21:18:19
+
+Fixed. When openssh-server is missing, Start sshd here's status gives the command for this system: sudo dnf install -y openssh-server on a flattened image (no ostree, such as a PS5 image, where rpm-ostree fails with "not booted via libostree"), rpm-ostree install and a reboot on an Atomic one (install_hint). The wiki's Set up the host says the same.
+
 Changelog: 18-11-2026 04:15:16
 
 Release 1.4.0.

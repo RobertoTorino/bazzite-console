@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2782 test functions (3170 cases counting the parametrized ones) in 32 test folders, and 33 installer tests.
+2784 test functions (3172 cases counting the parametrized ones) in 32 test folders, and 33 installer tests.
 
 ## Summary
 
@@ -19,10 +19,10 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
 | [apps/pcsx2](#appspcsx2) | 14 | 141 | 19.0 s |
 | [apps/ppsspp](#appsppsspp) | 11 | 91 | 4.5 s |
-| [apps/quickfix](#appsquickfix) | 6 | 37 |  |
+| [apps/quickfix](#appsquickfix) | 6 | 38 |  |
 | [apps/remoteplay](#appsremoteplay) | 25 | 240 | 9.6 s |
 | [apps/rpcs3](#appsrpcs3) | 12 | 114 | 5.6 s |
-| [apps/sftp](#appssftp) | 11 | 85 | 5.6 s |
+| [apps/sftp](#appssftp) | 11 | 86 | 5.6 s |
 | [apps/shadps4](#appsshadps4) | 17 | 147 | 7.7 s |
 | [apps/ssd](#appsssd) | 4 | 50 | 0.8 s |
 | [apps/upscaler](#appsupscaler) | 10 | 98 | 1.6 s |
@@ -40,7 +40,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
 | [tools](#tools) | 36 | 214 | 10.2 s |
-| **All** | | **2782** | **153 s** |
+| **All** | | **2784** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -881,12 +881,13 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/quickfix
 
-37 tests in 6 files.
+38 tests in 6 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_catalog.py` | `test_the_portal_lists_every_quickfix` |  |  | The portal lists every quickfix. |
 | `test_catalog.py` | `test_the_groups_are_board_tests_installers` |  |  | The groups are board tests installers. |
+| `test_catalog.py` | `test_how_follows_ostree` |  |  | How follows ostree. |
 | `test_kargs.py` | `test_split_and_join_keep_the_line` |  |  | Split and join keep the line. |
 | `test_kargs.py` | `test_every_argument_of_the_ps5_lines_is_described` |  |  | Every argument of the ps5 lines is described. |
 | `test_kargs.py` | `test_the_add_menu_and_the_list` |  |  | The add menu and the list. |
@@ -1293,7 +1294,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/sftp
 
-85 tests in 11 files, 5.6 s in a local run.
+86 tests in 11 files, 5.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1332,6 +1333,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_format_size.py` | `test_format_size_large_numbers` |  |  | Test very large file sizes. (Not run here: it needs the built native module, which CI's native job tests.) |
 | `test_local_host.py` | `test_status_reads_sshd_and_the_firewall` |  |  | Status reads sshd and the firewall. (Not run here: it needs the built native module, which CI's native job tests.) |
 | `test_local_host.py` | `test_status_without_firewalld_or_openssh_server` |  |  | Status without firewalld or openssh server. (Not run here: it needs the built native module, which CI's native job tests.) |
+| `test_local_host.py` | `test_install_hint_follows_ostree` |  |  | Install hint follows ostree. |
 | `test_local_host.py` | `test_start_enables_sshd_and_opens_the_firewall_through_pkexec` |  |  | Start enables sshd and opens the firewall through pkexec. (Not run here: it needs the built native module, which CI's native job tests.) |
 | `test_local_host.py` | `test_set_reads_the_state_again_or_says_why_it_failed` |  |  | Set reads the state again or says why it failed. (Not run here: it needs the built native module, which CI's native job tests.) |
 | `test_local_host.py` | `test_the_tab_shows_the_local_state_and_its_button` |  |  | The tab shows the local state and its button. (Not run here: it needs the built native module, which CI's native job tests.) |

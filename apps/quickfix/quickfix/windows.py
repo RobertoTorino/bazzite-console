@@ -153,7 +153,8 @@ class ToolsWindow(QuickfixWindow):
             button = self.buttons[group.option]
             complete = all(state.find_tool(t.command, self.home) for t in group.tools)
             button.caption.setText("Installed" if complete else "Install")
-            button.setToolTip("Everything in this group is there." if complete else f"{group.what} ({group.option})")
+            button.setToolTip("Everything in this group is there." if complete
+                              else f"{state.how(group, self.root)} ({group.option})")
             if complete:
                 button.setEnabled(False)
         if script is None:

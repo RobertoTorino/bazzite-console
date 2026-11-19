@@ -51,8 +51,8 @@ body:
     id: bazzite
     attributes:
       label: Bazzite version
-      description: Run `rpm-ostree status` in a terminal and copy the Version line of the deployment marked ●.
-      placeholder: "42.20261001.0 (2026-10-01T04:43:45Z)"
+      description: Run `grep -E '^(NAME|VERSION)=' /etc/os-release; uname -r` in a terminal and copy the lines.
+      placeholder: "NAME=\"Bazzite\" VERSION=\"43.20261001.0 (Kinoite)\" 7.3.1"
     validations:
       required: true
   - type: textarea

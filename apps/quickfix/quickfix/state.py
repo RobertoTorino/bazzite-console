@@ -30,10 +30,21 @@ class Group:
     tools: tuple[Tool, ...]
 
 
+# How the installer puts RPM packages on the system: rpm-ostree on an Atomic Bazzite, dnf on a flattened image
+# (the PS5's own: no ostree, rpm-ostree masked). how() picks the one this system has.
+LAYERED = "Layered with rpm-ostree: active after a reboot."
+WITH_DNF = "Installed with dnf (a flattened image, no ostree): ready at once."
+OSTREE_BOOTED = "run/ostree-booted"                                 # in /: there when booted from ostree
+
+
+def ostree_booted(root: Path = ROOT) -> bool:
+    return (root / OSTREE_BOOTED).exists()
+
+
 # The groups of Board Test's development/tools/install-requirements.sh, in its order (tests/test_catalog.py reads the
 # script and keeps the two the same).
 GROUPS: tuple[Group, ...] = (
-    Group("--rpms", "RPM packages", "Layered with rpm-ostree: active after a reboot.", (
+    Group("--rpms", "RPM packages", LAYERED, (
         Tool("stress-ng", "stress-ng", "41 (CPU load), 42 (CPU score), 49 (memory bandwidth)"),
         Tool("sensors", "lm_sensors", "22 (temperatures and fans)"),
         Tool("vkmark", "vkmark", "41 (GPU load, when memtest_vulkan and vkpeak are missing)"),
@@ -48,7 +59,7 @@ GROUPS: tuple[Group, ...] = (
           "privacy terms.", (
         Tool("speedtest", "Ookla speedtest", "44 (Internet Speed; speedtest-cli works too)"),
     )),
-    Group("--dev", "Development extras", "Layered with rpm-ostree: active after a reboot.", (
+    Group("--dev", "Development extras", LAYERED, (
         Tool("sqlite3", "sqlite", "no test: the app's history database, during development"),
     )),
 )
@@ -59,6 +70,11 @@ BUILT_IN = (Tool("glmark2", "glmark2", "41 (GPU load, last resort)"),
 INSTALLER = "development/tools/install-requirements.sh"             # in Board Test's folder
 BOARD_TEST = Path("/opt/ps5-board-test")
 BREW_BIN = Path("/home/linuxbrew/.linuxbrew/bin")                  # Homebrew on Bazzite
+
+
+def how(group: Group, root: Path = ROOT) -> str:
+    """How *group* is installed on this system, in a few words."""
+    return WITH_DNF if group.what == LAYERED and not ostree_booted(root) else group.what
 
 
 def find_tool(command: str, home: Path | None = None, path: str | None = None) -> str:

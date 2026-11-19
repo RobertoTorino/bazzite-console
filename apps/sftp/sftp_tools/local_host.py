@@ -10,11 +10,20 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 TIMEOUT_S = 15
 ROOT_TIMEOUT_S = 300                    # pkexec: the password dialog waits for the user
 
-INSTALL_HINT = "sudo rpm-ostree install openssh-server, then reboot"
+# How to install openssh-server: dnf on a flattened image (no ostree, rpm-ostree masked, such as a PS5 image), at
+# once; rpm-ostree on an Atomic one, active after a reboot.
+OSTREE_BOOTED = Path("/run/ostree-booted")
+INSTALL_DNF = "sudo dnf install -y openssh-server"
+INSTALL_LAYERED = "sudo rpm-ostree install openssh-server, then reboot"
+
+
+def install_hint(ostree_booted: Path = OSTREE_BOOTED) -> str:
+    return INSTALL_LAYERED if ostree_booted.exists() else INSTALL_DNF
 _START = (
     "systemctl enable --now sshd || exit $?; "
     "if firewall-cmd --state >/dev/null 2>&1 && ! firewall-cmd --query-service=ssh >/dev/null 2>&1; then "
@@ -68,9 +77,9 @@ def set_local_sshd(start: bool) -> LocalSshd:
     return local_status()
 
 
-def describe(state: LocalSshd) -> str:
+def describe(state: LocalSshd, ostree_booted: Path = OSTREE_BOOTED) -> str:
     if not state.installed:
-        return f"openssh-server is not installed: {INSTALL_HINT}."
+        return f"openssh-server is not installed: {install_hint(ostree_booted)}."
     text = "sshd is running" if state.active else "sshd is stopped"
     text += ", starts at boot" if state.enabled else ", does not start at boot"
     if state.firewall_open is False:

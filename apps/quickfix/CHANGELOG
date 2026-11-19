@@ -1,3 +1,7 @@
+Changelog: 19-11-2026 21:14:53
+
+Fixed. Quickfix's RPM groups say they are installed with dnf on a flattened image (no ostree, ready at once) and layered with rpm-ostree on an Atomic one (state.how); the installer it runs uses dnf there now.
+
 Changelog: 18-11-2026 04:15:16
 
 Release 0.1.0.
