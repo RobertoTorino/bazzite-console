@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bazzite-console-core"
-version = "4.3.0"                     # = VERSION; tools/check_versions.py keeps them equal
+version = "4.3.1"                     # = VERSION; tools/check_versions.py keeps them equal
 description = "Shared code of the Bazzite Console Suite apps"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
