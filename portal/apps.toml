@@ -9,7 +9,7 @@
 name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
 tag = "ps5-board-v0.4.1"
-sha256 = ""
+sha256 = "a414c37cae14e319e466e572c91f6f54eff7154b1339109400bb5eb4ad25edde"
 required = true
 changes_board = false
 category = "sustainable"
