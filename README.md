@@ -10,7 +10,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 
 **Beta:** The suite is in active development: features and layout may still change between releases.
 
-**Sustainable**: system and device information, and what keeps the console cool.
+**Sustainable**: system and device information, and what keeps the board cool.
 
 - <img src="portal/images/apps/board.webp" width="20" height="20" alt=""/> **[PS5 Board Test](apps/board)**: Read-only system details for PlayStation 5 hardware running Bazzite.
 - <img src="portal/images/apps/overlay.webp" width="20" height="20" alt=""/> **[PS5 System Overlay](apps/overlay)**: A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values.

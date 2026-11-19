@@ -15,7 +15,7 @@ dialog and update check off, player 1 on the first controller. RPCS3's own windo
 file, the window's job meanwhile; owner, 24-10-2026), and the firmware too (--headless --installfw; owner, 11-11-2026:
 RPCS3's window and its Success! box came up when the firmware was dropped in its folder); the result is read from
 RPCS3's log. The window also reads the volume Bazzite remembers for RPCS3 and says when it is muted (found on the
-console). What the window says it also writes to the app's log (core's applog), shown in the Log tab."""
+board). What the window says it also writes to the app's log (core's applog), shown in the Log tab."""
 
 from __future__ import annotations
 
@@ -571,7 +571,7 @@ class MainWindow(QMainWindow):
             tip = f"RPCS3 {pinned}, the build this version of the app was tried with"
         if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
             tip += (f"\nRPCS3 {self.newer.version} is out ({self.newer.published}). A later version of this app "
-                    f"brings it, once it has been tried on the console: {self.newer.url}")
+                    f"brings it, once it has been tried on the board: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
         self.emulator_state.setOpenExternalLinks(True)
 
@@ -645,7 +645,7 @@ class MainWindow(QMainWindow):
             self._show_state()
             self._update_buttons()
             self.note(f"RPCS3 {release.version} is out ({release.published}); a later version of this app brings "
-                      f"it, once it has been tried on the console: {release.url}")
+                      f"it, once it has been tried on the board: {release.url}")
 
     def chosen(self) -> Game | None:
         """The game whose row is selected."""

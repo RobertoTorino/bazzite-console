@@ -1,3 +1,7 @@
+Changelog: 19-11-2026 22:12:37
+
+Fixed. The suite says board, not console, for the PS5 that runs it (owner, 19-11-2026: board everywhere): the wiki, the README, the comments and test descriptions of every app, core and the tools, and the bug report path. Console stays where it means another machine or a product (Remote Play, XBOX Remote Play, the emulated systems, the PS5 history page), in DatStation, in the kernel's console= and in the suite's own names. .claude/suite.md has the rule.
+
 Changelog: 19-11-2026 21:46:13
 
 Fixed. The wiki's Quickfix chapter says board, not console, where it names which installer a group's tooltip gives.

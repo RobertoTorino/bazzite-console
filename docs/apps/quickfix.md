@@ -69,7 +69,7 @@ GPU share.
 !!! warning "Changes the board"
     Turn on writes vm.max_map_count = 2147483642 to /etc/sysctl.d/90-ps5-quickfix-max-map-count.conf and sets it now: the
     number of memory areas one program may map. The file stays across reboots and power offs. Nothing is written to the
-    console's firmware or the kernel's arguments. Turn off removes the file and reads the system's settings again, so
+    board's firmware or the kernel's arguments. Turn off removes the file and reads the system's settings again, so
     the value the other settings files give, else the kernel's own, is back.
 
 `vm.max_map_count` is the number of memory areas one program may map. Some games, and Proton, need far more than
@@ -82,7 +82,7 @@ only when the value is lower. Board Test's test 37 reports it.
 !!! warning "Changes the board"
     Turn on makes the folder /var/log/journal, with systemd-tmpfiles, and moves the journal there: journald then keeps
     the system's logs on the disk, within its own size limits, instead of in memory only. The folder stays across
-    reboots and power offs. Nothing is written to the console's firmware. Turn off works only on a folder this quickfix
+    reboots and power offs. Nothing is written to the board's firmware. Turn off works only on a folder this quickfix
     made: it moves the journal back to memory and removes the folder, with the logs in it.
 
 Without `/var/log/journal`, journald keeps the system journal in memory only, and the logs of a boot that crashed or
@@ -98,7 +98,7 @@ as it removes the logs of every earlier boot.
     password, and keeps the file it replaces as a dated backup beside it (for example cmdline.txt.bak-YYYYMMDD-HHMMSS).
     A change to cmdline.txt changes the boot settings of PS5 Linux from the next boot: a wrong argument can keep Linux
     from starting. The file stays across reboots and power offs. A line without root=, or of more than one line, is not
-    saved. Nothing is written to the console's firmware. To undo it, edit the line back, or copy a backup over the file.
+    saved. Nothing is written to the board's firmware. To undo it, edit the line back, or copy a backup over the file.
 
 The PS5 loader starts Linux from the FAT partition of a USB drive or SSD, mounted at `/boot/efi`, with the kernel
 command line in `cmdline.txt`: one line of kernel arguments. [PS5 Linux boot partition](../boot-partition.md)
@@ -119,16 +119,16 @@ or Revert your edits before you open another file.
 **Save changes** asks first, with the warning that it changes the boot settings of PS5 Linux: **Yes** saves, **No**
 drops your edits, **Cancel** goes back to editing. A line without `root=` is not saved. **Revert** reads the file
 again. When your user may not read the file, the File box says **Locked**, and **Read** shows it after your password.
-A change to `cmdline.txt` applies from the next boot: restart the console with `systemctl reboot`.
+A change to `cmdline.txt` applies from the next boot: restart the board with `systemctl reboot`.
 
 `mitigations=off` turns off the kernel's guards against the CPU's speculative execution flaws (Spectre, Meltdown and
 the like), which cost speed in games; the ps5-linux command line often sets it already. Without them a program could,
-in principle, read the memory of other programs: keep them on where the console runs code you do not trust.
+in principle, read the memory of other programs: keep them on where the board runs code you do not trust.
 `amd_iommu=off` keeps the kernel from using the IOMMU. By default leave the IOMMU off. If it is on and you experience
 an unstable system, turn it off again.
 
 To undo a change, edit the line back, or copy a backup over the file (`cmdline.txt.bak-YYYYMMDD-HHMMSS`, beside
-it). A console that no longer starts Linux after a change needs the file fixed on another computer: the partition is
+it). A board that no longer starts Linux after a change needs the file fixed on another computer: the partition is
 FAT, so any computer can open the USB drive.
 
 ## Install

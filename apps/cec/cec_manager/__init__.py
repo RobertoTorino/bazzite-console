@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""HDMI-CEC for the PlayStation 5: the console's CEC adapter (the kernel's ps5-cec), the TV on the other end, buttons
+"""HDMI-CEC for the PlayStation 5: the board's CEC adapter (the kernel's ps5-cec), the TV on the other end, buttons
 to turn the TV on or off and switch it to the PS5, and the automatic behavior of Valve's CEC daemon (cecd) that
 Bazzite ships."""
 

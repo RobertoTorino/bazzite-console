@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Watches the PlayStation 5's temperatures and its fan: a thermal guard that runs as a system service warns, cools
-and, at a critical temperature, shuts the console down cleanly. Nothing changes until you turn the guard on."""
+and, at a critical temperature, shuts the board down cleanly. Nothing changes until you turn the guard on."""
 
 APP_NAME = "PS5 Fan Controller"
 APP_ID = "ps5-fan-controller"

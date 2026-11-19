@@ -1204,7 +1204,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_without_sdl3_the_kernels_names_are_used` |  |  | Without sdl3 the kernels names are used. |
 | `test_main_window.py` | `test_packages_installed_through_rpcs3_without_its_window` |  | 0.1 s | Games Install runs RPCS3 headless once per file (--headless --installpkg; owner, 24-10-2026): the licenses first, then the packages, the updates last (a fake RPCS3 that writes RPCS3's log lines and the files RPCS3 would); the result comes from RPCS3's log and the state follows. |
 | `test_main_window.py` | `test_what_an_install_says` |  |  | The message after an install: RPCS3's log first, the files that came when the log says nothing. |
-| `test_main_window.py` | `test_bazzites_volume_for_rpcs3` |  |  | The volume Bazzite remembers for RPCS3 (WirePlumber's stream-properties): in the Settings tab's Sound box, and said once while RPCS3 is muted there (found on the console, 24-10-2026). |
+| `test_main_window.py` | `test_bazzites_volume_for_rpcs3` |  |  | The volume Bazzite remembers for RPCS3 (WirePlumber's stream-properties): in the Settings tab's Sound box, and said once while RPCS3 is muted there (found on the board, 24-10-2026). |
 | `test_main_window.py` | `test_each_games_screen` |  |  | The Screen setting column: 16:9 (RPCS3's default), 4:3 or Fill screen, kept in the game's own settings in RPCS3 (custom_configs); a file RPCS3 wrote keeps its other lines; nothing is written while RPCS3 runs. |
 | `test_main_window.py` | `test_the_settings_tab_follows_rpcs3s_file` |  |  | The settings tab follows rpcs3s file. |
 | `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes, Screen setting and Start game do, and Steam in it is a link the app opens itself (Steam starts when it does not run). |
@@ -1231,7 +1231,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_rpcn_set_up_from_the_window` |  |  | Rpcn set up from the window. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.5 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts the cover on the portrait, and a game in Steam not looked up yet makes the button do something again. |
 | `test_main_window.py` | `test_another_build_installed_than_the_app_brings` |  |  | The RPCS3 line shows the state alone (owner, 07-11-2026), the box the installed version's landmark (owner, 24-10-2026: the box is not wide enough for the build), the advice in the tooltip and the log. |
-| `test_main_window.py` | `test_the_settings_tab_is_not_squeezed_under_the_introduction` |  | 0.1 s | The introduction wraps to several lines and the state lines may too; their minimum heights count, so the tabs below get their minimum and the Sound box's rows keep their height (owner, 24-10-2026: squeezed unreadable on the console). |
+| `test_main_window.py` | `test_the_settings_tab_is_not_squeezed_under_the_introduction` |  | 0.1 s | The introduction wraps to several lines and the state lines may too; their minimum heights count, so the tabs below get their minimum and the Sound box's rows keep their height (owner, 24-10-2026: squeezed unreadable on the board). |
 | `test_main_window.py` | `test_unmute_bazzites_volume` |  | 0.1 s | Unmute beside Bazzite's volume (owner, 24-10-2026): shown while RPCS3 is muted there only; a click runs core's unmute off the window and the row follows what WirePlumber stored; a failure is said in red. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.1 s | Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.2 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
@@ -1448,7 +1448,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_games.py` | `test_updates_mods_and_add_ons_are_not_games` |  |  | Updates mods and add ons are not games. |
 | `test_games.py` | `test_scan_finds_games_sorted_once_and_not_too_deep` |  |  | Scan finds games sorted once and not too deep. |
 | `test_games.py` | `test_an_update_beside_its_game_is_left_out` |  |  | An update beside its game is left out. |
-| `test_games.py` | `test_a_game_with_its_update_in_it_is_a_game` |  |  | Dumped from a PS4 with the update installed: param.sfo says "gp", and there is no other game with its ID (LUMINES REMASTERED, CUSA11624, on the owner's console, 14-10-2026). |
+| `test_games.py` | `test_a_game_with_its_update_in_it_is_a_game` |  |  | Dumped from a PS4 with the update installed: param.sfo says "gp", and there is no other game with its ID (LUMINES REMASTERED, CUSA11624, on the owner's board, 14-10-2026). |
 | `test_games.py` | `test_the_games_own_pictures` |  | 0.1 s | The games own pictures. |
 | `test_games.py` | `test_a_failing_card_ends_no_scan` |  | 0.1 s | A failing card ends no scan. |
 | `test_library.py` | `test_fixed_folders` |  |  | Fixed folders. |
@@ -1466,7 +1466,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_no_steam_game_mode_or_no_wrapper` |  | 0.1 s | No steam game mode or no wrapper. |
 | `test_main_window.py` | `test_the_apps_own_game_folders` |  |  | The games are put in Games/PS4 in the home folder, made with its Modules folder when the app opens, and in Games/PS4 on a removable drive that has one (owner, 03-11-2026: fixed folders, no folder choosing); shadPS4's own game folders (config.json) are made the same, so its own window lists the games too, not while it runs. |
 | `test_main_window.py` | `test_the_settings_tab_follows_shadps4s_file` |  |  | The Settings tab reads config.json (shadPS4's defaults where a key is missing) and writes one key the moment it is changed, the rest of the file kept; not while shadPS4 runs. |
-| `test_main_window.py` | `test_bazzites_volume_for_shadps4` |  |  | The volume Bazzite remembers for shadPS4 (WirePlumber's stream-properties): in the Settings tab's Sound box, and said once while shadPS4 is muted there (as on the console, 24-10-2026). |
+| `test_main_window.py` | `test_bazzites_volume_for_shadps4` |  |  | The volume Bazzite remembers for shadPS4 (WirePlumber's stream-properties): in the Settings tab's Sound box, and said once while shadPS4 is muted there (as on the board, 24-10-2026). |
 | `test_main_window.py` | `test_the_play_time_in_the_header` |  |  | The time spent in all games together, as shadPS4 counts it in play_time.txt (H:MM:SS and the last start per Id), with each game in the tip; a dash while there is none. |
 | `test_main_window.py` | `test_the_controller_state` |  |  | Beside the title: whether a controller is connected, from the kernel's list, looked at again every few seconds (owner, 24-10-2026: a controller switched off by its idle timer left a game without one). |
 | `test_main_window.py` | `test_the_quit_hotkeys_are_set_up_and_logged` |  |  | The quit hotkeys are set up and logged. |
@@ -1535,7 +1535,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_userdata.py` | `test_one_setting_written_the_rest_kept` |  |  | write_config sets one key as shadPS4 writes the file (indented by two, no newline at the end); a missing file is made, an unreadable one is never written over. |
 | `test_userdata.py` | `test_a_game_folder_taken_out` |  |  | A game folder taken out. |
 | `test_userdata.py` | `test_modules_copied_from_a_folder` |  |  | Modules copied from a folder. |
-| `test_userdata.py` | `test_play_time_as_shadps4_writes_it` |  |  | play_time.txt as shadPS4 0.20.0 writes it, from the owner's console (24-10-2026). |
+| `test_userdata.py` | `test_play_time_as_shadps4_writes_it` |  |  | play_time.txt as shadPS4 0.20.0 writes it, from the owner's board (24-10-2026). |
 | `test_userdata.py` | `test_sync_modules_copies_what_is_new_or_changed` |  |  | The modules put in Games/PS4/Modules go into shadPS4's folder once (owner, 03-11-2026); a changed one again. |
 | `test_userdata.py` | `test_set_game_folders_writes_install_dirs` |  |  | Set game folders writes install dirs. |
 
@@ -2461,7 +2461,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_claude_usage_is_a_pill_that_opens_the_usage_page` |  | 0.4 s | Claude tokens today (the blue edge every neutral pill has, owner 26-10-2026), hidden without Claude Code; a click opens Claude's usage page. |
 | `test_main_window.py` | `test_the_window_has_nexus_design` |  | 0.4 s | A Nexus app, not a suite's (owner, 26-10-2026): create_app() puts Nexus's theme on the application (ink, silver, teal: nexus/docs/stylesheets/nexus.css), the widgets draw with it, and the icon is the Nexus drawing. |
 | `test_main_window.py` | `test_the_icons_are_the_nexus_drawing` |  |  | The app's icon and its menu icon are the Nexus drawing at 512 and 128 px, square. |
-| `test_main_window.py` | `test_remove_suite_runs_check_release_remove_on_the_board` |  | 0.4 s | Remove suite (owner, 15-11-2026): check-release.sh remove in a terminal, on the console. |
+| `test_main_window.py` | `test_remove_suite_runs_check_release_remove_on_the_board` |  | 0.4 s | Remove suite (owner, 15-11-2026): check-release.sh remove in a terminal, on the board. |
 | `test_main_window.py` | `test_an_old_portal_video_holds_the_release` |  | 0.6 s | An orange banner with Record new video now while the wiki's Portal Tour is older than the portal, and Start new release off until it is recorded (owner, 15-11-2026). |
 | `test_plan.py` | `test_a_suites_tags_carry_its_prefix` |  | 0.1 s | The suite's TAG_PREFIX starts its tags: the apps' and the portal's, never core's; a tag without it is not the suite's. |
 | `test_plan.py` | `test_units` |  | 0.1 s | Units. |

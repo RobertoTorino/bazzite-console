@@ -4,7 +4,7 @@
 
 # PPSSPP Manager
 
-Plays **PSP games** on the console with [PPSSPP](https://www.ppsspp.org), an open-source PSP emulator. The app
+Plays **PSP games** on the board with [PPSSPP](https://www.ppsspp.org), an open-source PSP emulator. The app
 installs the PPSSPP release pinned for this version of the app, finds your games and adds them to Steam, so they
 start from **Game Mode** like any other game. It also sets PPSSPP's common picture, sound, controller and display
 settings, and can rename ISO and CSO files after their game metadata.
@@ -121,7 +121,7 @@ Steam's overlay works over a game started from Steam, in Game Mode and on the de
 A game started from Steam reads your controllers itself. [How it works](#how-it-works) explains both.
 
 Change Steam from Desktop Mode: in Game Mode Steam is the session itself and cannot close for the change. **Update
-Steam** is off there, and until Steam has been started once on the console.
+Steam** is off there, and until Steam has been started once on the board.
 
 ##### Covers
 

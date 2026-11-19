@@ -1,3 +1,7 @@
+Changelog: 19-11-2026 22:12:37
+
+Fixed. Retract and Remove suite say board instead of console, as do the board checks of a portal release (owner, 19-11-2026: board everywhere).
+
 Changelog: 19-11-2026 10:26:39
 
 Fixed. While the release runs on GitHub, its step says what the run waits for: its first job waits until CI

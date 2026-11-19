@@ -7,7 +7,7 @@
 # Nexus Release Tool
 
 The suite's release front end: it writes the versions, CHANGELOG entries, pins and portal bump of a release, and
-runs the console checks of a portal release. It commits, pushes, tags and starts the release workflow only when you
+runs the board checks of a portal release. It commits, pushes, tags and starts the release workflow only when you
 press its buttons. It edits the checkout it lives in, so it is not part of a portal's releases and has none of its
 own.
 

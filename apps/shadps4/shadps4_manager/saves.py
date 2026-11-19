@@ -2,7 +2,7 @@
 """The saves shadPS4 keeps (owner, 18-11-2026: a Memory cards tab, as PCSX2 Manager has). A PS4 game keeps each save
 as a folder: home/<user>/savedata/<game's code>/<save's name> in shadPS4's own folder, <user> a number (1000 for the
 first one), with sce_sys/param.sfo that names the save (MAINTITLE), its line under it (SUBTITLE) and what is in it
-(DETAIL), a picture (sce_sys/icon0.png) and the data itself (seen in shadPS4 0.20's folder on the console).
+(DETAIL), a picture (sce_sys/icon0.png) and the data itself (seen in shadPS4 0.20's folder on the board).
 
 A save is exported as a .zip with <game's code>/<save's name> at the top, so several fit in one file and a file from
 here is taken in again as it is. The saves of every user are listed; one taken in goes to the first user's folder.

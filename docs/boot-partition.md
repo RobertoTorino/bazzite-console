@@ -40,10 +40,10 @@ root=LABEL=bazzite rw rootwait console=ttyTitania0 console=tty0 video=DP-1:1920x
 | `root=UUID=<id>` | The partition found by its file system's ID. Use this when two drives carry the same label, because then a label can lead to the wrong drive. |
 | `rw` | Mounts the system read-write from the start. |
 | `rootwait` | Waits until the system's drive appears instead of stopping with an error. A USB drive or an SSD comes up a few seconds after the kernel starts. |
-| `console=ttyTitania0` | A console on the PS5's own serial port (the Titania UART inside the console). It is harmless without a cable on it. |
+| `console=ttyTitania0` | A console on the PS5's own serial port (the Titania UART inside the board). It is harmless without a cable on it. |
 | `console=tty0` | A console on the screen. The last `console=` on the line gets `/dev/console`, so keep `console=tty0` last to see the boot messages on the TV. |
 | `video=DP-1:1920x1080@60` | Starts the HDMI output in 1080p60. The GPU calls the HDMI port `DP-1`. This avoids a black screen on a TV that mishandles the mode it picks by itself. The desktop can still switch to 4K after login. |
-| `mitigations=off` | Turns off the kernel's guards against the CPU's speculative execution flaws (Spectre, Meltdown and the like), for speed in games. Without them, a program could in principle read the memory of other programs. Keep them on where the console runs code you do not trust. |
+| `mitigations=off` | Turns off the kernel's guards against the CPU's speculative execution flaws (Spectre, Meltdown and the like), for speed in games. Without them, a program could in principle read the memory of other programs. Keep them on where the board runs code you do not trust. |
 | `idle=halt` | The CPU idles with plain HLT instead of the deeper MWAIT C-states. This works around hangs in the APU's low-power states. Remove it only if you see microstutter. |
 | `preempt=full` | A fully preemptible kernel (the kernel is built `PREEMPT_DYNAMIC`), for lower latency on the desktop and in games. |
 | `hdmi.frl_4k120=0` | The PS5 HDMI driver does not try 4K120 over HDMI 2.1 FRL. It stays on TMDS, up to 4K60. This avoids a black screen on a TV whose FRL negotiation fails. `1` tries 4K120. While Linux runs, `/sys/module/hdmi/parameters/frl_4k120` changes it. |

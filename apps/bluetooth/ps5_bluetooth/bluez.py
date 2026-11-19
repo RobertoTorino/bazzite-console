@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What the window reads, as you, without a password: the adapter and whether it is on, the devices Bluetooth knows
 (paired, connected, or heard in a search), the system part's two services and what the search after this boot did
-(its journal; readable for the wheel group, as the console's user is)."""
+(its journal; readable for the wheel group, as the board's user is)."""
 
 from __future__ import annotations
 

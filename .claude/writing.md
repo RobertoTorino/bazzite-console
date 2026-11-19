@@ -54,12 +54,12 @@ From a fan app's wiki chapter:
 
 > **Before:** Shows the temperatures and fans of the PlayStation 5 on Bazzite, and runs a thermal guard: a system
 > service that watches the GPU and the CPU, also when no app is open, and warns, cools and at a critical
-> temperature shuts the console down cleanly.
+> temperature shuts the board down cleanly.
 >
 > **After:** PS5 Fan Controller shows the temperatures and fan speeds of the **PlayStation 5** on **Bazzite**. It
-> can also turn on a **thermal guard**, a background service that protects the console from overheating. The guard
-> keeps watching when no app is open. When the console gets too hot it warns you. If it gets hotter still, it runs
-> the fans at full speed. As a last resort it shuts the console down cleanly.
+> can also turn on a **thermal guard**, a background service that protects the board from overheating. The guard
+> keeps watching when no app is open. When the board gets too hot it warns you. If it gets hotter still, it runs
+> the fans at full speed. As a last resort it shuts the board down cleanly.
 
 A dialog:
 

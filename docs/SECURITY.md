@@ -27,7 +27,7 @@ The suite answers for its own code and for the Python packages its apps install.
 the system tools some apps run (such as `systemctl`, `sudo` or `cec-ctl`), are updated and patched by Bazzite.
 
 [Nexus Deps](development/dashboard.md#deps), a development app run from a checkout of the repository,
-shows where the suite's dependencies stand on a console:
+shows where the suite's dependencies stand on a board:
 
 - **Python packages** are read from the environment each installed app runs in: the suite's shared one, or the
   app's own. A card shows the version in each environment, whether it meets the app's requirement, and the latest

@@ -46,7 +46,7 @@ of its own that keeps running when the dashboard closes.
 
 | Tile | What it opens |
 |---|---|
-| **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the console checks ([Releases](releases.md)). |
+| **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the board checks ([Releases](releases.md)). |
 | **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)). |
 | **Nexus Deps** | The suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). |
 | **Nexus Installer Tests** | The suite's installer tests, one at a time ([below](#installer-tests)). |
@@ -69,7 +69,7 @@ Under **Test local apps** are the suite's portal and every app window of it in t
 first). A click starts that app from the checkout, to try a change before its release. They start as
 `python -m <package>` with the checkout's venv and its `core`, as `run.sh` starts a development app. When the
 portal is already open, its icon warns instead of starting: a second portal never opens (starting it only brings
-the open window to the front), so close it first. An app that changes how the console runs (an orange **!**
+the open window to the front), so close it first. An app that changes how the board runs (an orange **!**
 on its icon) asks first, as in the portal; started from the checkout it uses the scripts in the checkout. Each app
 writes its output to `~/.cache/nexus-dashboard/local/<package>.log`. When an app stops with an error, the end of its log
 shows below. The apps keep running when you close the dashboard. The round **i** beside the title says the same.
@@ -108,7 +108,7 @@ in its name (1440p is the step between). A recording runs in the background; its
   in the checkout too, for you to review and commit.
 - **Apps video tour** lists every app of the suite. Tick the apps (**All**, **None**), set the **Length** (40
   seconds by default) and choose **Record**: each tour takes a few seconds,
-  `ps5-<app>-tour-v<version>.mp4`. Double-click an app to play its video. What an app reads from the console is
+  `ps5-<app>-tour-v<version>.mp4`. Double-click an app to play its video. What an app reads from the board is
   real, so watch a video before you publish it.
 
 The dialogs run `tools/record-tour.sh` and `tools/record-app-tour.sh` with the checkout's development environment;
@@ -168,7 +168,7 @@ Before you record, have:
 **Nexus Installer Tests** (`dev/itests/`) runs the suite's installer tests, `tools/installer-tests/*.sh`, one at a
 time (bash, with fakeroot), with their live output on the right and each one's result at the end of its row. Tick
 the tests and **Run selected**, or **Run all**; **Stop** ends the one that runs and skips the rest. Each test
-installs an app from the checkout as its installer does on a console and removes it again, in a temporary home:
+installs an app from the checkout as its installer does on a board and removes it again, in a temporary home:
 nothing of yours is touched. The tests use fixed temporary folders under `/tmp`, so the same test is never run
 twice at once. `dev/itests/run.sh` and `dev/itests/install.sh` start and install it on their own.
 
@@ -360,7 +360,7 @@ i that says how to handle it. None of them is installed from here:
 
 | Card | Asked | What an update means |
 |---|---|---|
-| RPCS3, PCSX2, PPSSPP, Vita3K, Xenia Canary, shadPS4 | GitHub's latest release | Each app installs the build it was tested with (its pin). **Installed** behind the pin: open the app and use its Install. **On GitHub**, newer than the pin: it comes with a release of the app, after a test on a console. |
+| RPCS3, PCSX2, PPSSPP, Vita3K, Xenia Canary, shadPS4 | GitHub's latest release | Each app installs the build it was tested with (its pin). **Installed** behind the pin: open the app and use its Install. **On GitHub**, newer than the pin: it comes with a release of the app, after a test on a board. |
 | DualSense firmware (and the Edge's) | Sony's firmware list | A new version since the last look: connect the controller with a USB cable and update it in PS5 Controller. |
 | PS4 system software | Sony's PS4 update list | A new version since the last look: update on the console. |
 | PS5 system software, PlayStation Portal | nothing a program can read | **On the device**: the i says where the device shows its updates. |

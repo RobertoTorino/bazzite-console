@@ -16,7 +16,7 @@ in place.
 - **Our tools, not Bazzite.** The suite answers for the portal and its apps. A Bazzite system package is in scope
   only where one of our apps uses it; its updates are Bazzite's.
 - **Not limited to one setup.** Apps read what the hardware reports and offer every option it supports. The
-  owner's console and TV are test data, not the target.
+  owner's board and TV are test data, not the target.
 - **Released code is the baseline.** Moving code must not change what an app does. Prove it with the tests, the
   installer tests and screenshots.
 - **Checked by CI.** Each rule below names the check that enforces it, so a mistake fails a test instead of
@@ -259,18 +259,18 @@ Each module of a package has one job, so the logic can be tested without a windo
 | `__init__.py` | The app's constants (`APP_NAME`, `APP_ID`, `__version__`, paths, `INFO`). No Qt. |
 | `__main__.py` | Start-up only: arguments, `create_app()`, single instance, the window, `exec_app()`. |
 | `main_window.py` | The window: layout, signals, and turning results into text and states. Little logic of its own. |
-| Logic modules | Reading the console, parsing, deciding, building command lines: `cec.py`, `guard.py`, `firmware.py`, `modes.py`, `speedtest.py`. No Qt, so they are tested on their own. |
+| Logic modules | Reading the board, parsing, deciding, building command lines: `cec.py`, `guard.py`, `firmware.py`, `modes.py`, `speedtest.py`. No Qt, so they are tested on their own. |
 | `runner.py`, `privileged.py` | The one place that runs commands. Steps that need root go through pkexec or sudo here. The result comes back as a small object (exit code, output) or, for a running `QProcess`, as signals; never as an exception the window has to guess about. |
 
 - **The outside world comes in as parameters.** A window or function takes its folders and command runner as
   arguments with the real ones as defaults: `MainWindow(sys_root=Path("/sys"), runner=privileged.run)`. Tests pass
-  a fake `/sys` and a fake runner; nothing in a test touches the console.
+  a fake `/sys` and a fake runner; nothing in a test touches the board.
 - **Nothing blocks the window.** Network checks and long jobs run off the GUI thread (core's `UpdateChecker`) or
   as a `QProcess`, and report back with a signal.
 - **State lives in the XDG folders:** settings in `~/.config/` (through `AppInfo` and core's settings helpers),
   results and data in `~/.local/share/`, each in a folder named after the app. `install.sh --uninstall --purge`
   removes exactly those.
-- **Scripts that do the console's work** (`test-board.sh`) stand on their own: the window builds their command line
+- **Scripts that do the board's work** (`test-board.sh`) stand on their own: the window builds their command line
   and shows their output, and the script can be run by hand with the same result.
 
 ### Code style
@@ -281,7 +281,7 @@ Each module of a package has one job, so the logic can be tested without a windo
 - **Every file** starts with its SPDX line (`# SPDX-License-Identifier: GPL-3.0-or-later`); a module or script
   starts with a docstring or comment that says what it is for.
 - **Comments say why,** not what the next line does: the reason for a choice, a hardware quirk, a finding on the
-  owner's console with its date.
+  owner's board with its date.
 - **Core imports no app;** logic modules import no Qt; an app imports core, never another app.
 - **Text in the window** is plain, short sentences for the person using the app, in English. The apps are not
   translated: no `self.tr()`, and Qt's own dialog buttons stay English too. Errors say what happened and what to
@@ -328,7 +328,7 @@ an extracted release, and needs no network except for pip.
 
 - **`apps/<name>/tests/`:** pytest, offscreen. `conftest.py` puts core from the checkout on the path, provides a
   `qapp` fixture, and points QSettings and the XDG folders at a temp folder, so tests never touch your settings.
-  Fake `/sys`, `/proc` and command runners stand in for the console; data recorded on a real console makes good
+  Fake `/sys`, `/proc` and command runners stand in for the board; data recorded on a real board makes good
   fixtures. Tests also cover other setups.
 - **Every app has `tests/`** and a `requirements-dev.txt` (its `requirements.txt` plus pytest); CI's pytest matrix
   is read from the folders with `tests/` (`tools/ci_matrix.py`), so the app is in it at once.
@@ -394,7 +394,7 @@ for an app that does not fit the template (the owner's decision):
    by itself (every folder with `tests/`, every script in `installer-tests/`), and shellchecks `install.sh`. Add
    the app's `requirements-dev.txt` to the root's, for the development venv.
 6. Add the app to `portal/apps.toml` (name, summary, `changes_board`, `category` (its icon's: the portal's tab for
-   it), install, uninstall, detect, launch). An app that changes the console also gets a `board_change`: what it
+   it), install, uninstall, detect, launch). An app that changes the board also gets a `board_change`: what it
    touches, what stays after a reboot or a power off, what it never touches and how it is undone, in a few plain
    sentences; the tile's popup shows it. An app made of small quickfixes, as PS5 Quickfix, lists each one as an
    `[[apps.<name>.quickfixes]]` table instead (key, name, summary, launch, and the same `changes_board` and
@@ -405,7 +405,7 @@ for an app that does not fit the template (the owner's decision):
    (`dev/deps/nexus_deps/catalogs/bazzite-console.toml`).
 8. Write its manual chapter, `docs/apps/<name>.md`, add it to `mkdocs.yml`, and give it a row in the apps overview,
    `docs/apps/index.md`, a link on the home page (`docs/index.md`) and an option in the bug report's App
-   dropdown (`.github/ISSUE_TEMPLATE/bug_report.yml`, in the manifest's order). An app that changes the console
+   dropdown (`.github/ISSUE_TEMPLATE/bug_report.yml`, in the manifest's order). An app that changes the board
    opens its chapter, right after the title, with
    a `!!! warning "Changes the board"` box holding its `board_change` text word for word
    (`tools/check_manifest.py` compares the two).

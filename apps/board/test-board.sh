@@ -1691,7 +1691,7 @@ fi  # TEST 45
 
 # ----------------------------------------------------------------------------
 # Gaming / stability tests. The PS5 is often used as a Steam box, so these
-# focus on crash forensics and the things that actually take the console down
+# focus on crash forensics and the things that actually take the board down
 # mid-game: GPU hangs, unified-memory exhaustion and power delivery.
 # ----------------------------------------------------------------------------
 if want 34; then
@@ -1836,7 +1836,7 @@ echo
 fi  # TEST 36
 if want 37; then
 log_result "[TEST 37] Unified Memory and VRAM Pressure Test"
-log_result "The PS5 shares one 16 GB GDDR6 pool between CPU and GPU, so exhaustion freezes the console"
+log_result "The PS5 shares one 16 GB GDDR6 pool between CPU and GPU, so exhaustion freezes the board"
 for card in /sys/class/drm/card*/device; do
     [ -r "$card/mem_info_vram_total" ] || continue
     VRAM_T=$(cat "$card/mem_info_vram_total" 2>/dev/null)
@@ -1998,8 +1998,8 @@ fi  # TEST 40
 if want 41; then
 log_result "[TEST 41] Combined CPU + GPU Stress and Telemetry Test"
 if [ "$STRESS_MODE" != true ]; then
-    log_howto "INFO: Skipped. Re-run with --stress (or --stress=SECONDS) to load the console and" \
-              "INFO: Skipped. Start test 41 (Stability and thermals page) to load the console and"
+    log_howto "INFO: Skipped. Re-run with --stress (or --stress=SECONDS) to load the board and" \
+              "INFO: Skipped. Start test 41 (Stability and thermals page) to load the board and"
     log_result "INFO: sample clocks, temperatures, power and fans while it is under load."
     echo
 else
@@ -2506,7 +2506,7 @@ log_result "Check for faults logged during the stress run"
 POST=$(journalctl -k --no-pager -q --since "@$START" 2>/dev/null | \
     grep -EI "$GPU_HANG_RE|$PANIC_RE|throttl|Out of memory|oom-kill" | head -40)
 if [ -n "$POST" ]; then
-    log_result "ERROR: Faults were logged while the console was under load:"
+    log_result "ERROR: Faults were logged while the board was under load:"
     echo "$POST" | tee -a "$LOG_FILE"
     ERROR_FOUND=true
 else
@@ -3153,7 +3153,7 @@ if [ "$VRAM_B" -gt 0 ]; then
     VRAM_G=$((VRAM_B / 1073741824))
     log_result "INFO: VRAM carveout: ${VRAM_G} GiB (plus GTT spill from shared memory)."
     if [ "$VRAM_G" -lt 8 ]; then
-        log_result "NOTE: Modern AAA titles recommend 8 GiB+ of VRAM. On this unified-memory console the carveout is"
+        log_result "NOTE: Modern AAA titles recommend 8 GiB+ of VRAM. On this unified-memory board the carveout is"
         log_result "NOTE: adjustable: /boot/efi/vram.txt sets the split (a larger split also fixes pin failures)."
     else
         log_result "SUCCESS: The ${VRAM_G} GiB carveout meets the common 8 GiB recommendation of current AAA titles."
@@ -3285,7 +3285,7 @@ if [ -n "$VCN_BOOT" ]; then
     echo "$VCN_BOOT" | tee -a "$LOG_FILE"
 else
     log_result "NOTE: The kernel logged nothing about VCN this boot: amdgpu did not initialize a media block"
-    log_result "NOTE: on this console. Then there is no hardware video decode or encode at all — a hardware fact,"
+    log_result "NOTE: on this board. Then there is no hardware video decode or encode at all — a hardware fact,"
     log_result "NOTE: not a configuration problem. Video plays fine but decodes on the CPU."
 fi
 if command -v vainfo >/dev/null 2>&1; then
@@ -3315,7 +3315,7 @@ if command -v vainfo >/dev/null 2>&1; then
         fi
     elif [ -z "$VCN_BOOT" ]; then
         log_result "INFO: vainfo exposes no profiles, consistent with the kernel initializing no VCN block (above):"
-        log_result "INFO: this console simply has no hardware video engine to talk to. Nothing to fix."
+        log_result "INFO: this board simply has no hardware video engine to talk to. Nothing to fix."
     else
         log_result "WARNING: The kernel initialized VCN, but vainfo exposes no profiles; the VA-API userspace is broken."
         log_result "INFO: vainfo said:"
@@ -3464,7 +3464,7 @@ if want 53; then
 log_result "[TEST 53] Wi-Fi Adapter Test"
 log_result "The PS5's built-in Wi-Fi: its driver and its firmware"
 # The PS5's own Wi-Fi: an NXP IW620 (PCI 1b4b:2b56) on the out-of-tree moal/mlan driver of ps5-linux-mwifiex, or on
-# other consoles a MediaTek combo (MT7921 family, the kernel's own mt7921e and btmtk; ps5-linux-patches #71). The IW620's
+# other boards a MediaTek combo (MT7921 family, the kernel's own mt7921e and btmtk; ps5-linux-patches #71). The IW620's
 # combo firmware (Wi-Fi + Bluetooth) is staged from the loader's boot partition by ps5-stage-firmware.service.
 if lspci -nn -d 1b4b:2b56 2>/dev/null | grep -q .; then
     MOAL_FW=$(grep -oE 'fw_name=[^ ]+' /etc/modprobe.d/moal.conf 2>/dev/null | head -1 | cut -d= -f2)

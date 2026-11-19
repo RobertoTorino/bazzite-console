@@ -8,7 +8,7 @@ when Start writes it (at least what the app releases need, check_manifest.py's r
 writes the release, as steps 1 and 2 would (the versions and their copies, the "Release x.y.z." entries, the new tags
 in apps.toml with their sha256 left for the workflow, the portal's version and its entry), then one command commits
 it, pushes it and starts release.yml on that commit. The workflow builds, publishes and pins; the portal ends as a
-draft. The device test installs that draft on this device (check-release.sh draft on a console); Publish makes it a
+draft. The device test installs that draft on this device (check-release.sh draft on a board); Publish makes it a
 release, which makes the portal tag and GitHub's Latest release. A run that failed is started again from where it
 stopped (gh run rerun --failed); one that should not go on is stopped (gh run cancel)."""
 

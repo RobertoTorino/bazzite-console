@@ -2,7 +2,7 @@
 """The portal's view (owner, 01-11-2026: the one view; Suite Desktop Mode, the window of tabs, is gone), as Steam's
 Big Picture is for Steam: fullscreen, for a TV and a controller as much as for a desk. Large icons and type, the
 header with the suite's icon, its name, ☰ at the top right and a row of big symbols (owner, 05-11-2026: in place of
-the pills) with the status on its right, a line each (owner, 12-11-2026): the console's load and temperatures, the date
+the pills) with the status on its right, a line each (owner, 12-11-2026): the board's load and temperatures, the date
 and time, and the weather when a place is chosen; a category strip, and a focus that moves
 with the arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always. The Settings
 page (the ☰ symbol or the controller's ☰ button, owner 04-11-2026, as the earlier implementation's portal) takes the
@@ -46,10 +46,10 @@ INTRO_MS = 3000                 # about three seconds (owner, 26-10-2026: two en
 LOGO_SHARE = 0.26               # the intro's icon: this part of the screen's shorter side
 # What each category is for, short enough for the line under the title on a handheld's screen.
 SHORT_HINTS = {
-    "sustainable": "Test and maintain the console.",
+    "sustainable": "Test and maintain the board.",
     "graphics": "Graphics features and tools for games.",
     "gaming": "Games, streaming and controller tools.",
-    "utilities": "System information and console utilities.",
+    "utilities": "System information and board utilities.",
 }
 KEYS = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Qt.Key.Key_Right: "right"}
 CATEGORY_KEYS = {Qt.Key.Key_PageUp: "previous", Qt.Key.Key_Q: "previous", Qt.Key.Key_PageDown: "next",

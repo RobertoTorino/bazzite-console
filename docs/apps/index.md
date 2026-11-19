@@ -12,7 +12,7 @@ the controller belongs to something else: in the two Remote Play apps (a stream'
 among them), in PS5 Controller and in PS5 System Overlay. A controller Steam Input owns sends what its desktop layout
 says, by default Escape for B.
 
-**Sustainable**: system and device information, and what keeps the console cool.
+**Sustainable**: system and device information, and what keeps the board cool.
 
 | App | What it does |
 |---|---|

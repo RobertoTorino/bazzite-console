@@ -4,7 +4,7 @@
 
 # Vita3K Manager
 
-Plays **PS Vita games** on the console with [Vita3K](https://vita3k.org), an open-source PS Vita emulator. The app
+Plays **PS Vita games** on the board with [Vita3K](https://vita3k.org), an open-source PS Vita emulator. The app
 installs the Vita3K build pinned for this version of the app, installs the PS Vita's firmware and your games
 through it, and adds the games to Steam, so they start from **Game Mode** like any other game.
 
@@ -133,7 +133,7 @@ Steam's overlay works over a game started from Steam, in Game Mode and on the de
 A game started from Steam reads your controllers itself. [How it works](#how-it-works) explains both.
 
 Change Steam from Desktop Mode: in Game Mode Steam is the session itself and cannot close for the change. **Update
-Steam** is off there, and until Steam has been started once on the console.
+Steam** is off there, and until Steam has been started once on the board.
 
 ##### Covers
 

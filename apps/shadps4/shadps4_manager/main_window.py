@@ -13,7 +13,7 @@ SteamGridDB API key, with which Update Steam looks up a cover for each game's po
 A game runs from Steam: the tab beside Your games, Start game, starts the chosen one there (owner, 12-11-2026). The
 window keeps what the app owns in shadPS4's files (userdata.py): the quit hotkeys. shadPS4's own window (Big Picture,
 shadPS4 settings under the games) stays for what the Settings tab does not set. The window also reads the volume
-Bazzite remembers for shadPS4 and says when it is muted (seen on the console). What the window says it also writes to
+Bazzite remembers for shadPS4 and says when it is muted (seen on the board). What the window says it also writes to
 the app's log (core's applog), shown in the Log tab.
 
 Packages (owner, 05-11-2026): a .pkg put in a game folder is a row of its own in Your games, "PKG" or "PKG update",
@@ -545,7 +545,7 @@ class MainWindow(QMainWindow):
             tip = f"shadPS4 {self.version} is installed; this version of the app brings {pinned}: Install puts it in."
         if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
             tip += (f"\nshadPS4 {self.newer.version} is out ({self.newer.published}). A later version of this app "
-                    f"brings it, once it has been tried on the console: {self.newer.url}")
+                    f"brings it, once it has been tried on the board: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
 
         m = self.modules                        # Ok in green or Missing sys modules in red (owner, 24-10-2026)
@@ -676,7 +676,7 @@ class MainWindow(QMainWindow):
             self._show_state()
             self._update_buttons()
             self.note(f"shadPS4 {release.version} is out ({release.published}); a later version of this app brings "
-                      f"it, once it has been tried on the console: {release.url}")
+                      f"it, once it has been tried on the board: {release.url}")
 
     def chosen(self) -> Game | None:
         """The game whose row is selected."""

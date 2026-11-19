@@ -18,7 +18,7 @@ What only this suite has. The rules every suite shares are in [CLAUDE.md](../CLA
 ## Names
 
 - **Portal package:** `bazzite_console_portal`. **Core package:** `core/bazzite_console_core/`.
-- **On the console:** the program in `~/.local/share/bazzite-console-suite/` (`portal`, `state`), the settings in
+- **On the board:** the program in `~/.local/share/bazzite-console-suite/` (`portal`, `state`), the settings in
   `~/.config/bazzite-console/`.
 - **Nexus Deps' catalog:** `dev/deps/nexus_deps/catalogs/bazzite-console.toml`.
 - **A new app's name** starts with "PS5".
@@ -44,5 +44,10 @@ The portal and its apps are for PlayStation 5 hardware running Bazzite. They rea
   (code, comments, tests, the wiki, READMEs, CHANGELOGs), in any case. Write "its twin" where a CHANGELOG entry
   needs it. Three exceptions, which stay: this file, `CROSS-REFERENCE.md` (the table for porting apps) and the
   stream chapter's line "Test results are from a BC250 board." (`docs/development/remoteplay-stream.md`).
-- **"Board" and "console":** an app that changes the system says **board** in "changes the board" and in every text
-  about that change (owner, 18-11-2026). Elsewhere the hardware is the console or the PlayStation 5.
+- **"Board", never "console"** (owner, 19-11-2026: "board everywhere"): the PS5 that runs Bazzite and the suite is
+  **the board** in every text: code, comments, tests, the wiki, READMEs and the apps' windows, as in "changes the
+  board" (owner, 18-11-2026). "Console" stays only where it means something else: a PS5 or other console the text
+  is about as a product or as another machine ("I just bought a new PS5 console", Remote Play's and XBOX Remote
+  Play's consoles, the emulated systems, PlayStation history), the kernel's `console=` and `/dev/console`, and the
+  names Bazzite Console Suite, `bazzite-console`, `bazzite_console` and Console Link. DatStation's texts are left
+  as they are. CHANGELOG entries are history and keep their words.

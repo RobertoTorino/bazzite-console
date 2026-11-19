@@ -4,7 +4,7 @@
 
 # PCSX2 Manager
 
-Plays **PS2 games** on the console with [PCSX2](https://pcsx2.net), an open-source PS2 emulator. The app installs
+Plays **PS2 games** on the board with [PCSX2](https://pcsx2.net), an open-source PS2 emulator. The app installs
 the PCSX2 release pinned for this version of the app and sets it up, takes your PS2 BIOS, finds your games and adds
 them to Steam, so a game starts straight away, on the desktop, from Steam's **Big Picture Mode** or in Game Mode.
 Everything about PCSX2 is done in the app: its [settings](#settings), the [memory cards](#memory-cards), each

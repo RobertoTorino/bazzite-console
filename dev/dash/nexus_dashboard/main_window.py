@@ -39,7 +39,7 @@ BADGE_PX = 26                           # the warning in the corner of an app's 
 LOCAL_LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / APP_ID / "local"
 ABOUT = ("One place for the tools for working on the suite. The first tiles are the development apps of this "
          "checkout, each a window of its own that keeps running when the dashboard closes: Nexus Release Tool (a "
-         "release's versions, CHANGELOG entries, pins and the console checks), Nexus Deps (the suite's packages and "
+         "release's versions, CHANGELOG entries, pins and the board checks), Nexus Deps (the suite's packages and "
          "tools on this machine, and its updates), Nexus Installer Tests (the suite's installer tests one at a "
          "time), Nexus Demo Recorder (a portal installation recorded with OBS), Nexus Sound Lab (short sound "
          "effects for the windows, made from sliders and saved as WAV), Text to Speech (an English text "

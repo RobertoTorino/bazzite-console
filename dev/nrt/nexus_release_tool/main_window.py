@@ -2,9 +2,9 @@
 """The window of the checkout it lives in, the suite: its steps, its withdrawals and its GitHub.
 
 Nexus release: the release as numbered steps, from your own changes to the portal published, and Contents, what it
-holds (release_page.py, flow.py). Retract app: a pinned release withdrawn in apps.toml, tested on a console (Test
-withdrawal); the portal that removes it from the consoles is the next release. Remove suite: what of the suite is
-installed on this console, removed (check-release.sh remove). The release by hand, a tag at a time
+holds (release_page.py, flow.py). Retract app: a pinned release withdrawn in apps.toml, tested on a board (Test
+withdrawal); the portal that removes it from the boards is the next release. Remove suite: what of the suite is
+installed on this board, removed (check-release.sh remove). The release by hand, a tag at a time
 (Release apps with its Apply, Pin and release Portal with its Pin and Bump, git tag and Test on this board), went on
 15-11-2026 (owner: its Bump wrote a portal release while the release's draft waited for its device test, which then
 went out as a second release of the same apps); tools/tag-release.sh still tags one release from a terminal. Each
@@ -67,8 +67,8 @@ SELECTION_STYLESHEET = (
 
 
 class WithdrawPage(QWidget):
-    """Withdrawing a release: marked in apps.toml (and, with the commands shown, on GitHub); tested on a console before
-    the portal release that removes it from the consoles."""
+    """Withdrawing a release: marked in apps.toml (and, with the commands shown, on GitHub); tested on a board before
+    the portal release that removes it from the boards."""
 
     def __init__(self, window: "ReleaseWindow"):
         super().__init__()
@@ -77,17 +77,17 @@ class WithdrawPage(QWidget):
         self.app_box.currentIndexChanged.connect(lambda _: self._show_state())
         self.state = QLabel()
         self.reason_edit = QLineEdit()
-        self.reason_edit.setPlaceholderText("Why: what is wrong with this release (shown on the consoles)")
+        self.reason_edit.setPlaceholderText("Why: what is wrong with this release (shown on the boards)")
         self.withdraw_button = accent_button("Retract", "Mark the pinned release withdrawn in apps.toml, with a "
                                              "CHANGELOG entry in the app")
         self.withdraw_button.clicked.connect(self.withdraw)
         self.back_button = QPushButton("Take back")
         self.back_button.setToolTip("Remove the mark again (after a test, or a mistake)")
         self.back_button.clicked.connect(self.take_back)
-        # The withdrawal tested on a console with the app installed (the tab Test on this board until 15-11-2026, whose
+        # The withdrawal tested on a board with the app installed (the tab Test on this board until 15-11-2026, whose
         # other tests the release tab's Device test does)
         self.test_button = QPushButton("Test withdrawal")
-        self.test_button.setToolTip("On a console with the app installed: install the portal from this checkout and "
+        self.test_button.setToolTip("On a board with the app installed: install the portal from this checkout and "
                                     "start it (check-release.sh local); it must show the app as not available and "
                                     "remove it")
         self.test_button.clicked.connect(self.test)
@@ -103,15 +103,15 @@ class WithdrawPage(QWidget):
         reason_row.addWidget(self.test_button)
         lay = QVBoxLayout(self)
         lay.addLayout(info_row(
-            "Retract marks a pinned release withdrawn, with the reason the consoles show; test it, then release the "
+            "Retract marks a pinned release withdrawn, with the reason the boards show; test it, then release the "
             "portal.",
             "For a release that must not be used any more (privacy, security, any reason):<br>"
-            "<b>1.</b> Retract: apps.toml marks the pinned release withdrawn, with the reason the consoles show.<br>"
+            "<b>1.</b> Retract: apps.toml marks the pinned release withdrawn, with the reason the boards show.<br>"
             "<b>2.</b> <b>Test withdrawal</b> on a PS5 that has the app installed: the portal from this checkout "
             "shows it as \"App not available\" and removes it. Take back undoes the mark.<br>"
             "<b>3.</b> Mark the release on GitHub with the command shown (it stays, as a pre-release, so no update "
             "check offers it), then release the portal on the release tab, from Commit your changes: it removes the "
-            "app from the consoles."))
+            "app from the boards."))
         lay.addLayout(row)
         lay.addLayout(reason_row)
         lay.addStretch(1)
@@ -147,7 +147,7 @@ class WithdrawPage(QWidget):
         if unit is None:
             return
         if not reason:
-            QMessageBox.warning(self, "Retract", "Say why the release is withdrawn: the consoles show it.")
+            QMessageBox.warning(self, "Retract", "Say why the release is withdrawn: the boards show it.")
             return
         root = self.release_window.root
         changed = rp.withdraw(root, unit, reason)
@@ -191,7 +191,7 @@ def open_url(url: str) -> None:
 
 
 class RemovePage(QWidget):
-    """Remove suite: what of the suite is installed on this console, removed with each part's own uninstaller
+    """Remove suite: what of the suite is installed on this board, removed with each part's own uninstaller
     (check-release.sh remove, in a terminal). It was on the tab Test on this board, whose tests the release tab's
     Device test and Retract's Test withdrawal do since 15-11-2026."""
 
@@ -199,7 +199,7 @@ class RemovePage(QWidget):
         super().__init__()
         self.release_window = window
         self.remove_button = QPushButton("Remove suite")
-        self.remove_button.setToolTip("Show what of the suite is installed on this console and whether a test put it "
+        self.remove_button.setToolTip("Show what of the suite is installed on this board and whether a test put it "
                                       "there, then remove it all: every app, the portal and Board Test, each with "
                                       "its own uninstaller (check-release.sh remove). Settings stay")
         self.remove_button.clicked.connect(self.remove)
@@ -209,12 +209,12 @@ class RemovePage(QWidget):
         row.addStretch(1)
         lay = QVBoxLayout(self)
         lay.addLayout(info_row(
-            "Remove suite shows what of the suite is installed on this console and removes it all, in a terminal.",
-            "<b>Remove suite</b> lists what of the suite is installed on this console and whether a test put it there "
+            "Remove suite shows what of the suite is installed on this board and removes it all, in a terminal.",
+            "<b>Remove suite</b> lists what of the suite is installed on this board and whether a test put it there "
             "(check-release.sh status), then removes it all: every app, the portal and Board Test, each with its own "
             "uninstaller (check-release.sh remove). Settings, history and results stay; <code>check-release.sh remove "
-            "--purge</code> in a terminal removes them too. A test on a console without the suite removes what it "
-            "installed when the portal closes; a console that had the suite gets its own install back then "
+            "--purge</code> in a terminal removes them too. A test on a board without the suite removes what it "
+            "installed when the portal closes; a board that had the suite gets its own install back then "
             "(<code>check-release.sh restore</code> does it by hand)."))
         lay.addLayout(row)
         lay.addStretch(1)

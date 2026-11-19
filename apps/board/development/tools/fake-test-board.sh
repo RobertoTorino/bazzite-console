@@ -57,7 +57,7 @@ for t in $TESTS; do
     log "[TEST $t] Simulated test $t"
     sleep 0.3
     if [ "$t" = 41 ] && [ "$STRESS_MODE" != true ]; then
-        log "INFO: Skipped. Re-run with --stress to load the console."
+        log "INFO: Skipped. Re-run with --stress to load the board."
         echo; continue
     fi
     if [ "$t" = 42 ]; then

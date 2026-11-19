@@ -9,7 +9,7 @@ from the checkout of the release commit:
 plan prints three lines: apps=<JSON list of tags>, portal=<tag or nothing> and draft=<true|false>. With --tag (a
 tag pushed by hand) it is that one tag, published at once. Without it (a release started by Nexus Release Tool's Start
 new release): every app tag apps.toml pins that has no published release yet, and ps5-portal-v<portal/VERSION>
-when that has none, as a draft: Nexus Release Tool publishes it after the device test on the console. A draft counts as
+when that has none, as a draft: Nexus Release Tool publishes it after the device test on the board. A draft counts as
 not released, so a run started again makes it anew.
 
 pin writes the sha256 of <TAG>.tar.gz from DIR/<TAG>/SHA256SUMS (the release's own, downloaded) on the sha256 line

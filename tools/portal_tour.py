@@ -92,7 +92,7 @@ class Tour(Recorder):
         (state_dir() / "wallpaper-none").touch()        # the tour starts without a wallpaper and chooses the example
         from bazzite_console_portal.main_window import MainWindow
 
-        class Silent(audio.Sounds):                 # the Sound pill as on a console with an output, but nothing plays
+        class Silent(audio.Sounds):                 # the Sound pill as on a board with an output, but nothing plays
             def available(self) -> bool:
                 return True
 
@@ -167,7 +167,7 @@ class Tour(Recorder):
         self.move(self.at(w.big.notice))
         self.hold(3.5)
         first = w.big.tiles["board"]
-        self.say("Board Test checks the console. It is always installed, as the first tile on Sustainable.")
+        self.say("Board Test checks the board. It is always installed, as the first tile on Sustainable.")
         self.move(self.at(first, 0.5, 0.3))
         self.hold(3.5)
         self.say("A press on a tile opens its app; its menu installs, updates and uninstalls it, in a terminal.")

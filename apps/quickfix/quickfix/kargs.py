@@ -26,7 +26,7 @@ SETTINGS = (
             "SSD comes up a few seconds after the kernel starts.", example="rootwait"),
     Setting("console", "A console for the kernel's messages. The last <code>console=</code> on the line gets "
             "<code>/dev/console</code>: keep <code>console=tty0</code> last for the boot messages on the screen.",
-            {"ttyTitania0": "the PS5's own serial port (the Titania UART inside the console); harmless without a "
+            {"ttyTitania0": "the PS5's own serial port (the Titania UART inside the board); harmless without a "
                             "cable on it",
              "tty0": "the screen"}, "console=tty0"),
     Setting("video", "Starts a display output in a fixed mode: <code>video=DP-1:1920x1080@60</code> starts the HDMI "
@@ -35,7 +35,7 @@ SETTINGS = (
     Setting("mitigations", "The kernel's guards against the CPU's speculative execution flaws (Spectre, Meltdown and "
             "the like).",
             {"off": "turns them off, for speed in games; without them a program could, in principle, read the memory "
-                    "of other programs: keep them on where the console runs code you do not trust",
+                    "of other programs: keep them on where the board runs code you do not trust",
              "auto": "the kernel's default: on"}, "mitigations=off"),
     Setting("idle", "How the CPU idles.",
             {"halt": "plain HLT instead of the deeper MWAIT C-states, which works around hangs in the APU's "

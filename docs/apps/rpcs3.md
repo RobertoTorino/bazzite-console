@@ -4,7 +4,7 @@
 
 # RPCS3 Manager
 
-Plays **PS3 games** on the console with [RPCS3](https://rpcs3.net), an open-source PS3 emulator. The app installs
+Plays **PS3 games** on the board with [RPCS3](https://rpcs3.net), an open-source PS3 emulator. The app installs
 the RPCS3 build pinned for this version of the app, takes the PS3's firmware, finds your games and adds them to
 Steam, so a game starts straight away, on the desktop, from Steam's **Big Picture Mode** or in Game Mode. A game
 runs from Steam: [**Start game**](#start-game) starts the chosen one there. The app sets RPCS3 up for that: its

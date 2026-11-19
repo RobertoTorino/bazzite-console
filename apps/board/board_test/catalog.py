@@ -153,7 +153,7 @@ CATEGORIES: list[Category] = [
                 "The HDMI bridge's state: recovery status, mode, colour depth, HDCP mode and failures, FRL."),
         TestDef("56", "Bluetooth (IW620 / MediaTek)",
                 "Whether the IW620's Bluetooth half runs its firmware (480 Mbit/s) or fell back to ROM mode, the "
-                "controller, and the sleep hook that keeps it across suspend; a MediaTek combo on other consoles."),
+                "controller, and the sleep hook that keeps it across suspend; a MediaTek combo on other boards."),
         TestDef("57", "ps5-linux-tools",
                 "The boost (ps5boost: CPU 3.5 GHz) and fan (ps5fan) services of ps5-linux-tools, when installed."),
         TestDef("58", "Firmware Versions",

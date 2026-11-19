@@ -10,7 +10,7 @@ the logs and crash forensics. Each test reports SUCCESS, INFO, NOTE, WARNING or 
 something can be done.
 
 Nothing is installed, enabled, disabled or reconfigured. The only exceptions are the opt-in stress test, which
-deliberately puts the console under load, and the optional write part of the disk speed test, which writes one
+deliberately puts the board under load, and the optional write part of the disk speed test, which writes one
 temporary file and removes it.
 
 ---
@@ -214,7 +214,7 @@ administrator rights, and a red bar at the top says so: reinstall the app.
 
 * **Stress telemetry** (next to the stress settings): the latest stress run as panels over time. Pick older runs
   from the *File* list. A clock that drops while the temperature climbs is thermal throttling; a line that simply
-  stops is the moment the console froze.
+  stops is the moment the board froze.
 * **Benchmark history** (Performance page): bar charts per run of the scores against the baseline. Bars are
   labeled *#run CUs threads*; hover for the date, mitigations and kernel.
 * **Disk write test** (Storage and memory page): the write speed and the drive temperature against the amount
@@ -231,7 +231,7 @@ as one image. **Open CSV**, beside each Show graph, opens the file in LibreOffic
   the seconds between telemetry samples (default 2). It loads all CPU threads (`stress-ng`, or shell busy-loops)
   and the GPU (`memtest_vulkan`, which also checks the memory for errors and is recommended, or `vkpeak`,
   `vkmark`, `glmark2`, `vkcube`). This is a deliberate attempt to reproduce lockups under load: the system is
-  sluggish while it runs and may freeze. If it does, the last telemetry line is the console's final operating
+  sluggish while it runs and may freeze. If it does, the last telemetry line is the board's final operating
   point. The app asks before it starts.
 * **Benchmark (42):** *CPU time per phase* is the seconds per `stress-ng` phase (5–300, default 20); keep it the
   same between runs you compare. Close games and other heavy apps first. How to save the baseline:
@@ -486,7 +486,7 @@ See [Performance score](#performance-score-comparing-kernels-and-settings) below
 |----|---------------------------|---------------------------------------------------------------------------------|
 | 54 | Loader and Boot Partition | Where the loader's FAT partition is (a USB stick or SSD) and that it is `/boot/efi`; `bzImage`, `initrd.img` and `cmdline.txt` on it; that `root=` in `cmdline.txt` points at a drive that is there; `vram.txt`; a second partition labeled `boot` (the wrong one may be mounted); free space. |
 | 55 | HDMI Output (ps5-linux)   | The HDMI bridge's state: recovery status, mode, color depth, HDCP mode and failures, FRL (4K at 120 Hz), ALLM. |
-| 56 | Bluetooth (IW620 / MediaTek) | Whether the IW620's Bluetooth half runs its firmware or fell back to ROM mode (only a cold boot reloads it), the controller, and the sleep hook that keeps it across suspend; a MediaTek combo on other consoles. |
+| 56 | Bluetooth (IW620 / MediaTek) | Whether the IW620's Bluetooth half runs its firmware or fell back to ROM mode (only a cold boot reloads it), the controller, and the sleep hook that keeps it across suspend; a MediaTek combo on other boards. |
 | 57 | ps5-linux-tools           | The boost (`ps5boost`: CPU 3.5 GHz) and fan (`ps5fan`) services of ps5-linux-tools, when installed, and the light bar. |
 | 58 | Firmware Versions         | The model (CFI-...), the south bridge revision, the GPU's firmware (PSP, VCN and others), the IW620's driver and firmware, the last connected DualSense's. The PS5 system software version is not visible to Linux. |
 | 59 | USB Storage               | USB drives (the loader's drive, data SSDs): the bridge chip, UAS or usb-storage, the link speed, whether `smartd` polls their SMART data, and USB resets this boot. |
@@ -541,17 +541,17 @@ that score is missing.
 
 ## After a freeze
 
-After a freeze or a sudden restart, start the console again and:
+After a freeze or a sudden restart, start the board again and:
 
 * run tests **34**, **35** and **36** (Crash forensics): boots that ended without a shutdown, GPU hangs and
   resets, kernel panics and lockups;
 * run test **37**: out-of-memory kills and framebuffer pin failures. The PS5 shares one 16 GB memory pool
-  between the CPU and the GPU, so running out of it can freeze the console;
+  between the CPU and the GPU, so running out of it can freeze the board;
 * run test **22** for the temperatures and the fan.
 
 To reproduce it under observation, set *Stress duration* to 300 s and run the stress test (41). A telemetry line
 prints to the page's terminal about every 10 seconds, and the files are flushed after every sample, so the last
-values are the console's final operating point.
+values are the board's final operating point.
 
 Useful follow-up commands:
 

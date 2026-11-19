@@ -5,7 +5,7 @@
 # App categories
 
 Every app in the suite belongs to one of four categories, and every app in a category has the same icon. The icon
-tells you what kind of app it is: one that keeps the console running well, one for graphics in games, one for
+tells you what kind of app it is: one that keeps the board running well, one for graphics in games, one for
 playing, or a utility.
 
 ## Why categories
@@ -24,10 +24,10 @@ The categories are also the [portal's](../portal.md) categories: an app's tile i
 
 | Icon | Category | What it stands for |
 |---|---|---|
-| ![](../assets/categories/sustainable.webp){ .app-icon } | **Sustainable** | The console itself: test it, watch it and keep it cool, so it runs well for a long time. |
+| ![](../assets/categories/sustainable.webp){ .app-icon } | **Sustainable** | The board itself: test it, watch it and keep it cool, so it runs well for a long time. |
 | ![](../assets/categories/graphics.webp){ .app-icon } | **Graphics** | Better pictures in games: an upscaler put into the games that can use one. |
 | ![](../assets/categories/gaming.webp){ .app-icon } | **Gaming** | Playing: emulators, Remote Play with your consoles, and PlayStation trivia. |
-| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the console: Bluetooth devices paired at boot, the controllers, a PlayStation camera as a webcam, the TV over HDMI-CEC, file transfer, the drives and a password generator. |
+| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the board: Bluetooth devices paired at boot, the controllers, a PlayStation camera as a webcam, the TV over HDMI-CEC, file transfer, the drives and a password generator. |
 
 ## Apps by category
 

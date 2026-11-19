@@ -4,11 +4,11 @@
 
 # PS5 CEC Manager
 
-HDMI-CEC lets the console and the TV talk over the HDMI cable. With it you can turn the TV on and off from a
+HDMI-CEC lets the board and the TV talk over the HDMI cable. With it you can turn the TV on and off from a
 **PlayStation 5** running **Bazzite**, switch the TV to the PS5's input, set the volume, and use the TV remote on
 the PS5.
 
-The app does not change how the console runs. It sends CEC messages to the TV when you press a button. While
+The app does not change how the board runs. It sends CEC messages to the TV when you press a button. While
 **Pause videos and music** is on, it asks the TV every 5 seconds whether it is on.
 
 ## What it does
@@ -26,7 +26,7 @@ The PS5's CEC adapter is part of the ps5-linux kernel (ps5-cec, `/dev/cec0`); it
 also turns the TV on and switches it to the PS5 at boot (`hdmi.one_touch_play`). What a TV answers and obeys over
 CEC differs per TV.
 
-- **The adapter is there from boot,** on the console's own HDMI port. When the app finds none, the kernel is not a
+- **The adapter is there from boot,** on the board's own HDMI port. When the app finds none, the kernel is not a
   ps5-linux one or its CEC module did not load. [PS5 Board Test](board.md) shows the kernel and checks HDMI-CEC.
 - **The TV answers** only when CEC is switched on in the TV. TVs give CEC a brand name in their settings: Anynet+
   (Samsung), SimpLink (LG), Bravia Sync (Sony), HDMI control or HDMI CEC (others). Plug the HDMI cable straight

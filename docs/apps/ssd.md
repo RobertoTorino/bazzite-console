@@ -32,7 +32,7 @@ is not evidence of a healthy drive. Check important data and backups independent
   |---|---|
   | Health | the drive's health, see above |
   | Serial | the drive's serial number, hidden: click the pill to see it in a small window below it, where you can select it to copy. A click anywhere else closes it, and it closes when you choose another drive or Refresh. |
-  | Measured R / W MB/s | **Test**: click it to measure the drive's read and write speed in this console, see below |
+  | Measured R / W MB/s | **Test**: click it to measure the drive's read and write speed on this board, see below |
   | Refresh | reads the drives again |
 
 - **Drive:** with more than one drive, choose it by its number (Drive 1, Drive 2) in the list under the top row.
@@ -67,7 +67,7 @@ is not evidence of a healthy drive. Check important data and backups independent
   | Health not reported | the drive gives its hours and cycles, but no health value SSD Check knows |
   | Partly read | the drive's SMART attributes could not be read this time; the boxes show what udisks had. Refresh tries again. |
   | No SMART over USB | the drive is on USB and its adapter does not pass its SMART values on; the specs still show |
-  | No drive found | udisks exposed no NVMe drive, no SATA drive with SMART values and no drive on USB. This does not mean the console has no storage. |
+  | No drive found | udisks exposed no NVMe drive, no SATA drive with SMART values and no drive on USB. This does not mean the board has no storage. |
   | udisks does not answer | the udisks service is not running; the line under the list says what it answered |
 
 - The **Health** box is green, orange at 0 % and red when the drive reports a problem. At 0 % the drive has used
@@ -102,7 +102,7 @@ over USB** as its interface.
 
 **A drive stuck at USB 2.0.** A USB 3 port is two ports to Linux, one for USB 2.0 and one for USB 3. When a drive
 links at USB 2.0 (480 Mb/s) in a port that does USB 3, the **Speed** pill turns orange, and hovering it says what
-to try: another cable (many USB-C cables carry only USB 2.0), the drive straight in the console instead of through
+to try: another cable (many USB-C cables carry only USB 2.0), the drive straight in the board instead of through
 a hub, or plugging it in again. **Board link** then shows what the port can do.
 
 **Host reads** and **Host writes** of an NVMe drive come from its own counters. A SATA drive keeps them in
@@ -111,8 +111,8 @@ other units shows a number that is off. The **Speed** comes from the kernel (sys
 
 ### Speed: the drive, the port and the measurement
 
-The last row of specs and the **Test** pill at the top answer whether the drive can run at its full speed in
-this console.
+The last row of specs and the **Test** pill at the top answer whether the drive can run at its full speed on
+this board.
 
 - **Board link** is the most the drive's port carries: a PCIe port's generation and lanes, a SATA port's limit or
   the USB bus's speed, with about how many MB/s that carries. It is an estimate from sysfs, which may not describe
@@ -153,7 +153,7 @@ this console.
     - **Netac:** its NVMe drives tell the system only their capacity ("Netac NVMe SSD 1TB"), never which model
       they are, so SSD Check cannot know their rated speed.
     - **CUSU:** it publishes no specifications for its drives.
-- **Measured R / W** is what the drive does in this console. Click the **Test** pill at the top: SSD Check writes
+- **Measured R / W** is what the drive does on this board. Click the **Test** pill at the top: SSD Check writes
   a test file of up to 1 GiB to the drive, reads it back and deletes it, which takes a few seconds (at most ten
   seconds of writing on a slow drive). The file goes in your home folder when that is on the drive
   (`~/.cache/ps5-ssd-check/`), else on the drive's first mount point you can write to, such as a USB stick. Click

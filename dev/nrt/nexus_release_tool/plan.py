@@ -14,7 +14,7 @@ patch. A part whose only changes since its tag are those edits (release_only) ne
 A withdrawal (owner's decisions, 13-10-2026): an app release that must not be used any more (privacy, security, any
 reason) is marked withdrawn in portal/apps.toml with the reason, and on GitHub (a pre-release titled "Withdrawn: ...",
 so no update check offers it; the release itself stays). The next portal release shows the app as not available and
-removes it from the consoles that have it. Test it on a console with Test withdrawal before that portal is released."""
+removes it from the boards that have it. Test it on a board with Test withdrawal before that portal is released."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ TAG_SCRIPT = "tools/tag-release.sh"     # tags only a pushed HEAD that holds the
 ALL_TESTS = "tools/all_tests.py"        # ALL-TESTS.md from the tests, before a commit
 CI_LOCAL = "tools/ci-local.sh"          # CI's jobs here, in a container: the push only when they pass
 VERSIONS_CHECK = "tools/check_versions.py"
-CHECK_SCRIPT = "tools/check-release.sh"     # the console checks of a portal release (local|release|draft|remove)
+CHECK_SCRIPT = "tools/check-release.sh"     # the board checks of a portal release (local|release|draft|remove)
 MANIFEST_CHECK = "tools/check_manifest.py"
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 _VERSION = re.compile(r"^\d+\.\d+\.\d+$")
@@ -738,7 +738,7 @@ def changed_withdrawals(root: Path, base: str) -> list[tuple[str, str]]:
 
 def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = None) -> str:
     """What stays the owner's: mark the GitHub release (it stays, as a pre-release, so no update check offers it),
-    then the portal release that removes the app from the consoles."""
+    then the portal release that removes the app from the boards."""
     date = amsterdam_now(now).strftime("%d-%m-%Y")
     notes = f"Withdrawn on {date}: {reason.strip()} Do not install this release."
     test = [

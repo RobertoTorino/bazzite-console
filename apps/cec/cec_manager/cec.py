@@ -5,7 +5,7 @@
 the plain CEC ones: Image View On, Active Source, Standby, Give Device Power Status, a poll and the volume keys.
 /dev/cec* belongs to the logged-in user (udev uaccess), so none of this needs root.
 
-On the PS5 the adapter is the kernel's ps5-cec (/dev/cec0), on the console's own HDMI port: it is there from boot,
+On the PS5 the adapter is the kernel's ps5-cec (/dev/cec0), on the board's own HDMI port: it is there from boot,
 and its physical address comes from the TV's EDID (f.f.f.f until the TV has been seen; the ps5-linux kernel replays
 the boot EDID to it). The kernel's ps5-cec also turns the TV on at boot (hdmi.one_touch_play, default on)."""
 
@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 CEC_CTL = "cec-ctl"
-OSD_NAME = "PS5"                        # the name the TV shows for the console, unless the user set another
+OSD_NAME = "PS5"                        # the name the TV shows for the board, unless the user set another
 NO_ADDRESS = "f.f.f.f"
 TV = 0                                  # logical addresses
 AUDIO_SYSTEM = 5
@@ -150,7 +150,7 @@ def configure(device: str, name: str = OSD_NAME) -> list[str]:
 
 
 def set_osd_name(device: str, name: str) -> list[str]:
-    """Tells the TV the console's name now (TVs otherwise ask when the cable is plugged in)."""
+    """Tells the TV the board's name now (TVs otherwise ask when the cable is plugged in)."""
     return ["-d", device, "-s", "--to", str(TV), "--set-osd-name", f"name={name}"]
 
 
@@ -171,7 +171,7 @@ def image_view_on(device: str) -> list[str]:
 
 
 def active_source(device: str, physical_address: str) -> list[str]:
-    """Tells every device that this console is the source to show: the TV switches its input to it."""
+    """Tells every device that this board is the source to show: the TV switches its input to it."""
     return ["-d", device, "-s", "--to", str(BROADCAST), "--active-source", f"phys-addr={physical_address}"]
 
 

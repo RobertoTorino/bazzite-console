@@ -1,3 +1,11 @@
+Changelog: 19-11-2026 22:20:11
+
+Release 4.0.4.
+
+Changelog: 19-11-2026 22:12:37
+
+Fixed. Sys info's first section is Board instead of Console, and the category texts and the Big Picture lines say board (owner, 19-11-2026: board everywhere).
+
 Changelog: 19-11-2026 21:56:58
 
 Release 4.0.3. Pins ps5-quickfix-v0.1.2.

@@ -4,13 +4,13 @@ open, and acts at three limits on the hottest of them:
  * warn: a desktop notification (and a line in the journal);
  * cool: the fan to full speed (ps5_fan's full mode, pwm1_enable 0) and the CPU boost off (ps5_control --boost off);
  * shut down: when the temperature stays at or above the limit for hold_s seconds, a clean `systemctl poweroff`.
-   The one place in the suite that powers the console off by itself: it protects the hardware.
+   The one place in the suite that powers the board off by itself: it protects the hardware.
 Each limit re-arms REARM_C below the warning; the fan then goes back to the mode it was in (normally the kernel's
 curve, auto). The boost stays off: turning it back on is the user's choice (`sudo systemctl restart ps5boost`, or a
 reboot).
 
 What the PS5 kernel already does on its own, so the guard adds to it rather than replaces it: ps5_fan runs the fan
-on its curve (full duty at 87 °C SoC on our console) and forces it to maximum from 90 °C SoC (its emergency mode,
+on its curve (full duty at 87 °C SoC on our board) and forces it to maximum from 90 °C SoC (its emergency mode,
 until 85 °C); ps5_gpufreq slows the GPU above temp_limit (85 °C). Neither warns, turns the boost off or shuts down.
 
 This file runs as root and needs only the standard library. The app runs it through pkexec with the system python3

@@ -26,7 +26,7 @@ hide:
 <div class="home-card" markdown>
 #### :material-stethoscope: Diagnostics
 
-[PS5 Board Test](apps/board.md) checks the console with about sixty tests, with
+[PS5 Board Test](apps/board.md) checks the board with about sixty tests, with
 [Quickfix](apps/quickfix.md) for its optional tools, MangoHud's FPS log, the memory map, the journal and
 the boot command line,
 [PS5 System Overlay](apps/overlay.md) keeps CPU, GPU, memory, fan and temperatures on top, and
@@ -36,7 +36,7 @@ the boot command line,
 #### :material-fan: Cooling
 
 [PS5 Fan Controller](apps/fan.md) shows the temperatures and the fan, and its thermal guard warns, cools and shuts the
-console down cleanly at a critical temperature.
+board down cleanly at a critical temperature.
 </div>
 <div class="home-card" markdown>
 #### :material-expansion-card: Graphics
@@ -106,7 +106,7 @@ open, update and remove every other app of the suite. You never download an app 
 <div class="home-section__inner" markdown>
 ## FAQ
 
-### Do the apps change my console?
+### Do the apps change my board?
 
 Only the apps marked **changes the board**: Fan Controller's thermal guard, Webcam's camera access and the SSH server
 that SFTP Tools starts. They are software-only and can be undone, and the portal says what the app changes and asks
@@ -119,9 +119,9 @@ In the app that made it: turn the thermal guard off in [PS5 Fan Controller](apps
 [PS5 SFTP Tools](apps/sftp.md#manage-ssh-servers), which leaves the firewall's rule for you to review. Uninstalling
 [PS5 Webcam](apps/webcam.md) removes its camera rule, and uninstalling Fan Controller removes the guard.
 
-### Do the apps change the console's own driver?
+### Do the apps change the board's own driver?
 
-No. The apps read what the kernel's drivers for the console offer and install no driver of their own. Bazzite's own
+No. The apps read what the kernel's drivers for the board offer and install no driver of their own. Bazzite's own
 packages and their updates are Bazzite's.
 
 ### Do the emulators come with games?

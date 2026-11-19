@@ -16,20 +16,20 @@ The PS5 Upscaler Manager gets the latest HelixSR release of one major version, o
 (apps/upscaler/upscaler/acquire.py: SUPPORTED_MAJOR, KNOWN_VERSION, FALLBACK_VERSION), read here without
 importing the app:
  * the latest stable release: newer than KNOWN_VERSION means the app gets it without having been checked against it;
-   what changed (setup options, the files in the zip, helixsr.ini) needs a look, and a try on the console. A later major
+   what changed (setup options, the files in the zip, helixsr.ini) needs a look, and a try on the board. A later major
    than SUPPORTED_MAJOR the app does not offer: moving the app to it is the work to do;
  * the fallback the latest release's notes name ("If 1.9.0 does not work for you, use HelixSR 1.8.1") must be
    FALLBACK_VERSION, and that release must still have its zip.
 
 The PPSSPP, PCSX2 and RPCS3 Managers pin one release each (VERSION in the emulator.py of PPSSPP and PCSX2's stable
 channel, RPCS3's LANDMARK), read here without importing the app:
- * the latest stable release: newer than the pin means a new version of the app, tried on the console first. Their
+ * the latest stable release: newer than the pin means a new version of the app, tried on the board first. Their
    checksums are checked by the apps themselves when they download.
 
 The Vita3K and Xenia Managers bring one build each (BUILD, SHA256 in their emulator.py; Xenia's PUBLISHED), read here
 without importing the app (owner, 04-11-2026: they come in, though both publish a build almost daily):
  * the newest build: a later one (Vita3K: a higher build number; Xenia: published later) means a new version of the
-   app could bring it, after it is tried on the console; the app itself already tells its users that a newer one is out;
+   app could bring it, after it is tried on the board; the app itself already tells its users that a newer one is out;
  * the pinned build: its AppImage must still be on GitHub, published with the pinned SHA-256 (or without one, which
    older uploads lack: the app checks the download itself).
 
@@ -190,7 +190,7 @@ def check_shadps4(pin: Pin, get: Fetch = fetch) -> Report:
             zip_line = (f"for the pin: {asset}, {digest}" if digest.startswith("sha256:")
                         else f"{asset} is published without a SHA-256: check it before pinning it.")
         report.drift.append(f"{report.latest} is out ({str(latest.get('published_at', ''))[:10]}): a new version of "
-                            f"the shadPS4 Manager pins it, after it is tried on the console; {zip_line} "
+                            f"the shadPS4 Manager pins it, after it is tried on the board; {zip_line} "
                             f"{latest.get('html_url', '')}")
     else:
         report.fine.append(f"no stable release newer than {pin.TAG}")
@@ -219,14 +219,14 @@ def check_helixsr(pin: HelixPin, get: Fetch = fetch) -> Report:
         report.drift.append(f"{report.latest} is out ({str(latest.get('published_at', ''))[:10]}), a new major "
                             f"version: the PS5 Upscaler Manager stays on {pin.SUPPORTED_MAJOR}.x (SUPPORTED_MAJOR) and does "
                             f"not offer it. Look at what changed (setup options, the files in the zip, helixsr.ini), "
-                            f"move the app to it and try it on the console. {latest.get('html_url', '')}")
+                            f"move the app to it and try it on the board. {latest.get('html_url', '')}")
     elif _version(report.latest) > _version(pin.KNOWN_VERSION):
         zips = [str(a.get("name")) for a in latest.get("assets", []) if str(a.get("name", "")).endswith(".zip")]
         zip_line = (f"its HelixSR-{version}.zip is there" if f"HelixSR-{version}.zip" in zips
                     else f"it has no HelixSR-{version}.zip (zips: {', '.join(zips) or 'none'}): the app needs one")
         report.drift.append(f"{report.latest} is out ({str(latest.get('published_at', ''))[:10]}): the HelixSR "
                             f"Manager already offers it; {zip_line}. Look at what changed (setup options, the files "
-                            f"in the zip, helixsr.ini), try it on the console, then set KNOWN_VERSION to {version}. "
+                            f"in the zip, helixsr.ini), try it on the board, then set KNOWN_VERSION to {version}. "
                             f"{latest.get('html_url', '')}")
     else:
         report.fine.append(f"no stable release newer than {pin.KNOWN_VERSION}")
@@ -293,7 +293,7 @@ def check_release(pin: Release, get: Fetch = fetch) -> Report:
     report.latest = tag
     if tag and _version(tag) > _version(pin.pinned):
         report.drift.append(f"{tag} is out ({str(latest.get('published_at', ''))[:10]}): a new version of {pin.app} "
-                            f"brings it, after it is tried on the console ({pin.where}). {latest.get('html_url', '')}")
+                            f"brings it, after it is tried on the board ({pin.where}). {latest.get('html_url', '')}")
     else:
         report.fine.append(f"no stable release newer than {pin.pinned}")
     return report
@@ -339,7 +339,7 @@ def check_build(pin: Build, get: Fetch = fetch) -> Report:
     if _newer_build(pin, tag, published):
         behind = f", {int(tag) - int(pin.build)} builds later" if not pin.published else ""
         report.drift.append(f"build {tag} is out ({published[:10]}{behind}): a new version of {pin.app} could bring "
-                            f"it, after it is tried on the console ({pin.where}); the app already tells its users. "
+                            f"it, after it is tried on the board ({pin.where}); the app already tells its users. "
                             f"{latest.get('html_url', '')}")
     else:
         report.fine.append(f"no build newer than {pin.build}")
@@ -394,10 +394,10 @@ def check_ffmpeg(ffmpeg: str, libva: str, get: Fetch = fetch) -> Report:
     if _version(on_branch) > _version(ffmpeg):
         report.drift.append(f"FFmpeg {on_branch} is out, on the pinned {'.'.join(branch)} branch: a new version of "
                             f"Remote Play could build it (FFMPEG_VERSION, FFMPEG_SHA256 in {where}), after the "
-                            f"stream is tried on the console. https://ffmpeg.org/download.html")
+                            f"stream is tried on the board. https://ffmpeg.org/download.html")
     if _version(newest)[:2] > _version(ffmpeg)[:2]:
         report.drift.append(f"FFmpeg {newest} is a newer branch than {'.'.join(branch)}: moving Remote Play to it "
-                            f"needs a look at the decoder calls its native core makes, and a try on the console.")
+                            f"needs a look at the decoder calls its native core makes, and a try on the board.")
     if not report.drift:
         report.fine.append(f"no FFmpeg release newer than {ffmpeg}")
     if latest_libva and _version(latest_libva) > _version(libva):
@@ -490,7 +490,7 @@ def check_speedtest(version: str, get: Fetch = fetch) -> Report:
     if _version(report.latest) > _version(version):
         report.drift.append(f"speedtest {report.latest} is out: the development tool could install it "
                             f"(SPEEDTEST_VERSION in apps/board/development/tools/install-requirements.sh), after test "
-                            f"44 is run with it on the console. https://www.speedtest.net/apps/cli")
+                            f"44 is run with it on the board. https://www.speedtest.net/apps/cli")
     else:
         report.fine.append(f"no release newer than {version}")
     return report

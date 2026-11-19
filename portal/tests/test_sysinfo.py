@@ -156,9 +156,9 @@ def test_the_owners_board(tmp_path, monkeypatch):
         write(sys / "class" / "input" / f"input{number}" / "id" / "bustype", bus + "\n")
     found = collect(tmp_path, sys, proc, etc, ids, image)
     sections = dict(found)
-    assert list(sections) == ["Console", "BIOS", "CPU", "GPU", "Memory", "Drives", "Display", "Audio", "Network", "USB",
+    assert list(sections) == ["Board", "BIOS", "CPU", "GPU", "Memory", "Drives", "Display", "Audio", "Network", "USB",
                               "Input", "Sensors", "OS"]
-    assert sections["Console"] == [("Mainboard", "ASRock AMD PS5"), ("Product", "AMD PS5")]   # no "Default string"
+    assert sections["Board"] == [("Mainboard", "ASRock AMD PS5"), ("Product", "AMD PS5")]   # no "Default string"
     assert sections["BIOS"] == [("Version", "P5.00"), ("Vendor", "American Megatrends Inc."), ("Date", "05/03/2022"),
                                 ("Boot", "UEFI")]
     assert sections["CPU"] == [("Model", "AMD PS5"), ("Online", "6 cores, 12 threads"), ("Max clock", "3.20 GHz"),

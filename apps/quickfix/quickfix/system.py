@@ -101,7 +101,7 @@ def cmdline_problem(text: str) -> str:
     if len(lines) != 1:
         return "cmdline.txt must be one line: the kernel arguments, separated by spaces."
     if not any(arg.startswith("root=") for arg in lines[0].split()):
-        return "The line has no root=: Linux would not find its system and the console would not start it."
+        return "The line has no root=: Linux would not find its system and the board would not start it."
     return ""
 
 
@@ -136,7 +136,7 @@ def cmdline_save(boot: Path, source: Path, name: str = CMDLINES[0]) -> int:
         os.fsync(out.fileno())
     tmp.replace(target)
     if name == CMDLINES[0]:
-        print(f"Wrote {target}. Restart the console to start Linux with it: systemctl reboot.")
+        print(f"Wrote {target}. Restart the board to start Linux with it: systemctl reboot.")
     else:
         print(f"Wrote {target}. The loader starts Linux with it once it is copied over {CMDLINES[0]}.")
     return 0

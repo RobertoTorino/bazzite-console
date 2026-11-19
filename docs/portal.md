@@ -60,7 +60,7 @@ mouse:
   installed, but not by this portal (by hand, or under an earlier name of the app), so the portal does not know its
   version. Reinstall in its menu installs the version this portal pins. An app installed from a checkout of the
   repository without its version recorded shows it too.
-- **changes the board**, in orange under the name, for apps that change how the console's system runs. Hover
+- **changes the board**, in orange under the name, for apps that change how the board's system runs. Hover
   over the tile: the popup says what the app touches, what stays after a reboot or a power off and how the change
   is undone, the same text that opens the app's chapter of this wiki.
 - **App not available**, in red under the name: the release of this app was withdrawn because of a problem
@@ -144,7 +144,7 @@ checkout, or give it a menu entry with its `install.sh`.
   because installers may ask for the sudo password and print what they do. The portal watches for the result and
   refreshes. A terminal whose installer ended well closes by itself; one that failed stays open with what happened
   until you press Enter.
-- Apps that change how the console's system runs (Fan Controller's thermal guard, Webcam's camera rule, the SSH server
+- Apps that change how the board's system runs (Fan Controller's thermal guard, Webcam's camera rule, the SSH server
   of SFTP Tools) are marked **changes the board**. The portal warns before installing or opening them,
   and the tile's popup says what each one changes and how that is undone.
 - Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/bazzite-console/blob/main/portal/apps.toml). The portal downloads
@@ -230,12 +230,12 @@ checkout, or give it a menu entry with its `install.sh`.
   Enter, Space, Escape, Tab, Page Up and Page Down, Q, E, U, S, K, M and the Menu key) and each click on a tile, a
   symbol, a pill, a button, a category or a menu entry. Any controller works, also one Steam turns into keys. A key held down
   sounds once, and typing in a text field stays silent. No switches both off. The portal remembers the choice.
-  When the console has no audio output, the pill says No and is disabled, and the portal stays silent.
+  When the board has no audio output, the pill says No and is disabled, and the portal stays silent.
 - **Music**, on the Settings page (Yes or No; click it to switch): a track plays quietly, over and over, while the
   portal is in front. It has its own switch, apart from Sound: with Sound off the music plays on, and with Music
   off the intro and the actions keep their sound. The music waits while the intro or the Portal Tour plays, while
   the portal is minimized and while another window has the focus (a game, an app), and plays on from where it was
-  when you are back. The portal remembers the choice. When the console has no audio output, the pill says No and
+  when you are back. The portal remembers the choice. When the board has no audio output, the pill says No and
   is disabled.
 - **Music track**, on the Settings page: which track the music plays. **Built-in** is the portal's own. Click the
   pill, then **Choose a track…** for one of your own (**Custom**): an Ogg, Opus, MP3, FLAC, WAV or M4A sound file,
@@ -274,7 +274,7 @@ checkout, or give it a menu entry with its `install.sh`.
 - **Touchpad**, on the Settings page, showing the speed: how fast the touchpad of a DualShock 4 or a DualSense moves
   the mouse pointer. Click it for the next speed: 50, 75, 100 (the normal speed, at first), 125 and 150 %, then 50
   again. The new speed applies at once, and the portal remembers it.
-- **Sys info**, a symbol at the top: a small window with what the system reports about the console: the mainboard, the
+- **Sys info**, a symbol at the top: a small window with what the system reports about the board: the mainboard, the
   BIOS (with UEFI and Secure Boot), the CPU (model, cores and threads online, top clock, microcode), each GPU (name,
   driver, VRAM, shared memory, clock levels, VBIOS, PCIe link), the memory, the drives with the free space in your
   home folder, the displays (each output, the monitor's name and its preferred mode), the sound cards, the network

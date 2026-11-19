@@ -4,7 +4,7 @@
 
 # Xenia Manager
 
-Plays **XBOX 360 games** on the console with [Xenia](https://xenia.jp), an XBOX 360 emulator, in its
+Plays **XBOX 360 games** on the board with [Xenia](https://xenia.jp), an XBOX 360 emulator, in its
 [Xenia Canary](https://github.com/xenia-canary/xenia-canary) builds. The app installs the build pinned for this
 version of the app, finds your games and adds them to Steam, so they start from **Game Mode** like any other game.
 
@@ -116,7 +116,7 @@ on the desktop: press **Shift+Tab** or the **Steam button** for the game's page,
 settings, without leaving the game.
 
 Change Steam from Desktop Mode: in Game Mode Steam is the session itself and cannot close for the change. **Update
-Steam** is off there, and until Steam has been started once on the console.
+Steam** is off there, and until Steam has been started once on the board.
 
 ##### Covers
 

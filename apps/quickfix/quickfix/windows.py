@@ -31,7 +31,7 @@ from . import LOGO_PATH, __version__, kargs, runner, state, system
 from .catalog import BY_KEY, Quickfix
 
 RootRunner = Callable[[list[str]], runner.Result]
-BOARD = ("<br><br><b>Changes the board.</b> It asks for your password once (pkexec). It never touches the console's "
+BOARD = ("<br><br><b>Changes the board.</b> It asks for your password once (pkexec). It never touches the board's "
          "firmware, and Turn off undoes it.")
 
 
@@ -405,11 +405,11 @@ CMDLINE_INFO = ("<b>Boot Command Line</b> edits <code>/boot/efi/cmdline.txt</cod
                 "writes the line, after a dated backup of the file beside it "
                 "(<code>cmdline.txt.bak-YYYYMMDD-HHMMSS</code>); <b>No</b> drops your edits; <b>Cancel</b> goes back "
                 "to editing. A line without <code>root=</code> is not saved. The change applies from the next boot: "
-                "restart the console (<code>systemctl reboot</code>). When your user may not read the file, "
+                "restart the board (<code>systemctl reboot</code>). When your user may not read the file, "
                 "<b>Read</b> shows it after your password.")
 CMDLINE_BOARD = ("<br><br><b>Changes the board.</b> It changes the boot settings of PS5 Linux: a wrong argument can "
                  "keep Linux from starting. Save changes asks for your password (pkexec) and keeps a backup of the "
-                 "file; it never touches the console's firmware.")
+                 "file; it never touches the board's firmware.")
 SAVE_QUESTION = ("Save the changes to /boot/efi/{name}?\n\nThis changes the boot settings of PS5 Linux: a wrong "
                  "argument can keep Linux from starting. A dated backup of the file is kept beside it, and the change "
                  "applies from the next boot.\n\nYes saves, No drops your edits, Cancel goes back to editing.")
@@ -661,7 +661,7 @@ class CmdlineWindow(QuickfixWindow):
             return
         self.saved = text
         self.refresh()
-        self.note.setText("Saved. Restart the console to start Linux with it: <code>systemctl reboot</code>."
+        self.note.setText("Saved. Restart the board to start Linux with it: <code>systemctl reboot</code>."
                           if self.name == system.CMDLINES[0] else
                           f"Saved. The loader starts Linux with it once it is copied over "
                           f"<code>{system.CMDLINES[0]}</code>.")

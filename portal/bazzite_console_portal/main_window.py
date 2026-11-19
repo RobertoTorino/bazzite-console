@@ -3,7 +3,7 @@
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
 icon (a click plays the Portal Tour), spanning the name with the version and the stage, a line that says what the open
 category is for, ☰ and the close symbol at the top right, and under them a row of big symbols (owner, 05-11-2026: in
-place of the pills): Refresh, Sys info (a small window with what the system reports about the console, sysinfo.py),
+place of the pills): Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py),
 Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
 shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, YouTube (in Brave Browser), GitHub
 (in the desktop's browser; owner, 18-11-2026), and the
@@ -171,7 +171,7 @@ CATEGORY_HINTS = {
     "sustainable": "Test and maintain the PlayStation 5 system.",
     "graphics": "Graphics features and tools for games.",
     "gaming": "Games, emulators, streaming and controller tools.",
-    "utilities": "System information, connectivity and other console utilities.",
+    "utilities": "System information, connectivity and other board utilities.",
 }
 
 BOARD_WARNING = (
@@ -311,7 +311,7 @@ class TogglePill(HeaderPill):
 
 
 class SysInfoDialog(QDialog):
-    """What the system reports about the console (sysinfo.py): a section per part in two columns of about the same
+    """What the system reports about the board (sysinfo.py): a section per part in two columns of about the same
     length, the names muted, the values selectable; Copy puts it all on the clipboard as plain text. Its background
     is the window color at SYSINFO_OPACITY (owner, 20-10-2026); the text stays opaque, so it reads as well."""
 

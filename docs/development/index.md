@@ -58,8 +58,8 @@ as a release does; the installed portal names the checkout and installs the apps
 it is. `tools/check-release.sh local` does the same and starts the portal; `release` and `draft` install a published
 portal release or the draft of one (`release` takes the draft while the release is not published).
 
-A test cleans up after itself. On a console without the suite, what the test installs is marked as a test's and
-removed again when the portal closes: the apps installed during the test, the portal and Board Test. A console that
+A test cleans up after itself. On a board without the suite, what the test installs is marked as a test's and
+removed again when the portal closes: the apps installed during the test, the portal and Board Test. A board that
 had the suite installed keeps it, and `--keep` keeps what a test installed.
 
 ```bash
@@ -132,7 +132,7 @@ it ends, as the two would share the venvs and the logs. The push commands Nexus 
 ### Line endings and file names
 
 - **Line endings:** `.gitattributes` makes every text file LF in the repository and in the working tree. Scripts,
-  units and `.desktop` files reach the console with LF. CI rejects CRLF.
+  units and `.desktop` files reach the board with LF. CI rejects CRLF.
 - **Executable bit:** when a script lost its executable bit, run `tools/fix-modes.sh` after `git add`: it marks every
   `.sh` as executable in the index. CI fails when a script is missing the bit.
 - **Venv:** one venv in the checkout, `.venv-linux/`, ignored by git.
@@ -210,7 +210,7 @@ tools/record-app-tour.sh fan --size 2160p             # at 4K for YouTube: ...-t
 
 The app starts from the checkout in a home folder of its own. The tour points at the controls of its header, with
 their tooltips as captions, and opens its tabs or pages; it presses no buttons and nothing runs as root. What the
-app reads from the console is real, so watch the video before you publish it.
+app reads from the board is real, so watch the video before you publish it.
 
 ## Where things are installed
 
@@ -255,7 +255,7 @@ gh issue close <number> --comment "PPSSPP pinned at 1.20."     # close one, sayi
 ```
 
 The run fails only when an upstream could not be checked. A moved pin means a new version of the app is due, with
-the new pin tried on the console first. It also moves Nexus Deps' list of the programs the apps use: run
+the new pin tried on the board first. It also moves Nexus Deps' list of the programs the apps use: run
 `dev/deps/run.sh --sync-upstreams` from the repository's root, else CI fails
 ([Nexus Deps](dashboard.md#deps)).
 
@@ -273,7 +273,7 @@ The PS5 Upscaler Manager pins no HelixSR release: it gets the latest of one majo
 the fallback HelixSR's developer names. Its `apps/upscaler/upscaler/acquire.py` holds `SUPPORTED_MAJOR`,
 `KNOWN_VERSION`, the newest release the app was checked against, and `FALLBACK_VERSION`. The same tool reports a
 newer stable release (users get it at once, so what changed in its setup, its zip and `helixsr.ini` needs a look and
-a try on the console; then `KNOWN_VERSION` moves), a newer major version (users do not get it until the app is moved
+a try on the board; then `KNOWN_VERSION` moves), a newer major version (users do not get it until the app is moved
 to it), a fallback named in the latest release's notes that is not `FALLBACK_VERSION`, and a fallback release
 without its zip.
 
@@ -353,7 +353,7 @@ Code shared by the suite's apps (`core/`). Nothing in it imports an app: each ap
 | `steam` | Steam's folders and users, `installed()`, `with_steam_closed()`, `shortcuts.vdf` and the shortcuts' artwork in `grid/`, `shortcut_number()` and `play_url()` (a shortcut's number in Steam's file, and the address that starts it) (standard library only) |
 | `steam_art` | `draw_icon_art()`: a shortcut's four pictures drawn from an app's icon, in the icon's color |
 | `upstream` | `publish()` / `read_all()`: the updates outside the suite an app can install now, for the portal's notice (standard library only; HelixSR carries a copy) |
-| `sensors` | `Sensors.read()`: the console's live values from `/proc` and `/sys` without root (CPU, GPU, the GPU governor's temperature limit, VRAM, RAM, temperatures, network, disk, the fan), `Reading`, `Fan` |
+| `sensors` | `Sensors.read()`: the board's live values from `/proc` and `/sys` without root (CPU, GPU, the GPU governor's temperature limit, VRAM, RAM, temperatures, network, disk, the fan), `Reading`, `Fan` |
 | `nexus` | The development apps' design (the theme `NEXUS`) and their header (`header()`: the checkout's last commit and its time in place of a version) |
 
 Core is **bundled per app**: `tools/stage_app.py` copies `bazzite_console_core/` next to the package of every app

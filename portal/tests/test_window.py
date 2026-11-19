@@ -1175,20 +1175,20 @@ def test_the_header_is_an_apps_header_with_symbols(window):
 def test_the_sys_info_symbol_opens_one_window_read_each_time(window, qapp, monkeypatch):
     """Sys info (owner, 20-10-2026): a small window with what the system reports, read again each time it opens;
     Copy puts it on the clipboard as text."""
-    reads = iter([[("Console", [("Mainboard", "Sony Interactive Entertainment")])],
-                  [("Console", [("Mainboard", "Sony Interactive Entertainment")]), ("BIOS", [("Version", "1.00")])]])
+    reads = iter([[("Board", [("Mainboard", "Sony Interactive Entertainment")])],
+                  [("Board", [("Mainboard", "Sony Interactive Entertainment")]), ("BIOS", [("Version", "1.00")])]])
     monkeypatch.setattr(mw.sysinfo, "collect", lambda: next(reads))
     window.sysinfo_button.click()
     first = window.sysinfo_window
-    assert first.isVisible() and [h for h, _ in first.sections] == ["Console"]
+    assert first.isVisible() and [h for h, _ in first.sections] == ["Board"]
     from PyQt6.QtCore import Qt
     assert first.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)    # semi-transparent (owner, 20-10-2026)
     picture = first.grab().toImage()
     assert picture.pixelColor(2, 2).alphaF() == pytest.approx(mw.SYSINFO_OPACITY / 100, abs=0.01)
     window.sysinfo_button.click()
-    assert window.sysinfo_window is first and [h for h, _ in first.sections] == ["Console", "BIOS"]
+    assert window.sysinfo_window is first and [h for h, _ in first.sections] == ["Board", "BIOS"]
     first.copy()
-    assert qapp.clipboard().text() == "Console\n  Mainboard: Sony Interactive Entertainment\nBIOS\n  Version: 1.00"
+    assert qapp.clipboard().text() == "Board\n  Mainboard: Sony Interactive Entertainment\nBIOS\n  Version: 1.00"
     first.close()
 
 

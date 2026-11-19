@@ -1,3 +1,7 @@
+Changelog: 19-11-2026 22:12:37
+
+Fixed. The log lines, the System overview and the test descriptions say board instead of console for the PS5 that runs the suite (owner, 19-11-2026: board everywhere).
+
 Changelog: 19-11-2026 21:22:43
 
 Release 0.4.2.

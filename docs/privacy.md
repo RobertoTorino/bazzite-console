@@ -6,7 +6,7 @@
 
 The Bazzite Console Suite collects nothing about you. It has no accounts, no statistics, no analytics, no crash
 reports and no advertising, and there is no server of ours that anything could be sent to. What the apps store
-stays on the console, in your home folder. The few things that go over the network are listed below, with when and
+stays on the board, in your home folder. The few things that go over the network are listed below, with when and
 to whom.
 
 Everything about the suite itself is public: the code, the plans and the issues are on
@@ -55,7 +55,7 @@ controllers' latest firmware (at most once a day), and downloads the firmware wh
 Links you click (a release page, the wiki, a PlayStation page) open in your browser, under that site's own privacy
 terms.
 
-## What stays on the console
+## What stays on the board
 
 Each app keeps its settings in `~/.config/<app>` and its data and logs in `~/.local/share/<app>`. Nothing of it is
 uploaded. Uninstalling with `--purge` removes the settings and logs too.

@@ -132,7 +132,7 @@ already and ends at once. The tool's steps follow only the run Start started on 
 The tabs are **Nexus release** (the steps above), **Contents** (what the release holds), **Retract app** (a
 withdrawal, [below](#withdrawing-a-release)), **Remove suite** and **Commands**.
 
-- **Remove suite**, on a PS5, opens a terminal that lists what of the suite is installed on the console and
+- **Remove suite**, on a PS5, opens a terminal that lists what of the suite is installed on the board and
   whether a test put it there (`tools/check-release.sh status`), then removes it all: every app, the portal,
   Board Test and Quickfix, each with its own uninstaller (`tools/check-release.sh remove`). Board Test asks for the sudo
   password. Settings, history and results stay; `tools/check-release.sh remove --purge` removes them too.

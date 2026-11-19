@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The system part: what runs as root, before anyone logs in. At boot no desktop runs yet, so a console with only a
+"""The system part: what runs as root, before anyone logs in. At boot no desktop runs yet, so a board with only a
 Bluetooth keyboard and mouse has nothing to log in with until they are paired; this pairs them.
 
 This file runs as root and needs only the standard library (the battery part also Bazzite's dbus-python and

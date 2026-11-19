@@ -4,7 +4,7 @@
 
 # shadPS4 Manager
 
-Plays **PS4 games** on the console with [shadPS4](https://github.com/shadps4-emu/shadPS4), an open-source PS4
+Plays **PS4 games** on the board with [shadPS4](https://github.com/shadps4-emu/shadPS4), an open-source PS4
 emulator. The app installs the shadPS4 release pinned for this version of the app, finds the games in your game
 folders and adds them to Steam, so a game starts straight away like any other, on the desktop, from Steam's **Big
 Picture Mode** or in Game Mode. It also unpacks package files (`.pkg`) into a game folder, with **Games Install**

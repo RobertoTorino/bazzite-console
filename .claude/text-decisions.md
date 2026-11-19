@@ -24,7 +24,8 @@ a line says otherwise.
 
 ## Words
 
-- An app that changes the board says **board**, never console.
+- The PS5 that runs the suite is **the board**, never the console (owner, 19-11-2026); see `.claude/suite.md` for
+  where console stays.
 - **No version or build numbers** in new text, except where the text is about that version.
 - A label in the wiki is written as the window shows it, for example **Install all apps** with a lowercase "all".
 

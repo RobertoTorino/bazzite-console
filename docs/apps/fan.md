@@ -8,9 +8,9 @@
     The thermal guard is a root system service, ps5-fan-controller-guard.service with its files in /etc/ps5-fan-controller, that reads the temperatures every two seconds. At the cool limit it sets the fan to full speed in sysfs (ps5_fan's full mode) and turns the CPU boost off (ps5_control --boost off); at the shutdown limit, held for the set number of seconds, it powers the PS5 off cleanly with systemctl poweroff. The service stays enabled across reboots and power offs. The fan setting is written in memory only, and the guard puts the saved mode back when it re-arms or stops. Nothing is written to the firmware or the kernel's arguments. Turn off disables the service and removes its files; the fan is back on its previous mode, and the boost, once the guard turned it off, stays off until you turn it on again or reboot.
 
 Fan Controller shows the temperatures and the fan of a **PlayStation 5** running **Bazzite**. It can also turn on a
-**thermal guard**, a background service that protects the console from overheating. The guard keeps watching when
-no app is open. When the console gets too hot it warns you. If it gets hotter still, it runs the fan at full speed
-and turns the CPU boost off. As a last resort it shuts the console down cleanly.
+**thermal guard**, a background service that protects the board from overheating. The guard keeps watching when
+no app is open. When the board gets too hot it warns you. If it gets hotter still, it runs the fan at full speed
+and turns the CPU boost off. As a last resort it shuts the board down cleanly.
 
 Nothing changes until you turn the guard on.
 
@@ -20,7 +20,7 @@ The app reads the sensors of the ps5-linux kernel: the SoC temperature, three ma
 from `ps5_fan`, the CPU from `k10temp` (Tctl), and the GPU from `amdgpu`. The GPU's temperature needs a ps5-linux kernel with the
 GPU sensors (7.3.1 and later); on older kernels the guard watches the SoC and the CPU.
 
-The PS5 kernel already protects the console on its own: it slows the GPU from 85 °C, runs the fan at full duty from
+The PS5 kernel already protects the board on its own: it slows the GPU from 85 °C, runs the fan at full duty from
 87 °C and forces it to maximum from 90 °C. The guard adds what the kernel does not do: a warning on the desktop, the
 CPU boost off, and a clean shutdown.
 
@@ -35,10 +35,10 @@ Under **Thermal guard** you set the limits and turn the guard on or off.
 
 - **Warn at, cool at, shut down at:** the guard's three temperature limits, in °C. They must rise from the warning
   to the shutdown, between 60 and 105 °C.
-- **after:** how many seconds the temperature must stay at the shutdown limit before the guard shuts the console
+- **after:** how many seconds the temperature must stay at the shutdown limit before the guard shuts the board
   down, from 3 to 60.
 - **Turn on…:** turns the guard on with these limits. The app asks you to confirm, then asks for your password
-  (pkexec), because the guard is a system service. The guard starts at once, and again every time the console
+  (pkexec), because the guard is a system service. The guard starts at once, and again every time the board
   starts.
 - **Apply…:** takes the place of Turn on… while the guard is on. It gives the guard the limits you changed. After
   an update of the app it also replaces the guard with the new version's; the app says when that is needed.
@@ -61,16 +61,16 @@ at three limits:
 |---|---|---|
 | Warning | 85 °C | It sends a desktop notification and writes a line in the journal. |
 | Cooling | 88 °C | It runs the fan at full speed (`ps5_fan`'s full mode) and turns the CPU boost off (`ps5_control --boost off`). |
-| Shutdown | 95 °C, held for 10 s | It shuts the console down cleanly (`systemctl poweroff`), to protect it. |
+| Shutdown | 95 °C, held for 10 s | It shuts the board down cleanly (`systemctl poweroff`), to protect it. |
 
-- **When the console has cooled down.** At 5 °C below the warning limit the guard puts the fan back to how it was:
+- **When the board has cooled down.** At 5 °C below the warning limit the guard puts the fan back to how it was:
   the kernel's curve, or the manual value it had. With the defaults that is at 80 °C. From then on the guard can
   warn again.
-  **The CPU boost stays off.** Turn it on again with `sudo systemctl restart ps5boost`, or restart the console.
-- **The shutdown waits.** The guard shuts the console down only when the temperature stays at the shutdown limit
+  **The CPU boost stays off.** Turn it on again with `sudo systemctl restart ps5boost`, or restart the board.
+- **The shutdown waits.** The guard shuts the board down only when the temperature stays at the shutdown limit
   for the whole time you set. If the temperature drops below the limit before that, the countdown stops. The guard
   tells you when a countdown starts.
-- **A broken sensor never shuts the console down.** The guard ignores a reading below 1 °C or above 150 °C. If it
+- **A broken sensor never shuts the board down.** The guard ignores a reading below 1 °C or above 150 °C. If it
   can read none of the three temperatures, it says so and does nothing.
 - **When the guard stops,** because you turned it off or uninstalled the app, it puts the fan back to how it was.
 - **When the guard is installed but does not run,** the app shows **Guard not running** and points to its log.
@@ -90,7 +90,7 @@ When the app finds no fan, the driver is not loaded: the ps5-linux kernel has it
 ## Files
 
 - `/etc/ps5-fan-controller/guard.py` and `guard.json`: the guard and its limits, while it is on.
-- `/etc/systemd/system/ps5-fan-controller-guard.service`: the service that starts the guard when the console starts.
+- `/etc/systemd/system/ps5-fan-controller-guard.service`: the service that starts the guard when the board starts.
 - `/run/ps5-fan-controller/state.json`: what the guard last read and recently did. The app shows it.
 - `~/.config/ps5-fan-controller/ps5-fan-controller.ini`: the size and position of the window.
 

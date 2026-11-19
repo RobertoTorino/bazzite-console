@@ -399,7 +399,7 @@ def test_the_icons_are_the_nexus_drawing():
 
 
 def test_remove_suite_runs_check_release_remove_on_the_board(window, monkeypatch):
-    """Remove suite (owner, 15-11-2026): check-release.sh remove in a terminal, on the console."""
+    """Remove suite (owner, 15-11-2026): check-release.sh remove in a terminal, on the board."""
     w, _app = window
     launched = []
     w.launch = launched.append

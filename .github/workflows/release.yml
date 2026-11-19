@@ -8,7 +8,7 @@ name: Release
 #   releases the suite: it builds every app tag apps.toml pins that has no release yet, side by side, and publishes
 #   each (the tag made on the release commit); writes their sha256 into apps.toml in one commit "Pin ..." on top
 #   of it; and builds the portal from that commit as a draft release (no tag
-#   yet, so no portal sees it). The Nexus Release Tool installs that draft on the console (check-release.sh draft) and
+#   yet, so no portal sees it). The Nexus Release Tool installs that draft on the board (check-release.sh draft) and
 #   publishes it after the owner's yes, which makes the portal tag and GitHub's Latest release.
 #   Started again, the run skips what is out already and makes the draft anew. The pin commit is pushed only while
 #   main is still the release commit, so no other commit gets into a portal tag.
