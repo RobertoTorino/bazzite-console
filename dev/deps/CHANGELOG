@@ -1,3 +1,7 @@
+Changelog: 19-11-2026 21:46:13
+
+Added. Nexus Deps knows a flattened Bazzite (no /run/ostree-booted, such as a PS5 image, where rpm-ostree refuses with "not booted via libostree"). Its Bazzite card shows the version from /etc/os-release and the running kernel, and nothing waits for a reboot. A System packages (dnf) card takes the place of Bazzite image: dnf check-update lists what is newer, the kernel too, and Update runs pkexec dnf upgrade -y. Fix installs a missing Fedora package with pkexec dnf install -y, there at once. A dnf step's question lists each package with a checkbox, all checked, and only the checked ones are installed or updated; a new kernel is used after a restart, which the question says. The texts say board, not console. The wiki's Nexus Deps chapter describes it.
+
 Changelog: 15-11-2026 10:50:24
 
 Added. The Sony cards: DualSense firmware (with PS5 Controller), PS4 system software

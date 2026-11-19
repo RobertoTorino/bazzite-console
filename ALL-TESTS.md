@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2784 test functions (3172 cases counting the parametrized ones) in 32 test folders, and 33 installer tests.
+2794 test functions (3182 cases counting the parametrized ones) in 32 test folders, and 33 installer tests.
 
 ## Summary
 
@@ -32,7 +32,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [core](#core) | 25 | 174 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
-| [dev/deps](#devdeps) | 6 | 92 | 2.1 s |
+| [dev/deps](#devdeps) | 6 | 102 | 2.1 s |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
 | [dev/nrt](#devnrt) | 4 | 123 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
@@ -40,7 +40,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
 | [tools](#tools) | 36 | 214 | 10.2 s |
-| **All** | | **2784** | **153 s** |
+| **All** | | **2794** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -2253,7 +2253,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## dev/deps
 
-92 tests in 6 files, 2.1 s in a local run.
+102 tests in 6 files, 2.1 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2263,6 +2263,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_bazzite.py` | `test_the_updater_failed_or_stopped_running` |  |  | The updater failed or stopped running. |
 | `test_bazzite.py` | `test_not_bazzite_or_rpm_ostree_failing` |  |  | Not bazzite or rpm ostree failing. |
 | `test_bazzite.py` | `test_only_reads` |  |  | rpm-ostree status and systemctl show: nothing that changes the system. |
+| `test_bazzite.py` | `test_a_flattened_image_reads_os_release_and_never_runs_rpm_ostree` |  |  | A PS5 image (19-11-2026): no /run/ostree-booted, rpm-ostree refuses; the version is os-release's. |
+| `test_bazzite.py` | `test_os_release_versions` |  |  | Os release versions. |
 | `test_dependencies.py` | `test_catalog_lists_python_and_external_dependencies` |  |  | Catalog lists python and external dependencies. |
 | `test_dependencies.py` | `test_app_has_the_standard_layout` |  |  | A Nexus app in dev/deps, its catalog per suite (owner, 07-11-2026: the suite's Dependency Checker moved here). |
 | `test_dependencies.py` | `test_catalog_matches_all_runtime_requirement_manifests` |  |  | Catalog matches all runtime requirement manifests. |
@@ -2305,6 +2307,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_fixes.py` | `test_remind_opens_the_app_on_a_click` |  |  | Remind opens the app on a click. |
 | `test_fixes.py` | `test_an_empty_plan_is_false` |  |  | An empty plan is false. |
 | `test_fixes.py` | `test_the_machines_updates_alone_make_a_notification_with_fix` |  |  | The hourly timer's sources are Nexus Deps' since 09-11-2026: Homebrew's updates alone are worth a word. |
+| `test_fixes.py` | `test_a_flattened_image_installs_with_dnf_and_a_checkbox_per_package` |  |  | No ostree (a PS5 image): the Fedora package with dnf through pkexec, there at once, no rpm-ostree. |
+| `test_fixes.py` | `test_chosen_keeps_the_checked_packages_and_a_kernel_restarts` |  |  | Chosen keeps the checked packages and a kernel restarts. |
 | `test_system.py` | `test_every_source_with_its_updates_and_its_step` |  |  | Every source with its updates and its step. |
 | `test_system.py` | `test_everything_current` |  |  | Everything current. |
 | `test_system.py` | `test_a_venv_left_on_an_older_python_says_so` |  |  | Bazzite's image moved python3 to 3.15: the venv's python follows it, without the packages it had for 3.14. |
@@ -2315,6 +2319,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_system.py` | `test_a_new_fedora_release_is_not_installed_by_a_click` |  |  | 44 → 45 changed the system's Python under the venv on 09-11-2026: such an image has the steps, not a step. |
 | `test_system.py` | `test_major_versions_are_named` |  |  | Major versions are named. |
 | `test_system.py` | `test_every_source_says_what_update_does` |  |  | Every source says what update does. |
+| `test_system.py` | `test_dnf_lists_the_updates_with_the_kernel_and_its_restart` |  |  | Dnf lists the updates with the kernel and its restart. |
+| `test_system.py` | `test_dnf_with_nothing_newer_or_failing` |  |  | Dnf with nothing newer or failing. |
+| `test_system.py` | `test_a_flattened_image_has_dnf_instead_of_the_image` |  |  | A flattened image has dnf instead of the image. |
 | `test_upstreams.py` | `test_the_catalog_is_in_sync_with_the_apps` |  |  | The pins, repos, names and launchers are the apps' own: dev/deps/run.sh --sync-upstreams fixes this. |
 | `test_upstreams.py` | `test_every_app_with_a_pinned_upstream_is_listed` |  |  | Every app with a pinned upstream is listed. |
 | `test_upstreams.py` | `test_the_constants_are_read_without_running_the_module` |  |  | The constants are read without running the module. |
@@ -2349,6 +2356,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_fix_offered_for_the_machines_updates_alone` |  | 0.1 s | --fix from a notification about Homebrew alone: the question comes once both checks are done. |
 | `test_window.py` | `test_an_image_of_a_new_fedora_release_is_by_hand` |  | 0.1 s | A system-wide change has no Update: the card says why, and its i gives the steps. |
 | `test_window.py` | `test_the_emulators_and_firmware_have_a_section_of_their_own` |  | 0.1 s | The emulators and firmware have a section of their own. |
+| `test_window.py` | `test_the_question_has_a_checkbox_per_package` |  |  | Only what stays checked is updated (owner, 19-11-2026: "no checkmark, no update/install"). |
+| `test_window.py` | `test_the_question_for_dnf_names_pkexec_and_the_kernels_restart` |  |  | The question for dnf names pkexec and the kernels restart. |
+| `test_window.py` | `test_a_dnf_card_updates_the_checked_packages_alone` |  |  | A dnf card updates the checked packages alone. |
 
 ## dev/itests
 

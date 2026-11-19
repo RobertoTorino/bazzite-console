@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QEventLoop, QTimer
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtCore import QEventLoop, Qt, QTimer
+from PyQt6.QtWidgets import QDialogButtonBox, QLabel
 
 from nexus_deps import CATALOG
 from nexus_deps.bazzite import BazziteState, Deployment
@@ -12,7 +12,7 @@ from nexus_deps.dependencies import (
     load_catalog, load_tools,
 )
 from nexus_deps.fixes import Plan, Step
-from nexus_deps.main_window import DependencyWindow, FixDialog, about_text, confirm_text, tool_advice
+from nexus_deps.main_window import ConfirmDialog, DependencyWindow, FixDialog, about_text, confirm_text, tool_advice
 
 SHARED = "/home/test/.local/share/bazzite-console-suite/venv"
 SFTP = "/home/test/.local/share/ps5-sftp-tools/venv"               # an app with a venv of its own
@@ -40,7 +40,7 @@ def _window(result: CheckResult, bazzite=None, system=(), extra_tools=(), **kwar
     """The window on *result*; Bazzite's state from *bazzite*, else none, and the machine's updates from *system* (the
     console's own are never read here). Fix's question is answered No unless a test passes its own *ask*.
     *extra_tools* get a card after the catalog's."""
-    kwargs.setdefault("ask", lambda text: False)
+    kwargs.setdefault("ask", lambda plan: None)
     window = DependencyWindow(load_catalog(CATALOG), [*load_tools(CATALOG), *extra_tools], load_apps(CATALOG),
                               check=lambda: result,
                               bazzite=bazzite or (lambda: BazziteState(error="Not read in a test.")),
@@ -264,7 +264,7 @@ def test_fix_is_off_until_there_is_something_to_fix(qapp):
 
 def test_fix_asks_with_every_command_and_no_changes_nothing(qapp):
     asked: list[str] = []
-    window = _window(_broken(), ask=lambda text: asked.append(text) or False)
+    window = _window(_broken(), ask=lambda plan: asked.append(confirm_text(plan)))
     try:
         window.fix()
         assert len(asked) == 1 and "pip install" in asked[0] and "Run them now?" in asked[0]
@@ -276,7 +276,7 @@ def test_fix_asks_with_every_command_and_no_changes_nothing(qapp):
 def test_fix_offered_at_once_with_fix(qapp):
     """--fix: the notification's Fix… button asks as soon as the check is done, once."""
     asked: list[str] = []
-    window = _window(_broken(), ask=lambda text: asked.append(text) or False, offer_fix=True)
+    window = _window(_broken(), ask=lambda plan: asked.append(confirm_text(plan)), offer_fix=True)
     try:
         assert len(asked) == 1 and not window.offer_fix
         window.check_updates()
@@ -347,7 +347,8 @@ def test_the_machines_updates_have_a_card_each(qapp):
 
 def test_a_cards_update_asks_for_its_own_step_alone(qapp):
     asked: list[str] = []
-    window = _window(CheckResult([], [], frozenset()), system=_sources(), ask=lambda text: asked.append(text) or False)
+    window = _window(CheckResult([], [], frozenset()), system=_sources(),
+                     ask=lambda plan: asked.append(confirm_text(plan)))
     try:
         window.system_cards["brew"].update_button.click()
         assert len(asked) == 1 and "14 Homebrew update(s)" in asked[0] and "1 package(s)" not in asked[0]
@@ -360,7 +361,7 @@ def test_fix_offered_for_the_machines_updates_alone(qapp):
     """--fix from a notification about Homebrew alone: the question comes once both checks are done."""
     asked: list[str] = []
     window = _window(CheckResult([], [], frozenset()), system=_sources(), offer_fix=True,
-                     ask=lambda text: asked.append(text) or False)
+                     ask=lambda plan: asked.append(confirm_text(plan)))
     try:
         assert len(asked) == 1 and "14 Homebrew update(s)" in asked[0]
     finally:
@@ -402,4 +403,69 @@ def test_the_emulators_and_firmware_have_a_section_of_their_own(qapp):
         assert window.system_cards["upstream-psportal"].status.text() == "On the device"
         assert not window.fix_button.isEnabled()                    # nothing here is installed by a click
     finally:
+        window.close()
+
+
+def _dnf_plan():
+    from nexus_deps.fixes import dnf_step
+    return Plan((Step("pip", "a into v", ("v/bin/python", "-m", "pip", "install", "a")),
+                 dnf_step("3 system package(s) with dnf", "upgrade", ("mesa-dri-drivers", "linux-ps5", "fio"))))
+
+
+def test_the_question_has_a_checkbox_per_package(qapp):
+    """Only what stays checked is updated (owner, 19-11-2026: "no checkmark, no update/install")."""
+    dialog = ConfirmDialog(_dnf_plan())
+    try:
+        assert [box.text() for box in dialog.boxes[1]] == ["mesa-dri-drivers", "linux-ps5", "fio"]
+        assert 0 not in dialog.boxes                                  # pip's step has no packages
+        assert dialog.chosen() == dialog.plan                         # all checked: the plan as it was
+        dialog.boxes[1][1].setChecked(False)                          # the kernel unchecked
+        chosen = dialog.chosen()
+        assert chosen.steps[1].command == ("pkexec", "dnf", "upgrade", "-y", "mesa-dri-drivers", "fio")
+        assert not chosen.restart and dialog.plan.restart             # no kernel: no restart
+        assert dialog.all_boxes[1].checkState() == Qt.CheckState.PartiallyChecked
+        dialog._set_all(1)                                            # All: every one checked again
+        assert dialog.chosen() == dialog.plan
+        dialog._set_all(1)                                            # All again: none
+        assert [step.kind for step in dialog.chosen().steps] == ["pip"]
+        yes = dialog.buttons.button(QDialogButtonBox.StandardButton.Yes)
+        assert yes.isEnabled()                                        # pip is still there to run
+    finally:
+        dialog.close()
+    alone = ConfirmDialog(Plan(_dnf_plan().steps[1:]))
+    try:
+        alone._set_all(1 - 1)
+        assert not alone.buttons.button(QDialogButtonBox.StandardButton.Yes).isEnabled()   # nothing left
+    finally:
+        alone.close()
+
+
+def test_the_question_for_dnf_names_pkexec_and_the_kernels_restart(qapp):
+    text = confirm_text(_dnf_plan())
+    assert "pkexec dnf upgrade -y</code> with the packages checked below" in text
+    assert "pkexec asks for your password" in text and "A new kernel, when it is checked, is used after a restart" in text
+    assert "rpm-ostree" not in text
+    assert "A new kernel" not in confirm_text(Plan((_dnf_plan().steps[1].choose(("fio",)),)))
+
+
+def test_a_dnf_card_updates_the_checked_packages_alone(qapp):
+    from nexus_deps.system import Source, Update
+    dnf = Source("dnf", "System packages (dnf)", (Update("fio", "3.40-1", "3.41-1"), Update("linux-ps5", "7.3.1-1",
+                 "7.3.3-1")), step=Step("dnf", "2 system package(s) with dnf", ("sh", "-c", "true", "fio", "linux-ps5"),
+                                        restart=True, packages=("fio", "linux-ps5")),   # never the real dnf here
+                 note="A new kernel (linux-ps5) is used after a restart.")
+    asked: list[Plan] = []
+    window = _window(CheckResult([], [], frozenset()), system=(dnf,),
+                     ask=lambda plan: asked.append(plan) or plan.chosen({0: ("fio",)}))
+    try:
+        card = window.system_cards["dnf"]
+        assert card.status.text() == "2 updates" and "linux-ps5 7.3.1-1 → 7.3.3-1" in card.text.text()
+        window.fix_dialog = None
+        card.update_button.click()
+        assert asked[0].steps[0].packages == ("fio", "linux-ps5")
+        assert window.fix_dialog is not None and window.fix_dialog.plan.steps[0].command[-1] == "fio"
+        assert _wait_for(lambda: not window.fix_dialog.running, 5000)
+    finally:
+        if window.fix_dialog is not None:
+            window.fix_dialog.reject()
         window.close()

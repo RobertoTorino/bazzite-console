@@ -34,7 +34,7 @@ the development extras (`--all`), and **Refresh** beside it reads the tools agai
 listed in [PS5 Board Test](board.md#requirements). The RPM packages are installed with `dnf` on a flattened image
 (one that does not boot from ostree, such as a PS5 image) and are there at once. On an Atomic image they are
 layered with `rpm-ostree` and are active after a reboot (`systemctl reboot`); until then the tools of that group
-still show as missing. The tooltip of a group's pill says which one this console uses.
+still show as missing. The tooltip of a group's pill says which one this board uses.
 
 A tool you put in `~/.local/bin` yourself counts when the file has the tool's own name and may be run. Ookla's
 download is a `.tgz` archive: unpack `speedtest` from it and make it executable, then press **Refresh**:

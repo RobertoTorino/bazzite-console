@@ -11,6 +11,10 @@ requirements-dev.txt allows (it keeps MkDocs below 2 on purpose): what the requi
 updated. Bazzite's own updater (uupd) installs the image, the Flatpaks and Homebrew's packages every night; Fix only
 does it sooner.
 
+A flattened image (no ostree, such as a PS5 image) has no image to stage: its System packages card asks
+`dnf check-update` instead, and its Update runs `pkexec dnf upgrade -y` with the packages checked in the question, the
+kernel among them (owner, 19-11-2026); a new kernel is used after a restart.
+
 Every source says what its Update does and how to handle what goes wrong (about, behind the card's "i"); an update
 that needs care says so on the card (note): a new major version, an image used after a restart. One that should not
 be installed by a click has no step and says how instead (owner, 09-11-2026): a Bazzite image of a new Fedora
@@ -29,8 +33,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import CHECKOUT
-from .bazzite import parse_status
-from .fixes import RESTART, Step
+from .bazzite import ostree_booted, parse_status
+from .fixes import KERNELS, RESTART, Step, dnf_step
 
 Run = Callable[..., subprocess.CompletedProcess]
 Which = Callable[[str], "str | None"]
@@ -65,7 +69,7 @@ class Update:
 
 @dataclass(frozen=True)
 class Source:
-    key: str                            # "image", "flatpak", "brew", "rust" or "venv"
+    key: str                            # "image", "dnf", "flatpak", "brew", "rust" or "venv"
     name: str                           # the card's title
     updates: tuple[Update, ...] = ()
     held: tuple[Update, ...] = ()       # newer than the requirements allow (the venv): shown, not updated
@@ -169,6 +173,62 @@ def check_image(run: Run) -> Source:
         f"password); the machine starts it at the next boot. {ROLLBACK}</p>"),
         step=Step("rpm-ostree", f"Bazzite {version} into the Bazzite image", ("rpm-ostree", "upgrade"),
                   restart=True))
+
+
+# --- dnf, on a flattened image -------------------------------------------------------------------------------
+
+DNF_ABOUT = ("<p>The system's packages on a flattened Bazzite (no ostree): dnf updates them in place, without a new "
+             "image, and Bazzite's updater leaves them alone. <b>Update</b> asks which ones, each with a checkbox, and "
+             "runs <code>pkexec dnf upgrade -y</code> with the checked ones (pkexec asks for your password). They are "
+             "used at once, an open app once it is started again; a new kernel after a restart (<code>"
+             f"{RESTART}</code>). <code>dnf history list</code> shows what was done, <code>sudo dnf history undo "
+             "&lt;id&gt;</code> takes it back.</p>")
+
+
+def parse_dnf(text: str) -> tuple[tuple[str, str], ...]:
+    """(name, version) of each package `dnf -q check-update` offers: lines "name.arch version repo"; a package of
+    two architectures once. Headings ("Obsoleting packages") and notices have no such line."""
+    found: dict[str, str] = {}
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) != 3 or "." not in parts[0] or line[:1].isspace():
+            continue
+        found.setdefault(parts[0].rsplit(".", 1)[0], parts[1])
+    return tuple(found.items())
+
+
+def installed_versions(run: Run, names: list[str]) -> dict[str, str]:
+    """The installed version-release of each of *names* (rpm -q); a name rpm does not know is left out."""
+    if not names:
+        return {}
+    done = run(["rpm", "-q", "--qf", "%{NAME} %{VERSION}-%{RELEASE}\\n", *names], capture_output=True, text=True,
+               timeout=TIMEOUT)
+    versions: dict[str, str] = {}
+    for line in done.stdout.splitlines():
+        parts = line.split()
+        if len(parts) == 2:
+            versions.setdefault(parts[0], parts[1])
+    return versions
+
+
+def check_dnf(run: Run) -> Source:
+    name = "System packages (dnf)"
+    done = run(["dnf", "-q", "check-update"], capture_output=True, text=True, timeout=TIMEOUT)
+    if done.returncode == 0:                                        # dnf's "nothing to update"
+        return Source("dnf", name, about=DNF_ABOUT)
+    if done.returncode != 100:                                      # 100: there are updates
+        return Source("dnf", name, error=f"dnf check-update failed: {_tail(done)}", about=DNF_ABOUT)
+    offered = parse_dnf(done.stdout)
+    if not offered:
+        return Source("dnf", name, about=DNF_ABOUT)
+    names = tuple(package for package, _version in offered)
+    current = installed_versions(run, list(names))
+    updates = tuple(Update(package, current.get(package, ""), version) for package, version in offered)
+    kernels = [package for package in names if package.startswith(KERNELS)]
+    note = (f"A new kernel ({', '.join(kernels)}) is used after a restart ({RESTART}), which Nexus Deps never does "
+            "by itself; uncheck it in Update's question to keep the one you have.") if kernels else ""
+    return Source("dnf", name, updates, step=dnf_step(f"{len(names)} system package(s) with dnf", "upgrade", names),
+                  note=note, about=DNF_ABOUT)
 
 
 # --- Flatpak --------------------------------------------------------------------------------------------------
@@ -354,11 +414,15 @@ def _guarded(key: str, name: str, job: Callable[[], Source]) -> Source:
 
 
 def read_sources(run: Run = subprocess.run, which: Which = shutil.which,
-                 checkout: Path = CHECKOUT) -> tuple[Source, ...]:
-    """Every source this machine has, asked at the same time; in a fixed order."""
+                 checkout: Path = CHECKOUT, booted: Callable[[], bool] = ostree_booted) -> tuple[Source, ...]:
+    """Every source this machine has, asked at the same time; in a fixed order. The system's own: the image on an
+    Atomic system, dnf's packages on a flattened one."""
     jobs: list[tuple[str, str, Callable[[], Source]]] = []
-    if which("rpm-ostree"):
+    atomic = booted()
+    if atomic and which("rpm-ostree"):
         jobs.append(("image", "Bazzite image", lambda: check_image(run)))
+    if not atomic and which("dnf"):
+        jobs.append(("dnf", "System packages (dnf)", lambda: check_dnf(run)))
     if which("flatpak"):
         jobs.append(("flatpak", "Flatpak", lambda: check_flatpak(run)))
     if brew := find_brew(which):

@@ -215,3 +215,50 @@ def test_every_source_says_what_update_does(tmp_path):
     run = Machine(image=(0, IMAGE_UPDATE), flatpak=FLATPAK, brew=BREW, rustup=RUSTUP, outdated=OUTDATED,
                   installed=INSTALLED, report=REPORT)
     assert all(source.about for source in system.read_sources(run, which, checkout(tmp_path)))
+
+
+DNF_CHECK = """
+fio.x86_64                       3.41-1.fc43        updates
+linux-ps5.x86_64                 7.3.3-1            etawen
+mesa-dri-drivers.x86_64          25.2.7-1.fc43      updates
+mesa-dri-drivers.i686            25.2.7-1.fc43      updates
+Obsoleting packages
+"""
+
+
+def _dnf_run(code=100, out=DNF_CHECK):
+    calls = []
+
+    def run(argv, **_kwargs):
+        calls.append(argv)
+        if argv[0] == "dnf":
+            return subprocess.CompletedProcess(argv, code, out, "")
+        if argv[0] == "rpm":
+            return subprocess.CompletedProcess(argv, 0, "fio 3.40-1.fc43\nlinux-ps5 7.3.1-1\n", "")
+        return subprocess.CompletedProcess(argv, 0, "", "")
+    run.calls = calls
+    return run
+
+
+def test_dnf_lists_the_updates_with_the_kernel_and_its_restart():
+    source = system.check_dnf(_dnf_run())
+    assert [system.Update(u.name, u.current, u.latest) for u in source.updates] == [
+        system.Update("fio", "3.40-1.fc43", "3.41-1.fc43"), system.Update("linux-ps5", "7.3.1-1", "7.3.3-1"),
+        system.Update("mesa-dri-drivers", "", "25.2.7-1.fc43")]
+    assert source.step.command == ("pkexec", "dnf", "upgrade", "-y", "fio", "linux-ps5", "mesa-dri-drivers")
+    assert source.step.packages == ("fio", "linux-ps5", "mesa-dri-drivers") and source.step.restart
+    assert "linux-ps5" in source.note and "uncheck it" in source.note and "pkexec dnf upgrade" in source.about
+
+
+def test_dnf_with_nothing_newer_or_failing():
+    assert not system.check_dnf(_dnf_run(0, "")).updates
+    failed = system.check_dnf(_dnf_run(1, "Error: Failed to download metadata"))
+    assert failed.error == "dnf check-update failed: Error: Failed to download metadata" and failed.step is None
+
+
+def test_a_flattened_image_has_dnf_instead_of_the_image(tmp_path):
+    run = _dnf_run()
+    sources = system.read_sources(run, lambda name: f"/usr/bin/{name}" if name in ("dnf", "rpm-ostree") else None,
+                                  tmp_path, booted=lambda: False)
+    assert [source.key for source in sources] == ["dnf"]
+    assert all(argv[0] != "rpm-ostree" for argv in run.calls)

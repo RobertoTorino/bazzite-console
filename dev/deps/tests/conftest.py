@@ -47,3 +47,14 @@ def no_tooltip_left():
     yield
     from bazzite_console_core.widgets import RoundedToolTip
     RoundedToolTip.uninstall()
+
+
+@pytest.fixture(autouse=True)
+def atomic(tmp_path, monkeypatch):
+    """An Atomic system (/run/ostree-booted there), whatever the machine the tests run on; a test of a flattened
+    image removes the marker."""
+    from nexus_deps import bazzite
+    marker = tmp_path / "ostree-booted"
+    marker.touch()
+    monkeypatch.setattr(bazzite, "OSTREE_BOOTED", marker)
+    return marker

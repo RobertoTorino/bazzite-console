@@ -323,11 +323,17 @@ boot, so an update can wait unnoticed for days. The card turns to **Reboot to up
 the updater failed on its last run or has not run for over a week. This card only reads (from `rpm-ostree status`
 and `systemctl`, without root or the network).
 
+On a flattened image (one that does not boot from ostree, such as a PS5 image, where `rpm-ostree` refuses with "not
+booted via libostree") the card shows the version from `/etc/os-release` and the running kernel instead. Nothing
+waits for a reboot there: dnf updates the packages in place, in the System packages card below. The updater line
+stays, since `uupd` still updates the Flatpaks, Homebrew and distroboxes.
+
 **The machine's updates** follow, a card per source the machine has, each with what is newer (installed → new):
 
 | Card | Asked with | Update runs |
 |---|---|---|
 | Bazzite image | `rpm-ostree upgrade --check` | `rpm-ostree upgrade`: the new image is used after a restart |
+| System packages (dnf), on a flattened image instead of Bazzite image | `dnf -q check-update` | `pkexec dnf upgrade -y` with the packages checked in its question; a new kernel is used after a restart |
 | Flatpak | `flatpak remote-ls --updates` | `flatpak update -y --noninteractive` |
 | Homebrew | `brew update`, then `brew outdated` (formulae and casks) | `brew upgrade` |
 | Rust | `rustup check` (the toolchains and rustup) | `rustup update` |
@@ -395,8 +401,11 @@ shows their output and stops at the first that fails, then the check runs again.
 - A missing tool an installed app **needs** is installed with Homebrew when Homebrew has it (no restart), else
   layered into the Bazzite image with `rpm-ostree install`, which may ask for your password. A layered package is
   there after a restart: the window says so and gives the command (`systemctl reboot`); Nexus Deps never restarts
-  by itself.
+  by itself. On a flattened image the same package is installed with `pkexec dnf install -y` and is there at once.
 - The machine's updates: each card's **Update** command (above), after the packages and the tools.
+- A dnf step lists each of its packages with a checkbox in the question, all checked: only the checked ones are
+  installed or updated. **All of …** checks them all, or clears them when all were checked; **Yes** is off when
+  nothing is left to run. Uncheck the kernel (`linux-ps5`, `kernel`) to keep the one you have.
 - Optional tools are left out: the apps work without them. A tool neither Homebrew nor Fedora has (`ujust`, Steam,
   a tool an app brings itself) is left to the app's chapter, which says how to get it.
 

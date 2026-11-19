@@ -13,8 +13,8 @@ from urllib.parse import quote
 from PyQt6.QtCore import QProcess, QSize, Qt
 from PyQt6.QtGui import QColor, QIcon, QPainter
 from PyQt6.QtWidgets import (
-    QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QScrollArea,
-    QSizePolicy, QStyle, QToolButton, QVBoxLayout, QWidget,
+    QCheckBox, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton,
+    QScrollArea, QSizePolicy, QStyle, QToolButton, QVBoxLayout, QWidget,
 )
 
 from bazzite_console_core import SUITE_MANUAL_URL
@@ -366,7 +366,8 @@ class BazziteCard(QFrame):
         word, colour = self.PILLS[kind]
         if state.update_waiting:
             word = "Reboot to update"
-        self.status.set_status(word, colour, "Read from rpm-ostree and systemd; updating is Bazzite's own")
+        self.status.set_status(word, colour, "Read from /etc/os-release and systemd; dnf updates the packages"
+                               if state.flattened else "Read from rpm-ostree and systemd; updating is Bazzite's own")
         self.text.setText(text)
 
 
@@ -487,18 +488,101 @@ def summary(result: CheckResult) -> tuple[list[str], list[str]]:
     return missing, optional
 
 
+def _command(step: Step) -> str:
+    """A step's command; one with packages names them in the checkboxes below the question instead."""
+    if step.packages:
+        base = step.command[:len(step.command) - len(step.packages)]
+        return f"<code>{escape(' '.join(base))}</code> with the packages checked below"
+    return f"<code>{escape(' '.join(step.command))}</code>"
+
+
 def confirm_text(plan: Plan) -> str:
     """The question Fix asks before it runs anything: each step with its command, and what a restart is for."""
-    rows = "".join(f"<li><b>{escape(step.title)}</b><br><code>{escape(' '.join(step.command))}</code></li>"
-                   for step in plan.steps)
+    rows = "".join(f"<li><b>{escape(step.title)}</b><br>{_command(step)}</li>" for step in plan.steps)
     text = f"<p>Fix runs these commands, one after the other:</p><ul>{rows}</ul>"
-    if plan.restart:
+    if any(step.restart and step.kind == "rpm-ostree" for step in plan.steps):
         text += ("<p>rpm-ostree changes the Bazzite image: what it installs is there after a restart, which "
                  f"{escape(APP_NAME)} never does by itself (<code>{RESTART}</code>). rpm-ostree may ask for your "
                  "password.</p>")
+    if any(step.kind == "dnf" for step in plan.steps):
+        text += ("<p>dnf runs as root: pkexec asks for your password. Only the checked packages are installed or "
+                 "updated.")
+        if any(step.restart and step.kind == "dnf" for step in plan.steps):
+            text += (f" A new kernel, when it is checked, is used after a restart, which {escape(APP_NAME)} never "
+                     f"does by itself (<code>{RESTART}</code>).")
+        text += "</p>"
     if plan.manual:
         text += f"<p>Not by Fix: {escape(_names(plan.manual))}. Each app's manual says how to install them.</p>"
     return text + "<p>Run them now?</p>"
+
+
+class ConfirmDialog(QDialog):
+    """Fix's question (confirm_text) with a checkbox per package of a step that has them (dnf's), all checked:
+    only what stays checked is installed or updated (owner, 19-11-2026). An All box per step checks or clears its
+    packages; Yes is off when nothing is left to run."""
+
+    LIST_HEIGHT = 240                       # the packages scroll beyond this
+
+    def __init__(self, plan: Plan, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setWindowTitle(window_title("Fix"))
+        self.resize(640, 0)
+        self.plan = plan
+        self.boxes: dict[int, list[QCheckBox]] = {}
+        self.all_boxes: dict[int, QCheckBox] = {}
+        layout = QVBoxLayout(self)
+        text = QLabel(confirm_text(plan))
+        text.setWordWrap(True)
+        text.setTextFormat(Qt.TextFormat.RichText)
+        layout.addWidget(text)
+        for index, step in enumerate(plan.steps):
+            if not step.packages:
+                continue
+            every = QCheckBox(f"All of {step.title}")
+            every.setChecked(True)
+            every.clicked.connect(lambda _checked=False, i=index: self._set_all(i))
+            layout.addWidget(every)
+            self.all_boxes[index] = every
+            inner = QWidget()
+            rows = QVBoxLayout(inner)
+            rows.setContentsMargins(20, 0, 0, 0)
+            self.boxes[index] = []
+            for name in step.packages:
+                box = QCheckBox(name)
+                box.setChecked(True)
+                box.toggled.connect(lambda _checked=False, i=index: self._changed(i))
+                rows.addWidget(box)
+                self.boxes[index].append(box)
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.Shape.NoFrame)
+            scroll.setWidget(inner)
+            scroll.setFixedHeight(min(self.LIST_HEIGHT, inner.sizeHint().height()))
+            layout.addWidget(scroll)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Yes | QDialogButtonBox.StandardButton.No)
+        self.buttons.button(QDialogButtonBox.StandardButton.No).setDefault(True)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
+
+    def _set_all(self, index: int) -> None:
+        """All: checks every package of the step, or clears them when every one was checked already."""
+        check = not all(box.isChecked() for box in self.boxes[index])
+        for box in self.boxes[index]:
+            box.setChecked(check)
+        self._changed(index)
+
+    def _changed(self, index: int) -> None:
+        checked = sum(box.isChecked() for box in self.boxes[index])
+        state = (Qt.CheckState.Checked if checked == len(self.boxes[index]) else
+                 Qt.CheckState.Unchecked if not checked else Qt.CheckState.PartiallyChecked)
+        self.all_boxes[index].setCheckState(state)
+        self.buttons.button(QDialogButtonBox.StandardButton.Yes).setEnabled(bool(self.chosen()))
+
+    def chosen(self) -> Plan:
+        """The plan with the checked packages alone."""
+        return self.plan.chosen({index: tuple(box.text() for box in boxes if box.isChecked())
+                                 for index, boxes in self.boxes.items()})
 
 
 class FixDialog(QDialog):
@@ -604,10 +688,11 @@ class DependencyWindow(QMainWindow):
         bazzite: Callable[[], BazziteState] | None = None,
         system: Callable[[], tuple[Source, ...]] | None = None,
         offer_fix: bool = False,
-        ask: Callable[[str], bool] | None = None,
+        ask: Callable[[Plan], Plan | None] | None = None,
     ):
         """*check*, *bazzite* and *system* read the packages and tools, Bazzite's state and the machine's updates,
-        *ask* puts Fix's question (tests pass their own). *offer_fix* offers Fix once the first check is done
+        *ask* puts Fix's question and returns the plan to run, with the packages that stayed checked, or None for
+        No (tests pass their own). *offer_fix* offers Fix once the first check is done
         (--fix)."""
         super().__init__(parent)
         self.resize(960, 760)
@@ -880,12 +965,9 @@ class DependencyWindow(QMainWindow):
     def fixing(self) -> bool:
         return self.fix_dialog is not None and self.fix_dialog.isVisible()
 
-    def _ask_user(self, text: str) -> bool:
-        box = QMessageBox(QMessageBox.Icon.Question, window_title("Fix"), text,
-                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, self)
-        box.setTextFormat(Qt.TextFormat.RichText)
-        box.setDefaultButton(QMessageBox.StandardButton.No)
-        return box.exec() == QMessageBox.StandardButton.Yes
+    def _ask_user(self, plan: Plan) -> Plan | None:
+        dialog = ConfirmDialog(plan, self)
+        return dialog.chosen() if dialog.exec() == QDialog.DialogCode.Accepted else None
 
     def update_source(self, step: Step) -> None:
         """A system card's Update: that source's step alone, asked and run as Fix does."""
@@ -894,7 +976,10 @@ class DependencyWindow(QMainWindow):
     def fix(self, plan: Plan | None = None) -> None:
         """Ask with every command listed, run them in a dialog, then check again. *plan*: one card's Update."""
         plan = plan or self.plan
-        if not plan or self.fixing or not self._ask(confirm_text(plan)):
+        if not plan or self.fixing:
+            return
+        plan = self._ask(plan)
+        if not plan:
             return
         self.fix_button.setEnabled(False)
         self.fix_dialog = FixDialog(plan, self)

@@ -12,7 +12,7 @@ from nexus_deps.dependencies import (
     CheckResult, DependencyStatus, EnvironmentVersion, ExternalTool, ToolSource, ToolStatus, Vulnerability,
     load_catalog, load_tools,
 )
-from nexus_deps.fixes import Plan, Step, notify, plan, problems, reminder_text, requirement
+from nexus_deps.fixes import Plan, Step, dnf_step, notify, plan, problems, reminder_text, requirement
 from nexus_deps.system import Source, Update
 
 VENV = "/home/u/.local/share/bazzite-console-suite/venv"
@@ -36,6 +36,10 @@ def which_all(name):
 
 def no_brew(name):
     return None if name == "brew" else which_all(name)
+
+
+def only_dnf(name):
+    return "/usr/bin/dnf" if name == "dnf" else None
 
 
 def result(packages=(), tool_results=(), installed=("board", "cec", "sftp", "portal")):
@@ -168,3 +172,25 @@ def test_the_machines_updates_alone_make_a_notification_with_fix():
     assert reminder_text(quiet, result(), which_all, (current, failed)).text == ""
     venv = Source("venv", "Python venv (.venv-linux)", note="The venv was made with Python 3.14 and runs 3.15 now.")
     assert reminder_text(quiet, result(), which_all, (venv,)).text == venv.note
+
+
+def test_a_flattened_image_installs_with_dnf_and_a_checkbox_per_package(atomic):
+    """No ostree (a PS5 image): the Fedora package with dnf through pkexec, there at once, no rpm-ostree."""
+    atomic.unlink()
+    missing = [ToolStatus(BREWED)]
+    steps = plan(result(tool_results=missing, installed=("cec",)), only_dnf).steps
+    assert [(step.kind, step.command, step.restart, step.packages) for step in steps] == [
+        ("dnf", ("pkexec", "dnf", "install", "-y", "stress-ng"), False, ("stress-ng",))]
+
+
+def test_chosen_keeps_the_checked_packages_and_a_kernel_restarts():
+    step = dnf_step("3 system package(s) with dnf", "upgrade", ("fio", "linux-ps5", "kernel-tools"))
+    assert step.restart
+    fio = step.choose(("fio",))
+    assert fio.command == ("pkexec", "dnf", "upgrade", "-y", "fio") and not fio.restart
+    assert step.choose(("linux-ps5", "fio")).packages == ("fio", "linux-ps5")       # in the step's order
+    assert step.choose(()) is None and step.choose(step.packages) is step
+    pip = Step("pip", "a", ("python", "-m", "pip", "install", "a"))
+    whole = Plan((pip, step))
+    assert whole.chosen({1: ("fio",)}).steps == (pip, step.choose(("fio",)))
+    assert whole.chosen({}).steps == (pip,)                          # none checked: the dnf step goes

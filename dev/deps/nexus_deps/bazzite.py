@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Bazzite's update state, read only: the image the console runs, an update that waits for a reboot, and the last run
+"""Bazzite's update state, read only: the image the board runs, an update that waits for a reboot, and the last run
 of Bazzite's updater (uupd, a nightly systemd timer that updates the image, Flatpaks, Homebrew and distroboxes).
+
+A flattened image (one that does not boot from ostree, such as a PS5 image: no /run/ostree-booted, rpm-ostree
+refuses with "not booted via libostree") has no deployments: its version is read from /etc/os-release and its
+packages are updated with dnf (system.py's System packages), so nothing waits for a reboot here.
 
 Updating is Bazzite's: the suite answers for its own apps, and shows this so a waiting update is not missed (owner's
 decision, 15-10-2026); what is newer than the machine has, and installing it sooner, is system.py's (owner,
@@ -13,15 +17,24 @@ from __future__ import annotations
 
 import datetime
 import json
+import platform
 import shutil
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 TIMEOUT = 20
 STALE_DAYS = 8                          # uupd runs nightly: a week without a run means it is not running
 UPDATER = "uupd"
 Run = Callable[..., subprocess.CompletedProcess]
+OSTREE_BOOTED = Path("/run/ostree-booted")     # there when the system booted from an ostree deployment
+OS_RELEASE = Path("/etc/os-release")
+
+
+def ostree_booted(marker: Path | None = None) -> bool:
+    """True on an Atomic image (rpm-ostree works), False on a flattened one (dnf installs and updates)."""
+    return (marker or OSTREE_BOOTED).exists()
 
 
 @dataclass(frozen=True)
@@ -40,6 +53,8 @@ class BazziteState:
     updater_last: datetime.datetime | None = None
     updater_failed: bool = False
     error: str = ""                         # why nothing could be read (not an rpm-ostree system, ...)
+    flattened: bool = False                 # no ostree: running is read from /etc/os-release, dnf updates
+    kernel: str = ""                        # the running kernel, shown on a flattened image
 
     @property
     def update_waiting(self) -> bool:
@@ -88,7 +103,44 @@ def _show(run: Run, unit: str, prop: str) -> str:
     return done.stdout.strip() if done.returncode == 0 else ""
 
 
-def read_state(run: Run = subprocess.run, which: Callable[[str], str | None] = shutil.which) -> BazziteState:
+def parse_os_release(text: str) -> str:
+    """The image's version from /etc/os-release: VERSION's first word ("43.20261117.0" of "43.20261117.0
+    (Kinoite)"), else VERSION_ID; "" when neither is there."""
+    values = {}
+    for line in text.splitlines():
+        key, sep, value = line.partition("=")
+        if sep:
+            values[key.strip()] = value.strip().strip("\"'")
+    version = values.get("VERSION", "").split()
+    return version[0] if version else values.get("VERSION_ID", "")
+
+
+def _updater(run: Run, which: Callable[[str], str | None]) -> tuple[datetime.datetime | None, bool]:
+    """When Bazzite's updater last ran, and whether that run failed."""
+    if which("systemctl") is None:
+        return None, False
+    try:
+        last = parse_systemd_time(_show(run, f"{UPDATER}.timer", "LastTriggerUSec"))
+        return last, _show(run, f"{UPDATER}.service", "Result") not in ("", "success")
+    except (OSError, subprocess.SubprocessError):
+        return None, False
+
+
+def read_flattened(run: Run, which: Callable[[str], str | None], os_release: Path = OS_RELEASE,
+                   kernel: Callable[[], str] = platform.release) -> BazziteState:
+    try:
+        version = parse_os_release(os_release.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return BazziteState(error=f"{os_release} could not be read: {exc}", flattened=True)
+    last, failed = _updater(run, which)
+    return BazziteState(Deployment(version or "(unknown version)", 0, True, False), None, "", last, failed,
+                        flattened=True, kernel=kernel())
+
+
+def read_state(run: Run = subprocess.run, which: Callable[[str], str | None] = shutil.which,
+               booted: Callable[[], bool] = ostree_booted) -> BazziteState:
+    if not booted():
+        return read_flattened(run, which)
     if which("rpm-ostree") is None:
         return BazziteState(error="This system has no rpm-ostree: it is not Bazzite, or not an image-based one.")
     try:
@@ -98,13 +150,7 @@ def read_state(run: Run = subprocess.run, which: Callable[[str], str | None] = s
         running, next_boot, image = parse_status(done.stdout)
     except (OSError, subprocess.SubprocessError, ValueError) as exc:
         return BazziteState(error=f"rpm-ostree status could not be read: {exc}")
-    last, failed = None, False
-    if which("systemctl") is not None:
-        try:
-            last = parse_systemd_time(_show(run, f"{UPDATER}.timer", "LastTriggerUSec"))
-            failed = _show(run, f"{UPDATER}.service", "Result") not in ("", "success")
-        except (OSError, subprocess.SubprocessError):
-            pass
+    last, failed = _updater(run, which)
     return BazziteState(running, next_boot, image, last, failed)
 
 
@@ -116,19 +162,24 @@ def describe(state: BazziteState) -> tuple[str, str]:
     """(a status word for the card: "ok", "warn" or "neutral", the text in plain sentences)."""
     if state.error or state.running is None:
         return "neutral", state.error or "The running image could not be found."
-    text = f"Bazzite {state.running.version} (built {build_date(state.running)}) is running"
-    text += f", from {state.image}." if state.image else "."
     kind = "ok"
-    if state.update_waiting:
-        text += (f" Bazzite {state.next_boot.version} (built {build_date(state.next_boot)}) is installed and waits for "
-                 "a reboot: restart the console to use it.")
-        kind = "warn"
-    elif state.rollback_waiting:
-        text += (f" The next boot starts the older {state.next_boot.version} (a rollback); restart to go back to it, "
-                 "or keep running this one.")
-        kind = "warn"
+    if state.flattened:
+        text = (f"Bazzite {state.running.version} is running, flattened (no ostree)"
+                + (f", with kernel {state.kernel}." if state.kernel else ".")
+                + " Its packages are updated with dnf, in place: System packages below shows what is newer.")
     else:
-        text += " No update waits for a reboot."
+        text = f"Bazzite {state.running.version} (built {build_date(state.running)}) is running"
+        text += f", from {state.image}." if state.image else "."
+        if state.update_waiting:
+            text += (f" Bazzite {state.next_boot.version} (built {build_date(state.next_boot)}) is installed and waits "
+                     "for a reboot: restart the board to use it.")
+            kind = "warn"
+        elif state.rollback_waiting:
+            text += (f" The next boot starts the older {state.next_boot.version} (a rollback); restart to go back to "
+                     "it, or keep running this one.")
+            kind = "warn"
+        else:
+            text += " No update waits for a reboot."
     if state.updater_last is None:
         text += f" Bazzite's updater ({UPDATER}) has not run yet."
         kind = "warn"
@@ -139,8 +190,12 @@ def describe(state: BazziteState) -> tuple[str, str]:
             kind = "warn"
         if state.updater_stale():
             text += f" That is more than {STALE_DAYS - 1} days ago: it normally runs every night."
-    text += (" It updates the image, Flatpaks, Homebrew and distroboxes by itself; the cards below show what is newer "
-             "now, and Update installs it sooner.")
+    if state.flattened:
+        text += (" It updates the Flatpaks, Homebrew and distroboxes by itself; the system's packages are dnf's. The "
+                 "cards below show what is newer now, and Update installs it.")
+    else:
+        text += (" It updates the image, Flatpaks, Homebrew and distroboxes by itself; the cards below show what is "
+                 "newer now, and Update installs it sooner.")
     return kind, text
 
 
@@ -150,7 +205,7 @@ def reminder(state: BazziteState, now: datetime.datetime | None = None) -> str:
         return ""
     lines = []
     if state.update_waiting:
-        lines.append(f"Bazzite {state.next_boot.version} waits for a reboot: restart the console to use it.")
+        lines.append(f"Bazzite {state.next_boot.version} waits for a reboot: restart the board to use it.")
     if state.updater_failed:
         lines.append(f"Bazzite's updater ({UPDATER}) failed on its last run.")
     elif state.updater_stale(now):

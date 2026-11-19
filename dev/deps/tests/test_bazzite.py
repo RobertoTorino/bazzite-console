@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Bazzite's update state from rpm-ostree's and systemd's answers (recorded on the owner's console, 15-10-2026, and
-the other states a console can be in), what the card says, and when the weekly reminder speaks."""
+"""Bazzite's update state from rpm-ostree's and systemd's answers (recorded on the owner's board, 15-10-2026, and
+the other states a board can be in), what the card says, and when the weekly reminder speaks."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def status(*deployments: dict) -> str:
 
 
 def fake_run(rpm: str, timer: str = LAST_RUN, result: str = "success", rpm_code: int = 0):
-    """subprocess.run for rpm-ostree and systemctl, answering what a console would; records the commands."""
+    """subprocess.run for rpm-ostree and systemctl, answering what a board would; records the commands."""
     calls: list[list[str]] = []
 
     def run(argv, **kwargs):
@@ -66,7 +66,7 @@ def test_an_update_waits_for_a_reboot():
     assert state.update_waiting and not state.rollback_waiting and state.next_boot.staged
     kind, text = bazzite.describe(state)
     assert kind == "warn" and "Bazzite 44.20261019.0" in text and "waits for a reboot" in text
-    assert bazzite.reminder(state, NOW) == "Bazzite 44.20261019.0 waits for a reboot: restart the console to use it."
+    assert bazzite.reminder(state, NOW) == "Bazzite 44.20261019.0 waits for a reboot: restart the board to use it."
 
 
 def test_a_rollback_is_not_an_update():
@@ -103,3 +103,29 @@ def test_only_reads():
     assert [argv[:2] for argv in run.calls] == [["rpm-ostree", "status"], ["systemctl", "show"],
                                                 ["systemctl", "show"]]
 
+
+
+OS_RELEASE = 'NAME="Bazzite"\nVERSION="43.20261117.0 (Kinoite)"\nVERSION_ID=43\n'
+
+
+def test_a_flattened_image_reads_os_release_and_never_runs_rpm_ostree(tmp_path, atomic):
+    """A PS5 image (19-11-2026): no /run/ostree-booted, rpm-ostree refuses; the version is os-release's."""
+    atomic.unlink()
+    release = tmp_path / "os-release"
+    release.write_text(OS_RELEASE, encoding="utf-8")
+    run = fake_run(status(RUNNING), timer=datetime.datetime.now().strftime("Thu %Y-%m-%d %H:%M:%S CET"))
+    state = bazzite.read_flattened(run, which, release, kernel=lambda: "7.3.1")
+    assert state.flattened and state.running.version == "43.20261117.0" and state.kernel == "7.3.1"
+    assert not state.update_waiting and state.updater_last is not None
+    kind, text = bazzite.describe(state)
+    assert kind == "ok" and "flattened (no ostree), with kernel 7.3.1" in text and "dnf" in text
+    assert "waits for a reboot" not in text and "updates the image" not in text
+    assert bazzite.reminder(state, NOW) == ""
+    assert all(argv[0] != "rpm-ostree" for argv in run.calls)
+    assert bazzite.read_state(run, which).flattened                    # read_state takes this path by itself
+
+
+def test_os_release_versions():
+    assert bazzite.parse_os_release(OS_RELEASE) == "43.20261117.0"
+    assert bazzite.parse_os_release("VERSION_ID=43\n") == "43"
+    assert bazzite.parse_os_release("") == ""

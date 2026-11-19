@@ -1,3 +1,7 @@
+Changelog: 19-11-2026 21:46:13
+
+Fixed. The wiki's Quickfix chapter says board, not console, where it names which installer a group's tooltip gives.
+
 Changelog: 19-11-2026 21:18:19
 
 Fixed. The bug report form asks for the lines of /etc/os-release and uname -r instead of rpm-ostree status, which fails on a flattened image such as a PS5 image.

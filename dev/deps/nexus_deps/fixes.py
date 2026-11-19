@@ -8,6 +8,10 @@ plan() turns a CheckResult into steps, each one command the window shows before 
   * brew: a missing tool an installed app needs, when Homebrew has it (the catalog's brew). No restart.
   * rpm-ostree: a missing tool Homebrew lacks, layered as the Fedora package (the catalog's rpm). It changes the
     Bazzite image and is active after a restart; the app says so and gives the command, it never restarts.
+  * dnf: the same package on a flattened image (no ostree, such as a PS5 image, where rpm-ostree refuses), installed
+    in place through pkexec and there at once.
+A step with packages (dnf's) lists each one with a checkbox in the question: only the checked ones are installed or
+updated (owner, 19-11-2026: "no checkmark, no update/install"); chosen() makes the plan of what stays checked.
 A tool with neither (ujust, Steam, a suite app's own) is left to the app's manual. Optional tools are not part of
 Fix: the apps work without them. The machine's own updates (system.py: Bazzite's image, the Flatpaks, Homebrew,
 Rust, the development venv) bring a step each; the window adds them to this plan.
@@ -21,11 +25,11 @@ from __future__ import annotations
 import shutil
 import subprocess
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .bazzite import BazziteState, reminder
+from .bazzite import BazziteState, ostree_booted, reminder
 from .dependencies import CheckResult, DependencyStatus, EnvironmentVersion, release, tool_need
 
 if TYPE_CHECKING:
@@ -35,15 +39,37 @@ Run = Callable[..., subprocess.CompletedProcess]
 Which = Callable[[str], "str | None"]
 
 RESTART = "systemctl reboot"
+KERNELS = ("kernel", "linux-")          # a package whose name starts with these is a kernel: used after a restart
 NOTIFY_WAIT = 3000                       # a notification nobody answers lets the service end before the next hour
 
 
 @dataclass(frozen=True)
 class Step:
-    kind: str                            # "pip", "brew", "rpm-ostree", "flatpak" or "rustup"
+    kind: str                            # "pip", "brew", "rpm-ostree", "dnf", "flatpak" or "rustup"
     title: str                           # what it does, for the confirmation and the log
     command: tuple[str, ...]
-    restart: bool = False                # active only after a restart (rpm-ostree)
+    restart: bool = False                # active only after a restart (rpm-ostree; dnf with a kernel)
+    packages: tuple[str, ...] = ()       # the last words of command: a checkbox each in the question (dnf)
+
+    def choose(self, names: tuple[str, ...]) -> Step | None:
+        """This step for *names* alone (the checked packages, in this step's order); None when none is left."""
+        kept = tuple(name for name in self.packages if name in names)
+        if not kept:
+            return None
+        if kept == self.packages:
+            return self
+        command = self.command[:len(self.command) - len(self.packages)] + kept
+        return replace(self, command=command, packages=kept,
+                       restart=kernel_in(kept) if self.kind == "dnf" else self.restart)
+
+
+def kernel_in(names: tuple[str, ...]) -> bool:
+    return any(name.startswith(KERNELS) for name in names)
+
+
+def dnf_step(title: str, verb: str, names: tuple[str, ...]) -> Step:
+    """dnf as root through pkexec's password dialog: *verb* ("install" or "upgrade") *names*, without questions."""
+    return Step("dnf", title, ("pkexec", "dnf", verb, "-y", *names), restart=kernel_in(names), packages=names)
 
 
 @dataclass(frozen=True)
@@ -54,6 +80,12 @@ class Plan:
     @property
     def restart(self) -> bool:
         return any(step.restart for step in self.steps)
+
+    def chosen(self, names: dict[int, tuple[str, ...]]) -> Plan:
+        """The plan with the checked packages alone: *names* maps a step's index to its checked packages; a step
+        without packages stays as it is, one with none checked goes."""
+        steps = (step.choose(names.get(index, ())) if step.packages else step for index, step in enumerate(self.steps))
+        return Plan(tuple(step for step in steps if step is not None), self.manual)
 
     def __bool__(self) -> bool:
         return bool(self.steps)
@@ -77,7 +109,7 @@ def _venv_python(environment: str) -> str:
     return str(Path(environment) / "bin" / "python")
 
 
-def plan(result: CheckResult, which: Which = shutil.which) -> Plan:
+def plan(result: CheckResult, which: Which = shutil.which, booted: Callable[[], bool] = ostree_booted) -> Plan:
     per_venv: dict[str, list[str]] = {}
     names: dict[str, list[str]] = {}
     for status in result.packages:
@@ -90,22 +122,27 @@ def plan(result: CheckResult, which: Which = shutil.which) -> Plan:
              for venv, reqs in per_venv.items()]
 
     brew, rpm, manual = [], [], []
+    atomic = booted()
+    system = "rpm-ostree" if atomic else "dnf"           # what installs a Fedora package on this system
     for item in result.tools:
         if item.path or item.note or tool_need(item.tool, result.installed) != "required":
             continue
         if item.tool.brew and which("brew"):
             brew.append(item.tool)
-        elif item.tool.rpm and which("rpm-ostree"):
+        elif item.tool.rpm and which(system):
             rpm.append(item.tool)
         else:
             manual.append(item.tool.name)
     if brew:
         steps.append(Step("brew", ", ".join(tool.name for tool in brew) + " with Homebrew",
                           (which("brew") or "brew", "install", *dict.fromkeys(tool.brew for tool in brew))))
-    if rpm:
+    if rpm and atomic:
         steps.append(Step("rpm-ostree", ", ".join(tool.name for tool in rpm) + " into the Bazzite image",
                           ("rpm-ostree", "install", "--idempotent", "--allow-inactive",
                            *dict.fromkeys(tool.rpm for tool in rpm)), restart=True))
+    elif rpm:
+        steps.append(dnf_step(", ".join(tool.name for tool in rpm) + " with dnf", "install",
+                              tuple(dict.fromkeys(tool.rpm for tool in rpm))))
     return Plan(tuple(steps), tuple(manual))
 
 
