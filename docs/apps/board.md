@@ -427,7 +427,7 @@ number of lines it covers.
 | 50 | Video Decode and Encode (VCN) | `vainfo` codec matrix: H.264/HEVC/VP9/AV1 decode and encode. Matters for streaming, OBS recording and video playback while gaming. |
 | 51 | HDMI-CEC | The PS5's CEC adapter (the kernel's `ps5-cec`), whether the TV answers a poll, and Bazzite's CEC mode. Whether the PS5 can turn the TV on and off; see [PS5 CEC Manager](cec.md). |
 | 52 | HDMI-CEC Services | Whether the services behind the TV control run: Valve's CEC daemon (`cecd`), PS5 CEC Manager's background service when installed, and Bazzite's dGPU CEC services when enabled. A service that is installed but not running is a warning; one that is not installed is only reported. |
-| 29 | Display Session       | Display manager, session and compositor, and the PS5 HDMI state.           |
+| 29 | Display Session, DisplayPort and HDMI | Display manager, session and compositor, and the PS5 HDMI state.           |
 
 ### CPU and firmware
 

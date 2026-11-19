@@ -1,3 +1,8 @@
+Changelog: 19-11-2026 11:02:34
+
+Fixed. Test 29 is called Display Session, DisplayPort and HDMI (owner, 19-11-2026): besides the session it
+reads the HDMI output. It was Display Session. The wiki's table has the new name.
+
 Changelog: 18-11-2026 04:15:16
 
 Release 0.4.0.

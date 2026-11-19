@@ -98,7 +98,7 @@ CATEGORIES: list[Category] = [
                 "The PS5's CEC adapter (the kernel's ps5-cec), whether the TV answers, and Bazzite's CEC mode. Whether the PS5 can turn the TV on and off."),
         TestDef("52", "HDMI-CEC Services",
                 "Whether the services behind the TV control run: Valve's CEC daemon (cecd), PS5 CEC Manager's background service when installed, and Bazzite's dGPU CEC services when enabled."),
-        TestDef("29", "Display Session",
+        TestDef("29", "Display Session, DisplayPort and HDMI",
                 "Display manager, session and compositor, and the PS5 HDMI state (recovery status, HDCP, FRL)."),
     ]),
     Category("cpu", "CPU and firmware", [

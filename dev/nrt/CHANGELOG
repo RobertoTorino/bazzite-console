@@ -1,3 +1,9 @@
+Changelog: 19-11-2026 10:26:39
+
+Fixed. While the release runs on GitHub, its step says what the run waits for: its first job waits until CI
+passed on the release commit, then it builds, and Device test and Publish come after it. The wait itself was
+release.yml's already.
+
 Changelog: 17-11-2026 23:32:30
 
 Fixed. Remove suite's text says that a test over an installed suite puts that install back when the portal

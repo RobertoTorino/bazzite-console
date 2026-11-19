@@ -391,7 +391,9 @@ class ReleasePage(QWidget):
         if key == "run" and facts.run is not None:
             link = f' <a href="{facts.run.url}">Open the run</a>'
             if not facts.run.done:
-                return f"{flow.WORKFLOW_NAME} is {facts.run.outcome} on {facts.run.sha[:7]}: wait, or Stop run.{link}"
+                return (f"{flow.WORKFLOW_NAME} is {facts.run.outcome} on {facts.run.sha[:7]}. Its first job waits until "
+                        f"CI passed on that commit, then it builds; Device test and Publish come after it. Wait, or "
+                        f"Stop run.{link}")
             if facts.restart:
                 return (f"{flow.WORKFLOW_NAME} ended {facts.run.outcome} on {facts.run.sha[:7]}; the fix is pushed and "
                         f"passed CI: Start again on this commit (the release is not written anew).{link}")

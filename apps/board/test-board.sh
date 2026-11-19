@@ -1470,7 +1470,7 @@ echo
 
 fi  # TEST 28
 if want 29; then
-log_result "[TEST 29] Display Session Test"
+log_result "[TEST 29] Display Session, DisplayPort and HDMI Test"
 log_result "Check display manager and graphical session"
 if systemctl cat display-manager.service >/dev/null 2>&1; then
     DM_UNIT=$(basename "$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null)" 2>/dev/null)
