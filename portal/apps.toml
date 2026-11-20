@@ -125,8 +125,8 @@ launch = [["Open", "~/.local/bin/ps5-pcsx2-manager"]]
 [apps.vita3k]
 name = "Vita3K Manager"
 summary = "Install Vita3K for PS Vita games and add installed titles to Game Mode."
-tag = "ps5-vita3k-v1.3.1"
-sha256 = "e9ae3c05aafd4f45b6a70c908f3ad01dd90032d22cbe211a457780415d7f3309"
+tag = "ps5-vita3k-v1.4.0"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -138,8 +138,8 @@ launch = [["Open", "~/.local/bin/ps5-vita3k-manager"]]
 [apps.xenia]
 name = "Xenia Manager"
 summary = "Install Xenia Canary for XBOX 360 games and add games to Game Mode."
-tag = "ps5-xenia-v1.3.1"
-sha256 = "f7142e026186b782c487102015ccadb8c414043954fc9dfed26b4e6384932128"
+tag = "ps5-xenia-v1.4.0"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
