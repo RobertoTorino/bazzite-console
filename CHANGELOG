@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 15:34:19
+
+Added. The Portal Tour (tools/portal_tour.py) spends more time on the tiles: their icons, and the tip that pops up over a tile, shown for Board Test, a tile not installed and, where one is installed, an app that changes the board. It starts with the example wallpaper, as the portal does, and the wallpaper part is shorter: the Wallpaper pill's menu and one pass of the transparency slider, no longer the choice of the example. The wiki's video is recorded again with tools/record-tour.sh --wiki; the Portal Tour page says what it shows.
+
 Changelog: 20-11-2026 15:13:27
 
 Fixed. The wiki builds again: the Quick Fix chapter linked CPU Tools' "Longer burn-in" section by an anchor that does not exist (MkDocs names it longer-burn-in-mprime--rasdaemon, with two hyphens for the slash).

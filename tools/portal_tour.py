@@ -89,7 +89,6 @@ class Tour(Recorder):
                     records[entry.key] = f"{entry.key}-v{major}.{max(int(minor) - 1, 0)}.0"
         state_dir().mkdir(parents=True, exist_ok=True)
         (state_dir() / "installed.json").write_text(json.dumps(records), encoding="utf-8")
-        (state_dir() / "wallpaper-none").touch()        # the tour starts without a wallpaper and chooses the example
         from bazzite_console_portal.main_window import MainWindow
 
         class Silent(audio.Sounds):                 # the Sound pill as on a board with an output, but nothing plays
@@ -167,9 +166,22 @@ class Tour(Recorder):
         self.move(self.at(w.big.notice))
         self.hold(3.5)
         first = w.big.tiles["board"]
-        self.say("Board Test checks the board. It is always installed, as the first tile on Sustainable.")
+        self.say("Every app has a tile: its own icon, its name, and under it whether it is installed.")
         self.move(self.at(first, 0.5, 0.3))
         self.hold(3.5)
+        self.say("Board Test checks the board. It is always installed, as the first tile on Sustainable.")
+        self.hold(3)
+        self.say("Hover over a tile and a tip pops up: what the app does, its release, and how to open it.")
+        self.show_tip(first)
+        self.hold(4.5)
+        self.hide_tip()
+        other = self.top_row_tile(installed=False)
+        if other is not None:
+            self.move(self.at(other, 0.5, 0.3), 0.7)
+            self.say("Every tile has one, installed or not. The symbols and the pills have their own tips too.")
+            self.show_tip(other)
+            self.hold(4.5)
+            self.hide_tip()
         self.say("A press on a tile opens its app; its menu installs, updates and uninstalls it, in a terminal.")
         self.move(self.at(first, 0.5, 0.6))
         self.click(lambda: self.open_tile_menu(first))
@@ -181,8 +193,10 @@ class Tour(Recorder):
         if board is not None:
             self.say("Apps that change how the board runs carry a mark, and the portal asks first. "
                      "All of them are software-only and can be undone.")
-            self.move(self.at(board, 0.5, 0.9))
-            self.hold(4)
+            self.move(self.at(board, 0.5, 0.3))
+            self.show_tip(board)                    # its tip says what it changes, under "Changes the board"
+            self.hold(5)
+            self.hide_tip()
 
         self.say("")
         for index, category in enumerate(w.big.categories[1:], 1):
@@ -198,28 +212,18 @@ class Tour(Recorder):
         self.move(self.at(w.settings_button), 0.6)
         self.click(w.toggle_settings)
         self.hold(0.6)
-        self.say("The Wallpaper pill: your own picture, the example, one used before, or none.")
+        self.say("The Wallpaper pill: your own picture, the example the portal starts with, one used before, or none.")
         self.move(self.at(w.wallpaper_pill))
         self.click(lambda: self.open_menu())
         self.hold(2.5)
-        example = next(a for a in self.popup.actions() if a.text() == "Example wallpaper")
-        self.move(self.at_action(example), 0.6)
-        self.click(lambda: (self.popup.close(), w.example_wallpaper()))
-        self.popup = None
-        self.say("It fills the screen, under a veil of the theme's color so the text stays readable.")
-        self.hold(3.5)
-        self.say("")
-        self.move(self.at(w.wallpaper_pill), 0.6)
-        self.click(lambda: self.open_menu())
         slider = w.transparency_slider
-        self.move(self.at_slider(slider, slider.value()), 0.7)
-        self.say("Transparency sets that veil: more for a dark or busy picture, so the icons stand out.")
+        self.move(self.at_slider(slider, slider.value()), 0.5)
+        self.say("Transparency sets the veil of the theme's color over it, and the view changes while you move it.")
+        self.hold(0.6)
+        for target in (85, 40):
+            self.drag(slider, target, 1.2)
+            self.hold(0.5)
         self.hold(1)
-        for target in (90, 25, 60):
-            self.drag(slider, target, 1.6)
-            self.hold(0.8)
-        self.say("The view changes while you move it, and the portal remembers it.")
-        self.hold(2)
         self.popup.close()
         self.popup = None
         self.pump()
@@ -300,6 +304,31 @@ class Tour(Recorder):
     def open_tile_menu(self, tile) -> None:
         self.popup = self.window.tile_menu(self.window.states[tile.key].entry)
         self.popup.popup(tile.mapToGlobal(tile.rect().bottomLeft()))
+        self.pump()
+
+    def top_row_tile(self, installed: bool):
+        """A tile of the top row (above the captions) after the first, installed or not; None when there is none."""
+        w = self.window
+        shown = sorted((t for t in w.big.tiles.values() if t.isVisible()), key=lambda t: (t.y(), t.x()))
+        return next((t for t in shown[1:] if t.y() == shown[0].y() and w.states[t.key].installed == installed), None)
+
+    def show_tip(self, widget) -> None:
+        """*widget*'s tooltip as the portal shows it under the mouse, at the pointer: Qt's own tooltip, drawn into
+        the frames as a menu is. It stays until hide_tip(), however slowly the frames are rendered."""
+        from PyQt6.QtCore import QPoint
+        from PyQt6.QtWidgets import QApplication, QToolTip
+        x, y = self.pointer
+        y += 30                                     # below the drawn arrow, as under a real pointer
+        QToolTip.showText(self.window.mapToGlobal(QPoint(round(x / SCALE), round(y / SCALE))), widget.toolTip(),
+                          widget, widget.rect(), 3_600_000)
+        self.pump()
+        self.popup = next((t for t in QApplication.topLevelWidgets()
+                           if t.objectName() == "qtooltip_label" and t.isVisible()), None)
+
+    def hide_tip(self) -> None:
+        from PyQt6.QtWidgets import QToolTip
+        QToolTip.hideText()
+        self.popup = None
         self.pump()
 
     def open_menu(self) -> None:
