@@ -102,6 +102,12 @@ def test_everything_when_the_change_is_not_known_or_every_job_stands_on_it(tmp_p
     for path in ("core/bazzite_console_core/theme.py", ".github/workflows/ci.yml", "tools/ci_matrix.py",
                  "requirements-dev.txt", "tools/installer-tests/shims.sh"):
         assert cm.plan([path], folder) == everything, path
+    for path in ("tools/ci-apt.sh", "tools/ci-qt-libs.sh", "tools/ci-font.sh",        # the jobs on GitHub run these
+                 ".github/actions/runner-packages/action.yml"):
+        assert cm.plan([path], folder)["full"], path
+    for path in ("tools/ci_local.py", "tools/ci-local.sh", "tools/ci-local/Containerfile"):
+        local = cm.plan([path], folder)                                 # no job on GitHub runs the local CI
+        assert not local["full"] and local["dirs"] == ["tools"] and not local["native"], path
     assert cm.changed_files("no-such-commit", folder) is None          # a new branch, a forced push
 
 

@@ -15,7 +15,7 @@ here and on GitHub, and one stalled job held the release): the test folders with
 tests hold the repository's rules), and the folders whose tests read a shared file that changed (portal/apps.toml,
 icons/categories.toml); the installer tests that name a changed app, folder or tool; the native job when the
 app with the native core changed; the wiki unless only Python code changed. Without --base, when the commit is not known here,
-or when something every job stands on changed (core, the workflows, this tool, the local CI, the development
+or when something every job stands on changed (core, the workflows, this tool, the scripts the jobs run, the development
 requirements), it is everything: full=true."""
 
 from __future__ import annotations
@@ -46,9 +46,11 @@ def pytest_dirs(root: Path = ROOT) -> list[str]:
     return test_folders(root, root)
 
 
-# A change to one of these is a change to every job: what the jobs run on, not what one of them tests.
-EVERYTHING = ("core/", ".github/workflows/", "tools/ci_matrix.py", "tools/ci_local.py", "tools/ci-local.sh",
-              "tools/ci-local/", "tools/ci-qt-libs.sh", "requirements-dev.txt", "tools/installer-tests/shims.sh")
+# A change to one of these is a change to every job: what the jobs run on, not what one of them tests. The local
+# CI (tools/ci_local.py, tools/ci-local.sh, tools/ci-local/) is not among them (owner, 20-11-2026): no job on GitHub
+# runs it, so its change is one to the tools, as any other tool's.
+EVERYTHING = ("core/", ".github/workflows/", ".github/actions/", "tools/ci_matrix.py", "tools/ci-apt.sh",
+              "tools/ci-qt-libs.sh", "tools/ci-font.sh", "requirements-dev.txt", "tools/installer-tests/shims.sh")
 ALWAYS = "tools"                        # its tests hold the repository's rules: the layout, the manifest, the wiki
 SHARED = ("portal/apps.toml", "icons/categories.toml")      # read by the tests of other folders, by their file name
 NATIVE = "apps/*/native/Cargo.toml"     # an app with a native core (Remote Play): the native job is its own

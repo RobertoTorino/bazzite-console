@@ -1,3 +1,15 @@
+Changelog: 20-11-2026 10:42:42
+
+Fixed. The CI jobs no longer download the same packages from Ubuntu's mirror each (owner, 20-11-2026: "every test has to download that same font over and over"): Bazzite's font and the libraries Qt needs, which the Ubuntu 26.04 runner lacks (ten packages per job), are downloaded once, by ci.yml's plan job, and kept in GitHub's cache (.github/actions/runner-packages, tools/ci-apt.sh); the pytest and docs jobs and docs.yml install them from the cache with tools/ci-qt-libs.sh and tools/ci-font.sh. Some runners reach the mirror at about 45 kB/s, and their jobs failed at the step's 5 minutes before a test ran; cutting a try off after 45 seconds did not help there. A download is now tried three times, each try going on where the last stopped, the second and third from the next mirror in the runner's list. Dependabot also reads the action; a change to .github/actions/ or to tools/ci-apt.sh runs every job.
+
+Changelog: 20-11-2026 10:32:13
+
+Fixed. A change to the local CI (tools/ci_local.py, tools/ci-local.sh, tools/ci-local/) no longer runs every job (owner, 20-11-2026): no job on GitHub runs these files, so tools/ci_matrix.py plans such a push as a change to any tool, the tests of tools and what else the push changed. A fix to tools/ci_local.py had started all 40 jobs on GitHub. The wiki's development page says so.
+
+Changelog: 20-11-2026 10:27:17
+
+Fixed. The CI jobs no longer wait 5 minutes on a stalled download of Bazzite's font and then fail: tools/ci-font.sh installs it in the pytest and docs jobs of ci.yml and in docs.yml, cuts a try off after 45 seconds and tries three times, and asks Ubuntu's mirror for its package lists only when an install fails. On 20-11-2026 two pytest jobs of one run stalled on the 13 MB package and failed before a test ran. A change to the script runs every job, as one to tools/ci-qt-libs.sh does.
+
 Changelog: 20-11-2026 05:35:36
 
 Fixed. tools/ci-local.sh runs fewer jobs at a time when the computer's free memory is short: one job per 1.5 GB of it, at least two and at most half the cores as before; --workers still sets the number. With six jobs side by side on a computer whose swap was full, a portal test crashed inside Qt (a segmentation fault while it scaled a picture) and passed three times when the job ran alone. The wiki's development page says so.

@@ -154,8 +154,8 @@ core's packages and of the suite's folders are in `.claude/suite.md`.
   `check_manifest.py`, `pin_app.py`, `suite_release.py`, `publish_release.sh`, `tag-release.sh`, `release_commit.py`,
   `ci_state.py`, `ci_matrix.py`, `check-release.sh`: the board checks of a portal release), `all_tests.py`
   (`ALL-TESTS.md`, the list of every test, written from the tests; CI compares them), CI on this machine
-  (`ci-local.sh`, `ci_local.py`, `ci-local/`, `ci-qt-libs.sh`), `suites.py`, `sync_icons.py`, `new_app.py`,
-  `check_upstream.py`, `fix-modes.sh`, `nrt.sh`, the tours (`portal_tour.py`, `app_tour.py`, `tour_frames.py`,
+  (`ci-local.sh`, `ci_local.py`, `ci-local/`, `ci-apt.sh`, `ci-qt-libs.sh`, `ci-font.sh`), `suites.py`,
+  `sync_icons.py`, `new_app.py`, `check_upstream.py`, `fix-modes.sh`, `nrt.sh`, the tours (`portal_tour.py`, `app_tour.py`, `tour_frames.py`,
   `record-tour.sh`, `record-app-tour.sh`, their music in `sounds/`), `portal_screenshot.py`,
   `make_portal_sounds.py`, `apply_design.py`, `make_design.py` (DESIGN.md and its samples in `design/colors/`),
   `text_check.py` with `text_check/` (what is wrong with the text people read; no test and no CI check), `mkdocs/`

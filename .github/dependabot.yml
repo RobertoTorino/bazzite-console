@@ -4,7 +4,7 @@
 version: 2
 updates:
   - package-ecosystem: github-actions
-    directory: /
+    directories: ["/", "/.github/actions/*"]       # the workflows, and the actions of our own that they use
     schedule:
       interval: weekly
       timezone: Europe/Amsterdam

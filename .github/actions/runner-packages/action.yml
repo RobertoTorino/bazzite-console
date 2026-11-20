@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# What a job needs from Ubuntu's mirror (Qt's libraries, Bazzite's font), without a download per job: the packages
+# are in GitHub's cache, and tools/ci-qt-libs.sh and tools/ci-font.sh install them from there (tools/ci-apt.sh).
+# ci.yml's plan job fills the cache (fetch-only) before the jobs that need the packages start, so they all find
+# them. The mirror is asked again when the runner's image or one of the scripts changes, or when GitHub dropped the
+# cache (a week without a run).
+name: Runner packages
+description: Qt's libraries and Bazzite's font from GitHub's cache
+inputs:
+  pulse:
+    description: Also libpulse0, for Qt Multimedia in the apps' tests
+    default: "false"
+  font:
+    description: Also Bazzite's font, for the tests that measure a window and the picture of the portal
+    default: "false"
+  fetch-only:
+    description: Fill the cache and install nothing (the plan job)
+    default: "false"
+runs:
+  using: composite
+  steps:
+    # The packages are those of the runner's image: its package lists name their versions.
+    - id: image
+      shell: bash
+      run: echo "name=${ImageOS:-none}-${ImageVersion:-none}" >> "$GITHUB_OUTPUT"
+    - uses: actions/cache@v6
+      with:
+        path: ~/.cache/ci-apt
+        key: >-
+          ci-apt-${{ steps.image.outputs.name }}-${{
+          hashFiles('tools/ci-apt.sh', 'tools/ci-qt-libs.sh', 'tools/ci-font.sh') }}
+    - shell: bash
+      env:
+        PULSE: ${{ inputs.pulse == 'true' && '--pulse' || '' }}
+        FONT: ${{ inputs.font }}
+        FETCH: ${{ inputs.fetch-only == 'true' && '--fetch' || '' }}
+      run: |
+        # shellcheck disable=SC2086  # an empty option is no option
+        bash tools/ci-qt-libs.sh $PULSE $FETCH
+        if [ "$FONT" = true ]; then bash tools/ci-font.sh $FETCH; fi
