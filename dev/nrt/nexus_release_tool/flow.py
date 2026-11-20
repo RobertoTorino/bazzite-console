@@ -32,6 +32,7 @@ CI_WORKFLOW = "ci.yml"
 _RUN_ID = re.compile(r"/actions/runs/(\d+)")
 DEVIATION_LIMIT = 120                   # seconds a release may take longer than the one before it without a banner
 DEVIATION_KEY = "release/deviation_limit"       # another limit, in seconds, in NRT's settings
+AUTOSTART_KEY = "release/autostart"     # false in NRT's settings: Start new release waits for its pill again
 
 
 def releases_on_github(root: Path) -> bool:
@@ -293,18 +294,21 @@ def resume_command(run: rp.BuildRun) -> str:
 
 @dataclass(frozen=True)
 class ReleaseTime:
-    """How long one release took up to its device test, as GitHub measured it: CI on the commit the release started
-    from (step 4) and from the release commit (Start new release) to the end of the release on GitHub (steps 5 and
-    6). What the owner waits between the two is not counted, nor the steps on this computer (pull, commit, push),
-    which no release before this one recorded."""
+    """How long one release took up to its device test, every step of it (owner, 20-11-2026: the time was GitHub's
+    CI and release only, 9 min 46 s for a release whose push alone ran CI's jobs here for 17 minutes): from the
+    commit the release started from (Commit your changes) to the end of GitHub's CI on it (steps 2 to 4: the push
+    with CI's jobs here, then GitHub's), and from the release commit (Start new release) to the end of the release
+    on GitHub (steps 5 and 6). Read from the commits' times and GitHub's runs, so a release made before this one
+    has its time too. What the owner waits between CI passed and Start is not counted."""
     sha: str                            # the release commit
-    ci: float                           # seconds of CI before Start; 0 when GitHub no longer lists that run
+    before: float                       # seconds from the commit before it to the end of GitHub's CI on that
+                                        # commit; 0 when GitHub no longer lists that run
     release: float                      # seconds from the release commit to the end of its run (so far, while it runs)
     running: bool = False
 
     @property
     def total(self) -> float:
-        return self.ci + self.release
+        return self.before + self.release
 
 
 def release_times(root: Path, now: Callable[[], float] = time.time,
@@ -321,7 +325,9 @@ def release_times(root: Path, now: Callable[[], float] = time.time,
         parent = (rp.git(root, "rev-parse", "--verify", "--quiet", f"{run.sha}^") or "").strip()
         before = read(rp.HEAD_RUNS_URL.format(repo=repo, sha=parent)) if parent else []
         ci = next((r for r in before if r.file == CI_WORKFLOW and r.done and r.started and r.ended), None)
-        times.append(ReleaseTime(run.sha, max(0.0, ci.ended - ci.started) if ci else 0.0,
+        worked = (rp.git(root, "log", "-1", "--format=%ct", parent) or "").strip() if ci else ""
+        times.append(ReleaseTime(run.sha, max(0.0, ci.ended - (float(worked) if worked.isdigit() else ci.started))
+                                 if ci else 0.0,
                                  max(0.0, (run.ended or now()) - start) if start else 0.0, not run.done))
     return times
 
@@ -357,13 +363,17 @@ STEPS = (
     ("push", "Push them", "Your commits to GitHub: what GitHub has that this checkout lacks comes in under them first "
                           "(git pull --rebase), then CI's jobs run here (tools/ci-local.sh)."),
     ("ci", "CI passes", "GitHub's CI on that commit. Nothing to press: wait until it passed."),
-    ("start", "Start new release", "Check the versions on the Contents tab, then start: it writes the release, commits and pushes "
-                                   "it and starts the release on GitHub."),
+    ("start", "Start new release", "Starts by itself when CI passes while this window is open; else check the "
+                                   "versions on the Contents tab, then start. It writes the release, commits and "
+                                   "pushes it and starts the release on GitHub."),
     ("run", "The release on GitHub", "Builds and publishes the apps, pins them and makes the portal a draft."),
     ("test", "Device test", "Installs the draft portal on this device and starts it: test it as a user would."),
     ("publish", "Publish", "The test passed: publish the portal. Not OK leaves it a draft."),
     ("finish", "Bring in the pin commit", "The release wrote a commit Pin ... on main: pull it."),
+    ("ready", "All runs finished", "What GitHub still runs after Publish (the wiki, the runs on the portal's tag): "
+                                   "wait until they all finished."),
 )
+READY = "All runs finished, ready."     # the last step's line once a release is out and GitHub runs nothing more
 KEYS = tuple(key for key, _title, _what in STEPS)
 
 
@@ -381,6 +391,7 @@ class Facts:
     restart: bool = False               # HEAD is not the run's commit: a failed run starts again on HEAD, the fix
     rejected: list[str] = field(default_factory=list)   # its drafts the device test failed (Not OK), still drafts
     push_failed: str = ""               # the last Push of these commits ended badly: why (push_failure)
+    building: tuple[str, ...] = ()      # the runs GitHub has not finished yet, by label ("Wiki on main")
 
 
 _CI_TOTAL = re.compile(r"^(\d+) jobs? from ci\.yml", re.M)
@@ -526,7 +537,9 @@ def current_step(facts: Facts) -> str:
             return "run"                    # running, or ended badly: Resume or Stop
         if facts.drafts:
             return "test"
-        return "finish" if facts.behind else ""
+        # Out and pulled, but not ready while GitHub still runs something (owner, 20-11-2026: every step had its
+        # check while the wiki's run went on)
+        return "finish" if facts.behind else "ready" if facts.building else ""
     if facts.unpushed:
         return "start"                      # its push stopped: Push and start
     if facts.behind:
@@ -554,12 +567,25 @@ def step_states(facts: Facts) -> dict[str, str]:
     elif now == "test":
         states["publish"] = "now"          # the test is the owner's: Publish or Not OK once it is done
     if now in ("pull", "commit", "push", "ci", "start"):
-        for key in ("run", "test", "publish", "finish"):
+        for key in ("run", "test", "publish", "finish", "ready"):
             states[key] = "later"
     run = facts.run
     if run is not None and run.done and not run.passed and now in ("commit", "push", "ci"):
         states["start"], states["run"] = "done", "failed"     # written already; its fix goes through 2 to 4 first
     return states
+
+
+def still_running(runs: list[rp.BuildRun]) -> tuple[str, ...]:
+    """The runs of *runs* GitHub has not finished, by label, each once: what the last step waits for."""
+    return tuple(dict.fromkeys(r.label for r in runs if not r.done))
+
+
+def autostart(facts: Facts, waited: str, head: str) -> bool:
+    """Whether Start new release starts by itself now (owner, 20-11-2026: "If CI passes in NRT we autostart"): the
+    step to do is Start, and this window saw CI pass on HEAD, that is, CI passes was the step to do on this commit
+    (*waited*) before. A window opened on a commit whose CI passed earlier starts nothing by itself, nor does a
+    release commit whose push stopped."""
+    return bool(head) and waited == head and not facts.unpushed and current_step(facts) == "start"
 
 
 def dirty_paths(root: Path) -> list[str]:

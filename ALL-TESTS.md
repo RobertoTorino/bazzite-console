@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2925 test functions (3313 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+2929 test functions (3317 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -36,13 +36,13 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 102 | 2.1 s |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
-| [dev/nrt](#devnrt) | 4 | 128 | 23.1 s |
+| [dev/nrt](#devnrt) | 4 | 132 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [dev/studio](#devstudio) | 6 | 58 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
 | [tools](#tools) | 38 | 225 | 10.2 s |
-| **All** | | **2925** | **153 s** |
+| **All** | | **2929** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -2517,7 +2517,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## dev/nrt
 
-128 tests in 4 files, 23.1 s in a local run.
+132 tests in 4 files, 23.1 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2578,11 +2578,15 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_flow.py` | `test_the_push_shows_ci_here_and_a_failure_stays_on_its_step` |  | 0.8 s | The push shows ci here and a failure stays on its step. |
 | `test_flow.py` | `test_a_push_github_has_no_runs_of_yet_shows_no_old_failure` |  | 0.4 s | Right after a push, GitHub's newest runs are the commit's before: one that failed showed this push as failed until GitHub had started its runs (owner, 15-11-2026). |
 | `test_flow.py` | `test_the_portal_video_check` |  |  | tools/portal_tour.py --check: "" when the video is current or the suite has none, else why it waits. |
-| `test_flow.py` | `test_a_release_takes_its_ci_before_start_and_the_time_from_its_commit_to_the_end_of_its_run` |  |  | Two releases in the checkout, each a commit on top of the one CI passed on; a failed run and a run on a tag are no releases; what the owner waited between CI and Start is not counted. |
+| `test_flow.py` | `test_a_release_takes_from_its_work_commit_to_ci_passed_and_from_its_commit_to_the_end_of_its_run` |  |  | Two releases in the checkout, each a commit on top of the one CI passed on; a failed run and a run on a tag are no releases; what the owner waited between CI and Start is not counted. |
 | `test_flow.py` | `test_a_release_that_still_runs_counts_the_time_so_far_and_a_first_release_has_no_deviation` |  |  | A release that still runs counts the time so far and a first release has no deviation. |
 | `test_flow.py` | `test_times_and_deviations_in_words` |  |  | Times and deviations in words. |
 | `test_flow.py` | `test_the_page_shows_both_times_and_the_deviation_and_a_banner_over_the_limit` |  |  | Over the limit the deviation is orange and in the banner; 0 or less and under the limit it is in its box only; while the release runs a deviation under the limit says nothing yet. |
 | `test_flow.py` | `test_the_times_are_read_through_the_windows_source` |  |  | The build indicator asks with each look (check_times): the source runs off the GUI thread and its answer fills the boxes; a source that cannot reach GitHub leaves them as they were. |
+| `test_flow.py` | `test_the_time_boxes_are_wide` |  |  | Owner, 20-11-2026: wider; "9 min 39 s so far" filled its box. |
+| `test_flow.py` | `test_start_follows_by_itself_when_this_window_saw_ci_pass` |  |  | Owner, 20-11-2026: "If CI passes in NRT we autostart". |
+| `test_flow.py` | `test_start_does_not_follow_by_itself_when_the_settings_say_so_or_another_commit_waited` |  |  | Start does not follow by itself when the settings say so or another commit waited. |
+| `test_flow.py` | `test_the_last_step_waits_until_github_runs_nothing_more` |  |  | Owner, 20-11-2026: step 9 had its check while the wiki still ran on GitHub. |
 | `test_main_window.py` | `test_every_widget_keeps_qts_window_method` |  | 0.4 s | An attribute named window on a widget hides QWidget.window(), which the suite's tooltip calls on the widget it is shown for: hovering the build indicator stopped the app that way. |
 | `test_main_window.py` | `test_without_notify_send_the_tray_icon_notifies` |  | 0.3 s | A desktop without notify-send: the notification comes from the tray icon instead (owner, 28-10-2026). |
 | `test_main_window.py` | `test_tooltip_over_the_build_indicator` |  | 0.4 s | Tooltip over the build indicator. |

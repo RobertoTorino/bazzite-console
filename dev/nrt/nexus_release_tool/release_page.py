@@ -2,8 +2,8 @@
 """The release tab (owner, 30-10-2026): the whole release as numbered steps in their order, from your own
 changes to the portal published (owner: "if I open NRT I want to see exactly what has to be done in their logical
 sequence"): Get up to date, Commit your changes, Push them, CI passes, Start new release (with what the release holds
-above it), the release on GitHub (Stop or Resume), Device test, Publish (or Not OK) and Bring in the pin commit. Each
-step says where it stands; only the step to do now has its pill lit (owner: "if that means I have to do 3 actions we
+above it), the release on GitHub (Stop or Resume), Device test, Publish (or Not OK), Bring in the pin commit and All
+runs finished. Each step says where it stands; only the step to do now has its pill lit (owner: "if that means I have to do 3 actions we
 make pills for them that can be clicked"). The logic is flow.py's (current_step, step_states); the window
 (main_window.py) holds the command line the commands run in and the GitHub runs the header reads. Above the steps,
 an orange banner says when the wiki's Portal Tour is older than the portal (flow.video_reason), with Record new video
@@ -15,7 +15,7 @@ import shlex
 import sys
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QComboBox, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMessageBox,
                              QPushButton, QScrollArea, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
@@ -52,6 +52,8 @@ RUNNING_ELSE = "A command runs. Its output is on the Commands tab; the steps go 
 REJECTED_KEY = "release/rejected"     # "<run url>|<portal tag>" of each Not OK, the newest 20
 DEFAULT_MESSAGE = "see changelog"      # the commit message the field starts with (owner, 05-11-2026)
 PILLS_PX = 360                        # the pills column of the steps: two pills side by side, or the message field
+TIME_BOX_PX = 240                     # each of the three time boxes (owner, 20-11-2026: wider; "9 min 39 s so far"
+                                      # filled its box from edge to edge)
 
 
 class ReleasePage(QWidget):
@@ -104,12 +106,13 @@ class ReleasePage(QWidget):
         # How long the release took up to its device test, the one before it and the deviation between the two
         # (owner, 20-11-2026); a deviation over the limit also shows in an orange banner.
         self.time_now = MetricBox("This release")
-        self.time_before = MetricBox("Previous release")
+        self.time_before = MetricBox("Release before it")
         self.time_deviation = MetricBox("Deviation")
         self.times_row = QWidget()
         boxes = QHBoxLayout(self.times_row)
         boxes.setContentsMargins(0, 0, 0, 0)
         for box in (self.time_now, self.time_before, self.time_deviation):
+            box.setMinimumWidth(TIME_BOX_PX)
             boxes.addWidget(box)
         boxes.addStretch(1)
         self.times_row.hide()
@@ -157,11 +160,14 @@ class ReleasePage(QWidget):
         self.picks: list[flow.Pick] = []
         self.rows: list[tuple[flow.Pick, QComboBox, QLineEdit]] = []
         self.facts = flow.Facts()
+        self.head = ""                          # the checkout's HEAD when the steps were read last
+        self.ci_waited = ""                     # the HEAD that CI passes was the step to do on: Start follows by itself
 
         pills = {"pull": [self.pull_button], "commit": [self.commit_message, self.commit_button],
                  "push": [self.push_button], "ci": [self.rerun_ci_button], "start": [self.start_button],
                  "run": [self.stop_button, self.resume_button], "test": [self.portal_choice, self.test_button],
-                 "publish": [self.publish_button, self.reject_button], "finish": [self.finish_button]}
+                 "publish": [self.publish_button, self.reject_button], "finish": [self.finish_button],
+                 "ready": []}
         steps = QGridLayout()
         steps.setColumnStretch(2, 1)            # the step's line gets the width; the pills keep theirs
         self.marks: dict[str, QLabel] = {}
@@ -204,9 +210,11 @@ class ReleasePage(QWidget):
             "The release's steps in their order: the one to do now has its pill lit and an orange ▶.",
             "The release, step by step: Get up to date, Commit your changes, Push them, CI passes, Start new "
             "release (what it holds is on the Contents tab), the release on GitHub (Stop or Resume), Device "
-            "test, Publish (or Not OK) and Bring in the pin commit. Only the step to do now has its pill lit and an "
-            "orange ▶; a step done has a green ✓, one that failed a red !, and the line beside each says what there "
-            "is to do. Only the lit pill does anything, so you never need a command or another tab."))
+            "test, Publish (or Not OK), Bring in the pin commit and All runs finished. Only the step to do now has "
+            "its pill lit and an orange ▶; a step done has a green ✓, one that failed a red !, and the line beside "
+            "each says what there is to do. Only the lit pill does anything, so you never need a command or another "
+            "tab. Start new release starts by itself when CI passes while this window is open; the last step has "
+            "its check when GitHub runs nothing more."))
         lay.addWidget(self.video_banner)
         lay.addWidget(self.slow_banner)
         lay.addWidget(self.times_row)
@@ -263,26 +271,35 @@ class ReleasePage(QWidget):
         self.slow_banner.hide()
         if not times:
             return
-        parts = ("CI before Start {ci}, from Start to the end of the release on GitHub {release}. Up to the device "
-                 "test; the waiting between the two is not counted.")
+        # The first box is the newest release GitHub has: This release only while it is the one being made (its run
+        # goes on, or its steps are not done), else Latest release (owner, 20-11-2026: during steps 1 to 4 it read
+        # This release for the one that was out already).
+        run = self.facts.run
+        mine = times[0].running or (run is not None and run.sha == times[0].sha
+                                    and bool(flow.current_step(self.facts)))
+        self.time_now.caption.setText("This release" if mine else "Latest release")
+        parts = ("From Commit your changes to CI passed on GitHub {before} (the push with CI's jobs here, then "
+                 "GitHub's CI); from Start to the end of the release on GitHub {release}. Up to the device test; the "
+                 "waiting between the two is not counted.")
         for box, taken in ((self.time_now, times[0]), (self.time_before, times[1] if len(times) > 1 else None)):
             if taken is None:
                 box.set_value("—", "No release before this one on GitHub.")
                 continue
             box.set_value(flow.duration_text(taken.total) + (" so far" if taken.running else ""),
                           f"Release commit {taken.sha[:7]}. " + parts.format(
-                              ci=flow.duration_text(taken.ci) if taken.ci else "not known",
+                              before=flow.duration_text(taken.before) if taken.before else "not known",
                               release=flow.duration_text(taken.release)))
         more = flow.deviation(times)
         over = more is not None and round(more) > limit
         known = more is not None and (over or not times[0].running)
         self.time_deviation.set_value(flow.deviation_text(more) if known else "—",
-                                      f"This release against the one before it. Over {flow.duration_text(limit)} "
+                                      f"The first box against the second. Over {flow.duration_text(limit)} "
                                       "longer shows an orange banner.")
         self.time_deviation.set_colour(ORANGE if over else GREY)
         if over:
             self.slow_note.setText(
-                f"This release {'is taking' if times[0].running else 'took'} {flow.duration_text(more)} longer "
+                f"{'This' if mine else 'The latest'} release {'is taking' if times[0].running else 'took'} "
+                f"{flow.duration_text(more)} longer "
                 f"than the one before it up to the device test ({flow.duration_text(times[0].total)} against "
                 f"{flow.duration_text(times[1].total)}).")
             self.slow_banner.show()
@@ -336,7 +353,7 @@ class ReleasePage(QWidget):
         window = self.release_window
         root, base = window.root, window.base()
         runs = window.build.runs
-        head = (rp.git(root, "rev-parse", "HEAD") or "").strip()
+        head = self.head = (rp.git(root, "rev-parse", "HEAD") or "").strip()
         run = flow.cycle_run(root, runs, self.rejected(flow.release_run(runs)))
         unstaged, staged, ahead = rp.git_state(root, base)
         return flow.Facts(
@@ -346,7 +363,8 @@ class ReleasePage(QWidget):
             drafts=[t for t in flow.waiting_portals(root, run.sha) if not flow.published(root, runs, t)]
             if run else [],
             restart=run is not None and run.sha != head, rejected=self.rejected(run),
-            push_failed=self.push_failed[1] if ahead and self.push_failed[0] == head else "")
+            push_failed=self.push_failed[1] if ahead and self.push_failed[0] == head else "",
+            building=flow.still_running(runs))
 
     def pushing(self) -> bool:
         """Whether the command that runs is the Push step's."""
@@ -434,6 +452,30 @@ class ReleasePage(QWidget):
         self.state.setText(f'Last {flow.WORKFLOW_NAME}: {last.outcome} on {last.sha[:7]}. <a href="{last.url}">Open '
                            "the run</a>" if last is not None else "")
         self.state.setStyleSheet(f"color:{GREY};")
+        # CI passed on the commit this window waited for: Start new release follows by itself (owner, 20-11-2026),
+        # once nothing holds it (a command that runs, the portal video, a tree not ready). After the steps are
+        # drawn, never from inside them.
+        if now == "ci":
+            self.ci_waited = self.head
+        elif now != "start" or self.ci_waited != self.head:
+            self.ci_waited = ""
+        elif idle and self.autostart_on() and not self.video_reason and not reasons \
+                and flow.autostart(facts, self.ci_waited, self.head):
+            self.ci_waited = ""
+            QTimer.singleShot(0, self.auto_start)
+
+    def autostart_on(self) -> bool:
+        """Start new release follows CI by itself unless NRT's settings say release/autostart=false."""
+        settings = self.release_window.settings
+        kept = str(settings.value(flow.AUTOSTART_KEY, "true")) if settings is not None else "true"
+        return kept.strip().lower() not in ("false", "0", "no", "off")
+
+    def auto_start(self) -> None:
+        """Start new release without its pill and its question, when it is still the step to do."""
+        window = self.release_window
+        if window.commands.is_running() or flow.current_step(self.read_facts()) != "start":
+            return
+        self.start(asked=False)
 
     def detail(self, key: str, state: str, facts: flow.Facts) -> str:
         """The step's line while it is the one to do or failed: what is there to do, in words; "" for its usual
@@ -451,9 +493,14 @@ class ReleasePage(QWidget):
             # After Not OK, or after a restart of NRT, which keeps nothing of its own: the draft says it is still there
             return (f"{', '.join(facts.drafts)} is still a draft, not published: Start new release replaces it with "
                     "a new one.")
+        if key == "ready" and state == "done" and facts.run is not None:
+            return flow.READY                   # a release is out and GitHub runs nothing more
         if state not in ("now", "failed"):
             return ""
         window = self.release_window
+        if key == "ready":
+            return (f"GitHub still runs {', '.join(facts.building)}: wait until "
+                    f"{'it' if len(facts.building) == 1 else 'they'} finished. Nothing to press.")
         if key == "pull":
             return f"{facts.behind} commit{'s' if facts.behind != 1 else ''} on GitHub that this checkout lacks."
         if key == "commit":
@@ -468,8 +515,9 @@ class ReleasePage(QWidget):
             if facts.ci == "failed":
                 return ("CI failed on this commit. When it was GitHub's own trouble (an error of its servers, a job "
                         "that never started): Run CI again. When a test failed: fix it, then Commit and Push.")
-            return ("CI is running on this commit: wait until it passed." if facts.ci == "building" else
-                    "GitHub has no CI run on this commit yet: wait a moment.")
+            then = " Start new release follows by itself." if facts.something and self.autostart_on() else ""
+            return (f"CI is running on this commit: wait until it passed.{then}" if facts.ci == "building" else
+                    f"GitHub has no CI run on this commit yet: wait a moment.{then}")
         if key == "start":
             if self.video_reason:
                 return "Record a new portal video first (the orange banner): the release waits for it."
@@ -583,7 +631,9 @@ class ReleasePage(QWidget):
         banner goes."""
         self.release_window.run_git(flow.RECORD_VIDEO)
 
-    def start(self) -> None:
+    def start(self, asked: bool = True) -> None:
+        """Start new release. *asked* False: started by itself after CI passed (auto_start), so without the
+        question; what holds a release still shows in its message."""
         window = self.release_window
         self.show_video(flow.video_reason(window.root))        # again, right before: the banner may be minutes old
         if self.video_reason:
@@ -617,11 +667,13 @@ class ReleasePage(QWidget):
             QMessageBox.warning(self, "Start new release", "\n".join(reasons + problems) or "Nothing to release.")
             return
         rows = "\n".join(f"{p.label}: {p.unit.version} -> {p.version or p.choices[0]}" for p in chosen)
-        if not window.confirm_git("Start new release", "Write this release, commit it, push it to main and start "
-                                  f"it on GitHub:\n\n{rows}", flow.start_command("Release ...")):
+        if asked and not window.confirm_git("Start new release", "Write this release, commit it, push it to main "
+                                            f"and start it on GitHub:\n\n{rows}",
+                                            flow.start_command("Release ...")):
             return
         log, tags = flow.write(window.root, chosen, window.base())
         message = flow.commit_message(tags)
+        log = ([] if asked else ["CI passed: the release starts by itself.", rows, ""]) + log
         log += ["", f"Commit \"{message}\", push, and {flow.RELEASE_WORKFLOW} on GitHub: see Commands."]
         self.output.set_text("\n".join(log))
         window.run_git(flow.start_command(message))

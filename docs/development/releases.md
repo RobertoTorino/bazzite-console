@@ -73,8 +73,11 @@ explanation.
    shows them running again; a run that fails again can be started again.
 5. **Start new release:** while the wiki's Portal Tour is older than the portal (its window or its tiles), an orange
    banner above the steps says so, with **Record new video now** (`tools/record-tour.sh --wiki`, about a minute, its
-   output on the Commands tab), and this step waits until the video is recorded. Then check the versions on the
-   Contents tab, and press it. It writes the release (the versions
+   output on the Commands tab), and this step waits until the video is recorded. When CI passes on the commit
+   while the tool's window is open and waited for it, the release starts by itself, without the pill and its
+   question, so check the versions on the Contents tab before then. A window opened on a commit whose CI passed
+   earlier starts nothing by itself: check the versions and press the pill. `release/autostart=false` in the
+   tool's settings turns starting by itself off. It writes the release (the versions
    and their copies, the `Release x.y.z.` entries, the new tags in `portal/apps.toml`, the portal's version and its
    entry), commits it, pushes it and starts `.github/workflows/release.yml` on that commit. If the push stops, fix
    what it says; the pill then reads **Push and start**. It fetches GitHub's tags and `main` first: the portal is
@@ -113,13 +116,18 @@ explanation.
    its version; the apps already out are skipped). Until the fix is committed, **Device test** and **Publish**
    stay at hand, for a Not OK pressed by mistake.
 9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. Publish fetches main with the new
-   tag, so it lights as soon as Publish ends (or as soon as GitHub's runs on main show that commit). Then every
-   step shows ✓.
+   tag, so it lights as soon as Publish ends (or as soon as GitHub's runs on main show that commit).
+10. **All runs finished:** nothing to press. Publish starts more runs on GitHub (the wiki, the runs on the
+    portal's tag), and the step waits for them, with their names in its line. When GitHub runs nothing more, the
+    line reads *All runs finished, ready.* and every step shows ✓.
 
-Above the steps, three boxes say how long the release takes: **This release**, **Previous release** and the
-**Deviation** between the two. The time runs up to the device test and is GitHub's: CI on the commit the release
-started from, plus the time from the release commit to the end of the release on GitHub. The waiting between the
-two is not counted, nor the steps on this computer. While the release runs, its box shows the time so far. A
+Above the steps, three boxes say how long the release takes: **This release**, **Release before it** and the
+**Deviation** between the two. The first box is the newest release GitHub has: until **Start new release** has
+started the new one, that is the last one that went out, and the box reads **Latest release**. The time runs up to the device test and has two parts: from the commit the
+release started from (**Commit your changes**) to the end of GitHub's CI on it, which holds the push with CI's
+jobs here, and from the release commit to the end of the release on GitHub. The waiting between CI passed and
+Start is not counted. The times come from the commits and GitHub's runs. While the release runs, its box shows
+the time so far. A
 release that took more than 2 minutes longer than the one before it also shows the deviation in an orange banner;
 a deviation under that, or of 0 or less, shows in its box only. Each box's tooltip names the release commit and
 the two parts. The limit is `DEVIATION_LIMIT` in `dev/nrt/nexus_release_tool/flow.py`.

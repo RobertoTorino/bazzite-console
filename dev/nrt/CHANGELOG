@@ -1,3 +1,9 @@
+Changelog: 20-11-2026 13:38:39
+
+Added. Start new release starts by itself, without its question, when CI passes on the commit while the window is open and waited for it (owner, 20-11-2026); a window opened on a commit whose CI passed earlier starts nothing by itself, and release/autostart=false in NRT's settings turns it off. A tenth step, All runs finished (owner, 20-11-2026): after Publish and the pin commit it waits while GitHub still runs something (the wiki, the runs on the portal's tag) and names the runs, then reads "All runs finished, ready."; before, every step had its check while a run went on.
+
+Fixed. The release's time counts every step up to the device test (owner, 20-11-2026: "Recorded time is incorrect"): its first part runs from the commit the release started from to the end of GitHub's CI on it, so the push with CI's jobs here is in it; it was GitHub's CI alone, 1 min 39 s where the push took 17 minutes. The three time boxes are wider (240 px at least). The first box reads This release only while that release is being made (its run goes on, or its steps are not done), else Latest release, and the second reads Release before it; during steps 1 to 4 the first box read This release for the release that was out already.
+
 Changelog: 20-11-2026 12:37:04
 
 Added. The Nexus release tab shows how long the release took up to its device test, how long the one before it took, and the deviation between the two (owner, 20-11-2026), in three boxes above the steps. A deviation over 2 minutes also shows in an orange banner; under that, and at 0 or less, the box alone says it. The time is GitHub's: CI on the commit the release started from, and from the release commit to the end of the release on GitHub; the waiting between the two and the steps on this computer are not counted. While the release runs, its time is the time so far. The limit is DEVIATION_LIMIT in flow.py, or release/deviation_limit (seconds) in NRT's settings.
