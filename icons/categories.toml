@@ -82,6 +82,16 @@ category = "sustainable"
 icons = ["apps/fan/images/ps5-fan-controller"]
 tile = "portal/images/apps/fan.webp"
 
+[compute]
+category = "sustainable"
+icons = ["apps/compute/images/ps5-cu-bisect"]
+tile = "portal/images/apps/compute.webp"
+
+[cores]
+category = "sustainable"
+icons = ["apps/cores/images/ps5-cores-bisect"]
+tile = "portal/images/apps/cores.webp"
+
 [cec]
 category = "utilities"
 icons = ["apps/cec/images/ps5-cec-manager"]

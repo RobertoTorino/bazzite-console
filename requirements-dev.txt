@@ -9,7 +9,9 @@
 -r apps/board/requirements-dev.txt
 -r apps/cec/requirements-dev.txt
 -r apps/clb/requirements-dev.txt
+-r apps/compute/requirements-dev.txt
 -r apps/controller/requirements-dev.txt
+-r apps/cores/requirements-dev.txt
 -r apps/datstation/requirements-dev.txt
 -r apps/fan/requirements-dev.txt
 -r apps/overlay/requirements-dev.txt

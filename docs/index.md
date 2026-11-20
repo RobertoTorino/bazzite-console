@@ -39,6 +39,12 @@ the boot command line,
 board down cleanly at a critical temperature.
 </div>
 <div class="home-card" markdown>
+#### :material-lock-open-variant: Unlocks
+
+[PS5 CU Tools](apps/compute.md) and [PS5 CPU Tools](apps/cores.md) tell bad CUs and cores apart from an unstable
+unlock, and keep a tested unlock.
+</div>
+<div class="home-card" markdown>
 #### :material-expansion-card: Graphics
 
 [PS5 Upscaler Manager](apps/upscaler.md) puts HelixSR, an FSR 3.1 drop-in upscaler with DLSS-style networks, into

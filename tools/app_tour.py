@@ -9,11 +9,11 @@ tools). The same script for every app: only the name changes.
                               [--size 1080p|1440p|2160p]
 
 Default output: ~/Videos/<prefix><app>-tour-v<its VERSION>.mp4, the prefix the suite's TAG_PREFIX (with the
-package for compute and cores; -2160p or -1440p before .mp4 for another size). --size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a
+package of an app with two programs; -2160p or -1440p before .mp4 for another size). --size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a
 4K upload far sharper than a 1080p one (about four times the time).
 
 APP is the app's key in portal/apps.toml (fan, cec, ...) or its folder under apps/. An app with two programs
-(compute, cores) needs --package to say which one (cu_bisect, cu_unlock, ...).
+needs --package to say which one.
 
 The app starts as it does on the board, through its own __main__, in a temporary home folder (no settings of yours)
 and offscreen; the tour takes over where the app would wait for the user. pkexec, sudo and run0 refuse (and are
@@ -301,7 +301,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("app", help="its key in portal/apps.toml, or its folder under apps/")
     parser.add_argument("out", nargs="?", help="default: ~/Videos/<prefix><app>-tour-v<version>.mp4")
-    parser.add_argument("--package", help="which program, for an app with two (compute, cores)")
+    parser.add_argument("--package", help="which program, for an app with two")
     parser.add_argument("--seconds", type=float, default=SECONDS, help="the length of the video (default 40)")
     parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the_quiet_engine.mp3)")
     parser.add_argument("--no-music", action="store_true", help="a video without sound")

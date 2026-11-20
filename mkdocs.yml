@@ -67,6 +67,8 @@ nav:
       - Covers from SteamGridDB: apps/covers.md
       - Sustainable:
           - PS5 Board Test: apps/board.md
+          - PS5 CPU Tools: apps/cores.md
+          - PS5 CU Tools: apps/compute.md
           - PS5 Fan Controller: apps/fan.md
           - PS5 System Overlay: apps/overlay.md
       - Graphics:

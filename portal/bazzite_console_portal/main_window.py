@@ -165,7 +165,7 @@ SETTING_LINES = ("An icon on the Desktop for every installed app, or only the po
                  "How fast a controller's touchpad moves the mouse pointer.")
 VALUE_PX = 300                  # a value in the Sys info window wraps beyond this width
 SYSINFO_OPACITY = 85            # % of the window color behind the Sys info text: what lies behind shows through
-LAUNCH_ICON_FILES = {("compute", "Unlock"): "cu-unlock", ("cores", "Unlock"): "cores-unlock"}  # else the app's
+LAUNCH_ICON_FILES: dict[tuple[str, str], str] = {}  # (key, label): an icon of one way to open an app; else the app's
 # What each category holds (docs/apps/categories.md says the same): the tooltip of its tab.
 CATEGORY_HINTS = {
     "sustainable": "Test and maintain the PlayStation 5 system.",
@@ -223,7 +223,7 @@ class AppState:
         self.has_icon = not self.icon.isNull()
 
     def launch_icon(self, label: str) -> QIcon:
-        """The icon of one way to open the app (CU Bisect's Unlock has its own), else the app's."""
+        """The icon of one way to open the app when LAUNCH_ICON_FILES names one, else the app's."""
         own = APP_ICONS / f"{LAUNCH_ICON_FILES.get((self.entry.key, label), '')}.webp"
         return QIcon(str(own)) if (self.entry.key, label) in LAUNCH_ICON_FILES and own.is_file() else self.icon
 

@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2794 test functions (3182 cases counting the parametrized ones) in 32 test folders, and 33 installer tests.
+2856 test functions (3244 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -12,7 +12,9 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/board](#appsboard) | 3 | 28 | 1.8 s |
 | [apps/cec](#appscec) | 6 | 54 | 0.7 s |
 | [apps/clb](#appsclb) | 13 | 90 | 2.8 s |
+| [apps/compute](#appscompute) | 5 | 31 |  |
 | [apps/controller](#appscontroller) | 13 | 164 | 5.8 s |
+| [apps/cores](#appscores) | 4 | 29 |  |
 | [apps/datstation](#appsdatstation) | 7 | 39 | 2.1 s |
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
 | [apps/overlay](#appsoverlay) | 2 | 18 | 0.2 s |
@@ -39,8 +41,8 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/studio](#devstudio) | 6 | 58 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
-| [tools](#tools) | 36 | 214 | 10.2 s |
-| **All** | | **2794** | **153 s** |
+| [tools](#tools) | 37 | 216 | 10.2 s |
+| **All** | | **2856** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -54,7 +56,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `board.sh` | Exercise apps/board/install.sh. |
 | `cec.sh` | Exercise apps/cec/install.sh. |
 | `clb.sh` | Exercise apps/clb/install.sh. |
+| `compute.sh` | Exercise apps/compute's installer as the portal runs it (packaging/bazzite/install-bisect-gui.sh: one window for the bisect and the unlock). |
 | `controller.sh` | Exercise apps/controller/install.sh. |
+| `cores.sh` | Exercise apps/cores/install.sh. |
 | `dash.sh` | Exercise dev/dash/install.sh, Nexus Dashboard's installer. |
 | `datstation.sh` | Exercise apps/datstation/install.sh. |
 | `demo.sh` | Exercise dev/demo/install.sh, Nexus Demo Recorder's installer. |
@@ -318,6 +322,44 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_xbox.py` | `test_cloud_titles_and_their_names_in_batches` |  |  | Cloud titles and their names in batches. |
 | `test_xbox.py` | `test_catalogue_products_as_a_list_too` |  |  | Catalogue products as a list too. |
 
+## apps/compute
+
+31 tests in 5 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_gate.py` | `test_cu_counts_and_levels` |  |  | Cu counts and levels. |
+| `test_gate.py` | `test_no_results` |  |  | No results. |
+| `test_gate.py` | `test_a_fully_retested_mask_is_accepted` |  |  | A fully retested mask is accepted. |
+| `test_gate.py` | `test_rejections` |  |  | Rejections. |
+| `test_gate.py` | `test_uneven_mask_suggests_an_even_retest` |  |  | Uneven mask suggests an even retest. |
+| `test_help_page.py` | `test_the_scripts_help_becomes_a_page` |  |  | The scripts help becomes a page. |
+| `test_help_page.py` | `test_what_the_window_does_is_the_first_paragraph` |  |  | What the window does is the first paragraph. |
+| `test_help_page.py` | `test_text_is_escaped_and_an_empty_help_says_so` |  |  | Text is escaped and an empty help says so. |
+| `test_main_window.py` | `test_bisect_window_has_the_suite_header` |  |  | Bisect window has the suite header. |
+| `test_main_window.py` | `test_start_with_the_defaults` |  |  | Start with the defaults. |
+| `test_main_window.py` | `test_start_with_a_custom_baseline_and_switches` |  |  | Start with a custom baseline and switches. |
+| `test_main_window.py` | `test_unattended_offers_the_autostart_service` |  |  | Unattended offers the autostart service. |
+| `test_main_window.py` | `test_invalid_options_start_nothing` |  |  | Invalid options start nothing. |
+| `test_main_window.py` | `test_unlock_part_without_results` |  |  | Unlock part without results. |
+| `test_main_window.py` | `test_unlock_part_accepts_a_retested_mask` |  |  | Unlock part accepts a retested mask. |
+| `test_main_window.py` | `test_help_opens_the_scripts_help` |  |  | Help is a pill under the title; a click opens the page. |
+| `test_main_window.py` | `test_the_header_has_four_pills_in_order` |  |  | Help, Start, Show status and Reset under the title, of one width; no About (owner, 19-11-2026). |
+| `test_main_window.py` | `test_the_numbers_on_one_line_and_the_switches_as_pills` |  |  | The numbers on one line and the switches as pills. |
+| `test_main_window.py` | `test_one_page_with_the_unlock_under_the_bisect` |  |  | One window, one page (owner, 19-11-2026): the bisect's pills, numbers and switches, then the verdict and Install, Uninstall, Refresh and Re-check, the WGP rows, the preview with its i, and the log behind a Show logs / Hide logs button, hidden at the start. |
+| `test_main_window.py` | `test_a_failed_install_shows_a_red_mark_not_a_message` |  |  | A red ! |
+| `test_main_window.py` | `test_hiding_the_log_gives_its_room_back` |  |  | Show logs, then Hide logs: the window is as tall as before and the WGP rows stay together (owner, 20-11-2026: the rows spread over the log's room); a window made taller by hand keeps them together too. |
+| `test_options.py` | `test_defaults_are_the_scripts_own` |  |  | Defaults are the scripts own. |
+| `test_options.py` | `test_every_switch_reaches_the_command_line` |  |  | Every switch reaches the command line. |
+| `test_options.py` | `test_command_is_quoted_for_bash` |  |  | Command is quoted for bash. |
+| `test_options.py` | `test_validation` |  |  | Validation. |
+| `test_options.py` | `test_one_round_is_allowed_for_a_control_only_retest` |  |  | One round is allowed for a control only retest. |
+| `test_options.py` | `test_presets_are_valid_masks` |  |  | Presets are valid masks. |
+| `test_options.py` | `test_every_baseline_choice_has_a_short_label_and_a_tooltip` |  |  | Every baseline choice has a short label and a tooltip. |
+| `test_service.py` | `test_unit_resumes_the_run_with_its_settings` |  |  | Unit resumes the run with its settings. |
+| `test_service.py` | `test_install_writes_and_enables_the_unit_without_starting_it` |  |  | The GUI starts the run in a terminal right after: the unit fires at the next login, not now. |
+| `test_service.py` | `test_without_systemctl_the_unit_is_written_and_the_error_says_so` |  |  | Without systemctl the unit is written and the error says so. |
+
 ## apps/controller
 
 164 tests in 13 files, 5.8 s in a local run.
@@ -488,6 +530,42 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_updater.py` | `test_a_controller_that_leaves_is_an_error` |  |  | A controller that leaves is an error. |
 | `test_updater.py` | `test_a_controller_that_restarts_at_finalize_is_fine` |  |  | A controller that restarts at finalize is fine. |
 | `test_updater.py` | `test_refuses_an_image_shorter_than_its_header` |  |  | Refuses an image shorter than its header. |
+
+## apps/cores
+
+29 tests in 4 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_gate.py` | `test_verdicts` |  |  | Verdicts. |
+| `test_gate.py` | `test_no_results` |  |  | No results. |
+| `test_gate.py` | `test_a_finished_clean_bisect_is_accepted` |  |  | A finished clean bisect is accepted. |
+| `test_gate.py` | `test_rejections` |  |  | Rejections. |
+| `test_gate.py` | `test_a_failing_core_rejects_the_whole_unlock` |  |  | A failing core rejects the whole unlock. |
+| `test_gate.py` | `test_aborted_attempts_do_not_count` |  |  | Aborted attempts do not count. |
+| `test_gate.py` | `test_notes_do_not_block` |  |  | Notes do not block. |
+| `test_help_page.py` | `test_the_scripts_help_becomes_a_page` |  |  | The scripts help becomes a page. |
+| `test_help_page.py` | `test_a_sentence_above_a_list_of_terms_is_its_paragraph` |  |  | 'For a longer, harsher burn-in ...' then --load and --rasdaemon: a paragraph and a table, not one run-on line. |
+| `test_help_page.py` | `test_what_the_window_does_is_the_first_paragraph` |  |  | What the window does is the first paragraph. |
+| `test_help_page.py` | `test_text_is_escaped_and_an_empty_help_says_so` |  |  | Text is escaped and an empty help says so. |
+| `test_main_window.py` | `test_the_window_has_the_suite_header` |  |  | The window has the suite header. |
+| `test_main_window.py` | `test_start_with_the_defaults` |  |  | Start with the defaults. |
+| `test_main_window.py` | `test_start_with_mprime_and_rasdaemon` |  |  | Start with mprime and rasdaemon. |
+| `test_main_window.py` | `test_unattended_installs_the_resume_unit` |  |  | Unattended installs the resume unit. |
+| `test_main_window.py` | `test_the_estimate_is_short_and_follows_the_options` |  |  | The estimate is short and follows the options. |
+| `test_main_window.py` | `test_help_opens_the_scripts_help` |  |  | Help is a pill under the title; a click opens the page. |
+| `test_main_window.py` | `test_the_header_has_four_pills_in_order` |  |  | Help, Start, Show status and Reset under the title, of one width; no About (owner, 20-11-2026). |
+| `test_main_window.py` | `test_the_numbers_on_one_line_and_the_switches_as_pills` |  |  | The numbers on one line and the switches as pills. |
+| `test_main_window.py` | `test_unlock_part_without_results` |  |  | Unlock part without results. |
+| `test_main_window.py` | `test_one_page_with_the_unlock_under_the_bisect` |  |  | One window, one page (owner, 20-11-2026, as CU Tools): the bisect's pills, numbers and switches, then the verdict and Install, Uninstall, Refresh, Root status and Re-check, the 8 cores with their i, and the log behind a Show logs / Hide logs button, hidden at the start. |
+| `test_main_window.py` | `test_a_failed_install_shows_a_red_mark_not_a_message` |  |  | A red ! |
+| `test_main_window.py` | `test_hiding_the_log_gives_its_room_back` |  |  | Show logs, then Hide logs: the window is as tall as before and the cores stay where they were (owner, 20-11-2026: CU Tools' rows spread over the log's room); a window made taller by hand keeps them in place too. |
+| `test_options_and_service.py` | `test_defaults_are_the_scripts_own` |  |  | Defaults are the scripts own. |
+| `test_options_and_service.py` | `test_every_switch_reaches_the_command_line` |  |  | Every switch reaches the command line. |
+| `test_options_and_service.py` | `test_validation` |  |  | Validation. |
+| `test_options_and_service.py` | `test_load_tools` |  |  | Load tools. |
+| `test_options_and_service.py` | `test_unit_resumes_with_the_gui_settings_and_always_auto` |  |  | Unit resumes with the gui settings and always auto. |
+| `test_options_and_service.py` | `test_install_enables_the_unit_without_starting_it` |  |  | enable, not enable --now: the GUI starts the run itself, a second instance would share its state. |
 
 ## apps/datstation
 
@@ -2883,7 +2961,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-214 tests in 36 files, 10.2 s in a local run.
+216 tests in 37 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2989,6 +3067,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_disclaimer.py` | `test_sets_the_text_and_fills_the_marker` |  |  | Sets the text and fills the marker. |
 | `test_disclaimer.py` | `test_every_disclaimer_has_the_same_text` |  |  | Every Disclaimer section in the repository's Markdown is the hook's text (owner, 28-10-2026: all disclaimers look the same): the marker on a wiki's home page, written out word for word everywhere else. |
 | `test_disclaimer.py` | `test_every_wiki_uses_it` |  |  | Every wiki uses it. |
+| `test_hang_limit.py` | `test_test_sh_limits_every_run` |  |  | Test sh limits every run. |
+| `test_hang_limit.py` | `test_ci_limits_every_pytest_step` |  |  | Ci limits every pytest step. |
 | `test_icons.py` | `test_installer_icon_exists` | 22 |  | Installer icon exists. |
 | `test_icons.py` | `test_icon_copies_match_their_category` |  |  | Every copy in icons/categories.toml is its category's icon: run ../tools/sync_icons.py after changing icons/. |
 | `test_icons.py` | `test_category_has_every_size` | 4 |  | WebP for Qt and the wiki; the 128 px one PNG, for menu entries, Steam and notifications. |

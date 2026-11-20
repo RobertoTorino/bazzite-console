@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+"""PyQt6 front-end for ps5-cu-bisect.sh: a menu-driven launcher for the initial setup/start of a
+bisect run. It only assembles the command line and starts it in a terminal; the actual bisecting
+still happens in ps5-cu-bisect.sh itself, exactly as if typed by hand."""
+
+APP_NAME = "PS5 CU Tools"
+APP_ID = "ps5-cu-bisect-gui"
+__version__ = "0.1.0"
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+LOGO_PATH = ROOT / "images" / "ps5-cu-bisect.webp"
+WINDOW_ICON_PATH = LOGO_PATH
+REPO_URL = "https://github.com/RobertoTorino/bazzite-console/tree/main/apps/compute"
+
+
+def window_title(part: str) -> str:
+    """Title of a secondary window. On Linux/Windows Qt appends " — <display name>" itself."""
+    import sys
+    return f"{APP_NAME} — {part}" if sys.platform == "darwin" else part

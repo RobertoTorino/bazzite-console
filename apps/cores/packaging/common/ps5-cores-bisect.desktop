@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+[Desktop Entry]
+Type=Application
+Name=PS5 CPU Tools
+Comment=Find bad CPU cores with ps5-cores-bisect.sh, then keep a tested 8C/16T core unlock
+Exec=ps5-cores-bisect-gui
+Icon=ps5-cores-bisect
+Terminal=false
+Categories=System;Settings;
+StartupNotify=true

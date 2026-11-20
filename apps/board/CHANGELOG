@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 01:20:52
+
+Added. Test 29 names the board's HDMI chip, as this boot's kernel log does ("HDMI IC Type [FLAVA3]" or "[VERDE]"), on one line with the hdmi module's 4K120 values, frl_4k120 and frl_rate_max. The driver reports nothing about VRR, 100 Hz or HDR, and the line says so rather than guessing from the chip. Without that kernel log line, it says the chip is not named. It only reads. The wiki's test list describes it.
+
 Changelog: 19-11-2026 22:33:16
 
 Release 0.4.3.

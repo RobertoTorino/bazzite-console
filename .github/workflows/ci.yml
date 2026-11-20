@@ -116,7 +116,9 @@ jobs:
       - name: Test
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -X faulthandler -m pytest -v tests        # -v: a crash log names the test
+        # -v: a crash log names the test. A test that hangs prints where it is stuck after 2 minutes and fails the
+        # step, instead of holding the job until its timeout without a name (as test.sh does).
+        run: python -X faulthandler -m pytest -v -o faulthandler_timeout=120 -o faulthandler_exit_on_timeout=true tests
 
   # Remote Play's native core (Rust, apps/remoteplay/native): its own tests, clippy, and the Python module
   # built into a wheel and tested from Python, all with the video decoder (FFmpeg from native/ffmpeg/build.sh, kept
@@ -181,7 +183,8 @@ jobs:
         working-directory: apps/remoteplay         # the app's package imports from here, as in test.sh
         run: |
           python -m pip install -q -r requirements-dev.txt native/dist/*.whl     # conftest.py uses PyQt6
-          python -m pytest -v tests/test_native.py tests/test_stream.py tests/test_senkusha.py
+          python -m pytest -v -o faulthandler_timeout=120 -o faulthandler_exit_on_timeout=true \
+            tests/test_native.py tests/test_stream.py tests/test_senkusha.py
 
   shell:
     runs-on: ubuntu-latest

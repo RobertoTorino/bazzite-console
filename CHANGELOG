@@ -1,3 +1,11 @@
+Changelog: 20-11-2026 01:14:33
+
+Added. Two apps came from its twin as they are there (owner, 20-11-2026: "port over as is, I do the refactor on the PS5"): PS5 CU Tools (apps/compute) and PS5 CPU Tools (apps/cores), each one window for a bisect and an unlock. Their scripts still hold the twin's hardware and were never run on a PS5. The suite lists them everywhere it lists its apps: the README, the wiki's app pages, its navigation and home page, the bug report's App list, icons/categories.toml, requirements-dev.txt and .claude/suite.md, which also names them among the apps that change the board. Each has its wiki chapter and its installer test; tools/installer-tests/shims.sh also points PS5_OPT_DIR, CPU Tools' /opt, at the test's folder. tools/app_tour.py no longer names an app with two programs, as in its twin.
+
+Changelog: 20-11-2026 00:14:41
+
+Fixed. A test that hangs ends after 2 minutes, in test.sh and in CI's pytest steps (pytest's faulthandler_timeout with faulthandler_exit_on_timeout): it prints where it is stuck and fails, instead of running on without a word (one waited 15 minutes for a dialog). tools/tests/test_hang_limit.py keeps every pytest run limited.
+
 Changelog: 19-11-2026 22:12:37
 
 Fixed. The suite says board, not console, for the PS5 that runs it (owner, 19-11-2026: board everywhere): the wiki, the README, the comments and test descriptions of every app, core and the tools, and the bug report path. Console stays where it means another machine or a product (Remote Play, XBOX Remote Play, the emulated systems, the PS5 history page), in DatStation, in the kernel's console= and in the suite's own names. .claude/suite.md has the rule.

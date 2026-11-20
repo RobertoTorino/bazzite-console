@@ -21,7 +21,10 @@ from nexus_deps.dependencies import (
 SUITE = Path(__file__).resolve().parents[3]
 PREFIX = "nexus_deps.dependencies"
 TOOLS = {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "paplay", "cec-ctl", "FFmpeg",
-         "bluetoothctl", "dbus-python", "PyGObject", "kwriteconfig6"}
+         "bluetoothctl", "dbus-python", "PyGObject", "kwriteconfig6",
+         # CU Tools and CPU Tools, as they came from the twin (owner, 20-11-2026)
+         "umr", "memtest_vulkan", "stress-ng", "vkpeak", "vkmark", "glmark2", "setpci", "lspci", "taskset", "mprime",
+         "ras-mc-ctl", "sudo", "journalctl"}
 # Tools of the kinds this suite's catalog has none of, for the checks every catalog may ask for: one of two commands,
 # and a flashrom that must have the internal programmer.
 SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("board", "Internet speed test."),))

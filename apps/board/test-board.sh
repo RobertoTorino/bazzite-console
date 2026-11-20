@@ -1494,6 +1494,16 @@ if systemctl --all --no-legend list-units 'gamescope-session*' 2>/dev/null | gre
     log_result "INFO: Gamescope (Deck UI) session units present:"
     systemctl --all --no-legend --no-pager list-units 'gamescope-session*' | tee -a "$LOG_FILE"
 fi
+# The board's HDMI chip, as the kernel names it at boot ("HDMI IC Type [FLAVA3]" or "[VERDE]"), and what the hdmi
+# module reports of 4K120: the line only reads. The driver reports nothing about VRR, 100 Hz or HDR, and the line
+# says so instead of guessing from the chip's name.
+HDMI_IC=$(boot_klog | grep -oE 'HDMI IC Type \[[A-Za-z0-9_-]+\]' | tail -1 | sed -E 's/.*\[(.*)\]/\1/')
+hdmi_param() { cat "/sys/module/hdmi/parameters/$1" 2>/dev/null || echo "?"; }
+if [ -n "$HDMI_IC" ]; then
+    log_result "INFO: HDMI chip: $HDMI_IC. 4K120 over FRL: frl_4k120=$(hdmi_param frl_4k120), frl_rate_max=$(hdmi_param frl_rate_max); VRR, 100 Hz and HDR: not reported by the driver."
+else
+    log_result "INFO: HDMI chip: not named in this boot's kernel log (no \"HDMI IC Type\" line)."
+fi
 if [ -d /sys/module/hdmi/parameters ]; then
     log_result "INFO: PS5 HDMI (the ps5-linux hdmi module):"
     log_result "  recovery_status: $(cat /sys/module/hdmi/parameters/recovery_status 2>/dev/null)"

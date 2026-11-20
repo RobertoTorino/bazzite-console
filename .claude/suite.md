@@ -28,13 +28,15 @@ What only this suite has. The rules every suite shares are in [CLAUDE.md](../CLA
 
 **Board Test** (`apps/board/`) is the first tile, always installed and the only required app.
 
-`apps/<name>/`: board, overlay, fan, upscaler, rpcs3, remoteplay, clb, shadps4, datstation, ppsspp, pcsx2, vita3k,
+`apps/<name>/`: board, overlay, fan, compute, cores, upscaler, rpcs3, remoteplay, clb, shadps4, datstation, ppsspp, pcsx2, vita3k,
 xenia, sftp, webcam, controller, ssd, cec, bluetooth, quickfix, password.
 
 **Licenses:** remoteplay is AGPL-3.0, its protocol code from chiaki-ng. The rest is GPL-3.0-or-later.
 
-**Apps that change the board:** Fan Controller's thermal guard, Webcam's camera rule and the SSH server of SFTP
-Tools. In `portal/apps.toml`: fan, webcam, sftp.
+**Apps that change the board:** Fan Controller's thermal guard, Webcam's camera rule, the SSH server of SFTP
+Tools, and the CU and core unlocks of CU Tools and CPU Tools. In `portal/apps.toml`: fan, webcam, sftp, compute,
+cores. CU Tools and CPU Tools came from the twin as they are there (owner, 20-11-2026): their scripts still hold the
+twin's hardware until the owner adapts them on the PS5.
 
 The portal and its apps are for PlayStation 5 hardware running Bazzite. They read system and device information.
 
