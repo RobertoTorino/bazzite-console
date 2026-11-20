@@ -58,14 +58,31 @@ beside Log.
 - **Xenia**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which build
   is installed, or what Install takes, and when a newer build is out. **Install** asks first, then downloads Xenia
   from GitHub (about 18 MB) and checks it against the checksum pinned in this version of the app before installing
-  it; a file that differs is not installed. When another build is installed, the tooltip and the log say so, and
-  **Install** puts the pinned one in. **Uninstall** takes it out again; Xenia's own folder, with its settings,
+  it; a file that differs is not installed. When another build is in use, the tooltip and the log say so, and
+  **Install** puts the pinned one back in use. **Uninstall** takes it out again; Xenia's own folder, with its settings,
   saves and installed content, stays.
 - **Game folder**: where the app looks for games, `~/Games/XBOX360` and a removable drive's `Games/XBOX360` (see
   [Where your games go](#where-your-games-go)); nothing is chosen or browsed to. The **i** beside them says what
   goes there. A game may sit up to six folders deep.
 
 Press Escape or the controller's B/back button to close the active window or dialog.
+
+### Versions
+
+The version box in the header is a pill. A click opens the list of the Xenia builds installed, with a check mark at
+the one in use; pick another to put it in use. The games in Steam start whichever build is in use, and every build
+shares Xenia's own folder (settings, saves and installed content). **Manage versions…** under the list opens the
+version manager:
+
+- **Installed**: every build in the app's folder, the one in use with a check mark and the one pinned in this version
+  of the app marked **Tested**. **Use** puts the chosen build in use, **Delete** removes it (not the one in use), and
+  **Add** (**Custom build**) takes an AppImage of your own, which is not checked.
+- **Download**: **Refresh** asks GitHub which builds there are (the newest Canary builds). **Download** fetches the
+  chosen one, checks it against the SHA-256 GitHub publishes for it and puts it beside the others; **Use** then puts
+  it in use.
+
+Only the pinned build, marked **Tested**, was tried on the board. To go back to it, pick it in the version pill's list
+or press **Xenia Install**, which puts it back in use without a download when it is still there.
 
 ### Where your games go
 
@@ -196,10 +213,11 @@ ps5-xenia-run                                         # Xenia's own window
 ## New Xenia builds
 
 Xenia has no stable releases: Xenia Canary publishes a build for almost every change, named after the change
-(`54386cb`). Each version of the app installs one build, the one pinned in it. When the window opens, the app
-asks GitHub for the newest build; when one was published after the app's, the Xenia line's tooltip and the log say
-so, with a link to what changed. The app does not install it. A newer build comes with a newer version of the app,
-from the [portal](../portal.md): after updating the app, the tooltip and the log say so, and **Install** brings it.
+(`54386cb`). Each version of the app pins one build, the one **Install** puts in. When the window opens, the app asks
+GitHub for the newest build; when one was published after the app's, the Xenia line's tooltip and the log say so, with
+a link to what changed. The app does not install it by itself, but the [version manager](#versions) can. A newer build
+comes with a newer version of the app, from the [portal](../portal.md): after updating the app, the tooltip and the
+log say so, and **Install** brings it.
 
 ## How it works
 

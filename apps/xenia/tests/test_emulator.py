@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Installing the pinned Xenia build (emulator.py) from a file made here instead of the download: checked against
-its SHA-256 first, "current" switched, older builds removed, nothing changed when a step fails, and a newer build
+its SHA-256 first, "current" switched, other builds kept beside it, nothing changed when a step fails, and a newer build
 found on GitHub by when it was published."""
 
 from __future__ import annotations
@@ -54,14 +54,15 @@ def test_install_and_remove(tmp_path, pinned):
     assert not home.exists() and emulator.installed_version(home) == ""
 
 
-def test_an_older_version_is_replaced(tmp_path, pinned):
+def test_an_older_version_stays_beside_it(tmp_path, pinned):
     home = tmp_path / "emulator"
     (home / "f42147a").mkdir(parents=True)
     (home / "f42147a" / emulator.MEMBER).write_text("old")
     (home / "current").symlink_to("f42147a")
     assert emulator.installed_version(home) == "f42147a"
     emulator.install(home, _fetch(pinned))
-    assert emulator.installed_version(home) == emulator.VERSION and not (home / "f42147a").exists()
+    assert emulator.installed_version(home) == emulator.VERSION
+    assert (home / "f42147a" / emulator.MEMBER).read_text() == "old"           # one click away
 
 
 def test_a_different_file_is_refused(tmp_path, pinned):
@@ -74,9 +75,22 @@ def test_a_different_file_is_refused(tmp_path, pinned):
 def test_a_failed_install_keeps_the_installed_one(tmp_path, pinned):
     home = tmp_path / "emulator"
     emulator.install(home, _fetch(pinned))
+    emulator.appimage(home).write_bytes(b"changed")                             # so Install downloads it again
     with pytest.raises(emulator.EmulatorError):
         emulator.install(home, _fetch(b"broken"))
-    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == APPIMAGE
+    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == b"changed"
+
+
+def test_the_pinned_build_back_in_use_without_a_download(tmp_path, pinned):
+    home = tmp_path / "emulator"
+    emulator.install(home, _fetch(pinned))
+    (home / "other").mkdir()
+    (home / "other" / emulator.MEMBER).write_text("another build")
+    (home / "current").unlink()
+    (home / "current").symlink_to("other")
+    calls = []
+    assert emulator.install(home, _fetch(pinned, calls)).endswith(" is in use.")
+    assert calls == [] and emulator.installed_version(home) == emulator.VERSION
 
 
 def test_download_errors_say_what_happened(tmp_path):
@@ -122,3 +136,22 @@ def test_xenia_running_sees_the_appimages_process(tmp_path):
     (proc / "11" / "stat").write_text("11 (xenia.AppImage) S 1 1 1\n")
     assert emulator.running(proc)
     assert not emulator.running(Path("/nonexistent"))
+
+
+def test_the_builds_on_github():
+    """The version manager's list: the Linux AppImage of each Canary build, with GitHub's SHA-256."""
+    def release(tag: str, digest: str = "sha256:" + "ab" * 32) -> dict:
+        return {"tag_name": tag, "name": f"{tag}_canary_experimental", "published_at": "2026-11-18T10:00:00Z",
+                "assets": [{"name": "xenia_canary_windows.zip", "digest": "sha256:" + "cd" * 32},
+                           {"name": "xenia_canary_linux.AppImage", "digest": digest, "size": 16546296,
+                            "browser_download_url": f"https://github.com/xenia-canary/xenia-canary/releases/download/"
+                                                    f"{tag}/xenia_canary_linux.AppImage"}]}
+
+    def fetch(url: str):
+        assert url == "https://api.github.com/repos/xenia-canary/xenia-canary/releases?per_page=30"
+        return [release("79aee12"), release("f9431eb", digest="")]
+    found = emulator.available(fetch)
+    assert [(b.version, b.name, b.published) for b in found] == [("79aee12", "79aee12_canary_experimental",
+                                                                    "2026-11-18")]
+    assert found[0].url.endswith("/download/79aee12/xenia_canary_linux.AppImage") and found[0].sha256 == "ab" * 32
+    assert emulator.tested().version == emulator.BUILD and emulator.tested().sha256 == emulator.SHA256

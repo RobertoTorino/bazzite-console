@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Installing the pinned PPSSPP release (emulator.py) from a file made here instead of the download: checked against
-its SHA-256 first, "current" switched, older versions removed, nothing changed when a step fails, and PPSSPP's two-
+its SHA-256 first, "current" switched, other versions kept beside it, nothing changed when a step fails, and PPSSPP's two-
 or three-number release tags read right."""
 
 from __future__ import annotations
@@ -54,14 +54,15 @@ def test_install_and_remove(tmp_path, pinned):
     assert not home.exists() and emulator.installed_version(home) == ""
 
 
-def test_an_older_version_is_replaced(tmp_path, pinned):
+def test_an_older_version_stays_beside_it(tmp_path, pinned):
     home = tmp_path / "emulator"
     (home / "1.19.3").mkdir(parents=True)
     (home / "1.19.3" / emulator.MEMBER).write_text("old")
     (home / "current").symlink_to("1.19.3")
     assert emulator.installed_version(home) == "1.19.3"
     emulator.install(home, _fetch(pinned))
-    assert emulator.installed_version(home) == emulator.VERSION and not (home / "1.19.3").exists()
+    assert emulator.installed_version(home) == emulator.VERSION
+    assert (home / "1.19.3" / emulator.MEMBER).read_text() == "old"           # one click away
 
 
 def test_a_different_file_is_refused(tmp_path, pinned):
@@ -74,9 +75,22 @@ def test_a_different_file_is_refused(tmp_path, pinned):
 def test_a_failed_install_keeps_the_installed_one(tmp_path, pinned):
     home = tmp_path / "emulator"
     emulator.install(home, _fetch(pinned))
+    emulator.appimage(home).write_bytes(b"changed")                             # so Install downloads it again
     with pytest.raises(emulator.EmulatorError):
         emulator.install(home, _fetch(b"broken"))
-    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == APPIMAGE
+    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == b"changed"
+
+
+def test_the_pinned_build_back_in_use_without_a_download(tmp_path, pinned):
+    home = tmp_path / "emulator"
+    emulator.install(home, _fetch(pinned))
+    (home / "other").mkdir()
+    (home / "other" / emulator.MEMBER).write_text("another build")
+    (home / "current").unlink()
+    (home / "current").symlink_to("other")
+    calls = []
+    assert emulator.install(home, _fetch(pinned, calls)).endswith(" is in use.")
+    assert calls == [] and emulator.installed_version(home) == emulator.VERSION
 
 
 def test_download_errors_say_what_happened(tmp_path):
@@ -118,3 +132,24 @@ def test_a_newer_ppsspp_release():
     def offline(url: str):
         raise urllib.error.URLError("no network")
     assert emulator.newer_release(offline) is None                              # nothing to say then
+
+
+def test_the_releases_on_github():
+    """The version manager's list: the x86_64 AppImage of each release, with GitHub's SHA-256; a release without one
+    (an older one, named otherwise) is left out."""
+    def release(tag: str, assets: list[str]) -> dict:
+        return {"tag_name": tag, "name": tag, "published_at": "2026-03-15T10:00:00Z",
+                "assets": [{"name": name, "digest": "sha256:" + "ab" * 32, "size": 50000000,
+                            "browser_download_url": f"https://github.com/hrydgard/ppsspp/releases/download/{tag}/{name}"}
+                           for name in assets]}
+
+    def fetch(url: str):
+        assert url == "https://api.github.com/repos/hrydgard/ppsspp/releases?per_page=30"
+        return [release("v1.20.3", ["PPSSPP-v1.20.3-anylinux-aarch64.AppImage",
+                                    "PPSSPP-v1.20.3-anylinux-x86_64.AppImage.zsync",
+                                    "PPSSPP-v1.20.3-anylinux-x86_64.AppImage"]),
+                release("v1.20", ["PPSSPP-v1.20-anylinux-x86_64.AppImage"]),
+                release("v1.17", ["PPSSPP-v1.17-x86_64.AppImage"])]
+    found = emulator.available(fetch)
+    assert [b.version for b in found] == ["1.20.3", "1.20"]
+    assert found[0].asset == "PPSSPP-v1.20.3-anylinux-x86_64.AppImage" and found[0].sha256 == "ab" * 32

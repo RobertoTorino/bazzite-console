@@ -1,3 +1,38 @@
+Changelog: 20-11-2026 04:25:06
+
+Added. Native Vulkan kernels for HLX DLSS (owner, 20-11-2026: an option, off by default): a box beside Version on the
+Setup page, remembered, adds --vulkan to HelixSR 3's builder, so Vulkan games run HLX DLSS in Vulkan instead of
+through HelixSR Scaler's DirectX 12 bridge; the build then takes about twice as long. The Overview reads from the
+builder's helixsr_setup.json whether the payload has them, and Download and build no longer calls a HelixSR 3 payload
+current when Scaler's network or the Vulkan kernels asked for are missing. HelixSR 2's builder gets no --vulkan.
+
+Changelog: 20-11-2026 04:19:27
+
+Fixed. The Overview hashes a file once while its size and time stay the same (HelixSR 3's DLLs are 58 MB and more).
+
+Changelog: 20-11-2026 04:19:27
+
+Added. HelixSR Scaler for the games without FSR 3.1 (owner, 20-11-2026: in place of the stand-alone folder for
+OptiScaler, with a HelixSR 3 payload). For 3.x Download and build also builds HLX DLSS's network into the release's
+HelixSR/helixsr.dll with HelixSR's own builder (--no-fg); when that build fails HLX FSR 4 is ready all the same and
+the Setup page says why. The whole release stays in the payload, as hard links where it can. The Deploy page's HelixSR
+Scaler mode installs it next to the game's .exe with HelixSR's own installer (its bridge, setup/helixsr_bridge.py, as
+HelixSR Desktop runs it): as dxgi.dll, or under another name when the game has its own, with the Steam launch option
+then copied to the clipboard; the game's files it replaces are kept, Remove puts them back, Update older games brings
+a newer HelixSR in and keeps the game's OptiScaler.ini. The Overview reads its state from HelixSR Scaler's install
+record and HLX DLSS in the game.
+
+Changelog: 20-11-2026 03:55:56
+
+Added. HelixSR 3 (owner, 20-11-2026: HLX FSR 4 is the default for a game with FSR 3.1). The app sets up HelixSR up to
+3.x (known 3.4.1). For 3.x Download and build downloads the release, checked against GitHub's SHA-256, and imports HLX
+FSR 4 from its HLX-FSR4 folder, which comes built with its network inside. Replace the game's DLL puts HLX FSR 4 in
+under the game's file name, the game's file kept as .original.dll as HelixSR's own installer does, and takes away
+network files and a helixsr.ini an earlier HelixSR left there; Remove also deletes HLX FSR 4's HLX_FSR.log and
+HLX_FSR_skip.txt. A game deployed with HelixSR 1 or 2 shows Older build, Update older games puts HLX FSR 4 in, and
+Remove works as before. The Overview shows an HLX FSR 4 payload as such. The stand-alone folder for OptiScaler needs a
+HelixSR 1 or 2 payload (the fallback on the Setup page); with HelixSR 3 its Deploy is off and says why.
+
 Changelog: 19-11-2026 22:33:16
 
 Release 0.4.1.

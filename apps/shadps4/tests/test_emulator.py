@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Installing the pinned shadPS4 (emulator.py) from a zip made here instead of the download: checked against its
-SHA-256 first, "current" switched, older versions removed, and nothing changed when a step fails."""
+SHA-256 first, "current" switched, other versions kept beside it, and nothing changed when a step fails; the builds
+the version manager offers, the stable releases and the pre-release (core's builds; owner, 20-11-2026)."""
 
 from __future__ import annotations
 
@@ -12,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from bazzite_console_core import builds
 from shadps4_manager import emulator
 
 
@@ -58,14 +60,48 @@ def test_install_and_remove(tmp_path, pinned):
     assert not home.exists() and emulator.installed_version(home) == ""
 
 
-def test_an_older_version_is_replaced(tmp_path, pinned):
+def test_an_older_version_stays_beside_it(tmp_path, pinned):
     home = tmp_path / "emulator"
     (home / "0.18.0").mkdir(parents=True)
     (home / "0.18.0" / emulator.MEMBER).write_text("old")
     (home / "current").symlink_to("0.18.0")
     assert emulator.installed_version(home) == "0.18.0"
     emulator.install(home, _fetch(pinned))
-    assert emulator.installed_version(home) == emulator.VERSION and not (home / "0.18.0").exists()
+    assert emulator.installed_version(home) == emulator.VERSION
+    assert (home / "0.18.0" / emulator.MEMBER).read_text() == "old"              # one click away
+    builds.use(home, "0.18.0", emulator.MEMBER)
+    calls = []
+    assert emulator.install(home, _fetch(pinned, calls)) == f"shadPS4 {emulator.VERSION} is in use."
+    assert calls == [] and emulator.installed_version(home) == emulator.VERSION  # back without a download
+
+
+def test_the_builds_on_github(tmp_path):
+    """The version manager's list: the Linux SDL zip of each release and of the pre-release, with GitHub's SHA-256;
+    one is unpacked as the pinned release is."""
+    nightly = _zip(data=b"#!/bin/sh\necho nightly\n")
+
+    def release(tag: str, name: str, asset: str, prerelease: bool = False) -> dict:
+        return {"tag_name": tag, "name": name, "published_at": "2026-11-19T10:00:00Z", "prerelease": prerelease,
+                "assets": [{"name": "shadps4-win64-sdl-x.zip", "digest": "sha256:" + "00" * 32},
+                           {"name": asset, "digest": "sha256:" + hashlib.sha256(nightly).hexdigest(), "size": 33000000,
+                            "browser_download_url": f"https://github.com/shadps4-emu/shadPS4/releases/download/{tag}/"
+                                                    f"{asset}"}]}
+
+    def fetch(url: str):
+        assert url == "https://api.github.com/repos/shadps4-emu/shadPS4/releases?per_page=30"
+        return [release("Pre-release-shadPS4-2026-11-19-443b954bea3e", "Pre-release-shadPS4-2026-11-19-443b954",
+                        "shadps4-linux-sdl-2026-11-19-443b954.zip", prerelease=True),
+                release("v.0.20.0", "shadps4 v0.20.0 - codename Dead Or Stephen 5 - The Comeback",
+                        "shadps4-linux-sdl-0.20.0.zip")]
+    found = emulator.available(fetch)
+    assert [(b.version, b.kind) for b in found] == [("2026-11-19-443b954", builds.PRERELEASE),
+                                                    ("0.20.0", builds.RELEASE)]
+    assert found[1].name.endswith("The Comeback")
+    home = tmp_path / "emulator"
+    emulator.install_build(home, found[0], _fetch(nightly))
+    assert (home / "2026-11-19-443b954" / emulator.MEMBER).read_bytes() == b"#!/bin/sh\necho nightly\n"
+    assert emulator.installed_version(home) == ""                                # not in use until Use
+    assert emulator.tested().version == emulator.VERSION and emulator._pick({}, {"name": emulator.ASSET}) == "0.21.0"
 
 
 @pytest.mark.parametrize("payload, message", [

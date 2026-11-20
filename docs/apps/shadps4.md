@@ -62,11 +62,11 @@ beside Log.
 
 - **shadPS4**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
   shows the version installed. The tooltip says which version is installed, or what Install takes, and when a newer
-  shadPS4 is out. When another version than the one pinned for this version of the app is installed, the tooltip
-  says so, and **Install** puts the pinned one in. Another version and a newer shadPS4 also go to the log, once.
-  **Install** downloads shadPS4 from its GitHub release (about 32 MB) and checks it against the pinned checksum
-  before unpacking it. **Uninstall** takes it out again; shadPS4's own folder, with your saves, settings and system
-  modules, stays.
+  shadPS4 is out. When another version than the one pinned for this version of the app is in use, the tooltip says so,
+  and **Install** puts the pinned one back in use. Another version and a newer shadPS4 also go to the log, once.
+  **Install** downloads shadPS4 from its GitHub release (about 32 MB) and checks it against the pinned checksum before
+  unpacking it. **Uninstall** takes it out again; shadPS4's own folder, with your saves, settings and system modules,
+  stays.
 - **Sys modules**: **Ok** in green when every module that shadPS4 cannot do without is in its module folder,
   **Missing sys modules** in red when one is not (how many there are, which are missing and the folder's path are in
   the tooltip). Many games run without them. Put the modules (`.sprx` files) you copied from your own PS4's
@@ -81,6 +81,23 @@ beside Log.
   not run yet (the server is in the tooltip). **Account** sets it up: see [shadNet](#shadnet).
 
 Press Escape or the controller's B/back button to close the active window or dialog.
+
+### Versions
+
+The version box in the header is a pill. A click opens the list of the shadPS4 builds installed, with a check mark at
+the one in use; pick another to put it in use. The games in Steam start whichever build is in use, and every build
+shares shadPS4's own folder (saves, settings and system modules). **Manage versions…** under the list opens the
+version manager:
+
+- **Installed**: every build in the app's folder, the one in use with a check mark and the one pinned in this version
+  of the app marked **Tested**. **Use** puts the chosen build in use, **Delete** removes it (not the one in use), and
+  **Add** (**Custom build**) takes an AppImage of your own, which is not checked.
+- **Download**: **Refresh** asks GitHub which builds there are (its stable releases and the pre-release, a nightly
+  named after its date and commit). **Download** fetches the chosen one, checks it against the SHA-256 GitHub
+  publishes for it and puts it beside the others; **Use** then puts it in use.
+
+Only the pinned build, marked **Tested**, was tried on the board. To go back to it, pick it in the version pill's list
+or press **shadPS4 Install**, which puts it back in use without a download when it is still there.
 
 ### Where your games go
 
@@ -419,11 +436,11 @@ python -m shadps4_manager.pkgxtractor.compare_delta <before.json> <after.json> [
 
 ## New shadPS4 releases
 
-Each version of the app installs one shadPS4 release, the one pinned for it. When the window opens, the app asks
+Each version of the app pins one shadPS4 release, the one **Install** puts in. When the window opens, the app asks
 GitHub for shadPS4's newest release (its stable releases, not the daily development builds). When that one is newer,
-the shadPS4 line's tooltip and the log say so, with a link to what is new; the app does not install it. A newer
-shadPS4 comes with a newer version of the app, from the [portal](../portal.md): after updating the app, the tooltip
-says so, and **Install** brings it.
+the shadPS4 line's tooltip and the log say so, with a link to what is new; the app does not install it by itself, but
+the [version manager](#versions) can. A newer shadPS4 comes with a newer version of the app, from the
+[portal](../portal.md): after updating the app, the tooltip says so, and **Install** brings it.
 
 ## How it works
 

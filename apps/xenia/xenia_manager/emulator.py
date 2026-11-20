@@ -2,11 +2,13 @@
 """The Xenia build this version of the app pins: the Linux AppImage of one Xenia Canary build on GitHub, checked
 against its SHA-256 before it is installed. Xenia has no stable releases: Xenia Canary publishes a build for almost
 every change, a release of xenia-canary/xenia-canary tagged with the commit it was built from (838850f), all of them
-marked experimental, the Linux build more so than the Windows one. The app reports when a newer build is available
-and does not install a different one. A tag is a commit, not a number, so "newer" is the latest release published
-after the pinned one.
+marked experimental, the Linux build more so than the Windows one. The app reports when a newer build is available.
+A tag is a commit, not a number, so "newer" is the latest release published after the pinned one. Another build is
+downloaded beside it in the version manager (owner, 20-11-2026: as shadPS4's own launcher; core's builds), checked
+against the SHA-256 GitHub publishes; it was not tried on the board.
 
-It goes to ~/.local/share/ps5-xenia-manager/emulator/<build>/xenia.AppImage, with "current" pointing to it. The
+Each build goes to ~/.local/share/ps5-xenia-manager/emulator/<build>/xenia.AppImage, with "current" pointing to the
+one in use. The
 run wrapper (~/.local/bin/ps5-xenia-run) starts "current", so the Steam shortcuts keep working when the build
 changes. The AppImage does not update itself (its AppRun is the program).
 
@@ -17,13 +19,14 @@ its settings alone then; owner, 03-11-2026)."""
 from __future__ import annotations
 
 import hashlib
-import os
 import shutil
 import urllib.error
 import urllib.request
 from collections.abc import Callable
 from pathlib import Path
 
+from bazzite_console_core import builds
+from bazzite_console_core.builds import Build
 from bazzite_console_core.platform import data_home
 from bazzite_console_core.updates import Fetch, ReleaseInfo, github_fetch
 
@@ -111,44 +114,45 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def tested() -> Build:
+    """The build this version of the app was tried with."""
+    return Build(VERSION, f"{BUILD}_canary_experimental", PUBLISHED[:10], builds.RELEASE, URL, ASSET, SHA256, SIZE,
+                 RELEASE_PAGE)
+
+
 def install(home: Path, fetch: Download = download, progress: Progress | None = None) -> str:
-    """Downloads the pinned build, checks it and installs it as "current"; other builds go. Returns what was done.
-    Nothing changes when a step fails (EmulatorError)."""
-    home.mkdir(parents=True, exist_ok=True)
-    work = home / f".download-{os.getpid()}"
-    shutil.rmtree(work, ignore_errors=True)
-    work.mkdir()
+    """Puts the pinned build in use: from its folder when it is there unchanged, else downloaded and checked. Other
+    builds stay. Returns what was done. Nothing changes when a step fails (EmulatorError)."""
+    image = home / VERSION / MEMBER
     try:
-        image = work / MEMBER
-        try:
-            fetch(URL, image, progress)
-        except urllib.error.HTTPError as error:
-            raise EmulatorError(f"GitHub answered {error.code} for {ASSET}.") from error
-        except (urllib.error.URLError, OSError) as error:
-            reason = str(getattr(error, "reason", error))
-            raise EmulatorError(f"The download failed: {reason}.") from error
-        if sha256(image) != SHA256:
-            raise EmulatorError(f"{ASSET} is not the file pinned by this app (its SHA-256 differs); "
-                                "nothing was installed.")
-        image.chmod(0o755)
-        target = home / VERSION
-        shutil.rmtree(target, ignore_errors=True)
-        target.mkdir()
-        image.replace(target / MEMBER)
-        link = home / ".current-new"
-        link.unlink(missing_ok=True)
-        link.symlink_to(VERSION)
-        link.replace(home / "current")
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
-    for other in home.iterdir():
-        if other.is_dir() and not other.is_symlink() and other.name != VERSION and not other.name.startswith("."):
-            shutil.rmtree(other, ignore_errors=True)
+        if image.is_file() and sha256(image) == SHA256:
+            builds.remember(home, VERSION, tested(), MEMBER)
+            builds.use(home, VERSION, MEMBER)
+            return f"Xenia {BUILD} is in use."
+        builds.install(home, tested(), MEMBER, fetch, progress, refused="pinned by this app")
+    except builds.BuildError as error:
+        raise EmulatorError(str(error)) from error
     return f"Xenia {BUILD} is installed."
 
 
+def _pick(release: dict, asset: dict) -> str | None:
+    tag = str(release.get("tag_name", "")).strip()
+    return tag if tag and asset.get("name") == ASSET else None
+
+
+def available(fetch: Fetch | None = None) -> list[Build]:
+    """The Xenia Canary builds that can be downloaded, newest first (builds.BuildError when GitHub cannot be
+    asked)."""
+    return builds.github_builds(REPO, _pick, fetch or github_fetch(f"{APP_ID}/{__version__}"))
+
+
+def install_build(home: Path, build: Build, fetch: Download = download, progress: Progress | None = None) -> None:
+    """Downloads *build* beside the others, checked against its SHA-256; not in use yet."""
+    builds.install(home, build, MEMBER, fetch, progress, use_it=False)
+
+
 def remove(home: Path) -> None:
-    """The installed Xenia goes; Xenia's own folder (settings, saves, installed content) stays."""
+    """Every installed Xenia build goes; Xenia's own folder (settings, saves, installed content) stays."""
     shutil.rmtree(home, ignore_errors=True)
 
 

@@ -207,12 +207,13 @@ def test_another_version_installed_than_the_app_brings(qapp, folders):
     (folders["home"] / "2026-10-15-b2d7ec7" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("2026-10-15-b2d7ec7")
     window = _window(folders)
-    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button." and window.emulator_box.value.text() == "other"
-    assert window.emulator_state.toolTip() == (f"shadPS4 2026-10-15-b2d7ec7 is installed; this version of the app "
-                                               f"brings {emulator.VERSION}: Install puts it in.")
+    assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button." and window.emulator_box.value.text() == "nightly"
+    assert window.emulator_state.toolTip() == (f"shadPS4 2026-10-15-b2d7ec7 is in use; it was not tried on the board. "
+                                               f"This version of the app was tried with {emulator.VERSION}: Install "
+                                               "puts it back in use.")
     assert window.install_pill.isEnabled()
     window.refresh()
-    assert window.output.toPlainText().count("Install puts it in") == 1                # once
+    assert window.output.toPlainText().count("Install puts it back in use") == 1                # once
     window.close()
 
 
@@ -960,4 +961,32 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     window.open_url = lambda url: False
     window.on_start_game()
     assert window.running.text() == f"{title} could not be started: xdg-open is missing."
+    window.close()
+
+
+def test_the_version_pill(qapp, folders, monkeypatch):
+    """The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and
+    puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder."""
+    from bazzite_console_core import builds_dialog
+    home = folders["home"]
+    for folder in (emulator.VERSION, "other"):
+        (home / folder).mkdir(parents=True, exist_ok=True)
+        (home / folder / emulator.MEMBER).write_text("")
+    (home / "current").symlink_to(emulator.VERSION)
+    window = _window(folders)
+    assert window.emulator_box.isEnabled()
+    window.on_versions_menu()
+    actions = [a for a in window.versions_menu.actions() if not a.isSeparator()]
+    labels = [a.text() for a in actions]
+    assert sorted(labels[:-1]) == sorted([f"{emulator.VERSION} (tested)", "other"]) and labels[-1] == "Manage versions…"
+    assert next(a for a in actions if a.text().endswith("(tested)")).isChecked()
+    window.versions_menu.hide()
+    next(a for a in actions if a.text() == "other").trigger()
+    assert window.version == "other" and window.running.text().endswith("is in use. It was not tried on the board.")
+    assert window.install_pill.isEnabled()                                      # puts the tested build back
+    opened = []
+    monkeypatch.setattr(builds_dialog.BuildsDialog, "exec",
+                        lambda dialog: opened.append((dialog.home, dialog.tested.version, dialog.member)) or 0)
+    actions[-1].trigger()
+    assert opened == [(home, emulator.VERSION, emulator.MEMBER)]
     window.close()

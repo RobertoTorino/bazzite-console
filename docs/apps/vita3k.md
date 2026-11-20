@@ -67,12 +67,12 @@ the pills say where each stands, and then comes a row of six tabs: **Your games*
 **Memory cards** and **Log**, and two that are buttons: **Start game**, beside Your games, and **Clear logs**,
 beside Log.
 
-- **Vita3K**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which build
-  is installed, or what Install takes, and when a newer build is out. **Install** asks first, then downloads Vita3K
-  from GitHub (about 86 MB) and checks it against the checksum pinned in this version of the app before installing
-  it; a file that differs is not installed. When another build is installed, the tooltip and the log say so, and
-  **Install** puts the pinned one in. **Uninstall** takes it out again; Vita3K's own folders, with the firmware,
-  your games, saves and settings, stay.
+- **Vita3K**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which build is
+  installed, or what Install takes, and when a newer build is out. **Install** asks first, then downloads Vita3K from
+  GitHub (about 86 MB) and checks it against the checksum pinned in this version of the app before installing it; a
+  file that differs is not installed. When another build is in use, the tooltip and the log say so, and **Install**
+  puts the pinned one back in use. **Uninstall** takes it out again; Vita3K's own folders, with the firmware, your
+  games, saves and settings, stay.
 - **Firmware**: **Installed.** once Vita3K has the system software and the font package, **Partly installed.** with
   one of the two, **Not installed.** with neither. The tooltip names each part: the system software, the font package
   and the preinstalled apps (optional).
@@ -92,6 +92,23 @@ beside Log.
     The list shows the game once it is installed.
 
 Press Escape or the controller's B/back button to close the active window or dialog.
+
+### Versions
+
+The version box in the header is a pill. A click opens the list of the Vita3K builds installed, with a check mark at
+the one in use; pick another to put it in use. The games in Steam start whichever build is in use, and every build
+shares Vita3K's own folder (firmware, games, saves and settings). **Manage versions…** under the list opens the
+version manager:
+
+- **Installed**: every build in the app's folder, the one in use with a check mark and the one pinned in this version
+  of the app marked **Tested**. **Use** puts the chosen build in use, **Delete** removes it (not the one in use), and
+  **Add** (**Custom build**) takes an AppImage of your own, which is not checked.
+- **Download**: **Refresh** asks GitHub which builds there are (the newest builds). **Download** fetches the chosen
+  one, checks it against the SHA-256 GitHub publishes for it and puts it beside the others; **Use** then puts it in
+  use.
+
+Only the pinned build, marked **Tested**, was tried on the board. To go back to it, pick it in the version pill's list
+or press **Vita3K Install**, which puts it back in use without a download when it is still there.
 
 ### Your games
 
@@ -218,10 +235,11 @@ ps5-vita3k-run                                               # Vita3K's own wind
 ## New Vita3K builds
 
 Vita3K has no stable releases: it publishes a new build for almost every change, numbered over its whole history
-(4377). Each version of the app installs one build, the one pinned in it. When the window opens, the app asks
-GitHub for Vita3K's newest build. When that one is newer, the Vita3K line's tooltip and the log say so, with a link
-to what is new; the app does not install it. A newer Vita3K comes with a newer version of the app, from the
-[portal](../portal.md): after updating the app, the tooltip and the log say so, and **Install** brings it.
+(4377). Each version of the app pins one build, the one **Install** puts in. When the window opens, the app asks
+GitHub for Vita3K's newest build. When that one is newer, the Vita3K line's tooltip and the log say so, with a link to
+what is new; the app does not install it by itself, but the [version manager](#versions) can. A newer Vita3K comes
+with a newer version of the app, from the [portal](../portal.md): after updating the app, the tooltip and the log say
+so, and **Install** brings it.
 
 Vita3K's own window (**Vita3K settings**) would look for a newer build when it opens; the app turns that check off
 in Vita3K's settings, with Vita3K's welcome window (see below). The AppImage Vita3K comes in can update itself, but

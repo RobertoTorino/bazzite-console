@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Installing the pinned PCSX2 release (emulator.py) from a file made here instead of the download: checked against
-its SHA-256 first, "current" switched, older versions removed, nothing changed when a step fails, and the newer
-stable GitHub may list. (The nightly channel went, owner 24-10-2026: nothing of it is left to test.)"""
+its SHA-256 first, "current" switched, other versions kept beside it, nothing changed when a step fails, and the
+newer stable GitHub may list; the builds the version manager offers, nightlies and the newest stable (core's builds;
+owner, 20-11-2026)."""
 
 from __future__ import annotations
 
@@ -78,14 +79,15 @@ def test_install_takes_pcsx2s_catalogue_out(tmp_path, pinned, monkeypatch):
     assert not emulator.take_catalogue(other)
 
 
-def test_an_older_version_is_replaced(tmp_path, pinned):
+def test_an_older_version_stays_beside_it(tmp_path, pinned):
     home = tmp_path / "emulator"
     (home / "2.7.0").mkdir(parents=True)
     (home / "2.7.0" / emulator.MEMBER).write_text("old")
     (home / "current").symlink_to("2.7.0")
     assert emulator.installed_version(home) == "2.7.0"
     emulator.install(home, _fetch(pinned))
-    assert emulator.installed_version(home) == emulator.VERSION and not (home / "2.7.0").exists()
+    assert emulator.installed_version(home) == emulator.VERSION
+    assert (home / "2.7.0" / emulator.MEMBER).read_text() == "old"               # one click away
 
 
 def test_pcsx2_updated_itself(tmp_path, pinned):
@@ -110,9 +112,22 @@ def test_a_different_file_is_refused(tmp_path, pinned):
 def test_a_failed_install_keeps_the_installed_one(tmp_path, pinned):
     home = tmp_path / "emulator"
     emulator.install(home, _fetch(pinned))
+    emulator.appimage(home).write_bytes(b"changed")                             # so Install downloads it again
     with pytest.raises(emulator.EmulatorError):
         emulator.install(home, _fetch(b"broken"))
-    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == APPIMAGE
+    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == b"changed"
+
+
+def test_an_install_from_before_build_json(tmp_path, pinned):
+    """An earlier version of the app wrote the build's size in .size: replaced() still reads it."""
+    home = tmp_path / "emulator"
+    (home / "2.7.0").mkdir(parents=True)
+    (home / "2.7.0" / emulator.MEMBER).write_text("old")
+    (home / "2.7.0" / ".size").write_text("3")
+    (home / "current").symlink_to("2.7.0")
+    assert not emulator.replaced(home)
+    (home / "2.7.0" / emulator.MEMBER).write_text("updated itself")
+    assert emulator.replaced(home)
 
 
 def test_download_errors_say_what_happened(tmp_path):
@@ -145,3 +160,41 @@ def test_a_newer_pcsx2_stable():
     def offline(url: str):
         raise urllib.error.URLError("no network")
     assert emulator.newer_release(offline) is None                                # nothing to say then
+
+
+def _asset(tag: str) -> dict:
+    name = f"pcsx2-{tag}-linux-appimage-x64-Qt.AppImage"
+    return {"name": name, "digest": "sha256:" + "ab" * 32, "size": 60119544,
+            "browser_download_url": f"https://github.com/PCSX2/pcsx2/releases/download/{tag}/{name}"}
+
+
+def test_the_builds_on_github():
+    """The version manager's list: the nightlies on the first page and the newest stable, which they push off it."""
+    def fetch(url: str):
+        if url.endswith("/releases/latest"):
+            return {"tag_name": "v2.8.2", "name": "v2.8.2", "published_at": "2026-10-01T10:00:00Z",
+                    "prerelease": False, "assets": [_asset("v2.8.2")]}
+        assert url == "https://api.github.com/repos/PCSX2/pcsx2/releases?per_page=30"
+        return [{"tag_name": tag, "name": tag, "published_at": f"2026-11-{day}T10:00:00Z", "prerelease": True,
+                 "assets": [{"name": f"pcsx2-{tag}-linux-flatpak-x64-Qt.flatpak", "digest": "sha256:" + "00" * 32},
+                            _asset(tag)]}
+                for tag, day in (("v2.9.185", "20"), ("v2.9.184", "19"))]
+    from bazzite_console_core import builds
+    found = emulator.available(fetch)
+    assert [(b.version, b.kind) for b in found] == [("2.9.185", builds.PRERELEASE), ("2.9.184", builds.PRERELEASE),
+                                                    ("2.8.2", builds.RELEASE)]
+
+
+def test_a_nightly_beside_the_stable(tmp_path, pinned, monkeypatch):
+    """A build from the version manager gets its own catalog, beside it."""
+    from pcsx2_manager import catalogue
+    taken = []
+    monkeypatch.setattr(catalogue, "extract", taken.append)
+    home = tmp_path / "emulator"
+    emulator.install(home, _fetch(pinned))
+    nightly = b"#!/bin/sh\necho PCSX2 nightly\n"
+    build = emulator.available(lambda url: {"tag_name": "v2.9.185", "assets": [_asset("v2.9.185")]}
+                               if url.endswith("/latest") else [])[0]
+    build.sha256 = hashlib.sha256(nightly).hexdigest()
+    emulator.install_build(home, build, _fetch(nightly))
+    assert taken[-1] == home / "2.9.185" / emulator.MEMBER and emulator.installed_version(home) == emulator.VERSION

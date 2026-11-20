@@ -15,6 +15,11 @@ app does exactly that, reversibly, and nothing else on the system is touched. No
 `WINEDLLOVERRIDES`, no Proton tweaks are needed. Only OptiScaler, for games without FSR 3.1, needs a launch
 option; the app sets that one too (see below).
 
+From HelixSR 3 on, what goes in is **HLX FSR 4**, HelixSR's FSR 4-class upscaler: one DLL from the release's
+`HLX-FSR4` folder, which comes built with its network inside. Nothing is built on the PC for it, and no network files
+or `helixsr.ini` go next to it. In the game, pick **AMD FSR**. Games without FSR 3.1 get **HelixSR Scaler**, with
+HLX DLSS (see below).
+
 ---
 
 ## What it manages
@@ -35,9 +40,18 @@ option; the app sets that one too (see below).
   `helixsr-setup.sh --yes` would install HelixSR Scaler into every game it finds. For 2.x the app therefore runs what
   that script runs before its game installer: HelixSR's own builder (`setup/helixsr_setup.py`, unchanged) on
   `HelixSR-fsrfg`, with the same Python, shader compiler and Proton, and without frame generation (`--no-fg`). It
-  then checks that the DLL carries the network. Your games are only changed from the Deploy and Games pages. When
-  a later major version is out that the app does not support yet, the Setup page says so and the app keeps getting
-  the newest release it supports.
+  then checks that the DLL carries the network. For HelixSR 3.x, *Download and build* downloads the release (about
+  280 MB, checked against GitHub's SHA-256), imports HLX FSR 4 from its `HLX-FSR4` folder, which comes built, and
+  builds HLX DLSS's network into the release's `HelixSR/helixsr.dll` for HelixSR Scaler, with HelixSR's own builder
+  and without frame generation. When that build fails, HLX FSR 4 is ready all the same and the Setup page says why.
+  *Native Vulkan kernels for HLX DLSS* (off by default) builds the network for Vulkan too: Vulkan games then run HLX
+  DLSS in Vulkan instead of through HelixSR Scaler's DirectX 12 bridge. The build takes about twice as long, and
+  HelixSR's builder downloads the Linux shader compiler for it once (13 MB). Turned on later, *Download and build*
+  builds again; the Overview says whether the payload has them.
+  The whole release stays in the payload (as hard links where it can, so it takes no second copy): HelixSR Scaler
+  and HelixSR's installer run from it. Your games are only changed from the Deploy and Games pages. When a later
+  major version is out that the app does not support yet, the Setup page says so and the app keeps getting the newest
+  release it supports.
 - **Version choice** – *Version* on the Setup page picks the latest HelixSR release (the default) or HelixSR
   1.8.1, the version HelixSR's developer recommends when the latest one does not work for you (please then open
   an issue at [HelixSR](https://github.com/lonewolf0622/HelixSR/issues) with the game's `helixsr.log`).
@@ -64,8 +78,21 @@ option; the app sets that one too (see below).
   - *Replace the game's DLL* – for games with native FSR 3.1: pick the game folder (Steam libraries are
     scanned, including `libraryfolders.vdf` and the Flatpak Steam), the app finds every upscaler DLL (Unreal
     games bury it under `Engine/Plugins/.../ThirdParty/Win64`), backs it up and deploys. *Remove* restores
-    the original. Re-deploying a newer build never overwrites the real original.
-  - *Stand-alone folder for OptiScaler* – for games without FSR 3.1: writes a folder with the DLL under both
+    the original. Re-deploying a newer build never overwrites the real original. With a HelixSR 3 payload this
+    puts in HLX FSR 4 under the game's file name; it lists the game's own FSR (the `.original.dll`) after its own
+    upscalers and uses it when it cannot start. A game deployed with HelixSR 1 or 2 shows *Older build*: *Update older
+    games* puts HLX FSR 4 in, and *Remove* puts the game's file back as before.
+  - *HelixSR Scaler* – for games without FSR 3.1 (DLSS, XeSS or FSR 2, also DirectX 11 and Vulkan games), with a
+    HelixSR 3 payload; it takes the place of the stand-alone folder below. HelixSR Scaler is OptiScaler with HelixSR
+    and runs HLX DLSS. Pick the game's folder; the app has HelixSR's own installer (the bridge HelixSR Desktop uses)
+    put it next to the game's `.exe`: as `dxgi.dll`, which Proton loads without a launch option, or under another
+    name when the game has its own `dxgi.dll` (the app then copies the Steam launch option it needs to the clipboard).
+    The game's files it replaces are kept in `HelixSR-Scaler-backup`, and `HelixSR-Scaler.files` lists what it put
+    in, so HelixSR's own setup and HelixSR Desktop can update or remove it too, and the other way round. Pick
+    **DLSS** in the game; **Insert** opens its menu. HelixSR's frame generation is not installed. *Remove* puts the
+    game's files back; *Update older games* brings a newer HelixSR in and keeps the game's `OptiScaler.ini`.
+  - *Stand-alone folder for OptiScaler* – for games without FSR 3.1, with a HelixSR 1 or 2 payload (HelixSR 3 has no
+    DLL for it; the fallback on the Setup page brings one): writes a folder with the DLL under both
     FidelityFX names, the network files and the ini. With a payload from HelixSR 1.7.0 to 1.8.1, which ship the
     official OptiScaler (1.9.0 and newer do not; the fallback on the Setup page brings it, and the payload keeps
     it when you switch back to the latest), it also installs OptiScaler next to the game's `.exe` (Scan finds that folder): as
@@ -147,7 +174,8 @@ lookup at start. `--version` prints the version.
 - **Overview** – payload status (version from the release's README, DLL, weights, kernels, ini) with
   *Import folder* / *Import zip* / *Open payload folder*, and the deployment table with *Open folder*,
   *Remove* (restores the original or deletes the stand-alone folder), *Forget* and *Update older games*.
-- **Setup** – release status for HelixSR with *Check now*; the version to get (latest or 1.8.1);
+- **Setup** – release status for HelixSR with *Check now*; the version to get (latest or 1.8.1) and, for HelixSR 3,
+  *Native Vulkan kernels for HLX DLSS*;
   *Download and build* with progress, the script's output, *Cancel*, *Import built release* and *Open work
   folder*; optional local `nvngx_dlss.dll`.
 - **Games** – every Steam game with its FSR 3.1 DLL and HelixSR state; *Run with HelixSR*, *Open on Deploy page*,

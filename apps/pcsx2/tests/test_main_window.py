@@ -911,3 +911,31 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     window.on_start_game()
     assert window.running.text() == f"{title} could not be started: xdg-open is missing."
     window.close()
+
+
+def test_the_version_pill(qapp, folders, monkeypatch):
+    """The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and
+    puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder."""
+    from bazzite_console_core import builds_dialog
+    home = folders["home"]
+    for folder in (emulator.VERSION, "other"):
+        (home / folder).mkdir(parents=True, exist_ok=True)
+        (home / folder / emulator.MEMBER).write_text("")
+    (home / "current").symlink_to(emulator.VERSION)
+    window = _window(folders)
+    assert window.emulator_box.isEnabled()
+    window.on_versions_menu()
+    actions = [a for a in window.versions_menu.actions() if not a.isSeparator()]
+    labels = [a.text() for a in actions]
+    assert sorted(labels[:-1]) == sorted([f"{emulator.VERSION} (tested)", "other"]) and labels[-1] == "Manage versions…"
+    assert next(a for a in actions if a.text().endswith("(tested)")).isChecked()
+    window.versions_menu.hide()
+    next(a for a in actions if a.text() == "other").trigger()
+    assert window.version == "other" and window.running.text().endswith("is in use. It was not tried on the board.")
+    assert window.install_pill.isEnabled()                                      # puts the tested build back
+    opened = []
+    monkeypatch.setattr(builds_dialog.BuildsDialog, "exec",
+                        lambda dialog: opened.append((dialog.home, dialog.tested.version, dialog.member)) or 0)
+    actions[-1].trigger()
+    assert opened == [(home, emulator.VERSION, emulator.MEMBER)]
+    window.close()

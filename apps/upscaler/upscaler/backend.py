@@ -7,7 +7,13 @@ HelixSR (github.com/lonewolf0622/HelixSR) is a drop-in replacement for a game's 
 the game's amd_fidelityfx_upscaler_dx12.dll (or amd_fidelityfx_dx12.dll) is renamed to *.original.dll and
 HelixSR's amd_fidelityfx_dx12.dll is copied in under the original name, together with the two network files the
 one-time helixsr-setup builds on the PC (helixsr_weights.bin, helixsr_kernels.pak) and an optional helixsr.ini.
-No launch options are needed."""
+No launch options are needed.
+
+From HelixSR 3 on the drop-in is HLX FSR 4 (owner, 20-11-2026: the default for a game with FSR 3.1): one DLL that
+comes built in the release (HLX-FSR4/amd_fidelityfx_upscaler_dx12.dll), with its network inside and no helixsr.ini.
+It goes in under the game's DLL name as HelixSR's did, the game's file kept as *.original.dll, as HelixSR's own
+installer does; HLX FSR 4 lists that file's upscalers after its own and falls back to it. Deployments of HelixSR 1 and
+2 stay recognized: removing one puts the game's file back, updating one puts HLX FSR 4 in."""
 
 from __future__ import annotations
 
@@ -16,6 +22,8 @@ import json
 import os
 import re
 import shutil
+import subprocess
+import sys
 import zipfile
 from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime
@@ -46,6 +54,28 @@ ESSENTIAL_FILES = (HELIXSR_DLL, WEIGHTS, KERNELS)
 MAX_SCAN_DEPTH = 12
 FSRFG = "HelixSR-fsrfg"                             # HelixSR 2's folder for its DLL in the release (and helixsr.ini)
 MODE_REPLACE, MODE_FOLDER = "replace", "folder"
+# HelixSR 3: HLX FSR 4, the FSR drop-in, built in the release's HLX-FSR4 folder under the game's upscaler DLL's name.
+# Its file names its version ("HLX FSR 4 (4.1.2)") in its first megabyte and ends with a footer that starts HLXFSR4D.
+HLX_DIR = "HLX-FSR4"
+HLX_DLL = UPSCALER_DLL
+HLX_MARK = b"HLX FSR 4 ("
+HLX_FOOTER = b"HLXFSR4D"
+HLX_DOCS = ("README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "SOURCE.md")
+# What HLX FSR 4 writes next to its DLL: its log, and the shader sets that ended a game (left out at the next start)
+HLX_FILES = ("HLX_FSR.log", "HLX_FSR_skip.txt")
+# HelixSR 3: HelixSR Scaler (OptiScaler with HelixSR) for games without FSR 3.1 (owner, 20-11-2026: in place of the
+# stand-alone folder for OptiScaler). It runs HLX DLSS, the network HelixSR's setup builds into HelixSR/helixsr.dll.
+# The app keeps the whole release in the payload and installs and removes HelixSR Scaler with HelixSR's own bridge
+# (setup/helixsr_bridge.py, the one HelixSR Desktop runs), so a game gets the same files as from HelixSR's setup, and
+# each can update or remove what the other installed.
+MODE_SCALER = "scaler"
+SCALER_RELEASE = "release"                          # the release in the payload folder
+BRIDGE = "setup/helixsr_bridge.py"
+SCALER_PKG = "helixsr-scaler"                       # HelixSR Scaler's download, in the release
+NGX_DLL = "HelixSR/helixsr.dll"                     # HLX DLSS, with the network built into it; also in the game
+SCALER_RECORD = "HelixSR-Scaler.files"              # what HelixSR Scaler put into the game's .exe folder
+BRIDGE_TIMEOUT = 600                                # seconds: the bridge looks through every game it knows first
+BUILD_RECORD = "helixsr_setup.json"                 # what the builder built, in the release ("vulkan": true or false)
 
 SHARPENING_MODES = ("off", "game", "override")
 SHARPENERS = ("off", "nvidia", "rcas")              # HelixSR 1.8+: NVIDIA Image Scaling's sharpening or AMD's RCAS
@@ -104,12 +134,21 @@ class HelixError(Exception):
 
 
 # ---------------------------------------------------------------------------------------------- files
+_DIGESTS: dict[tuple[str, int, int], str] = {}
+
+
 def file_digest(path: Path) -> str:
-    digest = hashlib.sha256()
-    with open(path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    """The file's SHA-256, kept while its size and time stay the same: the Overview compares DLLs every few seconds,
+    and HelixSR 3's are 58 MB and more."""
+    info = os.stat(path)
+    key = (str(Path(path).resolve()), info.st_size, info.st_mtime_ns)
+    if key not in _DIGESTS:
+        digest = hashlib.sha256()
+        with open(path, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(chunk)
+        _DIGESTS[key] = digest.hexdigest()
+    return _DIGESTS[key]
 
 
 def same_file(a: Path, b: Path) -> bool:
@@ -144,6 +183,23 @@ def dll_version(dll: Path) -> str:
     return match.group(1).decode() if match else ""
 
 
+def is_hlx(dll: Path) -> bool:
+    """HLX FSR 4's DLL (HelixSR 3's drop-in): its footer, or its name in the first 4 MB."""
+    try:
+        with open(dll, "rb") as handle:
+            head = handle.read(4 << 20)
+            handle.seek(-24, os.SEEK_END)
+            return handle.read(8) == HLX_FOOTER or HLX_MARK in head
+    except OSError:
+        return False
+
+
+def payload_dll(payload_dir: Path) -> Path:
+    """The DLL a deploy puts into a game: HLX FSR 4 (HelixSR 3) when the payload has it, else HelixSR's (1 and 2)."""
+    hlx = payload_dir / HLX_DLL
+    return hlx if is_hlx(hlx) else payload_dir / HELIXSR_DLL
+
+
 def original_path(dll: Path) -> Path:
     """amd_fidelityfx_upscaler_dx12.dll -> amd_fidelityfx_upscaler_dx12.original.dll (the game's own file)."""
     return dll.with_name(dll.name[:-len(".dll")] + ORIGINAL_SUFFIX)
@@ -165,26 +221,33 @@ class PayloadStatus:
     version: str = ""           # from the README.md that comes with the release, "" when unknown
     embedded: bool = False      # the network is inside the DLL (HelixSR 1.8+): no separate network files
     optiscaler: bool = False    # the payload has the OptiScaler that HelixSR 1.7+ ships
+    hlx: bool = False           # HLX FSR 4 (HelixSR 3): one built DLL, nothing else needed
+    scaler: bool = False        # HelixSR 3's release with HLX DLSS's network built: HelixSR Scaler can go in
+    vulkan: bool = False        # and with HLX DLSS's native Vulkan kernels (the build's --vulkan)
 
     @property
     def ready(self) -> bool:
-        return self.dll and self.network_ready
+        return self.hlx or (self.dll and self.network_ready)
 
     @property
     def network_ready(self) -> bool:
-        return self.embedded or (self.weights and self.kernels)
+        return self.hlx or self.embedded or (self.weights and self.kernels)
 
     def missing(self) -> list[str]:
+        if self.hlx:
+            return []
         network = () if self.embedded else ((WEIGHTS, self.weights), (KERNELS, self.kernels))
         return [name for name, have in ((HELIXSR_DLL, self.dll), *network) if not have]
 
 
 def payload_version(payload_dir: Path) -> str:
+    """From the release's README.md: "**Version 2.0.0" up to HelixSR 2, its title "# HelixSR 3.4.1" from 3 on."""
     readme = payload_dir / "README.md"
     try:
-        match = re.search(r"\*\*Version (\d+(?:\.\d+)+)", readme.read_text(encoding="utf-8", errors="replace"))
+        text = readme.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return ""
+    match = re.search(r"\*\*Version (\d+(?:\.\d+)+)", text) or re.search(r"^# HelixSR (\d+(?:\.\d+)+)", text, re.M)
     return match.group(1) if match else ""
 
 
@@ -209,7 +272,10 @@ def ini_ignored_fields(version: str) -> set[str]:
 
 
 def payload_folder(release_dir: Path) -> Path:
-    """Where an extracted release keeps HelixSR's DLL: HelixSR-fsrfg/ from 2.0 on, the release folder before."""
+    """Where an extracted release keeps the DLL a deploy puts in: HLX-FSR4/ from 3.0 on, HelixSR-fsrfg/ in 2.x, the
+    release folder before."""
+    if is_hlx(release_dir / HLX_DIR / HLX_DLL):
+        return release_dir / HLX_DIR
     return release_dir / FSRFG if (release_dir / FSRFG / HELIXSR_DLL).is_file() else release_dir
 
 
@@ -217,7 +283,8 @@ def payload_status(payload_dir: Path) -> PayloadStatus:
     have = lambda name: (payload_dir / name).is_file()
     return PayloadStatus(payload_dir, have(HELIXSR_DLL), have(WEIGHTS), have(KERNELS), have(INI),
                          payload_version(payload_dir), network_embedded(payload_dir / HELIXSR_DLL),
-                         optiscaler_available(payload_dir))
+                         optiscaler_available(payload_dir), is_hlx(payload_dir / HLX_DLL), scaler_ready(payload_dir),
+                         scaler_vulkan(payload_dir))
 
 
 @dataclass
@@ -244,12 +311,97 @@ def _find_payload_files(source: Path, max_depth: int = 3) -> dict[str, Path]:
     return found
 
 
+def _hlx_in_folder(source: Path) -> Path | None:
+    """HLX FSR 4 in an extracted HelixSR 3 release: <release>/HLX-FSR4/, the release folder or one inside source."""
+    for folder in (source, *(c for c in sorted(source.iterdir()) if c.is_dir())):
+        if is_hlx(folder / HLX_DIR / HLX_DLL):
+            return folder / HLX_DIR / HLX_DLL
+    return None
+
+
+def _import_hlx(source: Path, payload_dir: Path) -> list[str] | None:
+    """A HelixSR 3 release (folder or zip) into the payload: HLX FSR 4's DLL and the release's notices. None when
+    *source* is no HelixSR 3 release. HelixSR's DLL and network files of an earlier payload go (the payload is one
+    release); its helixsr.ini stays, the template the user saved."""
+    copied: list[str] = []
+    if source.is_file():
+        with zipfile.ZipFile(source) as archive:
+            names = {m.filename: m for m in archive.infolist() if not m.is_dir()}
+            dll = next((n for n in sorted(names, key=lambda n: n.count("/"))
+                        if n.endswith(f"{HLX_DIR}/{HLX_DLL}")), None)
+            if dll is None:
+                return None
+            root = dll[:-len(f"{HLX_DIR}/{HLX_DLL}")]
+            for member, name in ((dll, HLX_DLL), *((root + doc, doc) for doc in HLX_DOCS)):
+                if member in names:
+                    with archive.open(names[member]) as src, open(payload_dir / name, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+                    copied.append(name)
+    else:
+        dll = _hlx_in_folder(source)
+        if dll is None:
+            return None
+        for path, name in ((dll, HLX_DLL), *((dll.parent.parent / doc, doc) for doc in HLX_DOCS)):
+            if path.is_file():
+                shutil.copy2(path, payload_dir / name)
+                copied.append(name)
+    if not is_hlx(payload_dir / HLX_DLL):
+        raise HelixError("{0} in {1} is not HLX FSR 4.".format(HLX_DLL, source))
+    for name in (HELIXSR_DLL, *NETWORK_FILES):
+        (payload_dir / name).unlink(missing_ok=True)
+    _keep_release(source, root if source.is_file() else dll.parent.parent, payload_dir)
+    if scaler_available(payload_dir):
+        copied.append(SCALER_RELEASE + "/")
+    return copied
+
+
+def _link_or_copy(src: str, dst: str) -> None:
+    """A hard link where the payload is on the same file system as the source (no second copy), else a copy."""
+    try:
+        os.link(src, dst)
+    except OSError:
+        shutil.copy2(src, dst)
+
+
+def _keep_release(source: Path, root: Path | str, payload_dir: Path) -> None:
+    """The whole HelixSR 3 release into the payload's release folder (HelixSR Scaler and the bridge run from it): from
+    the extracted folder *root*, or the zip *source* below its folder *root* ("HelixSR-3.4.1/")."""
+    target = scaler_release(payload_dir)
+    work = payload_dir / (SCALER_RELEASE + ".new")
+    shutil.rmtree(work, ignore_errors=True)
+    if source.is_file():
+        work.mkdir(parents=True)
+        base = work.resolve()
+        with zipfile.ZipFile(source) as archive:
+            for member in archive.infolist():
+                if not member.filename.startswith(str(root)) or member.is_dir():
+                    continue
+                dest = (work / member.filename[len(str(root)):]).resolve()
+                if base not in dest.parents:
+                    raise HelixError("{0} has a file outside its folder: {1}".format(source.name, member.filename))
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(member) as src, open(dest, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                if member.filename.endswith(".sh") or "/setup/" in member.filename and member.filename.endswith(".py"):
+                    dest.chmod(0o755)
+    else:
+        shutil.copytree(Path(root), work, copy_function=_link_or_copy, symlinks=True)
+    shutil.rmtree(target, ignore_errors=True)
+    work.rename(target)
+
+
 def import_payload(source: Path, payload_dir: Path) -> ImportResult:
     """Copy the HelixSR files from an extracted release folder (or the release zip) into the payload folder.
-    Only the known files are taken, nothing else; existing payload files are replaced."""
+    Only the known files are taken, nothing else; existing payload files are replaced. A HelixSR 3 release brings HLX
+    FSR 4 (_import_hlx); an earlier one HelixSR's DLL, and HLX FSR 4 of an earlier payload goes."""
     if not source.exists():
         raise HelixError("{0} does not exist.".format(source))
+    if source.is_file() and not zipfile.is_zipfile(source):
+        raise HelixError("{0} is not a zip archive or a folder.".format(source.name))
     payload_dir.mkdir(parents=True, exist_ok=True)
+    hlx = _import_hlx(source, payload_dir)
+    if hlx is not None:
+        return ImportResult(hlx, [])
     copied: list[str] = []
     if source.is_file():
         if not zipfile.is_zipfile(source):
@@ -271,6 +423,9 @@ def import_payload(source: Path, payload_dir: Path) -> ImportResult:
     if HELIXSR_DLL not in copied:
         raise HelixError(("No {0} found in {1}. Pick the folder the HelixSR release was extracted to (or the release "
                           "zip itself).").format(HELIXSR_DLL, source))
+    if is_hlx(payload_dir / HLX_DLL):
+        (payload_dir / HLX_DLL).unlink()            # the payload is one release: HelixSR 1 or 2 now
+    shutil.rmtree(scaler_release(payload_dir), ignore_errors=True)
     copied += _import_optiscaler(source, payload_dir)
     if network_embedded(payload_dir / HELIXSR_DLL):
         # One-file DLL: network files left from an earlier release belong to another build, and Deploy would copy them.
@@ -347,13 +502,13 @@ class GameDll:
 
 def inspect_dll(path: Path, payload_dir: Path) -> GameDll:
     folder = path.parent
-    payload_dll = payload_dir / HELIXSR_DLL
+    deployed_dll = payload_dll(payload_dir)
     has_backup = original_path(path).is_file()
-    matches = payload_dll.is_file() and same_file(path, payload_dll)
-    embedded = network_embedded(path)
+    matches = deployed_dll.is_file() and same_file(path, deployed_dll)
+    carries = network_embedded(path) or is_hlx(path)        # the network inside: nothing to put next to it
     return GameDll(path, has_backup, matches,
-                   all((folder / name).is_file() for name in NETWORK_FILES) or embedded,
-                   (folder / INI).is_file(), has_backup and not matches and not embedded and not dll_version(path))
+                   all((folder / name).is_file() for name in NETWORK_FILES) or carries,
+                   (folder / INI).is_file(), has_backup and not matches and not carries and not dll_version(path))
 
 
 def find_game_dlls(game_dir: Path, payload_dir: Path, max_depth: int = MAX_SCAN_DEPTH,
@@ -418,7 +573,13 @@ def deploy(target: Path, payload_dir: Path, ini_text: str | None = None) -> list
     backup = original_path(target)
     if not backup.exists():
         target.rename(backup)
-    shutil.copy2(payload_dir / HELIXSR_DLL, target)
+    source = payload_dll(payload_dir)
+    shutil.copy2(source, target)
+    if source.name == HLX_DLL and is_hlx(source):
+        # HLX FSR 4 carries its network and reads no helixsr.ini: what an earlier HelixSR left next to it goes
+        for name in (*NETWORK_FILES, INI):
+            (target.parent / name).unlink(missing_ok=True)
+        return [target]
     return [target, *_copy_support_files(target.parent, payload_dir, ini_text)]
 
 
@@ -426,12 +587,12 @@ def remove(target: Path, payload_dir: Path) -> list[Path]:
     """Undo deploy(): delete HelixSR's files next to `target` and rename *.original.dll back. Refuses when
     `target` is neither a known HelixSR build (no backup) nor identical to the payload DLL."""
     backup = original_path(target)
-    payload_dll = payload_dir / HELIXSR_DLL
-    if not backup.exists() and not (payload_dll.is_file() and target.is_file() and same_file(target, payload_dll)):
+    deployed_dll = payload_dll(payload_dir)
+    if not backup.exists() and not (deployed_dll.is_file() and target.is_file() and same_file(target, deployed_dll)):
         raise HelixError("{0} is not HelixSR (no {1} next to it and it differs from the payload). Nothing was changed."
             .format(target.name, backup.name))
     removed = []
-    for name in (*NETWORK_FILES, INI, LOG):
+    for name in (*NETWORK_FILES, INI, LOG, *HLX_FILES):
         path = target.parent / name
         if path.exists():
             path.unlink()
@@ -451,7 +612,9 @@ def deploy_folder(folder: Path, payload_dir: Path, ini_text: str | None = None,
     upscaler DLL, e.g. AMD's with FSR 4) that DLL is copied in as SECOND_UPSCALER_DLL and the ini's UpscalerDll
     points at it; without, a second upscaler left from an earlier deploy is removed (and UpscalerDll cleared when
     it named it)."""
-    _require_ready(payload_dir)
+    if _require_ready(payload_dir).hlx:
+        raise HelixError("HelixSR 3 has no DLL for a stand-alone OptiScaler folder: its games without FSR 3.1 get "
+                         "HelixSR Scaler. For this mode, get the fallback release on the Setup page.")
     if second_upscaler is not None:
         if not second_upscaler.is_file():
             raise HelixError("{0} does not exist.".format(second_upscaler))
@@ -1004,6 +1167,87 @@ def ini_template(payload_dir: Path) -> str:
         return DEFAULT_INI_TEXT
 
 
+# ----------------------------------------------------------------------------- HelixSR Scaler (HelixSR 3)
+def scaler_release(payload_dir: Path) -> Path:
+    return payload_dir / SCALER_RELEASE
+
+
+def scaler_available(payload_dir: Path) -> bool:
+    """The payload has HelixSR 3's release with its bridge and HelixSR Scaler's download."""
+    release = scaler_release(payload_dir)
+    return (release / BRIDGE).is_file() and (release / SCALER_PKG / "OptiScaler.dll").is_file()
+
+
+def scaler_ready(payload_dir: Path) -> bool:
+    """HelixSR Scaler can go into a game: the release is there and HLX DLSS carries the network built by the setup."""
+    return scaler_available(payload_dir) and network_embedded(scaler_release(payload_dir) / NGX_DLL)
+
+
+def scaler_vulkan(payload_dir: Path) -> bool:
+    """HLX DLSS was built with its native Vulkan kernels (owner, 20-11-2026: an option, off by default): Vulkan games
+    then run it in Vulkan instead of through HelixSR Scaler's DirectX 12 bridge. From the builder's record."""
+    if not scaler_ready(payload_dir):
+        return False
+    try:
+        record = json.loads((scaler_release(payload_dir) / BUILD_RECORD).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return isinstance(record, dict) and record.get("vulkan") is True
+
+
+Runner = Callable[..., subprocess.CompletedProcess]
+
+
+def run_bridge(payload_dir: Path, command: str, *args: str, runner: Runner | None = None,
+               python: str = sys.executable) -> dict:
+    """HelixSR's bridge on the payload's release: *command* with *args*, its JSON answer. HelixError with its message
+    when it says no, or gives no answer."""
+    release = scaler_release(payload_dir)
+    argv = [python, "-I", str(release / BRIDGE), str(release), command, *args]
+    try:
+        done = (runner or subprocess.run)(argv, capture_output=True, text=True, errors="replace",
+                                          timeout=BRIDGE_TIMEOUT, cwd=release)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise HelixError("HelixSR's bridge did not run: {0}".format(exc)) from exc
+    try:
+        answer = json.loads(done.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        answer = None
+    if not isinstance(answer, dict):
+        raise HelixError("HelixSR's bridge gave no answer: {0}".format(
+            done.stderr.strip()[-400:] or "exit code {0}".format(done.returncode)))
+    if not answer.get("ok"):
+        raise HelixError(str(answer.get("error") or "HelixSR's bridge failed."))
+    return answer
+
+
+def scaler_install(game_dir: Path, payload_dir: Path, runner: Runner | None = None) -> dict:
+    """HelixSR Scaler into the game in *game_dir* (next to its .exe), or an update of it; without HelixSR's frame
+    generation, which the app does not build. Returns the bridge's answer: its "game" (exe_folder, scaler_dll,
+    launch_options) and its "messages"."""
+    if not scaler_ready(payload_dir):
+        raise HelixError("HelixSR Scaler needs HelixSR 3 with HLX DLSS's network built: Download and build on the "
+                         "Setup page.")
+    return run_bridge(payload_dir, "install", "--game", str(game_dir), "--way", "scaler",
+                      "--scaler", str(scaler_release(payload_dir) / SCALER_PKG), "--fg", "off", runner=runner)
+
+
+def scaler_remove(game_dir: Path, payload_dir: Path, runner: Runner | None = None,
+                  exe_folder: Path | None = None) -> dict:
+    """HelixSR Scaler out of the game, the game's own files it replaced put back (the bridge's remove). The bridge
+    looks the game up again afterwards for its answer, and does not find a folder outside the stores' libraries once
+    Scaler's files are gone: with HelixSR Scaler's record gone from *exe_folder*, the removal stands all the same."""
+    if not scaler_available(payload_dir):
+        raise HelixError("The payload has no HelixSR 3 release to remove HelixSR Scaler with: import it again, or run "
+                         "HelixSR-Scaler-remove.sh in the game's .exe folder.")
+    try:
+        return run_bridge(payload_dir, "remove", "--game", str(game_dir), runner=runner)
+    except HelixError:
+        if exe_folder is not None and exe_folder.is_dir() and not (exe_folder / SCALER_RECORD).exists():
+            return {"ok": True, "messages": ["HelixSR Scaler removed"]}
+        raise
+
+
 # ------------------------------------------------------------------------------------------ deployments
 @dataclass
 class Deployment:
@@ -1012,6 +1256,7 @@ class Deployment:
     game: str                   # display name: the game folder
     deployed_at: str = ""       # ISO timestamp of the last deploy
     helixsr_version: str = ""
+    target: str = ""            # MODE_SCALER: the game's .exe folder, where HelixSR Scaler is (path: the game)
 
     @property
     def location(self) -> Path:
@@ -1019,6 +1264,8 @@ class Deployment:
 
     @property
     def folder(self) -> Path:
+        if self.mode == MODE_SCALER:
+            return Path(self.target) if self.target else self.location
         return self.location if self.mode == MODE_FOLDER else self.location.parent
 
 
@@ -1039,6 +1286,16 @@ def deployment_state(dep: Deployment, payload_dir: Path) -> tuple[str, str]:
     folder = dep.folder
     if not folder.is_dir():
         return "bad", "Folder gone"
+    if dep.mode == MODE_SCALER:
+        if not (folder / SCALER_RECORD).is_file():
+            return "bad", "Removed"
+        dll = folder / NGX_DLL
+        if not dll.is_file() or not network_embedded(dll):
+            return "warn", "Network files missing"
+        built = scaler_release(payload_dir) / NGX_DLL
+        if built.is_file() and not same_file(dll, built):
+            return _other_build(dep, payload_dir)
+        return "ok", "In place"
     if dep.mode == MODE_FOLDER:
         dll = folder / HELIXSR_DLL
         if not dll.is_file():
@@ -1063,12 +1320,15 @@ def deployment_state(dep: Deployment, payload_dir: Path) -> tuple[str, str]:
 def needs_update(dep: Deployment, payload_dir: Path) -> bool:
     """A deployment Update older games brings to the payload: an older build, or the game's DLL back in place."""
     return deployment_state(dep, payload_dir)[1] in (OLDER, RESTORED) and \
-        (dep.mode == MODE_FOLDER or dep.location.is_file())
+        (dep.mode == MODE_FOLDER or (dep.mode == MODE_SCALER and scaler_ready(payload_dir)) or dep.location.is_file())
 
 
 def update_deployment(dep: Deployment, payload_dir: Path) -> list[Path]:
     """Put the payload's HelixSR where *dep* is, as Deploy did, keeping the helixsr.ini there byte for byte and, in a
     stand-alone folder, its second upscaler. A game's backup is never overwritten (deploy())."""
+    if dep.mode == MODE_SCALER:                 # the bridge keeps the game's OptiScaler.ini (the settings)
+        scaler_install(dep.location, payload_dir)
+        return [dep.folder]
     ini = dep.folder / INI
     kept = ini.read_bytes() if ini.is_file() else None
     if dep.mode == MODE_FOLDER:

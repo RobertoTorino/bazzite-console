@@ -32,6 +32,7 @@ class SetupPage(QWidget):
     import_requested = pyqtSignal(Path)             # import an already built release folder
     auto_check_changed = pyqtSignal(bool)
     fallback_changed = pyqtSignal(bool)             # the version choice: True = the fallback release
+    vulkan_changed = pyqtSignal(bool)               # HelixSR 3: build HLX DLSS's native Vulkan kernels too
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -84,6 +85,13 @@ class SetupPage(QWidget):
                                 .format(FALLBACK_VERSION))
         self.version.currentIndexChanged.connect(lambda _: self.fallback_changed.emit(self.fallback()))
         choice.addWidget(self.version)
+        choice.addSpacing(16)
+        # Native Vulkan kernels (owner, 20-11-2026: an option, off by default)
+        self.vulkan = QCheckBox("Native Vulkan kernels for HLX DLSS")
+        self.vulkan.setToolTip("HelixSR 3: Vulkan games run HLX DLSS in Vulkan instead of through HelixSR Scaler's "
+                               "DirectX 12 bridge. The build takes about twice as long.")
+        self.vulkan.toggled.connect(self.vulkan_changed)
+        choice.addWidget(self.vulkan)
         choice.addStretch(1)
         vbox.addLayout(choice)
         dlss = QHBoxLayout()
@@ -107,7 +115,8 @@ class SetupPage(QWidget):
 
         actions = QHBoxLayout()
         self.start = accent_button("Download and build", ("Download the latest release and everything the setup "
-                                                          "needs, build the network and import the result"))
+                                                          "needs, build the network and import the result (HelixSR 3: "
+                                                          "HLX FSR 4 comes built, so only the download)"))
         self.start.clicked.connect(self._start_clicked)
         actions.addWidget(self.start)
         self.cancel = QPushButton("Cancel")
@@ -184,6 +193,11 @@ class SetupPage(QWidget):
     # ------------------------------------------------------------ run
     def fallback(self) -> bool:
         return bool(self.version.currentData())
+
+    def set_vulkan(self, on: bool) -> None:
+        self.vulkan.blockSignals(True)
+        self.vulkan.setChecked(on)
+        self.vulkan.blockSignals(False)
 
     def set_fallback(self, on: bool) -> None:
         self.version.blockSignals(True)

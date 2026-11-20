@@ -14,11 +14,11 @@
 # the system's libva.so.2: Bazzite has the libraries but no headers.
 set -euo pipefail
 
-FFMPEG_VERSION=7.1.2
-FFMPEG_SHA256=089bc60fb59d6aecc5d994ff530fd0dcb3ee39aa55867849a2bbc4e555f9c304     # signature checked 13-10-2026
-LIBVA_VERSION=2.22.0
-LIBVA_API=1.22.0
-LIBVA_SHA256=467c418c2640a178c6baad5be2e00d569842123763b80507721ab87eb7af8735
+FFMPEG_VERSION=7.1.5
+FFMPEG_SHA256=de668509caf9e35e3cd162473441fdb29538c6d96ed080292b3cf9e6fc5d558f     # signature checked 20-11-2026
+LIBVA_VERSION=2.24.1
+LIBVA_API=1.24.0
+LIBVA_SHA256=0b4a3649ee8d683b9cce2ef094df4fb039d276c0cef7e49337c43d3b297b9f42
 
 PREFIX=${1:-${XDG_CACHE_HOME:-$HOME/.cache}/ps5-remoteplay/ffmpeg-$FFMPEG_VERSION}
 WORK=$(mktemp -d)

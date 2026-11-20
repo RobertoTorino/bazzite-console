@@ -21,13 +21,15 @@ from pathlib import Path
 from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtGui import QCloseEvent, QResizeEvent
 from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-                             QMainWindow, QMessageBox, QPushButton, QScrollArea, QSizePolicy, QTabWidget,
+                             QMainWindow, QMenu, QMessageBox, QPushButton, QScrollArea, QSizePolicy, QTabWidget,
                              QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from bazzite_console_core import SUITE_MANUAL_URL, applog, covers, steam, window_title
 from bazzite_console_core import __version__ as CORE_VERSION
 from bazzite_console_core import keep, renamed
+from bazzite_console_core import builds
 from bazzite_console_core.action_tab import ActionTab
+from bazzite_console_core.builds_dialog import BuildsDialog, fill_menu
 from bazzite_console_core.keep_dialog import KeepDialog
 from bazzite_console_core.platform import bin_home, private, xdg_open
 from bazzite_console_core.settings import SettingsStore
@@ -54,6 +56,7 @@ GAMES, START, SETTINGS, SAVES, LOG = range(5)               # the tabs
 # advice are in its tip.
 NOT_INSTALLED = "Not installed. Install it with the Install button."
 INSTALLED = "Installed. Uninstall with the Uninstall button."
+VERSIONS_TIP = "Put another installed Xenia build in use, or download one in the version manager"
 
 class XeniaSettings(SettingsStore):
     DEFAULTS: dict = {}
@@ -145,7 +148,11 @@ class MainWindow(QMainWindow):
         header.add_action(self.states_spacer)
         self.refresh_pill = style.action_pill("Refresh", "Click to refresh", "Read the state again and look for games")
         self.refresh_pill.clicked.connect(self.refresh)
-        self.emulator_box = MetricBox("Xenia version", style.BLUE)
+        # The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu puts another installed
+        # build in use, or opens the version manager (core's builds_dialog).
+        self.emulator_box = style.action_pill("—", "Xenia version", VERSIONS_TIP)
+        self.versions_menu = QMenu(self)
+        self.emulator_box.clicked.connect(self.on_versions_menu)
         self.games_box = MetricBox("Your games", style.BLUE)
         self.steam_box = MetricBox("Available in Steam", style.BLUE)
         # The header's pills spread over the window's width in equal parts, as the action pills below.
@@ -391,7 +398,8 @@ class MainWindow(QMainWindow):
             self.emulator_state.setText(INSTALLED)
             self.emulator_box.set_value(self.version)
             if self.version != pinned:
-                tip = f"Xenia {self.version} is installed; this version of the app brings {pinned}: Install puts it in."
+                tip = (f"Xenia {self.version} is in use; it was not tried on the board. This version of the app was "
+                       f"tried with {pinned}: Install puts it back in use.")
                 if not self._pin_noted:
                     self.note(tip)
                     self._pin_noted = True
@@ -466,6 +474,7 @@ class MainWindow(QMainWindow):
         installed_ = bool(self.version)
         self.refresh_pill.setEnabled(idle)
         self.install_pill.setEnabled(idle and self.version != emulator.VERSION)
+        self.emulator_box.setEnabled(idle)
         self.remove_pill.setEnabled(idle and installed_)
         self.covers_button.setEnabled(idle)
         self.remove_game_button.setEnabled(idle and self.chosen() is not None)
@@ -501,9 +510,9 @@ class MainWindow(QMainWindow):
         self.say(message, ok)
 
     def on_install(self) -> None:
-        if not self._ask("Install", f"Download Xenia {emulator.VERSION} from GitHub (about {emulator.SIZE_MB} MB)?"
-                                    "\n\nIt is checked against the SHA-256 this app was tried with before it is "
-                                    f"installed in {self.home}."):
+        if not (self.home / emulator.VERSION / emulator.MEMBER).is_file() and not self._ask(
+                "Install", f"Download Xenia {emulator.VERSION} from GitHub (about {emulator.SIZE_MB} MB)?\n\nIt is "
+                f"checked against the SHA-256 this app was tried with before it is installed in {self.home}."):
             return
         home, fetch = self.home, self.fetch
 
@@ -514,8 +523,36 @@ class MainWindow(QMainWindow):
                 return False, f"Xenia was not installed: {error}"
         self._start(f"Downloading Xenia {emulator.VERSION}…", job)
 
+    def on_versions_menu(self) -> None:
+        """The version pill's menu: the builds installed, then Manage versions…."""
+        fill_menu(self.versions_menu, self.home, emulator.MEMBER, emulator.VERSION, self.use_build,
+                  self.on_versions)
+        self.versions_menu.popup(self.emulator_box.mapToGlobal(self.emulator_box.rect().bottomLeft()))
+
+    def use_build(self, folder: str) -> None:
+        try:
+            builds.use(self.home, folder, emulator.MEMBER)
+        except (builds.BuildError, OSError) as error:
+            self.say(f"Xenia {folder} was not put in use: {error}", ok=False)
+            return
+        self.refresh()
+        self.say(f"Xenia {folder} is in use." + ("" if folder == emulator.VERSION else
+                                                   " It was not tried on the board."))
+
+    def on_versions(self) -> None:
+        """The version manager (core's BuildsDialog): every build installed and every build on GitHub."""
+        home, fetch = self.home, self.fetch
+        dialog = BuildsDialog("Xenia", home, emulator.MEMBER, emulator.tested(), emulator.available,
+                              lambda build: emulator.install_build(home, build, fetch), self,
+                              pill=style.action_pill, running=self.xenia_running)
+        dialog.changed.connect(self.refresh)
+        style.apply(dialog)
+        dialog.exec()
+        self.refresh()
+
     def on_remove(self) -> None:
-        text = "Remove the installed Xenia?\n\nIts own folder, with its settings, saves and installed content, stays."
+        text = ("Remove the installed Xenia, every build of it?\n\nIts own folder, with its settings, saves and "
+                "installed content, stays.")
         if self.in_steam:
             text += "\nThe games in Steam no longer start until it is installed again."
         if self._ask("Remove", text):

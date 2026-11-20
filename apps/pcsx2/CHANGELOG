@@ -1,3 +1,13 @@
+Changelog: 20-11-2026 03:39:29
+
+Added. The version manager (owner, 20-11-2026: as shadPS4's own launcher has one; core's builds). The version box in
+the header is a pill: its menu lists the PCSX2 builds installed and puts another in use, and Manage versions… opens
+the version manager, which downloads the nightlies and the newest stable release, each with its own catalog from
+GitHub, checked against the SHA-256 GitHub publishes, adds a custom AppImage, puts a build in use and deletes one.
+Builds stay side by side: Install no longer deletes the others, and puts the build this version was tried with back in
+use, without a download when it is still there. Uninstall removes every build. A build other than the tested one is
+said to be not tried on the board.
+
 Changelog: 19-11-2026 22:33:16
 
 Release 1.3.1.

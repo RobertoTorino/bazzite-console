@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2856 test functions (3244 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+2911 test functions (3299 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -19,19 +19,19 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
 | [apps/overlay](#appsoverlay) | 2 | 18 | 0.2 s |
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
-| [apps/pcsx2](#appspcsx2) | 14 | 141 | 19.0 s |
-| [apps/ppsspp](#appsppsspp) | 11 | 91 | 4.5 s |
+| [apps/pcsx2](#appspcsx2) | 14 | 145 | 19.0 s |
+| [apps/ppsspp](#appsppsspp) | 11 | 94 | 4.5 s |
 | [apps/quickfix](#appsquickfix) | 6 | 38 |  |
-| [apps/remoteplay](#appsremoteplay) | 25 | 240 | 9.6 s |
-| [apps/rpcs3](#appsrpcs3) | 12 | 114 | 5.6 s |
+| [apps/remoteplay](#appsremoteplay) | 26 | 242 | 9.6 s |
+| [apps/rpcs3](#appsrpcs3) | 12 | 117 | 5.6 s |
 | [apps/sftp](#appssftp) | 11 | 86 | 5.6 s |
-| [apps/shadps4](#appsshadps4) | 17 | 147 | 7.7 s |
+| [apps/shadps4](#appsshadps4) | 17 | 149 | 7.7 s |
 | [apps/ssd](#appsssd) | 4 | 50 | 0.8 s |
-| [apps/upscaler](#appsupscaler) | 10 | 98 | 1.6 s |
-| [apps/vita3k](#appsvita3k) | 9 | 72 | 4.9 s |
+| [apps/upscaler](#appsupscaler) | 11 | 119 | 1.6 s |
+| [apps/vita3k](#appsvita3k) | 9 | 76 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
-| [apps/xenia](#appsxenia) | 8 | 67 | 4.2 s |
-| [core](#core) | 25 | 174 | 3.5 s |
+| [apps/xenia](#appsxenia) | 8 | 70 | 4.2 s |
+| [core](#core) | 26 | 187 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 102 | 2.1 s |
@@ -42,7 +42,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
 | [tools](#tools) | 37 | 216 | 10.2 s |
-| **All** | | **2856** | **153 s** |
+| **All** | | **2911** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -713,7 +713,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/pcsx2
 
-141 tests in 14 files, 19.0 s in a local run.
+145 tests in 14 files, 19.0 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -726,12 +726,15 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_emulator.py` | `test_the_pin_points_at_the_release` |  |  | The pin points at the release. |
 | `test_emulator.py` | `test_install_and_remove` |  |  | Install and remove. |
 | `test_emulator.py` | `test_install_takes_pcsx2s_catalogue_out` |  |  | PCSX2's titles and patches come out of the AppImage beside it; without them the install stands all the same. |
-| `test_emulator.py` | `test_an_older_version_is_replaced` |  |  | An older version is replaced. |
+| `test_emulator.py` | `test_an_older_version_stays_beside_it` |  |  | An older version stays beside it. |
 | `test_emulator.py` | `test_pcsx2_updated_itself` |  |  | PCSX2's own update writes another build over the AppImage it runs from, in the same folder. |
 | `test_emulator.py` | `test_a_different_file_is_refused` |  |  | A different file is refused. |
 | `test_emulator.py` | `test_a_failed_install_keeps_the_installed_one` |  |  | A failed install keeps the installed one. |
+| `test_emulator.py` | `test_an_install_from_before_build_json` |  |  | An earlier version of the app wrote the build's size in .size: replaced() still reads it. |
 | `test_emulator.py` | `test_download_errors_say_what_happened` |  |  | Download errors say what happened. |
 | `test_emulator.py` | `test_a_newer_pcsx2_stable` |  |  | A newer pcsx2 stable. |
+| `test_emulator.py` | `test_the_builds_on_github` |  |  | The version manager's list: the nightlies on the first page and the newest stable, which they push off it. |
+| `test_emulator.py` | `test_a_nightly_beside_the_stable` |  |  | A build from the version manager gets its own catalog, beside it. |
 | `test_games.py` | `test_system_cnf_is_read` |  |  | System cnf is read. |
 | `test_games.py` | `test_the_serial_as_pcsx2_shows_it` |  |  | The serial as pcsx2 shows it. |
 | `test_games.py` | `test_an_iso_is_read` |  |  | An iso is read. |
@@ -777,6 +780,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_unmute_bazzites_volume` |  | 0.2 s | Unmute beside Bazzite's volume (owner, 24-10-2026): shown while PCSX2 is muted there only; a click runs core's unmute off the window and the row follows what WirePlumber stored; a failure is said in red. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.2 s | Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.4 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
+| `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_memcard_icon.py` | `test_rez_as_mymcs_opengl_viewer_draws_it` |  | 0.8 s | Rez as mymcs opengl viewer draws it. |
 | `test_memcard_icon.py` | `test_vertex_colours_and_light` |  | 0.3 s | Vertex colours and light. |
 | `test_memcard_icon.py` | `test_back_faces_are_left_out` |  | 0.1 s | Back faces are left out. |
@@ -861,18 +865,20 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/ppsspp
 
-91 tests in 11 files, 4.5 s in a local run.
+94 tests in 11 files, 4.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_emulator.py` | `test_the_pin_points_at_the_release` |  |  | The pin points at the release. |
 | `test_emulator.py` | `test_install_and_remove` |  |  | Install and remove. |
-| `test_emulator.py` | `test_an_older_version_is_replaced` |  |  | An older version is replaced. |
+| `test_emulator.py` | `test_an_older_version_stays_beside_it` |  |  | An older version stays beside it. |
 | `test_emulator.py` | `test_a_different_file_is_refused` |  |  | A different file is refused. |
 | `test_emulator.py` | `test_a_failed_install_keeps_the_installed_one` |  |  | A failed install keeps the installed one. |
+| `test_emulator.py` | `test_the_pinned_build_back_in_use_without_a_download` |  |  | The pinned build back in use without a download. |
 | `test_emulator.py` | `test_download_errors_say_what_happened` |  |  | Download errors say what happened. |
 | `test_emulator.py` | `test_ppsspp_tags_with_two_or_three_numbers` |  |  | Ppsspp tags with two or three numbers. |
 | `test_emulator.py` | `test_a_newer_ppsspp_release` |  |  | A newer ppsspp release. |
+| `test_emulator.py` | `test_the_releases_on_github` |  |  | The version manager's list: the x86_64 AppImage of each release, with GitHub's SHA-256; a release without one (an older one, named otherwise) is left out. |
 | `test_games.py` | `test_param_sfo_is_read` |  |  | Param sfo is read. |
 | `test_games.py` | `test_ppsspps_own_folder` |  |  | Ppsspps own folder. |
 | `test_games.py` | `test_an_iso_is_read` |  |  | An iso is read. |
@@ -915,6 +921,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_settings_tab` |  |  | The Settings tab holds PPSSPP's settings in the app (core's settings_page): the values as ppsspp.ini holds them, a change written into it at once, and nothing while PPSSPP runs. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
+| `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_ppsspp_settings.py` | `test_the_values_as_ppsspp_writes_them` |  |  | The values as ppsspp writes them. |
 | `test_ppsspp_settings.py` | `test_the_defaults_without_a_file` |  |  | The defaults without a file. |
 | `test_ppsspp_settings.py` | `test_other_forms_of_a_value` |  |  | Other forms of a value. |
@@ -1004,7 +1011,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/remoteplay
 
-240 tests in 25 files, 9.6 s in a local run.
+242 tests in 26 files, 9.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1047,6 +1054,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_exit_keys.py` | `test_menu_keeps_qt_escape` |  |  | Menu keeps qt escape. |
 | `test_exit_keys.py` | `test_close_can_be_refused_and_repeat_is_ignored` |  |  | Close can be refused and repeat is ignored. |
 | `test_exit_keys.py` | `test_escape_leaves_fullscreen_without_closing_stream` |  |  | Escape leaves fullscreen without closing stream. |
+| `test_ffmpeg_pin.py` | `test_build_rs_names_the_pinned_ffmpeg` |  |  | Build rs names the pinned ffmpeg. |
+| `test_ffmpeg_pin.py` | `test_the_pins` |  |  | The pins. |
 | `test_gamepad.py` | `test_idle` |  |  | Idle. |
 | `test_gamepad.py` | `test_buttons_as_the_reference_maps_them` | 19 |  | Buttons as the reference maps them. |
 | `test_gamepad.py` | `test_axes` |  |  | Axes. |
@@ -1251,7 +1260,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/rpcs3
 
-114 tests in 12 files, 5.6 s in a local run.
+117 tests in 12 files, 5.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1259,12 +1268,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_controllers.py` | `test_the_controllers_as_sdl_names_them` |  | 0.2 s | The names come from SDL3 itself, in a process of the app's own Python: one a line, in SDL's order; None when SDL3 is not there (the probe exits 3), when Python fails or when it does not answer in time. |
 | `test_emulator.py` | `test_the_pin_points_at_the_build` |  |  | The pin points at the build. |
 | `test_emulator.py` | `test_install_and_remove` |  |  | Install and remove. |
-| `test_emulator.py` | `test_an_older_version_is_replaced` |  |  | An older version is replaced. |
+| `test_emulator.py` | `test_an_older_version_stays_beside_it` |  |  | An older version stays beside it. |
 | `test_emulator.py` | `test_rpcs3_updated_itself` |  |  | RPCS3's own update writes another build over the AppImage it runs from, in the same folder. |
 | `test_emulator.py` | `test_a_different_file_is_refused` |  |  | A different file is refused. |
 | `test_emulator.py` | `test_a_failed_install_keeps_the_installed_one` |  |  | A failed install keeps the installed one. |
+| `test_emulator.py` | `test_the_pinned_build_back_in_use_without_a_download` |  |  | The pinned build back in use without a download. |
 | `test_emulator.py` | `test_download_errors_say_what_happened` |  |  | Download errors say what happened. |
 | `test_emulator.py` | `test_a_newer_rpcs3_landmark` |  |  | A newer rpcs3 landmark. |
+| `test_emulator.py` | `test_the_newest_build_on_github` |  |  | The version manager offers RPCS3's newest build beside the pinned one: GitHub lists the thousands of builds by their tag, not by date, so only /releases/latest says which is newest. |
 | `test_games.py` | `test_param_sfo_is_read` |  |  | Param sfo is read. |
 | `test_games.py` | `test_a_disc_game_and_an_installed_game` |  |  | A disc game and an installed game. |
 | `test_games.py` | `test_a_title_with_line_breaks` |  |  | A title with line breaks. |
@@ -1313,6 +1324,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_unmute_bazzites_volume` |  | 0.1 s | Unmute beside Bazzite's volume (owner, 24-10-2026): shown while RPCS3 is muted there only; a click runs core's unmute off the window and the row follows what WirePlumber stored; a failure is said in red. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.1 s | Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.2 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
+| `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_rpcn.py` | `test_the_password_as_rpcs3_derives_it` |  |  | The password as rpcs3 derives it. |
 | `test_rpcn.py` | `test_create_an_account` |  |  | Create an account. |
 | `test_rpcn.py` | `test_the_server_refuses_an_account` |  |  | The server refuses an account. |
@@ -1465,7 +1477,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/shadps4
 
-147 tests in 17 files, 7.7 s in a local run.
+149 tests in 17 files, 7.7 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1489,7 +1501,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_crypto.py` | `test_rsa_invalid_padding_returns_none` |  |  | Rsa invalid padding returns none. |
 | `test_emulator.py` | `test_the_pin_points_at_the_release` |  |  | The pin points at the release. |
 | `test_emulator.py` | `test_install_and_remove` |  |  | Install and remove. |
-| `test_emulator.py` | `test_an_older_version_is_replaced` |  |  | An older version is replaced. |
+| `test_emulator.py` | `test_an_older_version_stays_beside_it` |  |  | An older version stays beside it. |
+| `test_emulator.py` | `test_the_builds_on_github` |  |  | The version manager's list: the Linux SDL zip of each release and of the pre-release, with GitHub's SHA-256; one is unpacked as the pinned release is. |
 | `test_emulator.py` | `test_a_different_file_is_refused` |  |  | A different file is refused. |
 | `test_emulator.py` | `test_a_zip_without_the_appimage_or_damaged` |  |  | A zip without the appimage or damaged. |
 | `test_emulator.py` | `test_download_errors_say_what_happened` |  |  | Download errors say what happened. |
@@ -1566,6 +1579,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_remove_game_on_a_package_row_offers_the_package` |  | 0.1 s | Remove game… on a PKG row (owner, 11-11-2026: a package that cannot be unpacked stayed a row with no way out): the keep window offers the .pkg file; Cancel keeps it, Delete marked deletes it and the row goes. |
 | `test_main_window.py` | `test_packages_in_a_game_folder_wait_as_rows_and_unpack_all_takes_the_game_first` |  | 0.2 s | A .pkg put in a game folder (owner, 05-11-2026): a row of its own, PKG or PKG update, after the games; an update whose game still waits says so; Unpack all unpacks the game first and its update beside it, then the keep window offers the packages: kept ones are no longer rows, deleted ones are gone. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.2 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
+| `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_pkg.py` | `test_sanitize_file_name` |  |  | Sanitize file name. |
 | `test_pkg.py` | `test_find_pfsc_offset_priorities` |  |  | Find pfsc offset priorities. |
 | `test_pkg.py` | `test_decompress_pfsc_roundtrip` |  |  | Decompress pfsc roundtrip. |
@@ -1676,7 +1690,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/upscaler
 
-98 tests in 10 files, 1.6 s in a local run.
+119 tests in 11 files, 1.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1698,7 +1712,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_acquire.py` | `test_setup_worker_checksum_failure_keeps_nothing` |  |  | Setup worker checksum failure keeps nothing. |
 | `test_acquire.py` | `test_setup_worker_release_error` |  |  | Setup worker release error. |
 | `test_acquire.py` | `test_update_check_covers_only_helixsr` |  |  | Update check covers only helixsr. |
-| `test_acquire.py` | `test_the_newest_release_of_the_supported_major` |  |  | The app sets up 1.x and 2.x (owner, 20-10-2026) and says when a later major is out that it does not. |
+| `test_acquire.py` | `test_the_newest_release_of_the_supported_major` |  |  | The app sets up 1.x, 2.x (owner, 20-10-2026) and 3.x (owner, 20-11-2026) and says when a later major is out that it does not. |
 | `test_acquire.py` | `test_setup_worker_refuses_another_major` |  |  | Setup worker refuses another major. |
 | `test_acquire.py` | `test_setup_worker_needs_free_space` |  |  | Setup worker needs free space. |
 | `test_acquire.py` | `test_setup_worker_checks_the_release_zip` |  |  | Setup worker checks the release zip. |
@@ -1733,6 +1747,27 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_games.py` | `test_game_running` |  |  | Game running. |
 | `test_games.py` | `test_scan_can_be_cancelled` |  |  | Scan can be cancelled. |
 | `test_games.py` | `test_steam_tools_are_not_games` |  |  | Steam tools are not games. |
+| `test_helixsr3.py` | `test_hlx_is_recognized` |  |  | Hlx is recognized. |
+| `test_helixsr3.py` | `test_a_helixsr_3_payload` |  |  | Imported over a HelixSR 2 payload: HLX FSR 4 and the notices come in, HelixSR's DLL and network files go, the user's helixsr.ini template stays. |
+| `test_helixsr3.py` | `test_a_helixsr_2_payload_again_drops_hlx` |  |  | The fallback (or a 2.x import by hand) makes the payload HelixSR's again. |
+| `test_helixsr3.py` | `test_a_helixsr_3_release_is_not_an_hlx_one_without_it` |  |  | A helixsr 3 release is not an hlx one without it. |
+| `test_helixsr3.py` | `test_deploy_and_remove_hlx` |  |  | Deploy and remove hlx. |
+| `test_helixsr3.py` | `test_a_helixsr_2_deployment_becomes_hlx` |  |  | Deployed with HelixSR 2, the payload then HelixSR 3: the deployment is an older build, and updating it puts HLX FSR 4 in its place; the game's own file stays the backup. |
+| `test_helixsr3.py` | `test_a_game_that_put_its_file_back_over_hlx` |  |  | A game that put its file back over hlx. |
+| `test_helixsr3.py` | `test_no_standalone_folder_from_helixsr_3` |  |  | No standalone folder from helixsr 3. |
+| `test_helixsr3.py` | `test_setup_worker_builds_helixsr_3` |  |  | HLX FSR 4 comes built; the builder builds HLX DLSS's network into HelixSR/helixsr.dll, without frame generation. |
+| `test_helixsr3.py` | `test_a_failed_helixsr_3_build_keeps_hlx_fsr_4` |  |  | A failed helixsr 3 build keeps hlx fsr 4. |
+| `test_helixsr3.py` | `test_setup_worker_refuses_a_helixsr_3_zip_without_hlx` |  |  | Setup worker refuses a helixsr 3 zip without hlx. |
+| `test_helixsr3.py` | `test_the_release_for_helixsr_scaler` |  |  | Kept whole in the payload (hard links where it can), ready once HLX DLSS carries the network. |
+| `test_helixsr3.py` | `test_the_release_from_the_zip` |  |  | The release from the zip. |
+| `test_helixsr3.py` | `test_a_helixsr_2_payload_has_no_scaler_release` |  |  | A helixsr 2 payload has no scaler release. |
+| `test_helixsr3.py` | `test_helixsr_scaler_through_the_bridge` |  |  | Helixsr scaler through the bridge. |
+| `test_helixsr3.py` | `test_the_bridge_says_no` |  |  | The bridge says no. |
+| `test_helixsr3.py` | `test_a_helixsr_scaler_deployment` |  |  | Its state from the install record and HLX DLSS in the game; an older build updates through the bridge. |
+| `test_helixsr3.py` | `test_the_deploy_page_with_helixsr_3` |  |  | HelixSR Scaler takes the stand-alone folder's place; its Deploy needs the network built and a game folder; the helixsr.ini option goes, as HelixSR 3 reads none. |
+| `test_helixsr3.py` | `test_the_native_vulkan_kernels` |  |  | An option, off by default (owner, 20-11-2026): --vulkan to HelixSR 3's builder, and the payload says from the builder's record whether they were built. |
+| `test_helixsr3.py` | `test_no_vulkan_for_helixsr_2` |  |  | HelixSR 2's builder has no --vulkan: the option leaves its build as it was. |
+| `test_helixsr3.py` | `test_the_vulkan_option_on_the_setup_page` |  |  | The vulkan option on the setup page. |
 | `test_help.py` | `test_the_help_page_shows_the_users_folders_as_home` |  |  | The help page shows the users folders as home. |
 | `test_ini.py` | `test_defaults_match_upstream_file` |  |  | Defaults match upstream file. |
 | `test_ini.py` | `test_parse_values_and_comments` |  |  | Parse values and comments. |
@@ -1781,13 +1816,16 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/vita3k
 
-72 tests in 9 files, 4.9 s in a local run.
+76 tests in 9 files, 4.9 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_emulator.py` | `test_the_pin_points_at_the_build` |  |  | The pin points at the build. |
 | `test_emulator.py` | `test_install_and_remove` |  |  | Install and remove. |
-| `test_emulator.py` | `test_an_older_build_is_replaced` |  |  | An older build is replaced. |
+| `test_emulator.py` | `test_an_older_build_stays_beside_it` |  |  | Install puts the pinned build in use; another build stays, one click away in the version manager. |
+| `test_emulator.py` | `test_the_pinned_build_back_in_use_without_a_download` |  |  | The pinned build back in use without a download. |
+| `test_emulator.py` | `test_the_builds_on_github` |  |  | The version manager's list: the x86_64 AppImage of each build, with GitHub's SHA-256; a build without one is left out. |
+| `test_emulator.py` | `test_another_build_beside_the_pinned_one` |  |  | A build from the version manager: checked against GitHub's SHA-256, not in use until Use; replaced() goes by its own size once it is in use. |
 | `test_emulator.py` | `test_the_appimage_updated_itself` |  |  | Its self-updater writes another build over the AppImage it runs from, in the same folder. |
 | `test_emulator.py` | `test_a_different_file_is_refused` |  |  | A different file is refused. |
 | `test_emulator.py` | `test_a_failed_install_keeps_the_installed_one` |  |  | A failed install keeps the installed one. |
@@ -1827,6 +1865,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_settings_tab` |  |  | The Settings tab holds Vita3K's settings in the app (core's settings_page): the values as config.yml holds them, a change written into it at once, and nothing while Vita3K runs. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
+| `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
@@ -1980,18 +2019,20 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/xenia
 
-67 tests in 8 files, 4.2 s in a local run.
+70 tests in 8 files, 4.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_emulator.py` | `test_the_pin_points_at_the_release` |  |  | The pin points at the release. |
 | `test_emulator.py` | `test_install_and_remove` |  |  | Install and remove. |
-| `test_emulator.py` | `test_an_older_version_is_replaced` |  |  | An older version is replaced. |
+| `test_emulator.py` | `test_an_older_version_stays_beside_it` |  |  | An older version stays beside it. |
 | `test_emulator.py` | `test_a_different_file_is_refused` |  |  | A different file is refused. |
 | `test_emulator.py` | `test_a_failed_install_keeps_the_installed_one` |  |  | A failed install keeps the installed one. |
+| `test_emulator.py` | `test_the_pinned_build_back_in_use_without_a_download` |  |  | The pinned build back in use without a download. |
 | `test_emulator.py` | `test_download_errors_say_what_happened` |  |  | Download errors say what happened. |
 | `test_emulator.py` | `test_a_newer_xenia` |  |  | A newer xenia. |
 | `test_emulator.py` | `test_xenia_running_sees_the_appimages_process` |  |  | Xenia running sees the appimages process. |
+| `test_emulator.py` | `test_the_builds_on_github` |  |  | The version manager's list: the Linux AppImage of each Canary build, with GitHub's SHA-256. |
 | `test_games.py` | `test_a_disc_image_at_each_place` | 5 |  | A disc image at each place. |
 | `test_games.py` | `test_what_is_no_xbox_360_disc_is_not_a_game` |  |  | What is no xbox 360 disc is not a game. |
 | `test_games.py` | `test_the_title_id_of_an_xex` |  |  | The title id of an xex. |
@@ -2028,6 +2069,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_settings_tab` |  |  | The Settings tab holds Xenia's settings in the app (core's settings_page): Xenia's defaults while there is no file, a change written into Xenia's own folder at once, and nothing while Xenia runs. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
+| `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
@@ -2054,7 +2096,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## core
 
-174 tests in 25 files, 3.5 s in a local run.
+187 tests in 26 files, 3.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2074,6 +2116,19 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_applog.py` | `test_without_a_folder_the_log_goes_to_stderr` |  |  | Without a folder the log goes to stderr. |
 | `test_applog.py` | `test_a_private_log_masks_the_users_folders` |  |  | private=True (owner, 29-10-2026): no user name in a line. |
 | `test_applog.py` | `test_clear_empties_the_log_and_the_older_ones` |  |  | Clear logs (owner, 18-11-2026): the file emptied while it stays the app's log, the older ones removed. |
+| `test_builds.py` | `test_builds_side_by_side` |  |  | Builds side by side. |
+| `test_builds.py` | `test_a_build_older_than_build_json` |  |  | A folder an earlier version of a manager installed, without build.json: a build all the same. |
+| `test_builds.py` | `test_a_different_file_changes_nothing` |  |  | A different file changes nothing. |
+| `test_builds.py` | `test_download_errors` |  |  | Download errors. |
+| `test_builds.py` | `test_a_zip_unpacked` |  |  | A zip unpacked. |
+| `test_builds.py` | `test_replaced_by_its_own_size` |  |  | Replaced by its own size. |
+| `test_builds.py` | `test_a_custom_build` |  |  | A custom build. |
+| `test_builds.py` | `test_the_list_from_github` |  |  | The list from github. |
+| `test_builds.py` | `test_the_latest_release_and_merging` |  |  | The latest release and merging. |
+| `test_builds.py` | `test_the_version_pill_menu` |  |  | The version pill menu. |
+| `test_builds.py` | `test_the_version_manager` |  |  | The version manager. |
+| `test_builds.py` | `test_the_version_manager_says_what_went_wrong` |  |  | The version manager says what went wrong. |
+| `test_builds.py` | `test_a_custom_build_in_the_version_manager` |  |  | A custom build in the version manager. |
 | `test_covers.py` | `test_the_key_for_the_whole_suite` |  |  | The key for the whole suite. |
 | `test_covers.py` | `test_the_key_dialog` |  |  | The key dialog. |
 | `test_covers.py` | `test_names_and_titles` |  |  | Names and titles. |

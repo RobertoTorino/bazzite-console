@@ -369,24 +369,28 @@ def test_update_check_covers_only_helixsr():
 
 
 def test_the_newest_release_of_the_supported_major():
-    """The app sets up 1.x and 2.x (owner, 20-10-2026) and says when a later major is out that it does not."""
+    """The app sets up 1.x, 2.x (owner, 20-10-2026) and 3.x (owner, 20-11-2026) and says when a later major is out
+    that it does not."""
     with mock.patch.object(acquire, "_get_json", return_value=RELEASES):
         latest, unsupported = acquire.supported_release()
     assert (latest.version, latest.asset_name, unsupported) == ("2.0.0", "HelixSR-2.0.0.zip", "")
     assert latest.asset_sha256 == "ab" * 32
     assert UpdateStatus("HelixSR", "1.9.3", latest, unsupported).summary == "1.9.3 → 2.0.0 available (2026-10-16)"
-    with mock.patch.object(acquire, "_get_json", return_value=[gh_release("3.0.0"), *RELEASES]):
+    with mock.patch.object(acquire, "_get_json", return_value=[gh_release("4.0.0"), *RELEASES]):
         latest, unsupported = acquire.supported_release()
-    assert (latest.version, unsupported) == ("2.0.0", "3.0.0")
+    assert (latest.version, unsupported) == ("2.0.0", "4.0.0")
     status = UpdateStatus("HelixSR", "2.0.0", latest, unsupported)
     assert not status.update_available and status.kind == "ok"
-    assert status.summary.endswith("; HelixSR 3.0.0 is out, this app does not support it yet")
+    assert status.summary.endswith("; HelixSR 4.0.0 is out, this app does not support it yet")
+    with mock.patch.object(acquire, "_get_json", return_value=[gh_release("3.4.1"), *RELEASES]):
+        latest, unsupported = acquire.supported_release()
+    assert (latest.version, unsupported) == ("3.4.1", "")
     with mock.patch.object(acquire, "_get_json", return_value=RELEASES[1:]):
         assert acquire.supported_release()[0].version == "1.9.3"
-    no_zip = [gh_release("3.0.0"), gh_release("2.0.0", zip_name="x.zip")]
+    no_zip = [gh_release("4.0.0"), gh_release("2.0.0", zip_name="x.zip")]
     with mock.patch.object(acquire, "_get_json", return_value=no_zip):
         latest, unsupported = acquire.supported_release()
-    assert "no HelixSR release up to 2.x" in latest.error and unsupported == "3.0.0"
+    assert "no HelixSR release up to 3.x" in latest.error and unsupported == "4.0.0"
     with mock.patch.object(acquire, "_get_json", side_effect=OSError("no route")):
         assert "no connection" in acquire.supported_release()[0].error
     with mock.patch.object(acquire, "_get_json", return_value={"message": "rate limit"}):
@@ -394,10 +398,10 @@ def test_the_newest_release_of_the_supported_major():
 
 
 def test_setup_worker_refuses_another_major(qapp, tmp_path):
-    release = ReleaseInfo("3.0.0", "v3.0.0", "u", "2026-10-19", "HelixSR-3.0.0.zip", "file:///nowhere.zip", 1)
+    release = ReleaseInfo("4.0.0", "v4.0.0", "u", "2026-10-19", "HelixSR-4.0.0.zip", "file:///nowhere.zip", 1)
     with mock.patch.object(acquire, "download") as dl:
         outcome, _ = run_worker(qapp, SetupRequest(release, tmp_path / "work", tmp_path / "data"))
-    assert not outcome.ok and "HelixSR 3.0.0 is not supported yet" in outcome.message and not dl.called
+    assert not outcome.ok and "HelixSR 4.0.0 is not supported yet" in outcome.message and not dl.called
 
 
 def test_setup_worker_needs_free_space(qapp, tmp_path):

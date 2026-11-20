@@ -23,7 +23,7 @@ from .acquire import (
     DLSS_DLL, FALLBACK_VERSION, HELIXSR_DATA_DIR, WORK_DIR, DlssFinder, SetupOutcome, SetupRequest, SetupWorker,
     UpdateChecker, UpdateStatus, latest_work_release, pinned_dlss_sha, version_tuple,
 )
-from .backend import MODE_FOLDER, MODE_REPLACE, Deployment, DeploymentStore, GameDll, GameScan, HelixError
+from .backend import MODE_FOLDER, MODE_REPLACE, MODE_SCALER, Deployment, DeploymentStore, GameDll, GameScan, HelixError
 from .games_page import GamesPage, GameScanner
 from .help import HelpView
 from .pages import POLL_MS, DeployPage, IniPage, OverviewPage
@@ -113,6 +113,8 @@ class MainWindow(QMainWindow):
         self.setup_page.auto_check_changed.connect(lambda on: self.settings.setValue("updates/check_on_start", on))
         self.setup_page.set_fallback(self.settings.value("setup/fallback", False, type=bool))
         self.setup_page.fallback_changed.connect(lambda on: self.settings.setValue("setup/fallback", on))
+        self.setup_page.set_vulkan(self.settings.value("setup/vulkan", False, type=bool))
+        self.setup_page.vulkan_changed.connect(lambda on: self.settings.setValue("setup/vulkan", on))
         self.games_page = GamesPage()
         self.games_page.rescan_requested.connect(self._scan_steam)
         self.games_page.run_requested.connect(self._run_game)
@@ -214,7 +216,7 @@ class MainWindow(QMainWindow):
         status = backend.payload_status(self.payload_dir)
         self.overview.show_payload(status)
         self.overview.show_deployments(self.store.items, self.payload_dir)
-        self.deploy_page.set_payload_ready(status.ready, status.optiscaler)
+        self.deploy_page.set_payload_ready(status.ready, status.optiscaler, status.hlx, status.scaler)
         self.games_page.set_payload_ready(status.ready)
         self.ini_page.set_deployments(self.store.items)
         self.ini_page.set_helixsr_version(status.version)
@@ -222,9 +224,15 @@ class MainWindow(QMainWindow):
         self.box_payload.set_value(status.version or ("Imported" if status.dll else "Missing"),
                                    plain_tooltip(str(self.payload_dir)))
         self.box_payload.set_colour(COPPER if status.dll else RED)
-        self.box_network.set_value("Ready" if status.network_ready else "Missing",
-                                   "helixsr_weights.bin and helixsr_kernels.pak from helixsr-setup.sh")
-        self.box_network.set_colour(TEAL if status.network_ready else ORANGE)
+        if status.hlx:                          # HelixSR 3: HLX FSR 4 carries its own; HLX DLSS's is for HelixSR Scaler
+            self.box_network.set_value("Ready" if status.scaler else "Not built",
+                                       "HLX DLSS's network for HelixSR Scaler, built by Download and build "
+                                       "(HLX FSR 4 needs none)")
+            self.box_network.set_colour(TEAL if status.scaler else ORANGE)
+        else:
+            self.box_network.set_value("Ready" if status.network_ready else "Missing",
+                                       "helixsr_weights.bin and helixsr_kernels.pak from helixsr-setup.sh")
+            self.box_network.set_colour(TEAL if status.network_ready else ORANGE)
         states = [backend.deployment_state(d, self.payload_dir)[0] for d in self.store.items]
         in_place = states.count("ok")
         self.box_deployed.set_value(f"{in_place} / {len(states)}" if states else "0",
@@ -449,6 +457,9 @@ class MainWindow(QMainWindow):
             return
         ini_text = self.ini_page.text() if write_ini else None
         version = backend.payload_status(self.payload_dir).version
+        if mode == MODE_SCALER:
+            self._deploy_scaler(version)
+            return
         try:
             if mode == MODE_REPLACE:
                 if info is None:
@@ -505,7 +516,58 @@ class MainWindow(QMainWindow):
                                             "lists its upscalers after HelixSR.").format(backend.SECOND_UPSCALER_DLL)
                                        if second is not None else ""))
 
+    def _bridge(self, job):
+        """A call of HelixSR's bridge (it looks through the games first: a few seconds) with the wait cursor."""
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        self.statusBar().showMessage("HelixSR's installer is working…")
+        QApplication.processEvents()
+        try:
+            return job()
+        finally:
+            QApplication.restoreOverrideCursor()
+            self.statusBar().clearMessage()
+
+    def _deploy_scaler(self, version: str) -> None:
+        """HelixSR Scaler into the game on the Deploy page, with HelixSR's own installer (the bridge)."""
+        game_dir = self.deploy_page.game_dir()
+        if game_dir is None:
+            return
+        app_id = self._app_id(game_dir)
+        if app_id and backend.game_running(app_id):
+            QMessageBox.warning(self, "HelixSR Scaler", "The game is running: close it first.")
+            return
+        if QMessageBox.question(
+                self, "HelixSR Scaler",
+                ("Put HelixSR Scaler into\n{0}\nnext to the game's .exe?\n\nThe game's own files it replaces are "
+                 "kept in HelixSR-Scaler-backup; Remove puts them back.").format(game_dir)) \
+                != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            answer = self._bridge(lambda: backend.scaler_install(game_dir, self.payload_dir))
+        except (HelixError, OSError) as exc:
+            QMessageBox.critical(self, "Deploy failed", str(exc))
+            return
+        game = answer.get("game") or {}
+        dep = self.store.record(game_dir, MODE_SCALER, self._game_name(game_dir), version)
+        dep.target = str(game.get("exe_folder") or "")
+        self.store.save()
+        self.refresh()
+        self._rescan_game_of(game_dir)
+        text = "\n".join(str(m) for m in answer.get("messages") or [])
+        launch = game.get("launch_options")
+        if launch:
+            self._copy(launch)
+            text += ("\n\nIn Steam, the game's launch options need (copied to the clipboard; Properties, General):\n"
+                     + launch)
+        QMessageBox.information(self, "HelixSR Scaler", (text + "\n\n" if text else "") +
+                                "Start the game and pick DLSS. Insert opens HelixSR Scaler's menu.")
+
     def _remove_from_deploy_page(self, info: GameDll | None, mode: str, folder: Path | None) -> None:
+        if mode == MODE_SCALER:
+            game_dir = self.deploy_page.game_dir()
+            if game_dir is not None:
+                self._remove(game_dir, MODE_SCALER)
+            return
         if mode == MODE_REPLACE and info is not None:
             self._remove(info.path, MODE_REPLACE)
         elif mode == MODE_FOLDER and folder is not None:
@@ -516,13 +578,21 @@ class MainWindow(QMainWindow):
 
     def _remove(self, location: Path, mode: str) -> None:
         what = ("Delete HelixSR's files next to\n{0}\nand rename the game's .original.dll back?".format(location)
-                if mode == MODE_REPLACE else "Delete HelixSR's files in\n{0}?".format(location))
+                if mode == MODE_REPLACE else
+                "Take HelixSR Scaler out of\n{0}\nand put the game's own files back?".format(location)
+                if mode == MODE_SCALER else "Delete HelixSR's files in\n{0}?".format(location))
         if QMessageBox.question(self, "Remove HelixSR", what) != QMessageBox.StandardButton.Yes:
             return
         launch = (backend.optiscaler_record(location) or {}).get("launch", []) if mode == MODE_FOLDER else []
         try:
-            removed = (backend.remove(location, self.payload_dir) if mode == MODE_REPLACE
-                       else backend.remove_folder(location, self.payload_dir))
+            if mode == MODE_SCALER:
+                dep = self.store.find(location)
+                exe = Path(dep.target) if dep is not None and dep.target else None
+                answer = self._bridge(lambda: backend.scaler_remove(location, self.payload_dir, exe_folder=exe))
+                removed = [str(m) for m in answer.get("messages") or []]
+            else:
+                removed = (backend.remove(location, self.payload_dir) if mode == MODE_REPLACE
+                           else backend.remove_folder(location, self.payload_dir))
         except (HelixError, OSError) as exc:
             QMessageBox.critical(self, "Remove failed", str(exc))
             return
@@ -692,7 +762,10 @@ class MainWindow(QMainWindow):
         release = helix.latest if helix is not None and helix.latest.asset_url and not fallback else None
         wanted = FALLBACK_VERSION if fallback else release.version if release is not None else ""
         status = backend.payload_status(self.payload_dir)
-        if status.ready and wanted and version_tuple(status.version) == version_tuple(wanted) and QMessageBox.question(
+        vulkan = self.setup_page.vulkan.isChecked()
+        # HelixSR 3 is complete with HelixSR Scaler's network, and its Vulkan kernels when they are asked for
+        complete = status.ready and (not status.hlx or (status.scaler and (status.vulkan or not vulkan)))
+        if complete and wanted and version_tuple(status.version) == version_tuple(wanted) and QMessageBox.question(
                 self, "Payload is current",
                 ("The payload already has HelixSR {version} with its network files. "
                  "Download and build again anyway?").format(
@@ -702,7 +775,7 @@ class MainWindow(QMainWindow):
                                           version=status.version or ""))
             self.statusBar().showMessage("Payload is already current.", 6000)
             return
-        request = SetupRequest(release, self.work_dir, self.helix_data, dlss_file, fallback=fallback)
+        request = SetupRequest(release, self.work_dir, self.helix_data, dlss_file, fallback=fallback, vulkan=vulkan)
         worker = SetupWorker(request, self)
         worker.log.connect(self.setup_page.append)
         worker.stage.connect(self.setup_page.set_stage)
@@ -723,7 +796,7 @@ class MainWindow(QMainWindow):
         if worker is not None:
             worker.wait()
             worker.deleteLater()
-        self.setup_page.set_stage(outcome.message)
+        self.setup_page.set_stage(outcome.message + ("\n" + outcome.warning if outcome.warning else ""))
         self.setup_page.set_built(outcome.release_dir if outcome.ok else None)
         self.setup_page.set_running(False)
         if not outcome.ok:
@@ -735,6 +808,8 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("{message} ({seconds:.0f} s)".format(
             message=outcome.message, seconds=outcome.seconds), 10000)
         self._import(outcome.release_dir)
+        if outcome.warning:
+            QMessageBox.warning(self, "HelixSR setup", outcome.warning)
         self._scan_games(list(self.games_page.scans))
         self._update_older(ask=True)
         self.check_for_updates()

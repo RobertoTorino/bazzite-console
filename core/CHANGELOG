@@ -1,3 +1,13 @@
+Changelog: 20-11-2026 03:39:29
+
+Added. builds and builds_dialog: several builds of an emulator side by side, as the version manager of shadPS4's own
+launcher (owner, 20-11-2026). builds keeps each build in a folder of its own with a build.json, "current" pointing to
+the one in use; installs a download after checking it against its SHA-256 (GitHub's digest, or the one a manager
+pins), puts a build in use, deletes one that is not, adds a custom AppImage, tells a replaced member by its size, and
+reads a repository's builds from GitHub (github_builds, github_latest; a file without a SHA-256 is left out).
+builds_dialog is the window: Installed with Use, Delete and Add, Download with Refresh and Download, the tested build
+marked Tested; fill_menu is the menu of a manager's version pill.
+
 Changelog: 19-11-2026 22:33:16
 
 Version 4.3.1.

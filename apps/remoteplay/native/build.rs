@@ -15,7 +15,7 @@ mod decoder {
     use std::path::PathBuf;
     use std::process::Command;
 
-    const FFMPEG_VERSION: &str = "7.1.2";      // as in ffmpeg/build.sh
+    const FFMPEG_VERSION: &str = "7.1.5";      // as in ffmpeg/build.sh
 
     pub fn build() {
         println!("cargo:rerun-if-changed=src/decoder.c");

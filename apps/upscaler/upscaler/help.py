@@ -40,6 +40,21 @@ def help_html(payload_dir: str, deployments_file: str,
         '</ol>',
         ("<p><b>Remove</b> undoes it: HelixSR's files are deleted and the <code>.original.dll</code> gets its "
          'name back.</p>'),
+        ('<p><b>From HelixSR 3 on</b> the file that goes in is <b>HLX FSR 4</b>, HelixSR\'s FSR 4-class upscaler, '
+         "from the release's <code>HLX-FSR4</code> folder. It comes built, with its network inside: nothing is "
+         'built on this PC, no network files and no <code>{ini}</code> go next to it, and network files an '
+         'earlier HelixSR left there are removed. In the game pick <b>AMD FSR</b>. HLX FSR 4 lists the game\'s '
+         'own FSR (the <code>.original.dll</code>) after its own upscalers, and uses it when it cannot start. '
+         'Games deployed with HelixSR 1 or 2 show <i>Older build</i>: <b>Update older games</b> puts HLX FSR 4 '
+         "in, <b>Remove</b> puts the game's file back as before.</p>"),
+        ('<p><b>HelixSR Scaler</b> (HelixSR 3) is for the games without FSR 3.1: games with DLSS, XeSS or FSR 2, also '
+         "DirectX 11 and Vulkan games. It is OptiScaler with HelixSR and runs <b>HLX DLSS</b>, the network the setup "
+         "builds. On the Deploy page pick the game's folder and <b>HelixSR Scaler</b>: HelixSR's own installer puts "
+         "it next to the game's .exe as <code>dxgi.dll</code>, or under another name when the game has its own "
+         "<code>dxgi.dll</code> (it then gives the Steam launch option to set), and keeps the game's files it "
+         'replaces. Pick <b>DLSS</b> in the game; <b>Insert</b> opens its menu. HelixSR\'s frame generation is not '
+         'installed. The stand-alone folder for OptiScaler needs HelixSR 1 or 2 (the fallback on the Setup '
+         'page).</p>'),
         '<h2>Setup</h2>',
         ("<p><b>Download and build</b> does the HelixSR README's setup for you: it fetches the latest HelixSR "
          'release zip from <a href="{releases_url}">GitHub</a> (2 MB) and checks its SHA-256, reads the exact '
@@ -64,8 +79,14 @@ def help_html(payload_dir: str, deployments_file: str,
          'itself is updated through the Bazzite Console Suite portal.</p>'),
         ('<p><b>Download and build</b> does not start with less than about 1.5 GB free where it downloads and '
          'builds.</p>'),
-        ('<p>The app sets up HelixSR 1.x and 2.x. When a later major version is out, <b>Releases</b> says so and '
-         'the app keeps getting the newest release it supports.</p>'),
+        ('<p>The app sets up HelixSR 1.x, 2.x and 3.x. For 3.x HLX FSR 4 comes built, and <b>Download and build</b> '
+         "builds HLX DLSS's network for HelixSR Scaler with HelixSR's own builder; when that build fails, HLX FSR 4 "
+         'is ready all the same and the page says why. When a later major version is out, <b>Releases</b> says so '
+         'and the app keeps getting the newest release it supports.</p>'),
+        ('<p><b>Native Vulkan kernels for HLX DLSS</b> (HelixSR 3, off by default) builds HLX DLSS\'s network for '
+         'Vulkan too: Vulkan games then run it in Vulkan instead of through HelixSR Scaler\'s DirectX 12 bridge. The '
+         'build takes about twice as long, and HelixSR\'s builder downloads the Linux shader compiler for it once '
+         '(13 MB). Turned on later, <b>Download and build</b> builds again; deploy again per game afterwards.</p>'),
         ('<p><b>Version</b> picks what <b>Download and build</b> gets: the latest HelixSR release, or HelixSR '
          "{fallback}, the version HelixSR's developer recommends when the latest one does not work for you (please"
          ' then open an issue at <a href="{helixsr_url}/issues">HelixSR</a> with the <code>helixsr.log</code> from '

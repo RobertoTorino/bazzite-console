@@ -62,7 +62,7 @@ beside Log.
 
 - **RPCS3**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
   shows the version installed. The tooltip says which build is installed, or what Install takes, and when a newer
-  RPCS3 is out. When another build than the one pinned for this version of the app is installed, or RPCS3 updated
+  RPCS3 is out. When another build than the one pinned for this version of the app is in use, or RPCS3 updated
   itself in its own window, the tooltip says so, and **Install** puts the pinned build back. Another build and a
   newer RPCS3 also go to the log, once. **Install** downloads RPCS3 from GitHub (about 80 MB): the pinned build,
   checked against its checksum before it is installed. **Uninstall** takes it out again; RPCS3's own folder, with
@@ -87,6 +87,23 @@ beside Log.
   and the table lists the game once.
 
 Press Escape or the controller's B/back button to close the active window or dialog.
+
+### Versions
+
+The version box in the header is a pill. A click opens the list of the RPCS3 builds installed, with a check mark at
+the one in use; pick another to put it in use. The games in Steam start whichever build is in use, and every build
+shares RPCS3's own folder (firmware, saves, settings and installed games). **Manage versions…** under the list opens
+the version manager:
+
+- **Installed**: every build in the app's folder, the one in use with a check mark and the one pinned in this version
+  of the app marked **Tested**. **Use** puts the chosen build in use, **Delete** removes it (not the one in use), and
+  **Add** (**Custom build**) takes an AppImage of your own, which is not checked.
+- **Download**: **Refresh** asks GitHub which builds there are (RPCS3's newest build only: GitHub lists its thousands
+  of builds by name, not by date). **Download** fetches the chosen one, checks it against the SHA-256 GitHub publishes
+  for it and puts it beside the others; **Use** then puts it in use.
+
+Only the pinned build, marked **Tested**, was tried on the board. To go back to it, pick it in the version pill's list
+or press **RPCS3 Install**, which puts it back in use without a download when it is still there.
 
 ### Where your games go
 
@@ -287,11 +304,11 @@ ps5-rpcs3-run                                                              # RPC
 ## New RPCS3 builds
 
 RPCS3 has no stable releases: it publishes a new build for almost every change, and now and then marks one with a
-version number (0.0.43). Each version of the app installs one build, the one pinned for it. When the window opens,
+version number (0.0.43). Each version of the app pins one build, the one **Install** puts in. When the window opens,
 the app asks GitHub for RPCS3's newest version number. When that one is newer, the RPCS3 line's tooltip and the log
-say so, with a link to what is new; the app does not install it. A newer RPCS3 comes with a newer version of the
-app, from the [portal](../portal.md): after updating the app, the RPCS3 line's tooltip says so, and **Install**
-brings it.
+say so, with a link to what is new; the app does not install it by itself, but the [version manager](#versions) can. A
+newer RPCS3 comes with a newer version of the app, from the [portal](../portal.md): after updating the app, the RPCS3
+line's tooltip says so, and **Install** brings it.
 
 RPCS3's own window looks for a newer build when it opens and offers to update itself; the app turns that check
 off, so the build stays the pinned one (RPCS3's **Help** menu can still update it by hand). If you update it there,

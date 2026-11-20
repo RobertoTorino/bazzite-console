@@ -1,19 +1,20 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The PCSX2 this version of the app pins: the Linux AppImage of one stable GitHub release, checked against its
-SHA-256. A newer stable comes with a new version of the app; the app reports when one is available and does not
-install a different build.
+SHA-256. A newer stable comes with a new version of the app; the app reports when one is available. Another build,
+a stable release or a nightly, is downloaded beside it in the version manager (owner, 20-11-2026: as shadPS4's own
+launcher; core's builds), checked against the SHA-256 GitHub publishes; it was not tried on the board.
 
-It goes to ~/.local/share/ps5-pcsx2-manager/emulator/<version>/pcsx2.AppImage, with "current" pointing to it and
-the build's size beside it (.size), so replaced() knows the expected size. The run wrapper
-(~/.local/bin/ps5-pcsx2-run) starts "current", so the Steam shortcuts keep working when the version changes.
-Install also takes PCSX2's catalog out of the AppImage, beside it (catalogue.py). PCSX2's own window offers its
-updates when it opens, and replaces the AppImage with another build when asked to; the app then says so
-(replaced()), and Install puts the pinned release back."""
+Each build goes to ~/.local/share/ps5-pcsx2-manager/emulator/<version>/pcsx2.AppImage, with "current" pointing to
+the one in use and the build's size in its build.json (.size before it), so replaced() knows the expected size. The
+run wrapper (~/.local/bin/ps5-pcsx2-run) starts "current", so the Steam shortcuts keep working when the version
+changes. Installing a build also takes PCSX2's catalog out of its AppImage, beside it (catalogue.py). PCSX2's own
+window offers its updates when it opens, and replaces the AppImage with another build when asked to; the app then
+says so (replaced()), and Install puts the pinned release back."""
 
 from __future__ import annotations
 
 import hashlib
-import os
+import re
 import shutil
 import subprocess
 import urllib.error
@@ -21,8 +22,10 @@ import urllib.request
 from collections.abc import Callable
 from pathlib import Path
 
+from bazzite_console_core import builds
+from bazzite_console_core.builds import Build
 from bazzite_console_core.platform import data_home
-from bazzite_console_core.updates import Fetch, ReleaseInfo, latest_release, version_tuple
+from bazzite_console_core.updates import Fetch, ReleaseInfo, github_fetch, latest_release, version_tuple
 
 from . import APP_ID, __version__, catalogue
 
@@ -65,19 +68,14 @@ def installed_version(home: Path) -> str:
 
 
 def replaced(home: Path) -> bool:
-    """Whether the installed AppImage is no longer the installed build: PCSX2 updated itself in its own window (it
-    writes the new build over the AppImage it runs from). The expected size is the .size written at install; the
-    pinned release's without it (an install from before the file was written)."""
-    image = appimage(home)
+    """Whether the AppImage in use is no longer the build installed: PCSX2 updated itself in its own window (it
+    writes the new build over the AppImage it runs from). The expected size is in the build's build.json (core's
+    builds); for an install from before it, the .size written then, else the pinned release's."""
     try:
-        size = image.stat().st_size
-    except OSError:
-        return False
-    try:
-        expected = int((image.parent / ".size").read_text())
+        fallback: int | None = int((home / "current" / ".size").read_text())
     except (OSError, ValueError):
-        expected = SIZE
-    return size != expected
+        fallback = SIZE if installed_version(home) == VERSION else None
+    return builds.replaced(home, MEMBER, fallback)
 
 
 def take_catalogue(home: Path) -> bool:
@@ -111,46 +109,55 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def tested() -> Build:
+    """The build this version of the app was tried with."""
+    return Build(VERSION, TAG, "2026-09-04", builds.RELEASE, URL, ASSET, SHA256, SIZE, RELEASE_PAGE)
+
+
 def install(home: Path, fetch: Download = download, progress: Progress | None = None) -> str:
-    """Downloads the pinned release, checks it against the SHA-256 and installs it as
-    "current"; other versions go. Nothing changes when a step fails (EmulatorError). Returns what was done."""
-    home.mkdir(parents=True, exist_ok=True)
-    work = home / f".download-{os.getpid()}"
-    shutil.rmtree(work, ignore_errors=True)
-    work.mkdir()
+    """Puts the pinned build in use: from its folder when it is there unchanged, else downloaded and checked. Other
+    builds stay. Returns what was done. Nothing changes when a step fails (EmulatorError)."""
+    image = home / VERSION / MEMBER
     try:
-        image = work / MEMBER
-        try:
-            fetch(URL, image, progress)
-        except urllib.error.HTTPError as error:
-            raise EmulatorError(f"GitHub answered {error.code} for {ASSET}.") from error
-        except (urllib.error.URLError, OSError) as error:
-            reason = str(getattr(error, "reason", error))
-            raise EmulatorError(f"The download failed: {reason}.") from error
-        if sha256(image) != SHA256:
-            raise EmulatorError(f"{ASSET} is not the file pinned by this app (its SHA-256 differs); nothing "
-                                "was installed.")
-        image.chmod(0o755)
-        target = home / VERSION
-        shutil.rmtree(target, ignore_errors=True)
-        target.mkdir()
-        (target / ".size").write_text(str(image.stat().st_size))    # replaced() compares against the installed build
-        image.replace(target / MEMBER)
-        link = home / ".current-new"
-        link.unlink(missing_ok=True)
-        link.symlink_to(VERSION)
-        link.replace(home / "current")
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
+        if image.is_file() and sha256(image) == SHA256:
+            builds.remember(home, VERSION, tested(), MEMBER)
+            builds.use(home, VERSION, MEMBER)
+            return f"PCSX2 {VERSION} is in use."
+        builds.install(home, tested(), MEMBER, fetch, progress, refused="pinned by this app")
+    except builds.BuildError as error:
+        raise EmulatorError(str(error)) from error
     take_catalogue(home)
-    for other in home.iterdir():
-        if other.is_dir() and not other.is_symlink() and other.name != VERSION and not other.name.startswith("."):
-            shutil.rmtree(other, ignore_errors=True)
     return f"PCSX2 {VERSION} is installed."
 
 
+_ASSET = re.compile(r"pcsx2-v(.+)-linux-appimage-x64-Qt\.AppImage")
+
+
+def _pick(release: dict, asset: dict) -> str | None:
+    match = _ASSET.fullmatch(str(asset.get("name", "")))
+    return match.group(1) if match else None
+
+
+def available(fetch: Fetch | None = None) -> list[Build]:
+    """The PCSX2 builds that can be downloaded, newest first: the nightlies on the first page of GitHub's list and
+    the newest stable release, which the nightlies push off that page (builds.BuildError when GitHub cannot be
+    asked)."""
+    fetch = fetch or github_fetch(f"{APP_ID}/{__version__}")
+    stable = builds.github_latest(REPO, _pick, fetch)
+    return builds.merged([stable] if stable is not None else [], builds.github_builds(REPO, _pick, fetch))
+
+
+def install_build(home: Path, build: Build, fetch: Download = download, progress: Progress | None = None) -> None:
+    """Downloads *build* beside the others, checked against its SHA-256; not in use yet."""
+    builds.install(home, build, MEMBER, fetch, progress, use_it=False)
+    try:
+        catalogue.extract(home / build.folder / MEMBER)         # its own catalog, beside it
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
 def remove(home: Path) -> None:
-    """The installed PCSX2 goes; PCSX2's own folder (BIOS, memory cards, saves, settings) stays."""
+    """Every installed PCSX2 build goes; PCSX2's own folder (BIOS, memory cards, saves, settings) stays."""
     shutil.rmtree(home, ignore_errors=True)
 
 

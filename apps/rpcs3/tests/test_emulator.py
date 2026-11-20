@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Installing the pinned RPCS3 build (emulator.py) from a file made here instead of the download: checked against
-its SHA-256 first, "current" switched, older versions removed, and nothing changed when a step fails."""
+its SHA-256 first, "current" switched, other versions kept beside it, and nothing changed when a step fails."""
 
 from __future__ import annotations
 
@@ -55,14 +55,15 @@ def test_install_and_remove(tmp_path, pinned):
     assert not home.exists() and emulator.installed_version(home) == ""
 
 
-def test_an_older_version_is_replaced(tmp_path, pinned):
+def test_an_older_version_stays_beside_it(tmp_path, pinned):
     home = tmp_path / "emulator"
     (home / "0.0.42-19900").mkdir(parents=True)
     (home / "0.0.42-19900" / emulator.MEMBER).write_text("old")
     (home / "current").symlink_to("0.0.42-19900")
     assert emulator.installed_version(home) == "0.0.42-19900"
     emulator.install(home, _fetch(pinned))
-    assert emulator.installed_version(home) == emulator.VERSION and not (home / "0.0.42-19900").exists()
+    assert emulator.installed_version(home) == emulator.VERSION
+    assert (home / "0.0.42-19900" / emulator.MEMBER).read_text() == "old"           # one click away
 
 
 def test_rpcs3_updated_itself(tmp_path, pinned):
@@ -87,9 +88,22 @@ def test_a_different_file_is_refused(tmp_path, pinned):
 def test_a_failed_install_keeps_the_installed_one(tmp_path, pinned):
     home = tmp_path / "emulator"
     emulator.install(home, _fetch(pinned))
+    emulator.appimage(home).write_bytes(b"changed")                             # so Install downloads it again
     with pytest.raises(emulator.EmulatorError):
         emulator.install(home, _fetch(b"broken"))
-    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == APPIMAGE
+    assert emulator.installed_version(home) == emulator.VERSION and emulator.appimage(home).read_bytes() == b"changed"
+
+
+def test_the_pinned_build_back_in_use_without_a_download(tmp_path, pinned):
+    home = tmp_path / "emulator"
+    emulator.install(home, _fetch(pinned))
+    (home / "other").mkdir()
+    (home / "other" / emulator.MEMBER).write_text("another build")
+    (home / "current").unlink()
+    (home / "current").symlink_to("other")
+    calls = []
+    assert emulator.install(home, _fetch(pinned, calls)).endswith(" is in use.")
+    assert calls == [] and emulator.installed_version(home) == emulator.VERSION
 
 
 def test_download_errors_say_what_happened(tmp_path):
@@ -122,3 +136,27 @@ def test_a_newer_rpcs3_landmark():
     def offline(url: str):
         raise urllib.error.URLError("no network")
     assert emulator.newer_release(offline) is None                                 # nothing to say then
+
+
+def test_the_newest_build_on_github():
+    """The version manager offers RPCS3's newest build beside the pinned one: GitHub lists the thousands of builds by
+    their tag, not by date, so only /releases/latest says which is newest."""
+    from bazzite_console_core import builds
+    name = "rpcs3-v0.0.43-20640-1808e241_linux64.AppImage"
+
+    def fetch(url: str):
+        assert url == "https://api.github.com/repos/RPCS3/rpcs3-binaries-linux/releases/latest"
+        return {"tag_name": "build-1808e241d7b1bfb1c521e392b4c51a7d5494e9ca", "name": "0.0.43-20640",
+                "published_at": "2026-11-19T11:31:50Z",
+                "assets": [{"name": name, "digest": "sha256:" + "ab" * 32, "size": 83306630,
+                            "browser_download_url": f"https://github.com/RPCS3/rpcs3-binaries-linux/releases/download/"
+                                                    f"build-1808e241d7b1bfb1c521e392b4c51a7d5494e9ca/{name}"}]}
+    found = emulator.available(fetch)
+    assert [(b.version, b.published, b.size) for b in found] == [("0.0.43-20640", "2026-11-19", 83306630)]
+    assert emulator.available(lambda url: {"tag_name": "build-x", "assets": []}) == []
+
+    def offline(url: str):
+        raise urllib.error.URLError("no network")
+    with pytest.raises(builds.BuildError):
+        emulator.available(offline)
+    assert emulator._pick({}, {"name": emulator.ASSET}) == emulator.VERSION       # the pin reads the same way

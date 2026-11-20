@@ -7,7 +7,9 @@
   Microsoft's DXC and the portable Python, so the app downloads what the script would download, in parallel.
 * SetupWorker: downloads the release zip, the prerequisites it still needs, then builds the network with its output
   streamed to the GUI: helixsr-setup.sh --yes for 1.x, HelixSR's own builder for 2.x (see BUILDER_FROM). The network
-  files it builds are NVIDIA's property and stay on this PC.
+  files it builds are NVIDIA's property and stay on this PC. From 3.x on (BUILT_FROM) the drop-in, HLX FSR 4, comes
+  built in the release; the builder then builds HLX DLSS's network into HelixSR/helixsr.dll, for HelixSR Scaler. A
+  build that fails leaves HLX FSR 4 usable: the outcome is ready, with the reason in its warning.
 
 Nothing here is Qt except the thread wrappers at the bottom; the functions can be tested with file:// URLs."""
 
@@ -34,13 +36,17 @@ from typing import Callable
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 from . import APP_ID, DATA_HOME, HELIXSR_RELEASES_URL, __version__
-from .backend import FSRFG, HELIXSR_DLL, HelixError, file_digest, payload_folder, payload_status, version_key
+from .backend import (FSRFG, HELIXSR_DLL, HLX_DIR, HLX_DLL, HelixError, file_digest, is_hlx, payload_folder,
+                      payload_status, version_key)
 
 HELIXSR_API = "https://api.github.com/repos/lonewolf0622/HelixSR/releases?per_page=30"
 # The newest HelixSR major version this app sets up (1.x too). tools/check_upstream.py reports a newer major.
-SUPPORTED_MAJOR = 2
+SUPPORTED_MAJOR = 3
 # The newest HelixSR release this app was checked against. tools/check_upstream.py reports a newer one every week.
-KNOWN_VERSION = "2.0.0"
+KNOWN_VERSION = "3.4.1"
+# From HelixSR 3.0.0 on the FSR drop-in is HLX FSR 4, which comes built (HLX-FSR4/ in the release): no setup runs.
+BUILT_FROM = (3, 0, 0)
+NGX_DIR, NGX_NAME = "HelixSR", "helixsr.dll"        # HelixSR 3's HLX DLSS in the release, which the builder builds
 # The release HelixSR's developer points to when the latest one does not work ("If 1.9.0 does not work for you, use
 # HelixSR 1.8.1"): the Setup page offers it next to the latest. tools/check_upstream.py reports when the latest
 # release's notes name another one.
@@ -507,6 +513,7 @@ class SetupRequest:
     fallback: bool = False                      # with release None: the fallback release instead of the latest
     extra_args: list[str] = field(default_factory=list)
     script_env: dict[str, str] = field(default_factory=dict)
+    vulkan: bool = False                        # HelixSR 3: HLX DLSS's native Vulkan kernels too (--vulkan, slower)
 
 
 @dataclass
@@ -516,6 +523,7 @@ class SetupOutcome:
     version: str
     message: str
     seconds: float
+    warning: str = ""                           # ready, with something not built (HelixSR 3: Scaler's network)
 
 
 class SetupWorker(QThread):
@@ -529,6 +537,7 @@ class SetupWorker(QThread):
     def __init__(self, request: SetupRequest, parent: QObject | None = None):
         super().__init__(parent)
         self.request = request
+        self.warning = ""
         self._cancel = False
         self._process: subprocess.Popen | None = None
 
@@ -553,9 +562,10 @@ class SetupWorker(QThread):
         except (HelixError, OSError) as exc:
             self.finished_with.emit(SetupOutcome(False, None, "", str(exc), time.monotonic() - started))
         else:
+            done = "downloaded" if self.warning else "built"
             self.finished_with.emit(SetupOutcome(True, release_dir, version,
-                                                 "HelixSR {0} is built in {1}".format(version, release_dir),
-                                                 time.monotonic() - started))
+                                                 "HelixSR {0} is {1} in {2}".format(version, done, release_dir),
+                                                 time.monotonic() - started, self.warning))
 
     def _run(self) -> tuple[Path, str]:
         req = self.request
@@ -591,10 +601,34 @@ class SetupWorker(QThread):
             shutil.rmtree(extracted)
         release_dir = extract_zip(archive, extracted)
         self._say("Extracted to {0}".format(release_dir))
+        if version_tuple(release.version) >= BUILT_FROM:
+            if not is_hlx(release_dir / HLX_DIR / HLX_DLL):
+                raise HelixError("The release has no HLX FSR 4 ({0}/{1}).".format(HLX_DIR, HLX_DLL))
+            self._say("HLX FSR 4 comes built in the release. Now HLX DLSS's network, for HelixSR Scaler.")
+            try:
+                self._prerequisites_and_build(release, release_dir)
+            except Aborted:
+                raise
+            except (HelixError, OSError) as exc:
+                self.warning = ("HLX FSR 4 is ready; HLX DLSS's network for HelixSR Scaler was not built: {0}"
+                                .format(exc))
+                self._say(self.warning)
+            return release_dir, release.version
         payload = payload_folder(release_dir)
         if not (payload / HELIXSR_DLL).is_file():
             raise HelixError("The release has no {0}.".format(HELIXSR_DLL))
 
+        self._prerequisites_and_build(release, release_dir)
+        # HelixSR 1.8+ builds the network into its DLL; older releases leave the two files next to it.
+        missing = payload_status(payload).missing()
+        if missing:
+            raise HelixError("The setup finished but did not produce {0}".format(", ".join(missing)))
+        return release_dir, release.version
+
+    def _prerequisites_and_build(self, release: ReleaseInfo, release_dir: Path) -> None:
+        """What the release's scripts pin and this PC still needs, downloaded in parallel and checked, then the build
+        of the network (HelixError when it fails)."""
+        req = self.request
         pins = parse_pins(release_dir)
         needed = needed_pins(pins, req.helix_data, req.dlss_file, is_immutable_system())
         unparsed = [k for k in ("dlss", "dxc", "python") if k not in pins]
@@ -648,11 +682,6 @@ class SetupWorker(QThread):
         if code != 0:
             raise HelixError("{0} exited with code {1}; see the output above.".format(
                 BUILDER if version_tuple(release.version) >= BUILDER_FROM else SETUP_SCRIPT, code))
-        # HelixSR 1.8+ builds the network into its DLL; older releases leave the two files next to it.
-        missing = payload_status(payload).missing()
-        if missing:
-            raise HelixError("The setup finished but did not produce {0}".format(", ".join(missing)))
-        return release_dir, release.version
 
     def _stream(self, command: list[str], cwd: Path, env: dict[str, str], name: str,
                 stop_at: str = "") -> int:
@@ -715,7 +744,8 @@ class SetupWorker(QThread):
         return str(portable)
 
     def _build(self, release_dir: Path, dlss: Path | None) -> int:
-        """HelixSR 2.x: its builder on HelixSR-fsrfg, without frame generation (--no-fg) and without the games."""
+        """HelixSR 2.x: its builder on HelixSR-fsrfg; 3.x: on HelixSR (HLX DLSS's helixsr.dll). Without frame
+        generation (--no-fg) and without the games."""
         req = self.request
         if not dxc_present(req.helix_data):
             raise HelixError("The shader compiler is missing in {0}.".format(req.helix_data / "dxc-win"))
@@ -728,11 +758,15 @@ class SetupWorker(QThread):
         dxc = write_dxc_wrapper(req.work_dir / DXC_WRAPPER, wine, req.helix_data)
         self._say("Shader compiler through {0}".format(wine))
         builder = release_dir / BUILDER
-        payload = release_dir / FSRFG
+        payload = release_dir / (NGX_DIR if (release_dir / NGX_DIR / NGX_NAME).is_file() else FSRFG)
         command = [python, str(builder), str(payload), "--dxc", str(dxc), "--yes", "--no-fg", *req.extra_args]
+        vulkan = req.vulkan and payload.name == NGX_DIR     # HelixSR 3's builder only
+        if vulkan:
+            command.append("--vulkan")
         if dlss is not None:
             command += ["--dlss", str(dlss)]
-        self.stage.emit("Building the network (this takes several minutes)")
+        self.stage.emit("Building the network with its Vulkan kernels (this takes about twice as long)" if vulkan
+                        else "Building the network (this takes several minutes)")
         try:
             code = self._stream(command, release_dir, env, BUILDER)
         finally:
@@ -744,9 +778,10 @@ class SetupWorker(QThread):
                                     errors="replace", timeout=60, env=env).stdout.strip()
         except (OSError, subprocess.SubprocessError) as exc:
             status = str(exc)
-        self._say("{0}: {1}".format(FSRFG, status))
+        self._say("{0}: {1}".format(payload.name, status))
         if "network=1" not in status.split():
-            raise HelixError("The build finished but {0} does not carry the network ({1}).".format(FSRFG, status))
+            raise HelixError("The build finished but {0} does not carry the network ({1}).".format(payload.name,
+                                                                                                  status))
         return 0
 
 

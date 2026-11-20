@@ -16,8 +16,8 @@ from PyQt6.QtWidgets import (
 
 from . import plain_tooltip
 from .backend import (
-    HELIXSR_DLL, INI, KERNELS, MODE_FOLDER, MODE_REPLACE, NETWORKS, OLDER, RESTORED, SECOND_UPSCALER_DLL, SHARPENERS,
-    SHARPENING_MODES, WEIGHTS, Deployment,
+    HELIXSR_DLL, HLX_DLL, INI, KERNELS, MODE_FOLDER, MODE_REPLACE, MODE_SCALER, NETWORKS, OLDER, RESTORED,
+    SECOND_UPSCALER_DLL, SHARPENERS, SHARPENING_MODES, WEIGHTS, Deployment,
     GameDll, HelixIni, PayloadStatus, deployment_state, ini_ignored_fields, optiscaler_snippet, render_ini,
     validate_ini,
 )
@@ -169,6 +169,9 @@ class OverviewPage(QWidget):
         self.update_hint.setVisible(bool(text))
 
     def show_payload(self, status: PayloadStatus) -> None:
+        if status.hlx:                          # HelixSR 3: HLX FSR 4, one built DLL with its network inside
+            self._show_hlx(status)
+            return
         self.pills[HELIXSR_DLL].set_status("Present" if status.dll else "Missing",
                                            "ok" if status.dll else "bad", plain_tooltip(str(status.path / HELIXSR_DLL)))
         for key, have in ((WEIGHTS, status.weights), (KERNELS, status.kernels)):
@@ -192,6 +195,18 @@ class OverviewPage(QWidget):
             text = "No payload yet: import an extracted HelixSR release."
         self.payload_info.setText(text + "\n" + "Folder: {0}".format(private(status.path)))
 
+    def _show_hlx(self, status: PayloadStatus) -> None:
+        self.pills[HELIXSR_DLL].set_status("HLX FSR 4", "ok", plain_tooltip(str(status.path / HLX_DLL)))
+        for key in (WEIGHTS, KERNELS):
+            self.pills[key].set_status("In the DLL", "ok", "HLX FSR 4 comes built, with its network inside.")
+        self.pills[INI].set_status("Not used", "neutral", "HLX FSR 4 reads no helixsr.ini.")
+        version = f"HelixSR {status.version}" if status.version else "HelixSR (version unknown)"
+        scaler = ("HelixSR Scaler ready for the other games{0}.".format(
+                      ", with HLX DLSS's Vulkan kernels" if status.vulkan else "") if status.scaler else
+                  "HelixSR Scaler needs HLX DLSS's network: Download and build on the Setup page.")
+        self.payload_info.setText("{0}: HLX FSR 4 ready to deploy, the drop-in for games with FSR 3.1. {1}\nFolder: {2}"
+                                  .format(version, scaler, private(status.path)))
+
     def show_deployments(self, deployments: list[Deployment], payload_dir: Path) -> None:
         selected = self.selected()
         self.deployments = deployments
@@ -200,7 +215,7 @@ class OverviewPage(QWidget):
         for row, dep in enumerate(deployments):
             kind, state = deployment_state(dep, payload_dir)
             older += state in (OLDER, RESTORED)
-            mode = "Replaced DLL" if dep.mode == MODE_REPLACE else "OptiScaler folder"
+            mode = {MODE_REPLACE: "Replaced DLL", MODE_SCALER: "HelixSR Scaler"}.get(dep.mode, "OptiScaler folder")
             when = dep.deployed_at.replace("T", " ") if dep.deployed_at else "—"
             self.table.setItem(row, 0, _item(dep.game))
             self.table.setItem(row, 1, _item(mode))
@@ -254,6 +269,8 @@ class DeployPage(QWidget):
         self.found: list[GameDll] = []
         self.games: list[Path] = []
         self.payload_ready = False
+        self.payload_hlx = False
+        self.scaler_ready = False
         self.optiscaler_available = False
         layout = QVBoxLayout(self)
         header, _ = page_header("Deploy")
@@ -278,6 +295,7 @@ class DeployPage(QWidget):
         self.game_path = QLineEdit()
         self.game_path.setPlaceholderText("Pick a game above or browse to its folder")
         self.game_path.returnPressed.connect(self._scan_clicked)
+        self.game_path.textChanged.connect(lambda *_: self._update_buttons())
         row.addWidget(self.game_path, 1)
         self.scan = QPushButton("Scan")
         self.scan.clicked.connect(self._scan_clicked)
@@ -302,18 +320,31 @@ class DeployPage(QWidget):
         self.mode_replace = QRadioButton("Replace the selected DLL (the game's file is kept as *.original.dll)")
         self.mode_replace.setChecked(True)
         self.mode_folder = QRadioButton("Stand-alone folder for OptiScaler (DLSS / XeSS / FSR 2 games)")
+        # HelixSR 3 (owner, 20-11-2026): HelixSR Scaler in place of the stand-alone folder, for games without FSR 3.1
+        self.mode_scaler = QRadioButton("HelixSR Scaler next to the game's .exe (DLSS / XeSS / FSR 2 games, also "
+                                        "DirectX 11 and Vulkan)")
+        self.mode_scaler.setVisible(False)
         self.mode_group.addButton(self.mode_replace)
         self.mode_group.addButton(self.mode_folder)
+        self.mode_group.addButton(self.mode_scaler)
         self.mode_group.buttonToggled.connect(lambda *_: self._mode_changed())
         mode_layout.addWidget(self.mode_replace)
         mode_layout.addWidget(hint_label(
             "The way HelixSR is meant to be installed: the game calls FSR 3.1 and gets HelixSR. Pick the game's "
             "<code>amd_fidelityfx_upscaler_dx12.dll</code> (Unreal: under Engine/Plugins/…/Win64) or "
             "<code>amd_fidelityfx_dx12.dll</code> above, then choose <b>AMD FSR</b> in the game. No launch options."))
+        mode_layout.addWidget(self.mode_scaler)
+        self.scaler_hint = hint_label(
+            "HelixSR's own installer puts HelixSR Scaler (OptiScaler with HelixSR) into the game folder chosen above, "
+            "as <code>dxgi.dll</code> unless the game has its own, and keeps what it replaces. Pick <b>DLSS</b> in "
+            "the game; <b>Insert</b> opens HelixSR Scaler's menu. Remove puts everything back.")
+        self.scaler_hint.setVisible(False)
+        mode_layout.addWidget(self.scaler_hint)
         mode_layout.addWidget(self.mode_folder)
         folder_row = QHBoxLayout()
         folder_row.addSpacing(22)
-        folder_row.addWidget(QLabel("Folder:"))
+        self.folder_label = QLabel("Folder:")
+        folder_row.addWidget(self.folder_label)
         self.folder_path = QLineEdit()
         self.folder_path.setPlaceholderText("Defaults to <game>/HelixSR")
         self.folder_path.textChanged.connect(lambda *_: self._update_snippet())
@@ -386,11 +417,12 @@ class DeployPage(QWidget):
         ini_column = QVBoxLayout()
         ini_column.setSpacing(2)
         ini_column.addWidget(self.write_ini)
-        ini_column.addWidget(hint_label(
+        self.write_ini_hint = hint_label(
             "<b>helixsr.ini</b> is HelixSR's own settings file, next to its DLL in the game: sharpening, the log and "
             "the other options of the helixsr.ini page. Ticked, Deploy writes that page's values there. Unticked, "
             "the payload's helixsr.ini is copied if it has one; without one HelixSR uses its defaults (no "
-            "sharpening, as DLSS)."))
+            "sharpening, as DLSS).")
+        ini_column.addWidget(self.write_ini_hint)
         actions.addLayout(ini_column, 1)
         actions.addSpacing(12)
         self.remove = QPushButton("Remove HelixSR")
@@ -442,8 +474,16 @@ class DeployPage(QWidget):
     def set_exe_folder(self, path: Path | None) -> None:
         self.exe_path.setText(str(path) if path else "")
 
-    def set_payload_ready(self, ready: bool, optiscaler: bool = False) -> None:
+    def set_payload_ready(self, ready: bool, optiscaler: bool = False, hlx: bool = False, scaler: bool = False) -> None:
         self.payload_ready = ready
+        self.scaler_ready = scaler              # HelixSR 3 with HLX DLSS's network built
+        if hlx != self.payload_hlx:             # HelixSR 3: HelixSR Scaler in place of the stand-alone folder
+            self.payload_hlx = hlx
+            if self.mode() != MODE_REPLACE:
+                self.mode_replace.setChecked(True)
+            self.mode_scaler.setVisible(hlx)
+            self.mode_folder.setVisible(not hlx)
+            self._mode_changed()
         if optiscaler != self.optiscaler_available:
             self.optiscaler_available = optiscaler
             self._mode_changed()
@@ -482,6 +522,8 @@ class DeployPage(QWidget):
         return self.found[row] if 0 <= row < len(self.found) else None
 
     def mode(self) -> str:
+        if self.mode_scaler.isChecked():
+            return MODE_SCALER
         return MODE_FOLDER if self.mode_folder.isChecked() else MODE_REPLACE
 
     def folder(self) -> Path | None:
@@ -518,9 +560,13 @@ class DeployPage(QWidget):
 
     def _mode_changed(self) -> None:
         folder = self.mode() == MODE_FOLDER
-        for widget in (self.folder_path, self.browse_folder, self.second_label, self.second_path, self.browse_second,
-                       self.install_opti, self.exe_path, self.browse_exe):
+        self.scaler_hint.setVisible(self.mode() == MODE_SCALER)
+        for widget in (self.folder_label, self.folder_path, self.browse_folder, self.second_label, self.second_path,
+                       self.browse_second, self.install_opti, self.exe_path, self.browse_exe):
             widget.setVisible(folder)
+        # HelixSR 3 reads no helixsr.ini: HLX FSR 4 has none, HelixSR Scaler's settings are its OptiScaler.ini
+        for widget in (self.write_ini, self.write_ini_hint):
+            widget.setVisible(not self.payload_hlx)
         self.install_opti.setEnabled(self.optiscaler_available)
         self.install_opti.setToolTip(
             "" if self.optiscaler_available else
@@ -545,17 +591,27 @@ class DeployPage(QWidget):
         if self.mode() == MODE_FOLDER:
             folder = self.folder()
             needs_exe = self.optiscaler_available and self.install_opti.isChecked()
-            self.deploy.setEnabled(self.payload_ready and folder is not None
+            self.deploy.setEnabled(self.payload_ready and not self.payload_hlx and folder is not None
                                    and (not needs_exe or self.exe_folder() is not None))
             self.remove.setEnabled(folder is not None and (folder / HELIXSR_DLL).is_file())
             self.deploy.setToolTip("Import a complete payload first." if not self.payload_ready else
+                                   "HelixSR 3 has no DLL for a stand-alone OptiScaler folder: get the fallback release "
+                                   "on the Setup page for this mode." if self.payload_hlx else
                                    "Write HelixSR under both FidelityFX names into the folder.")
+        elif self.mode() == MODE_SCALER:
+            game = self.game_dir()
+            self.deploy.setEnabled(self.scaler_ready and game is not None)
+            self.remove.setEnabled(game is not None)
+            self.deploy.setToolTip("HLX DLSS's network is not built yet: Download and build on the Setup page."
+                                   if not self.scaler_ready else "Choose a game folder first." if game is None else
+                                   "Put HelixSR Scaler into the game, next to its .exe.")
         else:
             self.deploy.setEnabled(self.payload_ready and info is not None)
             self.remove.setEnabled(info is not None and info.deployed)
             self.deploy.setToolTip("Import a complete payload first." if not self.payload_ready else
                                    "Select a DLL in the list." if info is None else
-                                   "Replace {0} with HelixSR.".format(info.path.name))
+                                   "Replace {0} with {1}.".format(info.path.name,
+                                                                  "HLX FSR 4" if self.payload_hlx else "HelixSR"))
 
     def _deploy_clicked(self) -> None:
         second = self.second_upscaler() if self.mode() == MODE_FOLDER else None
