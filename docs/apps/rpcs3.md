@@ -48,17 +48,12 @@ your games stay. The games in Steam then no longer start: take them out first by
 
 ## Use it
 
-The header shows the **RPCS3 version**, **Your games** (the games found) and those **Available in Steam**. **Refresh** reads everything again. Beside the title, next to the app's state, stands the controller's:
+The header has four pills: the **RPCS3 version**, **RPCS3 Install**, **RPCS3 Uninstall** and **Refresh**, which reads everything again. Beside the title, next to the app's state, stands the controller's:
 **Controller connected**, or **No controller** when none is, looked at again every few seconds. A game started
 from Steam reads the controller that is connected when it starts, so switch yours on, or press its PS button to
 wake it, before starting a game. When Steam starts a game without one, the app also says so in a desktop
-notification. Under the links to **RPCS3's release notes** and to this wiki, a row of pills does the setting
-up, each with what it is for on top and what it does under it: **RPCS3 Install**, **RPCS3 Uninstall**, **Games Install** and **RPCN Account** (see [RPCN](#rpcn)). The last pill in that row is **Play time**: the time spent in all your games together, as RPCS3
-counts it, with each game's time in the tooltip. Your disc games and the firmware go into the app's own folder (see [Where your games
-go](#where-your-games-go)); nothing is chosen or browsed to for them. Five lines below the pills say where each
-stands, short, with more in their tooltips, and then comes a row of six tabs: **Your games**, **Settings**,
-**Memory cards** and **Log**, and two that are buttons: **Start game**, beside Your games, and **Clear logs**,
-beside Log.
+notification. Under the links to **RPCS3's release notes** and to this wiki, a second row of five pills follows, each with what it is for on top and what it does under it: **Games Install** and **Games Uninstall**, **Available in Steam** (how many of your games are in Steam), **RPCN Account** (see [RPCN](#rpcn)) and **Play time**: the time spent in all your games together, as RPCS3 counts it, with each game's time in the tooltip. Your disc games and the firmware go into the app's own folder (see [Where your games
+go](#where-your-games-go)); nothing is chosen or browsed to for them. Below the pills are two columns. The first says in five lines where each stands (**RPCS3:**, **Firmware:**, **Disc games:**, **PKG games:**, **RPCN:**), short, with more in their tooltips. The second shows the **Installed version:** of RPCS3. Then comes a row of six tabs: **Your games**, **Start game**, **Memory cards**, **Settings**, **View logs** and **Clear logs**. Start game and Clear logs are buttons.
 
 - **RPCS3**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
   shows the version installed. The tooltip says which build is installed, or what Install takes, and when a newer
@@ -135,7 +130,7 @@ games:
     └── PS3_GAME/          PARAM.SFO, ICON0.PNG, USRDIR/EBOOT.BIN, ...
 ```
 
-**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+**Games Uninstall**, the pill above, deletes the chosen game from the disk. A window first lists what would go, a row each with its
 size: a disc game's folder and its update in RPCS3's games folder, or a package game's folder there, and its Steam
 shortcut when it is in Steam. Every row is ticked; untick what you want to keep, then **Delete marked**; **Cancel**
 deletes nothing. The saves and the licenses stay. A game the app will not delete (one at the top of a drive, or in a
@@ -189,10 +184,20 @@ game's own.
 
 **Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
 
+#### A game in Steam more than once
+
+The app checks whether a game has more than one shortcut in Steam. When one has, the line under the tabs names
+the game and says how often it is there, and the tooltip of its **In Steam** box says the same. **Update Steam** is
+on for it: it leaves one shortcut of each game, with the latest play time, and takes the others out. Its question
+says how many double shortcuts go.
+
 #### Start game
 
 The tab beside Your games, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
-as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+as its shortcut in Steam starts it. When Steam does not run, the app starts Steam first and waits until it is up,
+which takes a while, and then starts the game. The line under the tabs says **Starting…** until RPCS3 runs, and
+says so when Steam did not start the game. While RPCS3 runs already, no second game is started. The tab you were
+on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
@@ -251,15 +256,15 @@ says is in it.
 
 Nothing is imported or deleted while RPCS3 runs: close it first.
 
-### Log
+### View logs
 
 Everything the app said and did, with the time: RPCS3 installed or removed, what the app set up in RPCS3, the
 firmware, the packages (what RPCS3's own log, `~/.cache/rpcs3/RPCS3.log`, says each package came to) and the
 folders chosen, every change to Steam, and every error. Each game started from Steam is logged by its folder's name
 when it starts, with whether a controller was connected. The same lines are in
 `~/.local/share/ps5-rpcs3-manager/ps5-rpcs3-manager.log`, which turns over at 1 MB (the three older files are
-kept). **Clear logs**, the tab beside Log, empties
-the file and the Log tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
+kept). **Clear logs**, the tab beside View logs, empties
+the file and the View logs tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
 keeps it; `--purge` removes it.
 
 ## RPCN

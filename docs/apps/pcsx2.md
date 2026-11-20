@@ -47,17 +47,12 @@ pressing **Update Steam**.
 
 ## Use it
 
-The header shows the **PCSX2 version**, **Your games** (the games found) and those **Available in Steam**. **Refresh** reads everything again. Beside the title, next to the app's state, stands the controller's:
+The header has four pills: the **PCSX2 version**, **PCSX2 Install**, **PCSX2 Uninstall** and **Refresh**, which reads everything again. Beside the title, next to the app's state, stands the controller's:
 **Controller connected**, or **No controller** when none is, looked at again every few seconds. A game started
 from Steam reads the controller that is connected when it starts, so switch yours on, or press its PS button to
 wake it, before starting a game. When Steam starts a game without one, the app also says so in a desktop
-notification. Under the links to **PCSX2's release notes** and to this wiki, a row of three
-pills does the setting up, each with what it is for on top and what it does under it: **PCSX2 Install**, **PCSX2
-Uninstall** and **BIOS Uninstall**. The fourth pill in that row is **Play time**:
-the time spent in all your games together, as PCSX2 counts it, with each game's time in the tooltip. Your games and your BIOS dump go into the app's own folder (see [Where your
-games go](#where-your-games-go)); nothing is chosen or browsed to. Three lines below the pills say where each
-stands, and then comes a row of six tabs: **Your games**, **Settings**, **Memory cards** and **Log**, and two that
-are buttons: **Start game**, beside Your games, and **Clear logs**, beside Log.
+notification. Under the links to **PCSX2's release notes** and to this wiki, a second row of four pills follows, each with what it is for on top and what it does under it: **Games Uninstall**, **Available in Steam** (how many of your games are in Steam), **BIOS Uninstall** and **Play time**: the time spent in all your games together, as PCSX2 counts it, with each game's time in the tooltip. Your games and your BIOS dump go into the app's own folder (see [Where your
+games go](#where-your-games-go)); nothing is chosen or browsed to. Below the pills are two columns. The first says in three lines where each stands (**PCSX2:**, **BIOS:**, **Game folder:**), short, with more in their tooltips. The second shows the **Installed version:** of PCSX2. Then comes a row of six tabs: **Your games**, **Start game**, **Memory cards**, **Settings**, **View logs** and **Clear logs**. Start game and Clear logs are buttons.
 
 - **PCSX2**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which release
   is installed, or what Install takes, and when a newer PCSX2 is out. When another release than the one pinned for
@@ -128,7 +123,7 @@ and a game PCSX2 does not know gets its file's name, without a serial in it: `SL
 **PCSX2 settings**, left of it, opens PCSX2's own window for what the Settings tab does not set: its other
 settings, the controllers and its game list.
 
-**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+**Games Uninstall**, the pill above, deletes the chosen game from the disk. A window first lists what would go, a row each with its
 size: the disc image, and its Steam shortcut when it is in Steam. Every row is ticked; untick what you want to keep,
 then **Delete marked**; **Cancel** deletes nothing. The memory cards stay. A game the app will not delete (one at
 the top of a drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
@@ -180,10 +175,20 @@ Change Steam from Desktop Mode: in Game Mode Steam is the session itself and can
 pictures for each game from SteamGridDB instead of drawing them: the cover, the wide picture, the banner and the
 logo. A picture SteamGridDB does not have stays drawn. The title the app looks up is the game's title in the list.
 
+#### A game in Steam more than once
+
+The app checks whether a game has more than one shortcut in Steam. When one has, the line under the tabs names
+the game and says how often it is there, and the tooltip of its **In Steam** box says the same. **Update Steam** is
+on for it: it leaves one shortcut of each game, with the latest play time, and takes the others out. Its question
+says how many double shortcuts go.
+
 #### Start game
 
 The tab beside Your games, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
-as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+as its shortcut in Steam starts it. When Steam does not run, the app starts Steam first and waits until it is up,
+which takes a while, and then starts the game. The line under the tabs says **Starting…** until PCSX2 runs, and
+says so when Steam did not start the game. While PCSX2 runs already, no second game is started. The tab you were
+on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
@@ -260,7 +265,7 @@ The tab reads PS2 cards. PCSX2 can also keep a card as a folder, and play PS1 ga
 `.mcr`); the tab lists those and says it cannot read them. A PS1 save on a PS2 card, as a PS2 makes when it
 copies one, is listed with its title.
 
-### Log
+### View logs
 
 Everything the app said and did, with the time: PCSX2 installed or removed, what it wrote in PCSX2's settings,
 the BIOS, each setting changed, each change to a memory card, every change to Steam, and every error. The games,
@@ -269,8 +274,8 @@ connected, and the next time the window looks, PCSX2's own log of its last run i
 game, how long it was played, until when, and with which controller. PCSX2 writes its log over at every start, so
 when two games are played before the window looks, only the last run is summed up. The same lines are in
 `~/.local/share/ps5-pcsx2-manager/ps5-pcsx2-manager.log`, which turns over at 1 MB (the three older files are
-kept). **Clear logs**, the tab beside Log, empties
-the file and the Log tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
+kept). **Clear logs**, the tab beside View logs, empties
+the file and the View logs tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
 keeps it; `--purge` removes it.
 
 ## From a terminal

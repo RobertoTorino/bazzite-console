@@ -57,6 +57,10 @@ def _window(folders, **kwargs) -> MainWindow:
     closed = kwargs.pop("closed", [])
     kwargs.setdefault("devices", folders["user_home"] / "no-devices")         # no controller, no file
     kwargs.setdefault("newer_release", lambda: None)                         # never GitHub in a test
+    kwargs.setdefault("ppsspp_running", lambda: False)
+    # Start game: Steam takes the address at once and the game runs (never the real Steam in a test)
+    kwargs.setdefault("steam_play", lambda url, open_url, started: steam.play(
+        url, open_url, lambda: True, ready=lambda: True, sleep=lambda seconds: None))
     return MainWindow(**folders, steam_closed=lambda change: (closed.append(1), change())[0] and False,
                       steam_running=lambda: False, **kwargs)
 
@@ -113,14 +117,14 @@ def test_installed_with_games(qapp, folders):
     _install(folders["home"])
     window = _window(folders)
     assert window.pill.text() == "Ready" and window.emulator_box.value.text() == emulator.VERSION
-    assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
+    assert window.table.rowCount() == 2 and window.steam_box.value.text() == "0"
     assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert window.emulator_state.toolTip() == f"PPSSPP {emulator.VERSION}, the release this version of the app was tried with"
     assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled()
     assert not hasattr(window, "play_button")                   # a game is started from Steam (owner, 07-11-2026)
-    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    assert not window.remove_game_pill.isEnabled()                            # nothing chosen yet
     window.table.selectRow(0)
-    assert window.remove_game_button.isEnabled() and window.chosen().title == "One"
+    assert window.remove_game_pill.isEnabled() and window.chosen().title == "One"
     assert not window.steam_button.isEnabled()                                  # nothing to change
     assert window.table.item(0, 3).text() == "ISO" and window.table.item(1, 3).text() == "Memory Stick"
     window.close()
@@ -303,15 +307,17 @@ def test_the_blue_look(qapp, folders):
     assert window.ppsspp_button.property("primary") is None
     assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
     assert [(p.value.text(), p.caption.text()) for p in window.actions] == [
-        ("PPSSPP", "Install"), ("PPSSPP", "Uninstall"), ("Games", "Rename")]
-    for pill in (window.refresh_pill, *window.actions):
+        ("Games", "Rename"), ("Games", "Uninstall")]
+    assert [(p.value.text(), p.caption.text()) for p in window.header_pills[1:3]] == [
+        ("PPSSPP", "Install"), ("PPSSPP", "Uninstall")]
+    for pill in (*window.header_pills, *window.actions):
         sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
     assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
-                                                                            "Settings", "Memory cards", "Log",
-                                                                            "Clear logs"]
+                                                                            "Memory cards", "Settings",
+                                                                            "View logs", "Clear logs"]
     window.close()
 
 
@@ -374,7 +380,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
     older.write_text("17-11-2026 10:00:00 INFO older\n")
     window = _window(folders)
     tabs, clear = window.tabs, window.clear_tab.index
-    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "Log"
+    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "View logs"
     assert clear == tabs.count() - 1 and "Manager started" in window.output.toPlainText()
     tabs.setCurrentIndex(clear - 1)
     tabs.tabBarClicked.emit(clear)
@@ -389,13 +395,22 @@ def test_the_play_time_ppsspp_counts(qapp, folders):
     """Play time, the last pill of the second row (owner, 18-11-2026: the header is full): all games together, from
     [PlayTime] in PPSSPP's settings, each game's time in the tip under its title."""
     window = _window(folders)
-    assert [b.caption.text() for b in window.header_pills[1:]] == ["PPSSPP version", "Your games",
-                                                                    "Available in Steam"]
+    # The owner's order (20-11-2026), as shadPS4 Manager's: the version, Install, Uninstall and Refresh in the
+    # header, the games' pills, Available in Steam and Play time under it. The Your games box went.
+    assert [b.caption.text() for b in window.header_pills] == ["PPSSPP version", "Install", "Uninstall",
+                                                               "Click to refresh"]
+    assert [b.caption.text() for b in window.second_row] == ["Rename", "Uninstall", "Available in Steam", "Play time"]
+    assert not hasattr(window, "games_box") and not hasattr(window, "remove_game_button")
+    # Two columns under the pills: the states, each name with a colon, and the installed version beside them
+    names = [w.text() for w in window.centralWidget().findChildren(QLabel)
+             if w.text().endswith(":") and w.styleSheet() == "font-weight:700;"]
+    assert names == ["PPSSPP:", "Game folder:", "Installed version:"]
+    assert window.version_state.text() == "—"
     window.show()
     qapp.processEvents()
     assert window.time_box.caption.text() == "Play time" and window.time_box.y() == window.rename_pill.y()
     assert window.time_box.x() > window.rename_pill.x() and abs(window.time_box.width()
-                                                                - window.install_pill.width()) <= 1
+                                                                - window.second_row[0].width()) <= 1
     assert window.time_box.value.text() == "—" and "none yet" in window.time_box.toolTip()
     ini = folders["memstick"] / "PSP" / "SYSTEM" / "ppsspp.ini"
     ini.write_text("\ufeff[General]\nFirstRun = False\n[PlayTime]\nULUS00001 = 5400,1795000000\nNPUH10000 = 65,0\n"
@@ -430,7 +445,7 @@ def test_the_window_keeps_its_width(qapp, folders):
     assert window.intro.styleSheet() == window.refresh_pill.caption.styleSheet() == style.CAPTION
     assert f"href='{emulator.RELEASE_PAGE}'" in window.intro.text() and "text-decoration:none" in window.intro.text()
     assert style.BLUE not in window.intro.text() and window.intro.openExternalLinks()
-    assert window.tabs.tabText(3) == "Memory cards" and window.tabs.widget(3) is window.saves_page
+    assert window.tabs.tabText(2) == "Memory cards" and window.tabs.widget(2) is window.saves_page
     window.close()
 
 
@@ -479,16 +494,16 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
 
 
 def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
-    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    """Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
     deletes the rows still ticked off the window's thread and says what went and what stayed."""
     from PyQt6.QtWidgets import QDialog
     from bazzite_console_core.keep_dialog import KeepDialog
     _install(folders["home"])
     window = _window(folders)
-    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    assert not window.remove_game_pill.isEnabled()                            # nothing chosen yet
     window.table.selectRow(0)
     game = window.chosen()
-    assert game.title == "One" and window.remove_game_button.isEnabled()
+    assert game.title == "One" and window.remove_game_pill.isEnabled()
     target = tmp_path / "Games" / "PSP" / "one.iso"
     assert target.exists()
     seen = []
@@ -521,7 +536,7 @@ def test_the_settings_tab(qapp, folders):
     running = [False]
     window = _window(folders, ppsspp_running=lambda: running[0])
     page = window.settings_page
-    assert window.tabs.widget(2).widget() is page and page.widgets["resolution"].currentData() == "3"
+    assert window.tabs.widget(3).widget() is page and page.widgets["resolution"].currentData() == "3"
     assert page.widgets["renderer"].currentText() == "Vulkan" and page.widgets["volume"].value() == 100
     page.widgets["vsync"].setChecked(False)
     assert "VerticalSync = False" in ini.read_text() and page.status.text() == "VSync: off."
@@ -557,12 +572,17 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     tabs.setCurrentIndex(2)
     tabs.tabBarClicked.emit(start)                                           # a click on the tab
     tabs.setCurrentIndex(start)                                              # as the click goes on to select it
+    assert window.running.text().startswith(f"Starting {title} through Steam")      # off the window's thread
+    _wait(window, qapp)
     assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
-    assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
-    assert tabs.currentIndex() == 2                                          # Settings is still open
+    assert opened[0].startswith("steam://rungameid/")
+    assert window.running.text() == f"{title} runs, started through Steam."
+    assert tabs.currentIndex() == 2                                          # Memory cards is still open
+    window.table.selectRow(0)
     window.open_url = lambda url: False
     window.on_start_game()
-    assert window.running.text() == f"{title} could not be started: xdg-open is missing."
+    _wait(window, qapp)
+    assert window.running.text() == f"{title} was not started: xdg-open is missing."
     window.close()
 
 
@@ -614,4 +634,74 @@ def test_the_version_pill(qapp, folders, monkeypatch):
                         lambda dialog: opened.append((dialog.home, dialog.tested.version, dialog.member)) or 0)
     actions[-1].trigger()
     assert opened == [(home, emulator.VERSION, emulator.MEMBER)]
+    window.close()
+
+
+def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypatch):
+    """Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never
+    started, while the line said it did): Steam is started and waited for before the game's address is given, and
+    what went wrong is said. While PPSSPP runs, no second one is started."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    opened, ran, ready = [], [], iter([False, False, True])
+    window = _window(folders, open_url=lambda url: opened.append(url) or True,
+                     steam_play=lambda url, open_url, started: steam.play(
+                         url, open_url, lambda: bool(opened), run=ran.append, running=lambda: False,
+                         ready=lambda: next(ready), sleep=lambda seconds: None))
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    window.table.selectRow(0)
+    title = window.chosen().title
+    window.on_start_game()
+    _wait(window, qapp)
+    assert ran == [steam.start_command()] and len(opened) == 1
+    assert window.running.text() == f"{title} runs, started through Steam."
+
+    def never(url, open_url, started):
+        raise steam.SteamError("Steam did not start within 120 seconds.")
+    window.steam_play = never
+    window.table.selectRow(0)
+    window.on_start_game()
+    _wait(window, qapp)
+    assert window.running.text() == f"{title} was not started: Steam did not start within 120 seconds."
+    window.ppsspp_running = lambda: True
+    window.table.selectRow(0)
+    window.on_start_game()
+    assert window.running.text() == "PPSSPP is running: close it first, then start the game."
+    window.close()
+
+
+def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp, folders, monkeypatch):
+    """Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
+    that and a feature to fix it"): the window says which game is there more than once, the box's tooltip too, and
+    Update Steam, lit for it, leaves one shortcut."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    window = _window(folders)
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert window.doubles == {} and not window.steam_button.isEnabled()
+    (path,) = folders["steam_dir"].glob("userdata/*/config/shortcuts.vdf")
+    values = steam.read_vdf(path.read_bytes())
+    items = list(values["shortcuts"].values())
+    ours = next(item for item in items if shortcuts.ours(item))
+    lower = {("exe" if k == "Exe" else "launchoptions" if k == "LaunchOptions" else k): v for k, v in ours.items()}
+    path.write_bytes(steam.write_vdf({"shortcuts": {str(n): i for n, i in enumerate([*items, lower])}}))
+    window.refresh()
+    title = window.games[0].title
+    assert list(window.doubles.values()) == [1]
+    assert window.running.text() == f"In Steam more than once: {title} (2 times). Update Steam leaves one of each."
+    assert window.table.item(0, 0).toolTip() == "In Steam 2 times: Update Steam leaves one"
+    assert window.steam_button.isEnabled() and window.steam_box.value.text() == "1"
+    asked = []
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]),
+                                                                  QMessageBox.StandardButton.Yes)[1])
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert "1 double shortcut(s) taken out" in asked[0]
+    left = [i for i in steam.read_vdf(path.read_bytes())["shortcuts"].values() if shortcuts.ours(i)]
+    assert len(left) == 1 and window.doubles == {} and not window.steam_button.isEnabled()
+    assert window.table.item(0, 0).toolTip() == "In Steam"
     window.close()

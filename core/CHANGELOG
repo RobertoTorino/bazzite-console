@@ -1,3 +1,16 @@
+Changelog: 20-11-2026 18:49:34
+
+Added. steam: takes_commands, whether the running Steam takes a steam:// address now (the process its pid file names
+has Steam's command pipe open, as Steam's own start script tells; both paths are resolved first, since the home
+folder is a link on Bazzite, /home to /var/home), and play, which starts a game by its address and waits until it
+runs: a Steam that does not run is started and waited for first, and the address is given again, at most three
+times, while the game does not come up. For Start game in the managers: Steam started with the game's address came
+up and never started the game.
+
+Added. steam: doubles, what is in Steam more than once (how many shortcuts too many per game, for one Steam user),
+and put_shortcut leaves one shortcut where it recognizes several: the first is replaced, the others go, the latest
+play time kept (owner, 20-11-2026: multiple entries for the same game in Steam).
+
 Changelog: 20-11-2026 13:11:18
 
 Version 4.4.0.

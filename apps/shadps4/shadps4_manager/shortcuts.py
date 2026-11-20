@@ -36,10 +36,11 @@ def launch_options(game: Game) -> str:
 
 def _eboot(item: dict) -> str:
     """The game a shortcut of this app starts ("" for any other shortcut)."""
-    if not str(item.get("Exe", "")).strip('"').endswith(RUN_NAME):
+    # By core's field(): Steam has written a shortcut's fields in lower case, and one not recognized was added again
+    if not str(steam.field(item, "Exe")).strip('"').endswith(RUN_NAME):
         return ""
     try:
-        words = shlex.split(str(item.get("LaunchOptions", "")))
+        words = shlex.split(str(steam.field(item, "LaunchOptions")))
     except ValueError:
         return ""
     return words[words.index("-g") + 1] if "-g" in words[:-1] else ""
@@ -72,7 +73,13 @@ def entry(game: Game, name: str, run: Path, logo: Path) -> dict:
 
 def in_steam(folder: Path) -> dict[str, str]:
     """The eboot.bin paths that have a shortcut of this app, for any Steam user, with the shortcut's name."""
-    return {_eboot(item): str(item.get("AppName", "")) for item in steam.shortcuts(folder) if ours(item)}
+    return {_eboot(item): str(steam.field(item, "AppName")) for item in steam.shortcuts(folder) if ours(item)}
+
+
+def doubles(folder: Path) -> dict[str, int]:
+    """The eboot.bin paths that are in Steam more than once, with how many shortcuts are too many (owner,
+    20-11-2026): Update Steam leaves one."""
+    return steam.doubles(folder, _eboot)
 
 
 def old_tags(folder: Path) -> set[str]:

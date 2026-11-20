@@ -33,6 +33,9 @@ STEAM_DIRS = (                          # the native Steam (Bazzite's), its olde
     "~/.var/app/com.valvesoftware.Steam/.local/share/Steam",
 )
 SHUTDOWN_TIMEOUT = 30.0
+START_TIMEOUT = 120.0                   # play(): how long a Steam that was started may take to come up
+PLAY_TRIES = 3                          # play(): how often the game's address is given
+PLAY_PAUSE = 30.0                       # play(): seconds a game may take to run before the address is given again
 MAP, STRING, INT32, END = 0, 1, 2, 8
 ART = {"p": (600, 900), "": (920, 430), "_hero": (3840, 1240), "_logo": (1280, 720)}
 
@@ -104,6 +107,53 @@ def play_url(number: int) -> str:
     Change.number): Steam's game id for a shortcut is that appid in the high half with 0x02000000 below it. Steam
     starts first when it does not run (owner, 29-10-2026: a game started from its manager, through Steam)."""
     return f"steam://rungameid/{((number & 0xFFFFFFFF) << 32) | 0x02000000}"
+
+
+def takes_commands(home: Path | None = None, proc: Path = Path("/proc")) -> bool:
+    """Whether a running Steam takes a steam:// address now, as Steam's own start script tells: the process its pid
+    file names has Steam's command pipe open. A Steam that is still starting does not, and neither does a pid file
+    left by one that ended."""
+    folder = (home or Path.home()) / ".steam"
+    try:
+        pid = (folder / "steam.pid").read_text().strip()
+        if not pid.isdigit():
+            return False
+        # Both resolved: the home folder is a link on Bazzite (/home to /var/home), and the process names the
+        # pipe by the other spelling. Compared as written, Steam never seemed ready (the board, 20-11-2026).
+        pipe = os.path.realpath(folder / "steam.pipe")
+        return any(os.path.realpath(os.readlink(link)) == pipe for link in (proc / pid / "fd").iterdir())
+    except OSError:
+        return False
+
+
+def play(url: str, open_url: Callable[[str], bool], started: Callable[[], bool], run: Run | None = None,
+         running: Callable[[], bool] = steam_running, ready: Callable[[], bool] = takes_commands,
+         timeout: float = START_TIMEOUT, tries: int = PLAY_TRIES, pause: float = PLAY_PAUSE,
+         sleep: Callable[[float], None] = time.sleep) -> None:
+    """Starts a game by its steam:// address (play_url()) and waits until it runs (*started*). A Steam that does
+    not run is started first and waited for: started with the address itself, Steam came up and never started the
+    game (owner's board, 20-11-2026). The address is given again, at most *tries* times with *pause* seconds
+    between, while the game does not run: a Steam that only just took commands may still drop it. Raises
+    SteamError when Steam does not come up, the address cannot be opened or the game does not start."""
+    if not ready():
+        if not running():
+            (run or _run)(start_command())
+        waited = 0.0
+        while not ready():
+            if waited >= timeout:
+                raise SteamError(f"Steam did not start within {timeout:g} seconds.")
+            sleep(1)
+            waited += 1
+    for _ in range(tries):
+        if not open_url(url):
+            raise SteamError("xdg-open is missing.")
+        waited = 0.0
+        while waited < pause:
+            if started():
+                return
+            sleep(1)
+            waited += 1
+    raise SteamError("Steam did not start it: look in Steam, which may be asking something.")
 
 
 def _run(command: list[str]) -> None:
@@ -243,13 +293,18 @@ Match = Callable[[dict], bool]
 
 def put_shortcut(values: dict, new: dict, ours: Match) -> dict:
     """The file's contents with *new* added, or replacing the shortcut *ours* recognizes (its play time kept); the
-    other shortcuts stay, numbered 0, 1, ... in their order."""
-    shortcuts = list(values.get("shortcuts", {}).values())
-    for n, item in enumerate(shortcuts):
-        if ours(item):
-            shortcuts[n] = {**new, "LastPlayTime": field(item, "LastPlayTime", 0)}
-            break
-    else:
+    other shortcuts stay, numbered 0, 1, ... in their order. When *ours* recognizes several (the same game in Steam
+    more than once; owner, 20-11-2026), the first is replaced and the others go, the latest play time kept."""
+    shortcuts, placed = [], False
+    played = max((int(field(item, "LastPlayTime", 0) or 0) for item in values.get("shortcuts", {}).values()
+                  if ours(item)), default=0)
+    for item in values.get("shortcuts", {}).values():
+        if not ours(item):
+            shortcuts.append(item)
+        elif not placed:
+            shortcuts.append({**new, "LastPlayTime": played})
+            placed = True
+    if not placed:
         shortcuts.append(new)
     return {**values, "shortcuts": {str(n): item for n, item in enumerate(shortcuts)}}
 
@@ -257,6 +312,28 @@ def put_shortcut(values: dict, new: dict, ours: Match) -> dict:
 def remove_shortcut(values: dict, ours: Match) -> dict:
     shortcuts = [item for item in values.get("shortcuts", {}).values() if not ours(item)]
     return {**values, "shortcuts": {str(n): item for n, item in enumerate(shortcuts)}}
+
+
+def doubles(steam: Path, key: Callable[[dict], str]) -> dict[str, int]:
+    """What is in Steam more than once (owner, 20-11-2026: "multiple entries for the same game"): per *key* (what a
+    shortcut starts; "" for a shortcut that is not the caller's), how many shortcuts one Steam user has too many.
+    Empty when every game is there once."""
+    extra: dict[str, int] = {}
+    for config in user_folders(steam):
+        path = config / "shortcuts.vdf"
+        try:
+            values = read_vdf(path.read_bytes()) if path.is_file() else {}
+        except (OSError, ShortcutError):
+            continue
+        counts: dict[str, int] = {}
+        for item in values.get("shortcuts", {}).values():
+            name = key(item)
+            if name:
+                counts[name] = counts.get(name, 0) + 1
+        for name, count in counts.items():
+            if count > 1:
+                extra[name] = max(extra.get(name, 0), count - 1)
+    return extra
 
 
 def shortcuts(steam: Path) -> list[dict]:

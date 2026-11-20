@@ -1,3 +1,27 @@
+Changelog: 20-11-2026 18:49:20
+
+Added. The window's new order (owner, 20-11-2026: shadPS4 Manager's design in every manager). The header's pills are
+the Vita3K version, Vita3K Install, Vita3K Uninstall and Refresh. The row under them is Games Install, Games
+Uninstall, Available in Steam and Play time. Games Uninstall is new: it is what the Remove game… button under the
+table did, and that button went. The Your games box went. Under the pills are two columns: the three state lines,
+each name with a colon (Vita3K:, Firmware:, Game folder:), and beside them Installed version:, the Vita3K version in
+use. The tabs are Your games, Start game, Memory cards, Settings, View logs (it was Log) and Clear logs.
+
+Added. A check for a game that is in Steam more than once. The app says which games and how often, the game's In
+Steam box says it in its tooltip, and Update Steam lights and leaves one shortcut of each, with the latest play
+time; its question says how many double shortcuts go.
+
+Fixed. The chosen row of a table is 30 % blue, with the theme's text color: filled with the header's blue, a chosen
+first row could hardly be told from the header above it.
+
+Fixed. Start game with Steam closed started Steam and never the game, while the line said "Steam starts" (seen in
+shadPS4 Manager on the board, 20-11-2026). The app now starts Steam first, waits until it takes commands, then gives
+it the game's address, again when the game does not come up (core's play). The line says the game runs only once
+Vita3K does, and says when Steam did not start it. While Vita3K runs already, Start game starts no second one.
+
+Fixed. A shortcut whose fields Steam wrote in lower case (exe, launchoptions) was not recognized as the app's, so
+Update Steam added the game a second time. They are read whatever their case now.
+
 Changelog: 20-11-2026 13:11:18
 
 Release 1.5.0.

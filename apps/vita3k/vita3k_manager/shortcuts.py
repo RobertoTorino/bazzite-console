@@ -36,10 +36,11 @@ def launch_options(game: Game) -> str:
 def _name(item: dict) -> str:
     """The game a shortcut of this app starts ("" for any other shortcut): the word after -r in its launch
     options."""
-    if not str(item.get("Exe", "")).strip('"').endswith(RUN_NAME):
+    # By core's field(): Steam has written a shortcut's fields in lower case, and one not recognized was added again
+    if not str(steam.field(item, "Exe")).strip('"').endswith(RUN_NAME):
         return ""
     try:
-        words = shlex.split(str(item.get("LaunchOptions", "")))
+        words = shlex.split(str(steam.field(item, "LaunchOptions")))
     except ValueError:
         return ""
     if "-r" not in words[:-1]:
@@ -75,7 +76,13 @@ def entry(game: Game, name: str, run: Path, logo: Path) -> dict:
 def in_steam(folder: Path) -> dict[str, str]:
     """The games (by their folder's name) that have a shortcut of this app, for any Steam user, with the shortcut's
     name."""
-    return {_name(item): str(item.get("AppName", "")) for item in steam.shortcuts(folder) if ours(item)}
+    return {_name(item): str(steam.field(item, "AppName")) for item in steam.shortcuts(folder) if ours(item)}
+
+
+def doubles(folder: Path) -> dict[str, int]:
+    """The games that are in Steam more than once, with how many shortcuts are too many (owner,
+    20-11-2026): Update Steam leaves one."""
+    return steam.doubles(folder, _name)
 
 
 def cover_name(game: Game) -> str:

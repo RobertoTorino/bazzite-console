@@ -12,8 +12,13 @@ Everything about PCSX2 is done here (owner, 24-10-2026); PCSX2's own window stay
 set (PCSX2 settings, under the games; owner, 18-11-2026). A game runs from Steam: the tab beside Your games, Start
 game, starts the chosen one there (owner, 12-11-2026). While PCSX2 is installed and not running, the window keeps
 PCSX2's settings at what the app owns (pcsx2_settings.py), so a game started from Steam goes straight into the game.
-What the window says it also writes to the app's log (core's applog), shown in the Log tab; PCSX2's last run (the game,
-the play time, the controller, from PCSX2's own log) goes there too, once, when the window next looks."""
+What the window says it also writes to the app's log (core's applog), shown in the View logs tab; PCSX2's last run (the game,
+the play time, the controller, from PCSX2's own log) goes there too, once, when the window next looks.
+
+The owner's order of 20-11-2026, shadPS4 Manager's, replaces the one above: the header's pills are PCSX2's (its
+version, Install, Uninstall) and Refresh; the row under them the games' pills and Available in Steam, with Play
+time where the emulator counts it; then two columns, the state lines and the installed version beside them; then the
+tabs, Memory cards before Settings and the log's as View logs."""
 
 from __future__ import annotations
 
@@ -51,14 +56,14 @@ from .settings_page import SettingsPage
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/pcsx2/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
-CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the Log tab"
+CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 KINDS = {"iso": "ISO", "chd": "CHD", "cso": "CSO", "zso": "ZSO", "gz": "GZ"}
 RUNNING = "PCSX2 is running: close it first, it would write its own settings over the change."
 STEAM, GAME, SERIAL, KIND, FILE, SCREEN = range(6)          # the table's columns (the screen last; owner)
 WIDTH = 900                             # the window opens this wide, and is never narrower (owner, 18-11-2026)
 HEIGHT = 606                            # the window opens this high (owner, 18-11-2026); it was 800
-GAMES, START, SETTINGS, MEMCARDS, LOG = range(5)            # the tabs
+GAMES, START, MEMCARDS, SETTINGS, LOG = range(5)            # the tabs
 # The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
 # advice are in its tip.
 NOT_INSTALLED = "Not installed. Install it with the Install button."
@@ -67,6 +72,9 @@ VERSIONS_TIP = "Put another installed PCSX2 build in use, or download one in the
 
 
 RUNNING_REMOVE = "PCSX2 is running: close it first, then remove the game."
+RUNNING_START = "PCSX2 is running: close it first, then start the game."
+UNINSTALL_GAME_TIP = ("Delete the game chosen under Your games from the disk: a window lists what would go, and you "
+                      "untick what to keep; nothing is deleted before you confirm")
 
 
 class Pcsx2Settings(SettingsStore):
@@ -98,17 +106,19 @@ class MainWindow(QMainWindow):
                  covers_key: Path | None = None, log_path: Path | None = None,
                  devices: Path = controllers.DEVICES, sound_state: Path | None = None,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
-                 open_url=xdg_open):
+                 open_url=xdg_open,
+                 steam_play=steam.play):
         """*home*: where the app installs PCSX2; *pcsx2_home*: PCSX2's own folder; *steam_dir*: Steam's folder
         (None: looked up); *run*: the run wrapper the shortcuts start; *fetch*: the download; *steam_closed* and
         *steam_running*: closing Steam for a change and asking whether it runs; *newer_release*: asks GitHub for a
         newer stable; *pcsx2_running*: whether PCSX2 runs (its settings are not written then); *covers_home*,
         *covers_get* and *covers_key*: where the SteamGridDB pictures are kept, how SteamGridDB is asked and the
-        suite's key file (tests never touch the real ones); *log_path*: the app's log file, as the Log tab shows
+        suite's key file (tests never touch the real ones); *log_path*: the app's log file, as the View logs tab shows
         it (__main__ set it up); *devices*: the kernel's list of input devices, for the controller state;
         *sound_state*: WirePlumber's file with the volume the desktop remembers for PCSX2 (tests pass their own);
         *user_home*: the home folder with the app's own game folder, Games/PS2 (library.fixed); *drives*: the
-        removable drives looked at for one; *open_url*: opens a URL on the desktop (Start game's steam:// address)."""
+        removable drives looked at for one; *open_url*: opens a URL on the desktop (Start game's steam:// address).
+        *steam_play*: starts a game by its Steam address and waits until it runs (Start game)."""
         super().__init__()
         self.setMinimumWidth(WIDTH)                     # never narrower (owner, 18-11-2026)
         self.resize(WIDTH, HEIGHT)
@@ -120,6 +130,7 @@ class MainWindow(QMainWindow):
         self.steam_closed = steam_closed
         self.steam_running = steam_running
         self.open_url = open_url
+        self.steam_play = steam_play
         self.covers_home = covers_home or covers.covers_home(APP_ID)
         self.covers_get = covers_get
         self.covers_key = covers_key
@@ -145,6 +156,8 @@ class MainWindow(QMainWindow):
         self.moved: dict[str, str] = {}               # a game found again under another name: its file in Steam
         self._moved_said: set[str] = set()
         self.no_cover: set[str] = set()               # games in Steam not yet looked up on SteamGridDB, with a key
+        self.doubles: dict[str, int] = {}             # games in Steam more than once: how many shortcuts too many
+        self._doubles_said: dict[str, int] = {}
         self.version = ""
         self.replaced = False                       # PCSX2 updated itself to a build the app was not tried with
         self._pin_noted = False                     # another release installed than the app brings: logged once
@@ -173,14 +186,7 @@ class MainWindow(QMainWindow):
         self.emulator_box = style.action_pill("—", "PCSX2 version", VERSIONS_TIP)
         self.versions_menu = QMenu(self)
         self.emulator_box.clicked.connect(self.on_versions_menu)
-        self.games_box = MetricBox("Your games", style.BLUE)
         self.steam_box = MetricBox("Available in Steam", style.BLUE)
-        # The header's pills spread over the window's width in equal parts, as the action pills below (owner,
-        # 24-10-2026). (The BIOS box went: the BIOS line below says which dump.)
-        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box]
-        for box in self.header_pills:
-            box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            header.add_second(box, 1)
         # The two links alone (owner, 18-11-2026), in the type of a pill's caption (Click to refresh): what the
         # app is for is in the wiki.
         self.intro = hint_label(style.caption_link(self, emulator.RELEASE_PAGE, "PCSX2's release notes") + " · "
@@ -201,12 +207,23 @@ class MainWindow(QMainWindow):
                                                                        "folder and out of Games/PS2/BIOS, with the files "
                                                                        "beside it")
         self.bios_remove_pill.clicked.connect(self.on_remove_bios)
-        self.actions = [self.install_pill, self.remove_pill, self.bios_remove_pill]
-        # Play time beside them (owner, 18-11-2026: the header is full): all games together, as PCSX2 counts it
+        # Games Uninstall (owner, 20-11-2026): a pill in place of the Remove game… button under the table
+        self.remove_game_pill = style.action_pill("Games", "Uninstall", UNINSTALL_GAME_TIP)
+        self.remove_game_pill.clicked.connect(self.on_remove_game)
+        # Play time (owner, 18-11-2026): all games together, as PCSX2 counts it
         self.time_box = MetricBox("Play time", style.BLUE)
+        # The owner's order (20-11-2026), as shadPS4 Manager's. The header: PCSX2's version, Install and
+        # Uninstall, then Refresh. The row under it: the games' Uninstall, Available in Steam, the BIOS's Uninstall and Play time
+        # (the Your games box went: the table lists them). Each row's pills share the width in equal parts.
+        self.header_pills = [self.emulator_box, self.install_pill, self.remove_pill, self.refresh_pill]
+        for box in self.header_pills:
+            box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            header.add_second(box, 1)
+        self.actions = [self.remove_game_pill, self.bios_remove_pill]    # the row's pills that act
+        self.second_row = [self.remove_game_pill, self.steam_box, self.bios_remove_pill, self.time_box]
         actions = QHBoxLayout()
         actions.setSpacing(8)
-        for pill in (*self.actions, self.time_box):     # each a quarter of the width, whatever the window's
+        for pill in self.second_row:                    # each a quarter of the width, whatever the window's
             pill.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             actions.addWidget(pill, 1)
 
@@ -221,11 +238,21 @@ class MainWindow(QMainWindow):
         infos = {self.bios_state: self.bios_info, self.folders_state: self.folders_info}
         for row, (name, state) in enumerate((("PCSX2", self.emulator_state), ("BIOS", self.bios_state),
                                              ("Game folder", self.folders_state))):
-            label = QLabel(name)
-            label.setStyleSheet("font-weight:700;")
-            label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-            grid.addWidget(label, row, 0)
+            grid.addWidget(self._name_label(name), row, 0)
             grid.addWidget(_with_info(state, infos[state]) if state in infos else state, row, 1)
+        # A second column beside the states (owner, 20-11-2026): the PCSX2 version installed
+        self.version_state = self._state_label()
+        second = QGridLayout()
+        second.setColumnStretch(1, 1)
+        second.setHorizontalSpacing(14)
+        second.setVerticalSpacing(6)
+        second.addWidget(self._name_label("Installed version"), 0, 0)
+        second.addWidget(self.version_state, 0, 1)
+        second.setRowStretch(1, 1)
+        columns = QHBoxLayout()
+        columns.setSpacing(14)
+        columns.addLayout(grid, 1)
+        columns.addLayout(second, 1)
 
         self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels(["In Steam", "Game title", "Id", "Type", "File name",
@@ -249,10 +276,6 @@ class MainWindow(QMainWindow):
         self.pcsx2_button.setToolTip("Open PCSX2's own window for what the Settings tab does not set: its other "
                                      "settings, the controllers and its game list")
         self.pcsx2_button.clicked.connect(self.on_open_pcsx2)
-        self.remove_game_button = QPushButton("Remove game…")
-        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and you "
-                                      "untick what to keep; nothing is deleted before you confirm")
-        self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Steam artwork…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Steam "
                                       "gives each game its cover, banner and logo from SteamGridDB in Steam")
@@ -269,7 +292,6 @@ class MainWindow(QMainWindow):
         buttons.addWidget(self.steam_info)
         buttons.addStretch(1)
         buttons.addWidget(self.pcsx2_button)
-        buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
         games_page = QWidget()
@@ -307,10 +329,11 @@ class MainWindow(QMainWindow):
         self.settings_scroll.setWidgetResizable(True)
         self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.settings_scroll.setWidget(self.settings_page)
-        self.tabs.addTab(self.settings_scroll, "Settings")
         self.tabs.addTab(self.memcard_page, "Memory cards")
-        self.tabs.addTab(log_page, "Log")
-        # Clear logs (owner, 18-11-2026): beside the Log tab, a tab that is a button and empties the log
+        # Memory cards before Settings, and the log's tab is View logs (owner, 20-11-2026)
+        self.tabs.addTab(self.settings_scroll, "Settings")
+        self.tabs.addTab(log_page, "View logs")
+        # Clear logs (owner, 18-11-2026): beside the View logs tab, a tab that is a button and empties the log
         self.clear_tab = ActionTab(self.tabs, "Clear logs", CLEAR_TIP, self.on_clear_logs)
 
         self.running = WrappedLabel()
@@ -324,7 +347,7 @@ class MainWindow(QMainWindow):
         lay.addSpacing(4)
         lay.addLayout(actions)
         lay.addSpacing(4)
-        lay.addLayout(grid)
+        lay.addLayout(columns)
         lay.addSpacing(6)
         lay.addWidget(self.tabs, 1)
         lay.addWidget(self.running)
@@ -339,6 +362,14 @@ class MainWindow(QMainWindow):
             self.restoreGeometry(geometry)
         self.refresh()
         self.release_check.start(self._newer_release)
+
+    @staticmethod
+    def _name_label(name: str) -> QLabel:
+        """What a state line is about, bold, with a colon (owner, 20-11-2026)."""
+        label = QLabel(f"{name}:")
+        label.setStyleSheet("font-weight:700;")
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        return label
 
     @staticmethod
     def _state_label() -> QLabel:
@@ -367,11 +398,13 @@ class MainWindow(QMainWindow):
         self.log_session(titles)
         try:
             self.in_steam = shortcuts.in_steam(self.steam_dir) if self.steam_dir else {}
+            self.doubles = shortcuts.doubles(self.steam_dir) if self.steam_dir else {}
             self.no_cover = ({str(g.file) for g in self.games if str(g.file) in self.in_steam
                               and not covers.known(self.covers_home, shortcuts.cover_name(g))}
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_cover = {}, set()
+            self.doubles = {}
         # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026;
         # core's renamed): known by its code, else its file's size.
         found = {str(g.file): renamed.identity(g.serial, g.file) for g in self.games}
@@ -380,6 +413,13 @@ class MainWindow(QMainWindow):
         renamed.remember(self.settings.qsettings, known, found, self.in_steam)
         self._show_state()
         self._fill_table()
+        # The same game in Steam more than once (owner, 20-11-2026): said once, and Update Steam leaves one
+        if self.doubles and self.doubles != self._doubles_said:
+            titles = {str(g.file): g.title for g in self.games}
+            names = [f"{titles.get(key) or self.in_steam.get(key) or key} ({extra + 1} times)"
+                     for key, extra in self.doubles.items()]
+            self.say(f"In Steam more than once: {', '.join(names)}. Update Steam leaves one of each.", ok=False)
+        self._doubles_said = dict(self.doubles)
         if self.moved and set(self.moved) != self._moved_said:
             self._moved_said = set(self.moved)
             titles = [g.title for g in self.games if str(g.file) in self.moved]
@@ -417,20 +457,20 @@ class MainWindow(QMainWindow):
                                        "keyboard only and Select + Start cannot quit the game.")
 
     def say(self, text: str, ok: bool = True) -> None:
-        """What the window has to say: the line under the tabs, the Log tab and the log file."""
+        """What the window has to say: the line under the tabs, the View logs tab and the log file."""
         self.running.setStyleSheet("font-weight:600;" + ("" if ok else "color:#c62828;"))
         self.running.setText(text)
         self.note(text, ok)
 
     def note(self, text: str, ok: bool = True) -> None:
-        """Into the Log tab and the log file only: something that happened, not what the window is doing now."""
+        """Into the View logs tab and the log file only: something that happened, not what the window is doing now."""
         (self.log.info if ok else self.log.error)(text)
         stamp = time.strftime(applog.DATE)
         self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
 
     def on_clear_logs(self) -> None:
         """Clear logs (owner, 18-11-2026): the app's log file emptied, with the older ones kept beside it, and the
-        Log tab with them. Said in the line under the tabs only, so the log stays empty."""
+        View logs tab with them. Said in the line under the tabs only, so the log stays empty."""
         if not applog.clear(APP_ID, self.log_path):
             self.say(f"The log could not be cleared: {private(self.log_path)}", ok=False)
             return
@@ -528,6 +568,8 @@ class MainWindow(QMainWindow):
             tip += (f"\nPCSX2 {self.newer.version} is out ({self.newer.published}). A later version of this app "
                     f"brings it, once it has been tried on the board: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
+        self.version_state.setText(escape(self.version) if self.version else "—")   # whole: the pill shortens it
+        self.version_state.setToolTip(tip)
 
         page = style.link(self, userdata.BIOS_HELP_URL, "PCSX2's BIOS page")
         chosen = pcsx2_settings.chosen_bios(self.pcsx2_home)
@@ -556,7 +598,6 @@ class MainWindow(QMainWindow):
                                    f"{escape(private(library.bios_home(self.user_home)))}. A USB drive or an SD card "
                                    "with a Games/PS2 folder is also checked for content.")
         self.folders_state.setToolTip("\n".join(private(f) for f in self.folders))
-        self.games_box.set_value(str(len(self.games)))
         found = {str(g.file) for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
         self._show_play_time()
@@ -608,7 +649,8 @@ class MainWindow(QMainWindow):
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
             box.setCheckState(Qt.CheckState.Checked if str(game.file) in self.in_steam or str(game.file) in self.moved
                               else Qt.CheckState.Unchecked)
-            box.setToolTip("In Steam" if str(game.file) in self.in_steam else
+            box.setToolTip(f"In Steam {self.doubles[str(game.file)] + 1} times: Update Steam leaves one"
+                           if str(game.file) in self.doubles else "In Steam" if str(game.file) in self.in_steam else
                            f"Found again under a new name: in Steam as {self.in_steam.get(self.moved[str(game.file)], '?')}; "
                            "Update Steam brings the shortcut up to date" if str(game.file) in self.moved else "Not in Steam")
             self.table.setItem(row, STEAM, box)
@@ -668,10 +710,10 @@ class MainWindow(QMainWindow):
         self.bios_remove_pill.setEnabled(idle and bool(self.bios))
         self.covers_button.setEnabled(idle)
         self.pcsx2_button.setEnabled(idle and bool(self.version))
-        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
+        self.remove_game_pill.setEnabled(idle and self.chosen() is not None)
         add, remove = self.steam_plan()
         named = shortcuts.names(add)        # a name in Steam that differs (one from before the prefix) is renamed
-        changed = bool(remove) or any(self.in_steam.get(str(g.file)) != named[g.file] or str(g.file) in self.no_cover
+        changed = bool(remove) or bool(self.doubles) or any(self.in_steam.get(str(g.file)) != named[g.file] or str(g.file) in self.no_cover
                                       for g in add)
         self.steam_button.setEnabled(idle and changed and self.steam_dir is not None and not steam.game_mode())
         if self.steam_dir is None:
@@ -793,7 +835,7 @@ class MainWindow(QMainWindow):
         self.say(f"{game.title}: {pcsx2_settings.SCREENS[screen].lower()}.")
 
     def on_remove_game(self) -> None:
-        """Remove game… (owner, 03-11-2026: before deleting anything, let
+        """Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026: before deleting anything, let
         the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
         every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
         the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The memory cards stay."""
@@ -837,7 +879,10 @@ class MainWindow(QMainWindow):
 
     def on_start_game(self) -> None:
         """The Start game tab (owner, 12-11-2026): the chosen game started through Steam, as its shortcut there
-        starts it (steam://rungameid/ with the shortcut's number; Steam starts first when it does not run)."""
+        starts it (steam://rungameid/ with the shortcut's number). Off the window's thread, with core's play(): a
+        Steam that does not run is started and waited for before the game's address is given, and the line says
+        the game runs only once PCSX2 does (owner, 20-11-2026, first in shadPS4 Manager: Steam, started with
+        the address, came up and never started the game)."""
         game = self.chosen()
         if game is None:
             self.say("Choose a game under Your games first: Start game starts the chosen one in Steam.", ok=False)
@@ -850,10 +895,19 @@ class MainWindow(QMainWindow):
         if number is None:
             self.say(f"{game.title} is not in Steam yet: tick it and press Update Steam first.", ok=False)
             return
-        if self.open_url(steam.play_url(number)):
-            self.say(f"Steam starts {game.title}.")
-        else:
-            self.say(f"{game.title} could not be started: xdg-open is missing.", ok=False)
+        if self.pcsx2_running():
+            self.say(RUNNING_START, ok=False)
+            return
+        url, title = steam.play_url(number), game.title
+        play, open_url, started = self.steam_play, self.open_url, self.pcsx2_running
+
+        def job() -> tuple[bool, str]:
+            try:
+                play(url, open_url, started)
+            except steam.SteamError as error:
+                return False, f"{title} was not started: {error}"
+            return True, f"{title} runs, started through Steam."
+        self._start(f"Starting {title} through Steam (Steam starts first when it does not run)…", job)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:
@@ -867,6 +921,8 @@ class MainWindow(QMainWindow):
             self.say("Install PCSX2 first: the games in Steam start it.", ok=False)
             return
         text = f"{len(add)} game(s) in Steam" + (f", {len(remove)} taken out." if remove else ".")
+        if self.doubles:
+            text += f"\n{sum(self.doubles.values())} double shortcut(s) taken out: each game stays in Steam once."
         if self.steam_running():
             text += "\n\nSteam closes for it and starts again in the background."
         if not self._ask("Steam", text):
@@ -923,7 +979,7 @@ class MainWindow(QMainWindow):
 
     def place_states(self) -> None:
         """The states end at the middle of the last header pill: the spacer after them is half its width."""
-        self.states_spacer.setFixedWidth(max(0, self.steam_box.width() // 2))
+        self.states_spacer.setFixedWidth(max(0, self.header_pills[-1].width() // 2))
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
         busy = self.worker.running or self.memcard_page.worker.running

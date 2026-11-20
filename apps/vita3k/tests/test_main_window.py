@@ -70,6 +70,10 @@ def _window(folders, **kwargs) -> MainWindow:
     closed = kwargs.pop("closed", [])
     kwargs.setdefault("devices", folders["user_home"] / "no-devices")         # no controller, no file
     kwargs.setdefault("newer_release", lambda: None)                         # never GitHub in a test
+    kwargs.setdefault("vita3k_running", lambda: False)
+    # Start game: Steam takes the address at once and the game runs (never the real Steam in a test)
+    kwargs.setdefault("steam_play", lambda url, open_url, started: steam.play(
+        url, open_url, lambda: True, ready=lambda: True, sleep=lambda seconds: None))
     return MainWindow(**folders, steam_closed=lambda change: (closed.append(1), change())[0] and False,
                       steam_running=lambda: False, **kwargs)
 
@@ -149,15 +153,15 @@ def test_installed_with_firmware_and_games(qapp, folders, tmp_path):
     assert window.firmware_state.toolTip().splitlines()[:3] == ["System software: installed", "Font package: installed",
                                                                 "Preinstalled apps: not installed"]
     assert window.emulator_box.value.text() == "4377"
-    assert window.games_box.value.text() == "1" and window.steam_box.value.text() == "0"
+    assert window.table.rowCount() == 1 and window.steam_box.value.text() == "0"
     assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
     assert window.emulator_state.toolTip() == (f"Vita3K build {emulator.VERSION} ({emulator.SEMVER}), the build this "
                                                "version of the app was tried with")
     assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled()
     assert not hasattr(window, "play_button")                   # a game is started from Steam (owner, 07-11-2026)
-    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    assert not window.remove_game_pill.isEnabled()                            # nothing chosen yet
     window.table.selectRow(0)
-    assert window.remove_game_button.isEnabled() and window.chosen().title == "Two"
+    assert window.remove_game_pill.isEnabled() and window.chosen().title == "Two"
     assert not window.steam_button.isEnabled()                                  # nothing to change
     window.close()
 
@@ -305,7 +309,7 @@ def test_a_vpk_installed_in_vita3ks_window(qapp, folders, tmp_path):
     make_game(tmp_path / "storage", "Three", "PCSB00003")
     window._watch_install()
     assert not window.install_watch.isActive() and window.running.text() == "Installed in Vita3K: PCSB00003."
-    assert window.games_box.value.text() == "2"
+    assert window.table.rowCount() == 2
     window.close()
 
 
@@ -411,15 +415,17 @@ def test_the_blue_look(qapp, folders, monkeypatch):
     assert window.vita3k_button.property("primary") is None
     assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
     assert [(p.value.text(), p.caption.text()) for p in window.actions] == [
-        ("Vita3K", "Install"), ("Vita3K", "Uninstall"), ("Games", "Install")]
-    for pill in (window.refresh_pill, *window.actions):
+        ("Games", "Install"), ("Games", "Uninstall")]
+    assert [(p.value.text(), p.caption.text()) for p in window.header_pills[1:3]] == [
+        ("Vita3K", "Install"), ("Vita3K", "Uninstall")]
+    for pill in (*window.header_pills, *window.actions):
         sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
     assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
-                                                                            "Settings", "Memory cards", "Log",
-                                                                            "Clear logs"]
+                                                                            "Memory cards", "Settings",
+                                                                            "View logs", "Clear logs"]
     shown = []
     monkeypatch.setattr(QMenu, "popup", lambda menu, point, *a: shown.append(menu))
     window.game_pill.click()
@@ -468,7 +474,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
     older.write_text("17-11-2026 10:00:00 INFO older\n")
     window = _window(folders)
     tabs, clear = window.tabs, window.clear_tab.index
-    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "Log"
+    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "View logs"
     assert clear == tabs.count() - 1 and "Manager started" in window.output.toPlainText()
     tabs.setCurrentIndex(clear - 1)
     tabs.tabBarClicked.emit(clear)
@@ -491,14 +497,14 @@ def test_the_blueprint_layout(qapp, folders):
     bar = window.tabs.tabBar()
     assert window.width() == 900 == window.minimumWidth()
     assert window.centralWidget().minimumSizeHint().width() <= 900 and window.height() == 606
-    assert [b.caption.text() for b in window.header_pills[1:]] == ["Vita3K version", "Your games",
-                                                                    "Available in Steam"]    # no Firmware box
-    assert window.tabs.widget(2) is window.settings_scroll                      # the Settings tab scrolls: no higher
+    assert [b.caption.text() for b in window.header_pills] == ["Vita3K version", "Install", "Uninstall",
+                                                               "Click to refresh"]      # no Firmware box
+    assert window.tabs.widget(3) is window.settings_scroll                      # the Settings tab scrolls: no higher
     assert window.settings_scroll.widget() is window.settings_page and window.settings_scroll.widgetResizable()
-    assert window.tabs.tabText(3) == "Memory cards" and window.tabs.widget(3) is window.saves_page
+    assert window.tabs.tabText(2) == "Memory cards" and window.tabs.widget(2) is window.saves_page
     assert window.time_box.caption.text() == "Play time" and window.time_box.y() == window.game_pill.y()
     assert window.time_box.x() > window.game_pill.x() and abs(window.time_box.width()
-                                                                     - window.install_pill.width()) <= 1
+                                                                     - window.second_row[0].width()) <= 1
     assert bar.count() == 6 and len({bar.tabRect(i).width() for i in range(6)}) <= 2    # equal but for a pixel
     assert not bar.drawBase()
     assert bar.tabRect(0).left() <= 1 and abs(bar.tabRect(5).right() - (window.tabs.width() - 1)) <= 1
@@ -571,16 +577,16 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
 
 
 def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
-    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    """Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
     deletes the rows still ticked off the window's thread and says what went and what stayed."""
     from PyQt6.QtWidgets import QDialog
     from bazzite_console_core.keep_dialog import KeepDialog
     _install(folders["home"])
     window = _window(folders)
-    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    assert not window.remove_game_pill.isEnabled()                            # nothing chosen yet
     window.table.selectRow(0)
     game = window.chosen()
-    assert game.title == "Two" and window.remove_game_button.isEnabled()
+    assert game.title == "Two" and window.remove_game_pill.isEnabled()
     target = tmp_path / "storage" / "ux0" / "app" / "PCSE00002"
     assert target.exists()
     seen = []
@@ -612,7 +618,7 @@ def test_the_settings_tab(qapp, folders):
     running = [False]
     window = _window(folders, vita3k_running=lambda: running[0])
     page = window.settings_page
-    assert window.tabs.widget(2).widget() is page and page.widgets["scale"].currentData() == "1"
+    assert window.tabs.widget(3).widget() is page and page.widgets["scale"].currentData() == "1"
     assert page.widgets["renderer"].currentText() == "Vulkan" and page.widgets["vsync"].isChecked()
     page.widgets["scale"].setCurrentIndex(page.widgets["scale"].findData("2"))
     assert "resolution-multiplier: 2" in path.read_text() and page.status.text() == "Resolution: 2x (1088p)."
@@ -648,12 +654,17 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     tabs.setCurrentIndex(2)
     tabs.tabBarClicked.emit(start)                                           # a click on the tab
     tabs.setCurrentIndex(start)                                              # as the click goes on to select it
+    assert window.running.text().startswith(f"Starting {title} through Steam")      # off the window's thread
+    _wait(window, qapp)
     assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
-    assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
-    assert tabs.currentIndex() == 2                                          # Settings is still open
+    assert opened[0].startswith("steam://rungameid/")
+    assert window.running.text() == f"{title} runs, started through Steam."
+    assert tabs.currentIndex() == 2                                          # Memory cards is still open
+    window.table.selectRow(0)
     window.open_url = lambda url: False
     window.on_start_game()
-    assert window.running.text() == f"{title} could not be started: xdg-open is missing."
+    _wait(window, qapp)
+    assert window.running.text() == f"{title} was not started: xdg-open is missing."
     window.close()
 
 
@@ -705,4 +716,74 @@ def test_the_version_pill(qapp, folders, monkeypatch):
                         lambda dialog: opened.append((dialog.home, dialog.tested.version, dialog.member)) or 0)
     actions[-1].trigger()
     assert opened == [(home, emulator.VERSION, emulator.MEMBER)]
+    window.close()
+
+
+def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypatch):
+    """Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never
+    started, while the line said it did): Steam is started and waited for before the game's address is given, and
+    what went wrong is said. While Vita3K runs, no second one is started."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    opened, ran, ready = [], [], iter([False, False, True])
+    window = _window(folders, open_url=lambda url: opened.append(url) or True,
+                     steam_play=lambda url, open_url, started: steam.play(
+                         url, open_url, lambda: bool(opened), run=ran.append, running=lambda: False,
+                         ready=lambda: next(ready), sleep=lambda seconds: None))
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    window.table.selectRow(0)
+    title = window.chosen().title
+    window.on_start_game()
+    _wait(window, qapp)
+    assert ran == [steam.start_command()] and len(opened) == 1
+    assert window.running.text() == f"{title} runs, started through Steam."
+
+    def never(url, open_url, started):
+        raise steam.SteamError("Steam did not start within 120 seconds.")
+    window.steam_play = never
+    window.table.selectRow(0)
+    window.on_start_game()
+    _wait(window, qapp)
+    assert window.running.text() == f"{title} was not started: Steam did not start within 120 seconds."
+    window.vita3k_running = lambda: True
+    window.table.selectRow(0)
+    window.on_start_game()
+    assert window.running.text() == "Vita3K is running: close it first, then start the game."
+    window.close()
+
+
+def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp, folders, monkeypatch):
+    """Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
+    that and a feature to fix it"): the window says which game is there more than once, the box's tooltip too, and
+    Update Steam, lit for it, leaves one shortcut."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    window = _window(folders)
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert window.doubles == {} and not window.steam_button.isEnabled()
+    (path,) = folders["steam_dir"].glob("userdata/*/config/shortcuts.vdf")
+    values = steam.read_vdf(path.read_bytes())
+    items = list(values["shortcuts"].values())
+    ours = next(item for item in items if shortcuts.ours(item))
+    lower = {("exe" if k == "Exe" else "launchoptions" if k == "LaunchOptions" else k): v for k, v in ours.items()}
+    path.write_bytes(steam.write_vdf({"shortcuts": {str(n): i for n, i in enumerate([*items, lower])}}))
+    window.refresh()
+    title = window.games[0].title
+    assert list(window.doubles.values()) == [1]
+    assert window.running.text() == f"In Steam more than once: {title} (2 times). Update Steam leaves one of each."
+    assert window.table.item(0, 0).toolTip() == "In Steam 2 times: Update Steam leaves one"
+    assert window.steam_button.isEnabled() and window.steam_box.value.text() == "1"
+    asked = []
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]),
+                                                                  QMessageBox.StandardButton.Yes)[1])
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert "1 double shortcut(s) taken out" in asked[0]
+    left = [i for i in steam.read_vdf(path.read_bytes())["shortcuts"].values() if shortcuts.ours(i)]
+    assert len(left) == 1 and window.doubles == {} and not window.steam_button.isEnabled()
+    assert window.table.item(0, 0).toolTip() == "In Steam"
     window.close()

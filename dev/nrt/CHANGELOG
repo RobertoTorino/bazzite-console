@@ -1,3 +1,11 @@
+Changelog: 20-11-2026 17:19:51
+
+Fixed. The last two steps changed places (owner, 20-11-2026: git pull could be pressed while jobs still ran, and the tool said finished while git pull was still to press). Step 9 is All runs finished: it waits until GitHub runs nothing more, and git pull stays off until then. Step 10 is Bring in the pin commit, the last thing to press. The line "The release is out and pulled in: ready." (it was "All runs finished, ready.") comes only after that pull.
+
+Changelog: 20-11-2026 16:52:11
+
+Fixed. The Current release box counts the time the steps of the release worked, not the time since the first step was pressed (owner, 20-11-2026: "very bizarre numbers", 48 min 28 s against 3 min 39 s). A window left open between two steps counted as release time: Get up to date at 15:37, the release at 16:27, and the 40 minutes between them were in it. Counted now: a command that runs here (Get up to date, Commit, Push with CI's jobs, Start), GitHub's CI on the commit and the release run, up to the device test. Not counted: the time the tool waits for a step to be pressed, and the time the tool is closed. The times measured before, waiting included, are no longer the Previous release: until a release is timed the new way, that box shows GitHub's own time.
+
 Changelog: 20-11-2026 14:17:31
 
 Fixed. The time boxes are Previous release, Current release and Deviation (owner, 20-11-2026: "Recorded time is incorrect"; opened for a new release, what is out is the previous one). Previous release is the last release that went out, with the time this tool measured for it, or GitHub's own (its CI and its release run) for one it did not time. Current release is the release being made: its time starts with the first step pressed, runs on this computer's clock and ends when the release on GitHub passed; a dash until a step is pressed. Before, the first box read This release for the release that was out already and counted GitHub's CI and release run only.

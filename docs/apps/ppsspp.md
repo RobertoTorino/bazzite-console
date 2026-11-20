@@ -46,16 +46,10 @@ log go too.
 
 ## Use it
 
-The header shows the **PPSSPP version**, **Your games** (the games found) and those **Available in Steam**.
-**Refresh** reads everything again. Beside the title, next to the app's state, stands the controller's:
+The header has four pills: the **PPSSPP version**, **PPSSPP Install**, **PPSSPP Uninstall** and **Refresh**, which reads everything again. Beside the title, next to the app's state, stands the controller's:
 **Controller connected**, or **No controller** when none is, looked at again every few seconds. A game started
 from Steam reads the controller that is connected when it starts, so switch yours on first. Beside the title stands the app's state: **Not installed**, **No games** or
-**Ready**. Under the links to **PPSSPP's release notes** and to this wiki, a row of three pills
-does the setting up, each with what it is for on top and what it does under it: **PPSSPP Install**, **PPSSPP
-Uninstall** and **Games Rename**. The fourth pill in that row is **Play time**: the time spent in all your games
-together, as PPSSPP counts it, with each game's time in the tooltip. Two lines below the pills say where each stands, and then comes a row of six tabs: **Your games**, **Settings**,
-**Memory cards** and **Log**, and two that are buttons: **Start game**, beside Your games, and **Clear logs**,
-beside Log.
+**Ready**. Under the links to **PPSSPP's release notes** and to this wiki, a second row of four pills follows, each with what it is for on top and what it does under it: **Games Rename** and **Games Uninstall**, **Available in Steam** (how many of your games are in Steam) and **Play time**: the time spent in all your games together, as PPSSPP counts it, with each game's time in the tooltip. Below the pills are two columns. The first says in two lines where each stands (**PPSSPP:**, **Game folder:**), short, with more in their tooltips. The second shows the **Installed version:** of PPSSPP. Then comes a row of six tabs: **Your games**, **Start game**, **Memory cards**, **Settings**, **View logs** and **Clear logs**. Start game and Clear logs are buttons.
 
 - **PPSSPP**: **Not installed.** or **Installed.**, with the button to use after it, on one line. The tooltip says
   which release is installed, or what Install takes, and when a newer PPSSPP is out. **Install** asks first, then
@@ -106,7 +100,7 @@ and its file. It has two kinds of games:
   (`~/.config/ppsspp/PSP/GAME`), where PPSSPP keeps homebrew and installed games. A game's update there (its
   `PARAM.SFO` says category PG) is not a game to start: PPSSPP lays it over the disc game by itself.
 
-**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+**Games Uninstall**, the pill above, deletes the chosen game from the disk. A window first lists what would go, a row each with its
 size: the disc image, or a memory stick game's own folder, and its Steam shortcut when it is in Steam. Every row is
 ticked; untick what you want to keep, then **Delete marked**; **Cancel** deletes nothing. The saves on the memory
 stick stay. A game the app will not delete (one at the top of a drive, or in a folder that holds another game) is
@@ -150,10 +144,20 @@ stay in use.
 
 **Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
 
+#### A game in Steam more than once
+
+The app checks whether a game has more than one shortcut in Steam. When one has, the line under the tabs names
+the game and says how often it is there, and the tooltip of its **In Steam** box says the same. **Update Steam** is
+on for it: it leaves one shortcut of each game, with the latest play time, and takes the others out. Its question
+says how many double shortcuts go.
+
 #### Start game
 
 The tab beside Your games, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
-as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+as its shortcut in Steam starts it. When Steam does not run, the app starts Steam first and waits until it is up,
+which takes a while, and then starts the game. The line under the tabs says **Starting…** until PPSSPP runs, and
+says so when Steam did not start the game. While PPSSPP runs already, no second game is started. The tab you were
+on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
@@ -194,13 +198,13 @@ it was last written. Select a save to see its picture and what the game says is 
 
 Nothing is imported or deleted while PPSSPP runs: close it first.
 
-### Log
+### View logs
 
 Everything the app said and did, with the time: PPSSPP installed or removed, what the app set up in PPSSPP, files
 renamed, games deleted, every change to Steam, and every error. The same lines are in
 `~/.local/share/ps5-ppsspp-manager/ps5-ppsspp-manager.log`, which turns over at 1 MB (the three older files are
-kept). **Clear logs**, the tab beside Log, empties
-the file and the Log tab and removes the three older files. The log holds what the app did, with your home folder written as `~`, and not your SteamGridDB key.
+kept). **Clear logs**, the tab beside View logs, empties
+the file and the View logs tab and removes the three older files. The log holds what the app did, with your home folder written as `~`, and not your SteamGridDB key.
 `install.sh --uninstall` keeps it; `--purge` removes it.
 
 ## Renaming the files

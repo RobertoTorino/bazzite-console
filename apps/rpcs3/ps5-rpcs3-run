@@ -50,7 +50,7 @@ if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY
    [ -z "${QT_QPA_PLATFORM:-}" ]; then
     export QT_QPA_PLATFORM=xcb
 fi
-# The game started goes to the app's log (the Log tab), in the app's own form, by its folder's name (the disc's, or
+# The game started goes to the app's log (the View logs tab), in the app's own form, by its folder's name (the disc's, or
 # the installed game's ID) and from where (Steam sets SteamGameId); nothing else is known here. As PCSX2 Manager's
 # wrapper does (owner, 24-10-2026).
 LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-rpcs3-manager/ps5-rpcs3-manager.log"

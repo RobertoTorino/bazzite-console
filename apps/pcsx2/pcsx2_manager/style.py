@@ -23,6 +23,8 @@ BLUE_HOVER = "#2A6CC4"
 BLUE_PRESSED = "#08448D"
 BLUE_TINT = "#1A0A55B0"                 # #AARRGGBB: 10 % blue, for hover and every other table row
 BLUE_LINE = "#590A55B0"                 # 35 % blue, for outlines
+BLUE_CHOSEN = "#4D0A55B0"               # 30 % blue: a table's chosen row, told from the blue header above the
+                                        # first row (owner, 20-11-2026); the text keeps the theme's color
 LINK_ON_DARK = "#5B93DA"                # #0A55B0 is too dark to read as a link on a dark window
 DISABLED = "#80808080"                  # 50 % gray: a disabled button, readable as such on light and dark
 
@@ -54,8 +56,8 @@ QPushButton[primary="true"]:pressed {{ background:{BLUE_PRESSED}; border-color:{
 QPushButton[primary="true"]:disabled {{ background:palette(window); border-color:{DISABLED};
                                         color:{DISABLED}; }}
 QTableWidget {{ border:1px solid {BLUE_LINE}; border-radius:6px; gridline-color:{BLUE_TINT};
-                alternate-background-color:{BLUE_TINT}; selection-background-color:{BLUE};
-                selection-color:white; }}
+                alternate-background-color:{BLUE_TINT}; selection-background-color:{BLUE_CHOSEN};
+                selection-color:{THEME.text}; }}
 QHeaderView::section {{ background:{BLUE}; color:white; font-weight:700; border:none;
                         border-right:1px solid {BLUE_HOVER}; padding:5px 8px; }}
 QPlainTextEdit {{ border:1px solid {BLUE_LINE}; border-radius:6px; }}

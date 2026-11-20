@@ -297,7 +297,7 @@ class ReleaseTime:
     """How long GitHub worked on one release up to its device test: CI on the commit the release started from (step
     4) and from the release commit (Start new release) to the end of the release on GitHub (steps 5 and 6). It is
     what the Previous release box shows for a release this tool did not time itself (release_page.py's clock, which
-    runs from the first step pressed)."""
+    adds up the time its steps worked)."""
     sha: str                            # the release commit
     before: float                       # seconds of GitHub's CI before Start; 0 when GitHub no longer lists that run
     release: float                      # seconds from the release commit to the end of its run (so far, while it runs)
@@ -328,24 +328,49 @@ def release_times(root: Path, now: Callable[[], float] = time.time,
     return times
 
 
-# The release's clock (owner, 20-11-2026: "the release that is NOW started with step 1 in NRT"): the Current release
-# box counts from the first step pressed for a release to the device test, on this computer's clock, waiting
-# included. The steps whose command starts it, and the ones that say the release on GitHub is through.
+# The release's clock (owner, 20-11-2026: "the release that is NOW started with step 1 in NRT", "all steps combined
+# up and until the device test step"): the Current release box adds up the time the steps of a release worked, from
+# the first step pressed to the device test. Only work counts: a command that runs here, GitHub's CI on the commit
+# and the release run. The time the tool waits for the owner between two steps does not (owner, 20-11-2026: "very
+# bizarre numbers": 48 minutes against 3, most of them a window left open between Get up to date and Commit).
+# The steps whose command starts it, and the ones that say the release on GitHub is through.
 CLOCK_STARTS = ("pull", "commit", "push", "ci", "start")
 CLOCK_ENDS = ("test", "finish", "ready", "")
 CLOCK_STALE = 12 * 3600                 # a clock older than this that never ended is no release still being made
+Clock = tuple[float, float, float, float]       # start, end (0: not yet), seconds worked, working since (0: not now)
+NO_CLOCK: Clock = (0.0, 0.0, 0.0, 0.0)
 
 
-def clock_step(clock: tuple[float, float], step: str, running: bool, facts: "Facts", now: float) -> tuple[float, float]:
-    """The clock (start, end; 0: not yet) after a look at the steps: it starts when a command runs for one of the
-    first steps while no release is being timed, and ends when the release on GitHub passed (at the end of its run,
-    as GitHub has it)."""
-    start, end = clock
+def clock_working(step: str, running: bool, facts: "Facts") -> bool:
+    """Whether something works for the release now: a command here, GitHub's CI on the commit or the release run."""
+    return running or (step == "ci" and facts.ci == "building") or \
+        (step == "run" and facts.run is not None and not facts.run.done)
+
+
+def clock_step(clock: Clock, step: str, running: bool, facts: "Facts", now: float) -> Clock:
+    """The clock after a look at the steps: it starts when a command runs for one of the first steps while no release
+    is being timed, adds the time up while something works (clock_working) and ends when the release on GitHub
+    passed (at the end of its run, as GitHub has it)."""
+    start, end, worked, since = clock
     if running and step in CLOCK_STARTS and (not start or end):
-        return now, 0.0
-    if start and not end and facts.run is not None and facts.run.passed and step in CLOCK_ENDS:
-        return start, max(start, min(now, facts.run.ended or now))
+        return now, 0.0, 0.0, now
+    if not start or end:
+        return clock
+    if facts.run is not None and facts.run.passed and step in CLOCK_ENDS:
+        stop = max(start, min(now, facts.run.ended or now))
+        return start, stop, worked + (max(0.0, stop - since) if since else 0.0), 0.0
+    working = clock_working(step, running, facts)
+    if working and not since:
+        return start, 0.0, worked, now
+    if not working and since:
+        return start, 0.0, worked + max(0.0, now - since), 0.0
     return clock
+
+
+def clock_time(clock: Clock, now: float) -> float:
+    """The seconds the release's steps worked, the piece that is going on now included."""
+    _start, end, worked, since = clock
+    return worked + (max(0.0, now - since) if since and not end else 0.0)
 
 
 def deviation(current: float | None, previous: float | None) -> float | None:
@@ -385,11 +410,13 @@ STEPS = (
     ("run", "The release on GitHub", "Builds and publishes the apps, pins them and makes the portal a draft."),
     ("test", "Device test", "Installs the draft portal on this device and starts it: test it as a user would."),
     ("publish", "Publish", "The test passed: publish the portal. Not OK leaves it a draft."),
-    ("finish", "Bring in the pin commit", "The release wrote a commit Pin ... on main: pull it."),
+    # The wait before the pull (owner, 20-11-2026: git pull could be pressed while jobs still ran, and the tool said
+    # finished while git pull was still to press): the pull is the last thing to do, and nothing says ready before it
     ("ready", "All runs finished", "What GitHub still runs after Publish (the wiki, the runs on the portal's tag): "
                                    "wait until they all finished."),
+    ("finish", "Bring in the pin commit", "The release wrote a commit Pin ... on main: pull it. The last step."),
 )
-READY = "All runs finished, ready."     # the last step's line once a release is out and GitHub runs nothing more
+READY = "The release is out and pulled in: ready."      # the last step's line once nothing is left to do
 KEYS = tuple(key for key, _title, _what in STEPS)
 
 
@@ -553,9 +580,9 @@ def current_step(facts: Facts) -> str:
             return "run"                    # running, or ended badly: Resume or Stop
         if facts.drafts:
             return "test"
-        # Out and pulled, but not ready while GitHub still runs something (owner, 20-11-2026: every step had its
-        # check while the wiki's run went on)
-        return "finish" if facts.behind else "ready" if facts.building else ""
+        # Not ready while GitHub still runs something (owner, 20-11-2026: every step had its check while the wiki's
+        # run went on), and the pull only after it: no git pull while jobs run
+        return "ready" if facts.building else "finish" if facts.behind else ""
     if facts.unpushed:
         return "start"                      # its push stopped: Push and start
     if facts.behind:

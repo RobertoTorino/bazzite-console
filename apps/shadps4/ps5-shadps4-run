@@ -50,7 +50,7 @@ if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY
    [ -z "${SDL_VIDEO_DRIVER:-}" ]; then
     export SDL_VIDEO_DRIVER=x11
 fi
-# The game started goes to the app's log (the Log tab), in the app's own form, by its folder's name (the game's ID
+# The game started goes to the app's log (the View logs tab), in the app's own form, by its folder's name (the game's ID
 # as Extract PKG names it) and from where (Steam sets SteamGameId); nothing else is known here. As PCSX2 Manager's
 # wrapper does (owner, 24-10-2026).
 LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-shadps4-manager/ps5-shadps4-manager.log"

@@ -86,6 +86,9 @@ def _window(folders, **kwargs) -> MainWindow:
     kwargs.setdefault("rpcs3_running", lambda: False)
     kwargs.setdefault("sdl_names", lambda: [])                                # never SDL in a test
     kwargs.setdefault("open_url", lambda url: True)
+    # Start game: Steam takes the address at once and the game runs (never the real Steam in a test)
+    kwargs.setdefault("steam_play", lambda url, open_url, started: steam.play(
+        url, open_url, lambda: True, ready=lambda: True, sleep=lambda seconds: None))
     return MainWindow(**folders, steam_closed=lambda change: (closed.append(1), change())[0] and False,
                       steam_running=lambda: False, **kwargs)
 
@@ -102,10 +105,19 @@ def test_before_installing(qapp, folders):
     assert not window.package_pill.isEnabled()
     assert [window.table.item(r, 1).text() for r in range(window.table.rowCount())] == ["One", "Two"]   # Games/PS3 and RPCS3's own
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
-                                                                            "Settings", "Memory cards", "Log",
-                                                                            "Clear logs"]
-    assert [b.caption.text() for b in window.header_pills[1:]] == ["RPCS3 version", "Your games",
-                                                                    "Available in Steam"]
+                                                                            "Memory cards", "Settings",
+                                                                            "View logs", "Clear logs"]
+    # The owner's order (20-11-2026), as shadPS4 Manager's: the version, Install, Uninstall and Refresh in the
+    # header, the games' pills, Available in Steam and Play time under it. The Your games box went.
+    assert [b.caption.text() for b in window.header_pills] == ["RPCS3 version", "Install", "Uninstall",
+                                                               "Click to refresh"]
+    assert [b.caption.text() for b in window.second_row] == ["Install", "Uninstall", "Available in Steam", "Account", "Play time"]
+    assert not hasattr(window, "games_box") and not hasattr(window, "remove_game_button")
+    # Two columns under the pills: the states, each name with a colon, and the installed version beside them
+    names = [w.text() for w in window.centralWidget().findChildren(QLabel)
+             if w.text().endswith(":") and w.styleSheet() == "font-weight:700;"]
+    assert names == ["RPCS3:", "Firmware:", "Disc games:", "PKG games:", "RPCN:", "Installed version:"]
+    assert window.version_state.text() == "—"
     for name in ("play_button", "firmware_box", "refresh_button", "install_button", "remove_button",
                  "firmware_button", "folder_button", "forget_button", "forget_pill", "folders_state",
                  "firmware_pill", "folder_pill"):                                   # the last two: fixed folders
@@ -113,18 +125,20 @@ def test_before_installing(qapp, folders):
     # The action pills: what it is for in large type, what the pill does under it, the header pills' size and all
     # one width (owner, 24-10-2026: Games Install in place of Remove folder, which is a link in the Disc games line).
     assert [(p.value.text(), p.caption.text()) for p in window.actions] == [
-        ("RPCS3", "Install"), ("RPCS3", "Uninstall"), ("Games", "Install"), ("RPCN", "Account")]
+        ("Games", "Install"), ("Games", "Uninstall"), ("RPCN", "Account")]
+    assert [(p.value.text(), p.caption.text()) for p in window.header_pills[1:3]] == [
+        ("RPCS3", "Install"), ("RPCS3", "Uninstall")]
     assert all(p.sizeHint().height() == window.refresh_pill.sizeHint().height() for p in window.actions)
     window.show()                                       # spread over the width: all one width, no gap at the end
     window.centralWidget().layout().activate()
-    assert len({p.width() for p in window.actions}) <= 2            # equal but for a pixel of rounding
+    assert len({p.width() for p in window.second_row}) <= 2            # equal but for a pixel of rounding
     assert abs(window.tabs.tabBar().tabRect(0).height() - window.install_pill.height()) <= 2   # tabs as big
     assert window.time_box.geometry().right() >= window.tabs.geometry().right() - 1    # Play time, the row's last
     assert len({p.width() for p in window.header_pills}) <= 2       # the header's pills spread the same way
-    assert window.steam_box.geometry().right() >= window.tabs.geometry().right() - 1
+    assert window.refresh_pill.geometry().right() >= window.tabs.geometry().right() - 1
     window.place_states()                               # the states end at the middle of the last pill (owner)
     window.centralWidget().layout().activate()
-    centre = window.steam_box.mapTo(window, window.steam_box.rect().center()).x()
+    centre = window.refresh_pill.mapTo(window, window.refresh_pill.rect().center()).x()
     right = window.controller.mapTo(window, window.controller.rect().topRight()).x()
     assert abs(right - centre) <= 8 and window.pill.x() < window.rpcn_pill.x() < window.controller.x()
     assert "RPCS3's release notes" in window.intro.text() and emulator.RELEASE_PAGE in window.intro.text()
@@ -159,7 +173,7 @@ def test_installed_with_firmware_and_games(qapp, folders):
         f"1 game(s) installed in RPCS3's games folder: {folders['rpcs3_home'] / 'dev_hdd0' / 'game'}\n")
     assert "Install takes the folder with your .pkg files" in window.pkg_state.toolTip()
     assert window.disc_state.text().endswith("Games/PS3</b>") and "1 disc game(s) found" in window.disc_state.toolTip()
-    assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
+    assert window.table.rowCount() == 2 and window.steam_box.value.text() == "0"
     assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled() and window.package_pill.isEnabled()
     head = window.table.horizontalHeader().model()
     assert [head.headerData(c, Qt.Orientation.Horizontal) for c in range(6)] == [
@@ -281,7 +295,7 @@ esac
                                              f"--headless --installpkg {packages / 'A-Update.pkg'}"]
     assert window.running.text() == ("1 game(s) installed in RPCS3: Three (NPUB00003); 1 license(s) copied into "
                                      f"RPCS3; 1 file(s) that are no PS3 package. RPCS3's log: {rpcs3_log}")
-    assert window.pkg_state.text() == "<b>dev_hdd0/game/</b>" and window.games_box.value.text() == "3"
+    assert window.pkg_state.text() == "<b>dev_hdd0/game/</b>" and window.table.rowCount() == 3
     assert window.package_pill.isEnabled()
     window.close()
 
@@ -665,7 +679,7 @@ def test_the_blue_look(qapp, folders):
     assert window.covers_button.property("primary") is None and window.steam_button.property("primary")
     assert window.rpcs3_button.property("primary") is None
     assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
-    for pill in (window.refresh_pill, *window.actions):
+    for pill in (*window.header_pills, *window.actions):
         sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
@@ -675,7 +689,7 @@ def test_the_blue_look(qapp, folders):
     # (owner, 24-10-2026: it showed another background color).
     window.show()
     qapp.processEvents()
-    assert window.focusWidget() is window.refresh_pill
+    assert window.focusWidget() is window.emulator_box           # the header's first pill, since 20-11-2026
     image = window.grab().toImage()
     for widget in (window.refresh_pill, window.emulator_box):
         corner = widget.mapTo(window, widget.rect().topLeft())
@@ -731,7 +745,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
     older.write_text("17-11-2026 10:00:00 INFO older\n")
     window = _window(folders)
     tabs, clear = window.tabs, window.clear_tab.index
-    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "Log"
+    assert tabs.tabText(clear) == "Clear logs" and tabs.tabText(clear - 1) == "View logs"
     assert clear == tabs.count() - 1 and "Manager started" in window.output.toPlainText()
     tabs.setCurrentIndex(clear - 1)
     tabs.tabBarClicked.emit(clear)
@@ -754,12 +768,12 @@ def test_the_blueprint_layout(qapp, folders):
     bar = window.tabs.tabBar()
     assert window.width() == 900 == window.minimumWidth()
     assert window.centralWidget().minimumSizeHint().width() <= 900 and window.height() == 606
-    assert window.tabs.widget(2) is window.settings_scroll                      # the Settings tab scrolls: no higher
+    assert window.tabs.widget(3) is window.settings_scroll                      # the Settings tab scrolls: no higher
     assert window.settings_scroll.widget() is window.settings_page and window.settings_scroll.widgetResizable()
-    assert window.tabs.tabText(3) == "Memory cards" and window.tabs.widget(3) is window.saves_page
+    assert window.tabs.tabText(2) == "Memory cards" and window.tabs.widget(2) is window.saves_page
     assert window.time_box.caption.text() == "Play time" and window.time_box.y() == window.account_pill.y()
     assert window.time_box.x() > window.account_pill.x() and abs(window.time_box.width()
-                                                                 - window.install_pill.width()) <= 1
+                                                                 - window.second_row[0].width()) <= 1
     assert bar.count() == 6 and len({bar.tabRect(i).width() for i in range(6)}) <= 2    # equal but for a pixel
     assert not bar.drawBase()
     assert bar.tabRect(0).left() <= 1 and abs(bar.tabRect(5).right() - (window.tabs.width() - 1)) <= 1
@@ -914,7 +928,7 @@ def test_the_settings_tab_is_not_squeezed_under_the_introduction(qapp, folders):
     unreadable on the board)."""
     _install(folders["home"])
     window = _window(folders)
-    window.tabs.setCurrentIndex(2)
+    window.tabs.setCurrentIndex(3)                      # Settings
     window.show()
     qapp.processEvents()
     assert window.intro.minimumHeight() == window.intro.heightForWidth(window.intro.width()) > 0
@@ -933,7 +947,7 @@ def test_unmute_bazzites_volume(qapp, folders, tmp_path):
     state.write_text('[stream-properties]\nOutput/Audio:application.name:RPCS3={"volume":1.000000, "mute":true}\n')
     window = _window(folders, sound_state=state)
     page = window.settings_page
-    window.tabs.setCurrentIndex(2)
+    window.tabs.setCurrentIndex(3)                      # Settings
     window.show()
     qapp.processEvents()
     assert page.sound_path == state and page.unmute_button.isVisible()
@@ -972,16 +986,16 @@ def test_unmute_bazzites_volume(qapp, folders, tmp_path):
 
 
 def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
-    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    """Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
     deletes the rows still ticked off the window's thread and says what went and what stayed."""
     from PyQt6.QtWidgets import QDialog
     from bazzite_console_core.keep_dialog import KeepDialog
     _install(folders["home"])
     window = _window(folders)
-    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    assert not window.remove_game_pill.isEnabled()                            # nothing chosen yet
     window.table.selectRow(0)
     game = window.chosen()
-    assert game.title == "One" and window.remove_game_button.isEnabled()
+    assert game.title == "One" and window.remove_game_pill.isEnabled()
     target = tmp_path / "Games" / "PS3" / "one"
     assert target.exists()
     seen = []
@@ -1032,12 +1046,17 @@ def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypa
     tabs.setCurrentIndex(2)
     tabs.tabBarClicked.emit(start)                                           # a click on the tab
     tabs.setCurrentIndex(start)                                              # as the click goes on to select it
+    assert window.running.text().startswith(f"Starting {title} through Steam")      # off the window's thread
+    _wait(window, qapp)
     assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
-    assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
-    assert tabs.currentIndex() == 2                                          # Settings is still open
+    assert opened[0].startswith("steam://rungameid/")
+    assert window.running.text() == f"{title} runs, started through Steam."
+    assert tabs.currentIndex() == 2                                          # Memory cards is still open
+    window.table.selectRow(0)
     window.open_url = lambda url: False
     window.on_start_game()
-    assert window.running.text() == f"{title} could not be started: xdg-open is missing."
+    _wait(window, qapp)
+    assert window.running.text() == f"{title} was not started: xdg-open is missing."
     window.close()
 
 
@@ -1066,4 +1085,74 @@ def test_the_version_pill(qapp, folders, monkeypatch):
                         lambda dialog: opened.append((dialog.home, dialog.tested.version, dialog.member)) or 0)
     actions[-1].trigger()
     assert opened == [(home, emulator.VERSION, emulator.MEMBER)]
+    window.close()
+
+
+def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypatch):
+    """Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never
+    started, while the line said it did): Steam is started and waited for before the game's address is given, and
+    what went wrong is said. While RPCS3 runs, no second one is started."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    opened, ran, ready = [], [], iter([False, False, True])
+    window = _window(folders, open_url=lambda url: opened.append(url) or True,
+                     steam_play=lambda url, open_url, started: steam.play(
+                         url, open_url, lambda: bool(opened), run=ran.append, running=lambda: False,
+                         ready=lambda: next(ready), sleep=lambda seconds: None))
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    window.table.selectRow(0)
+    title = window.chosen().title
+    window.on_start_game()
+    _wait(window, qapp)
+    assert ran == [steam.start_command()] and len(opened) == 1
+    assert window.running.text() == f"{title} runs, started through Steam."
+
+    def never(url, open_url, started):
+        raise steam.SteamError("Steam did not start within 120 seconds.")
+    window.steam_play = never
+    window.table.selectRow(0)
+    window.on_start_game()
+    _wait(window, qapp)
+    assert window.running.text() == f"{title} was not started: Steam did not start within 120 seconds."
+    window.rpcs3_running = lambda: True
+    window.table.selectRow(0)
+    window.on_start_game()
+    assert window.running.text() == "RPCS3 is running: close it first, then start the game."
+    window.close()
+
+
+def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp, folders, monkeypatch):
+    """Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
+    that and a feature to fix it"): the window says which game is there more than once, the box's tooltip too, and
+    Update Steam, lit for it, leaves one shortcut."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    window = _window(folders)
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert window.doubles == {} and not window.steam_button.isEnabled()
+    (path,) = folders["steam_dir"].glob("userdata/*/config/shortcuts.vdf")
+    values = steam.read_vdf(path.read_bytes())
+    items = list(values["shortcuts"].values())
+    ours = next(item for item in items if shortcuts.ours(item))
+    lower = {("exe" if k == "Exe" else "launchoptions" if k == "LaunchOptions" else k): v for k, v in ours.items()}
+    path.write_bytes(steam.write_vdf({"shortcuts": {str(n): i for n, i in enumerate([*items, lower])}}))
+    window.refresh()
+    title = window.games[0].title
+    assert list(window.doubles.values()) == [1]
+    assert window.running.text() == f"In Steam more than once: {title} (2 times). Update Steam leaves one of each."
+    assert window.table.item(0, 0).toolTip() == "In Steam 2 times: Update Steam leaves one"
+    assert window.steam_button.isEnabled() and window.steam_box.value.text() == "1"
+    asked = []
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]),
+                                                                  QMessageBox.StandardButton.Yes)[1])
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert "1 double shortcut(s) taken out" in asked[0]
+    left = [i for i in steam.read_vdf(path.read_bytes())["shortcuts"].values() if shortcuts.ours(i)]
+    assert len(left) == 1 and window.doubles == {} and not window.steam_button.isEnabled()
+    assert window.table.item(0, 0).toolTip() == "In Steam"
     window.close()

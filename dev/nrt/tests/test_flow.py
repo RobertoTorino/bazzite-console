@@ -412,9 +412,11 @@ def test_the_step_to_do_follows_the_release():
     assert flow.current_step(flow.Facts(run=_run(), behind=1)) == "finish"
     assert flow.current_step(flow.Facts(run=_run())) == ""                               # out and pulled
     waiting = flow.Facts(run=_run(), building=("Wiki on main",))                         # GitHub still runs
-    assert flow.current_step(waiting) == "ready" and flow.step_states(waiting)["finish"] == "done"
-    assert flow.current_step(flow.Facts(run=_run(), behind=1, building=("Wiki on main",))) == "finish"
-    assert flow.KEYS[-1] == "ready" and len(flow.KEYS) == 10
+    assert flow.current_step(waiting) == "ready" and flow.step_states(waiting)["finish"] == "later"
+    # No git pull while jobs run (owner, 20-11-2026): the wait comes first, the pull is the last step
+    both = flow.Facts(run=_run(), behind=1, building=("Wiki on main",))
+    assert flow.current_step(both) == "ready" and flow.step_states(both)["finish"] == "later"
+    assert flow.KEYS[-2:] == ("ready", "finish") and len(flow.KEYS) == 10
     assert flow.current_step(flow.Facts(run=_run(), drafts=["x"], dirty=True)) == "commit"  # a fix after Not OK
 
 
@@ -808,18 +810,47 @@ def test_times_and_deviations_in_words():
 def test_the_clock_starts_with_the_first_step_pressed_and_ends_when_the_release_on_github_passed():
     """Owner, 20-11-2026: the current release is "the release that is NOW started with step 1 in NRT"."""
     none = flow.Facts()
-    assert flow.clock_step((0, 0), "commit", False, none, 100) == (0, 0)             # nothing pressed yet
-    assert flow.clock_step((0, 0), "commit", True, none, 100) == (100, 0)            # Commit runs: it starts
-    assert flow.clock_step((100, 0), "push", True, none, 160) == (100, 0)            # and goes on through the steps
+    assert flow.clock_step(flow.NO_CLOCK, "commit", False, none, 100) == flow.NO_CLOCK   # nothing pressed yet
+    assert flow.clock_step(flow.NO_CLOCK, "commit", True, none, 100) == (100, 0, 0, 100)    # Commit runs: it starts
+    assert flow.clock_step((100, 0, 0, 100), "push", True, none, 160) == (100, 0, 0, 100)   # on through the steps
     running = flow.Facts(run=_timed("abc", "release.yml", 300, 0))
-    assert flow.clock_step((100, 0), "run", False, running, 400) == (100, 0)
+    assert flow.clock_step((100, 0, 0, 100), "run", False, running, 400) == (100, 0, 0, 100)
     passed = flow.Facts(run=_timed("abc", "release.yml", 300, 520), drafts=["x"])
-    assert flow.clock_step((100, 0), "test", False, passed, 530) == (100, 520)       # the run's end, as GitHub has it
-    assert flow.clock_step((100, 520), "ready", False, passed, 900) == (100, 520)    # the later steps add nothing
-    assert flow.clock_step((100, 520), "finish", True, passed, 900) == (100, 520)    # nor does its git pull
-    assert flow.clock_step((100, 520), "commit", True, none, 2000) == (2000, 0)      # the next release: anew
+    done = flow.clock_step((100, 0, 0, 100), "test", False, passed, 530)        # the run's end, as GitHub has it
+    assert done == (100, 520, 420, 0) and flow.clock_time(done, 9000) == 420
+    assert flow.clock_step(done, "ready", False, passed, 900) == done           # the later steps add nothing
+    assert flow.clock_step(done, "finish", True, passed, 900) == done           # nor does its git pull
+    assert flow.clock_step(done, "commit", True, none, 2000) == (2000, 0, 0, 2000)       # the next release: anew
     failed = flow.Facts(run=_timed("abc", "release.yml", 300, 520, conclusion="failure"))
-    assert flow.clock_step((100, 0), "run", False, failed, 530) == (100, 0)          # its fix is still this release
+    assert flow.clock_step((100, 0, 50, 0), "run", False, failed, 530) == (100, 0, 50, 0)   # its fix: this release
+
+
+def test_the_clock_counts_the_work_and_not_the_waiting():
+    """Owner, 20-11-2026 ("very bizarre numbers"): a window left open between Get up to date and Commit counted 40
+    minutes of waiting, 48 minutes against the 3 of the release before. Only what works counts: a command here,
+    GitHub's CI on the commit, the release run."""
+    none, building = flow.Facts(), flow.Facts(ci="building")
+    clock = flow.clock_step(flow.NO_CLOCK, "pull", True, none, 1000)            # Get up to date runs, 10 s
+    clock = flow.clock_step(clock, "commit", False, none, 1010)                 # done: the tool waits for the owner
+    assert clock == (1000, 0, 10, 0) and flow.clock_time(clock, 3000) == 10     # 40 minutes later: still 10 s
+    assert flow.clock_step(clock, "commit", False, none, 3400) == clock
+    clock = flow.clock_step(clock, "commit", True, none, 3400)                  # Commit runs, 5 s
+    assert clock == (1000, 0, 10, 3400) and flow.clock_time(clock, 3403) == 13  # counting while it runs
+    clock = flow.clock_step(clock, "push", False, none, 3405)
+    clock = flow.clock_step(clock, "push", True, none, 3500)                    # Push, with CI's jobs here: 300 s
+    clock = flow.clock_step(clock, "ci", False, building, 3800)                 # GitHub's CI goes on: no gap
+    assert clock == (1000, 0, 15, 3500)
+    clock = flow.clock_step(clock, "start", False, flow.Facts(ci="passed", something=True), 4400)   # CI passed
+    assert clock == (1000, 0, 915, 0)                                           # waiting for Start: not counted
+    clock = flow.clock_step(clock, "start", True, none, 4500)
+    running = flow.Facts(run=_timed("abc", "release.yml", 4510, 0))
+    clock = flow.clock_step(clock, "run", False, running, 4520)                 # the release run: no gap either
+    passed = flow.Facts(run=_timed("abc", "release.yml", 4510, 4700), drafts=["x"])
+    clock = flow.clock_step(clock, "test", False, passed, 4730)
+    assert clock == (1000, 4700, 1115, 0) and flow.clock_time(clock, 9999) == 1115
+    assert not flow.clock_working("ci", False, flow.Facts(ci="failed"))         # a failed CI waits for its fix
+    assert not flow.clock_working("run", False, failed := flow.Facts(run=_timed("a", "release.yml", 1, 2,
+                                                                               conclusion="failure"))) and failed
 
 
 def test_the_page_shows_the_previous_release_the_current_one_and_the_deviation(release_window, monkeypatch):
@@ -837,7 +868,7 @@ def test_the_page_shows_the_previous_release_the_current_one_and_the_deviation(r
     assert page.time_now.value.text() == page.time_deviation.value.text() == "—"
     monkeypatch.setattr(release_page.time, "time", lambda: 10_000.0)
     page.run_clock("commit", True, flow.Facts())                                # Commit pressed: the clock starts
-    assert page.clock == (10_000.0, 0.0) and page.ticking.isActive()
+    assert page.clock == (10_000.0, 0.0, 0.0, 10_000.0) and page.ticking.isActive()
     monkeypatch.setattr(release_page.time, "time", lambda: 10_090.0)
     page.show_times()
     assert page.time_now.value.text() == "1 min 30 s so far" and page.time_deviation.value.text() == "—"
@@ -849,14 +880,14 @@ def test_the_page_shows_the_previous_release_the_current_one_and_the_deviation(r
     assert "is taking 3 min 20 s longer" in page.slow_note.text() and not page.slow_banner.isHidden()
     passed = flow.Facts(run=_timed("c" * 40, "release.yml", 10_210, 10_400), drafts=["x"])
     page.run_clock("test", False, passed)                                       # the release on GitHub passed
-    assert page.clock == (10_000.0, 10_400.0) and not page.ticking.isActive()
+    assert page.clock == (10_000.0, 10_400.0, 400.0, 0.0) and not page.ticking.isActive()
     page.times_checked([flow.ReleaseTime("c" * 40, 60, 200, at=10_200), out])
     assert page.time_now.value.text() == "6 min 40 s" and page.time_before.value.text() == "8 min 20 s"
     assert page.time_deviation.value.text() == "−1 min 40 s" and page.slow_banner.isHidden()
     assert page.recorded() == {"c" * 40: 400.0}
     page.times_checked(OSError("offline"))                                      # GitHub not reached: as it was
     assert len(page.times) == 2 and page.time_now.value.text() == "6 min 40 s"
-    page.clock, page.clock_sha = (0.0, 0.0), ""                                 # the tool opened for the next release
+    page.clock, page.clock_sha = flow.NO_CLOCK, ""                              # the tool opened for the next release
     page.show_times()
     assert page.time_before.value.text() == "6 min 40 s" and "Measured here" in page.time_before.toolTip()
     assert page.time_now.value.text() == "—"
@@ -868,17 +899,19 @@ def test_a_clock_left_running_is_kept_and_one_that_ended_or_is_old_is_not(releas
     from PyQt6.QtCore import QSettings
     from nexus_release_tool import release_page
     w, page = release_window, release_window.release_page
-    assert page.kept_clock() == (0.0, 0.0)                                      # no settings
+    assert page.kept_clock() == flow.NO_CLOCK                                   # no settings
     w.settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "nexus", "nrt-test")
     start = clock.time() - 60
-    w.settings.setValue(release_page.CLOCK_KEY, f"{start} 0.0")
-    assert page.kept_clock() == (start, 0.0)                                    # the tool restarted during a release
-    w.settings.setValue(release_page.CLOCK_KEY, f"{start} {start + 30}")
-    assert page.kept_clock() == (0.0, 0.0)                                      # ended: the next release is new
-    w.settings.setValue(release_page.CLOCK_KEY, f"{start - flow.CLOCK_STALE} 0.0")
-    assert page.kept_clock() == (0.0, 0.0)
+    w.settings.setValue(release_page.CLOCK_KEY, f"{start} 0.0 25.0 {start + 40}")
+    assert page.kept_clock() == (start, 0.0, 25.0, 0.0)     # restarted during a release: its work, not the closed time
+    w.settings.setValue(release_page.CLOCK_KEY, f"{start} {start + 30} 30.0 0.0")
+    assert page.kept_clock() == flow.NO_CLOCK                                   # ended: the next release is new
+    w.settings.setValue(release_page.CLOCK_KEY, f"{start - flow.CLOCK_STALE} 0.0 5.0 0.0")
+    assert page.kept_clock() == flow.NO_CLOCK
+    w.settings.setValue(release_page.CLOCK_KEY, f"{start} 0.0")                 # the form of before: start and end
+    assert page.kept_clock() == flow.NO_CLOCK
     w.settings.setValue(release_page.CLOCK_KEY, "nonsense")
-    assert page.kept_clock() == (0.0, 0.0)
+    assert page.kept_clock() == flow.NO_CLOCK
 
 
 def test_the_times_are_read_through_the_windows_source(release_window):
@@ -973,8 +1006,9 @@ def test_start_does_not_follow_by_itself_when_the_settings_say_so_or_another_com
 
 
 def test_the_last_step_waits_until_github_runs_nothing_more(release_window, monkeypatch):
-    """Owner, 20-11-2026: step 9 had its check while the wiki still ran on GitHub. The tenth step is the one to do
-    until every run finished, then says All runs finished, ready."""
+    """Owner, 20-11-2026: step 9 had its check while the wiki still ran on GitHub, git pull could be pressed while
+    jobs still ran, and the tool said finished while git pull was still to press. All runs finished is the ninth
+    step and waits; git pull, the tenth, lights only after it; ready is said once the pull is in."""
     w = release_window
     page = w.release_page
     head = sh(w.root, "rev-parse", "HEAD").strip()
@@ -985,10 +1019,21 @@ def test_the_last_step_waits_until_github_runs_nothing_more(release_window, monk
     monkeypatch.setattr(w.build, "runs", [wiki, release])
     page.show_state()
     assert flow.current_step(page.facts) == "ready" and page.marks["ready"].text() == "▶"
-    assert page.marks["finish"].text() == "✓" and page.titles["ready"].text() == "10. All runs finished"
-    assert "GitHub still runs Wiki on main: wait until it finished" in page.details["ready"].text()
-    monkeypatch.setattr(w.build, "runs", [_run(head, "docs.yml", "Wiki"), release])
+    assert page.titles["ready"].text() == "9. All runs finished"
+    assert page.titles["finish"].text() == "10. Bring in the pin commit" and page.marks["finish"].text() != "✓"
+    assert page.details["ready"].text() == "GitHub still runs Wiki on main: wait until it finished. Nothing to press."
+    assert not page.finish_button.isEnabled() and page.details["finish"].text() != flow.READY
+    pin = _run("f" * 40, "ci.yml", "CI", status="in_progress", conclusion="")    # the pin commit, not pulled yet
+    monkeypatch.setattr(w.build, "runs", [pin, wiki, release])
     page.show_state()
-    assert page.marks["ready"].text() == "✓" and page.details["ready"].text() == flow.READY == \
-        "All runs finished, ready."
+    assert page.facts.behind == 1 and flow.current_step(page.facts) == "ready"  # jobs run: no git pull yet
+    assert not page.finish_button.isEnabled() and "git pull comes after it" in page.details["ready"].text()
+    monkeypatch.setattr(w.build, "runs", [_run("f" * 40, "ci.yml", "CI"), _run(head, "docs.yml", "Wiki"), release])
+    page.show_state()
+    assert flow.current_step(page.facts) == "finish" and page.finish_button.isEnabled()     # all finished: pull
+    assert page.marks["ready"].text() == "✓" and page.details["finish"].text() != flow.READY
+    monkeypatch.setattr(w.build, "runs", [_run(head, "docs.yml", "Wiki"), release])         # pulled
+    page.show_state()
+    assert page.marks["finish"].text() == "✓" and page.details["finish"].text() == flow.READY == \
+        "The release is out and pulled in: ready."
     assert flow.still_running([wiki, wiki, release]) == ("Wiki on main",)

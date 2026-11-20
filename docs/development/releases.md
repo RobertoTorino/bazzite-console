@@ -115,11 +115,12 @@ explanation.
    **CI passes** and **Start new release**, which builds the portal anew (a portal that was never published keeps
    its version; the apps already out are skipped). Until the fix is committed, **Device test** and **Publish**
    stay at hand, for a Not OK pressed by mistake.
-9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. Publish fetches main with the new
-   tag, so it lights as soon as Publish ends (or as soon as GitHub's runs on main show that commit).
-10. **All runs finished:** nothing to press. Publish starts more runs on GitHub (the wiki, the runs on the
-    portal's tag), and the step waits for them, with their names in its line. When GitHub runs nothing more, the
-    line reads *All runs finished, ready.* and every step shows ✓.
+9. **All runs finished:** nothing to press. Publish starts more runs on GitHub (the wiki, the runs on the
+   portal's tag). The step waits until they all finished and names the ones still running. **git pull** of the next
+   step stays off until then.
+10. **Bring in the pin commit** (**git pull**): the last step. The *Pin ...* commit is on main, and the tool knows
+    of it once Publish fetched main (or GitHub's runs on main show that commit). The step lights when GitHub runs
+    nothing more. After the pull its line reads *The release is out and pulled in: ready.* and every step shows ✓.
 
 Above the steps, three boxes say how long a release takes up to its device test: **Previous release**, **Current
 release** and the **Deviation** between the two.
@@ -128,9 +129,10 @@ release** and the **Deviation** between the two.
   tool measured for it. For a release the tool did not time, it is GitHub's own time: its CI before Start and its
   release run. The box's tooltip says which.
 - **Current release** is the release you are making. Its time starts with the first step you press (Get up to
-  date, Commit, Push or Start new release), runs on this computer's clock with the waiting included, and ends when
-  the release on GitHub passed. Until you press a step it shows a dash. A tool that is closed and opened again
-  during a release keeps the time.
+  date, Commit, Push or Start new release) and ends when the release on GitHub passed. It adds up the time the steps
+  work: a command that runs on this computer, GitHub's CI on the commit and the release run. The time the tool
+  waits for you between two steps is not counted. Until you press a step it shows a dash. A tool that is closed and
+  opened again during a release keeps the time worked until then.
 - **Deviation** is the current release against the previous one. Over 2 minutes longer, it also shows in an
   orange banner; under that, or at 0 or less, it shows in its box only. The limit is `DEVIATION_LIMIT` in
   `dev/nrt/nexus_release_tool/flow.py`.

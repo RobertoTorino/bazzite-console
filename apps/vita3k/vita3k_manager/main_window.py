@@ -9,7 +9,12 @@ nothing here needs root. The look is the app's own blue (style.py).
 
 A game runs from Steam: the tab beside Your games, Start game, starts the chosen one there (owner, 12-11-2026).
 Vita3K's own window (Vita3K settings, under the games) stays for what the Settings tab does not set. What the window
-says it also writes to the app's log (core's applog), shown in the Log tab."""
+says it also writes to the app's log (core's applog), shown in the View logs tab.
+
+The owner's order of 20-11-2026, shadPS4 Manager's, replaces the one above: the header's pills are Vita3K's (its
+version, Install, Uninstall) and Refresh; the row under them the games' pills and Available in Steam, with Play
+time where the emulator counts it; then two columns, the state lines and the installed version beside them; then the
+tabs, Memory cards before Settings and the log's as View logs."""
 
 from __future__ import annotations
 
@@ -50,12 +55,12 @@ INSTALL_WATCH_LIMIT = 300               # checks, so 10 minutes: Vita3K's own wi
 INSTALL_TIMEOUT = 900                   # seconds for Vita3K to install a firmware file or a package without a window
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
-CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the Log tab"
+CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER = range(5)             # the table's columns
 WIDTH = 900                             # the window opens this wide, and is never narrower (owner, 18-11-2026)
 HEIGHT = 606                            # the window opens this high (owner, 18-11-2026); it was 800
-GAMES, START, SETTINGS, SAVES, LOG = range(5)               # the tabs
+GAMES, START, SAVES, SETTINGS, LOG = range(5)               # the tabs
 # The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
 # advice are in its tip.
 NOT_INSTALLED = "Not installed. Install it with the Install button."
@@ -63,6 +68,9 @@ INSTALLED = "Installed. Uninstall with the Uninstall button."
 VERSIONS_TIP = "Put another installed Vita3K build in use, or download one in the version manager"
 
 RUNNING_REMOVE = "Vita3K is running: close it first, then remove the game."
+RUNNING_START = "Vita3K is running: close it first, then start the game."
+UNINSTALL_GAME_TIP = ("Delete the game chosen under Your games from the disk: a window lists what would go, and you "
+                      "untick what to keep; nothing is deleted before you confirm")
 
 
 class Vita3kSettings(SettingsStore):
@@ -94,7 +102,8 @@ class MainWindow(QMainWindow):
                  vita3k_running=emulator.running, user_home: Path | None = None,
                  drives: Callable[[], list[Path]] = library.removable_drives, log_path: Path | None = None,
                  open_url=xdg_open,
-                 devices: Path = controllers.DEVICES):
+                 devices: Path = controllers.DEVICES,
+                 steam_play=steam.play):
         """*home*: where the app installs Vita3K; *vita3k_config*: Vita3K's settings folder (its config.yml says
         where its storage is); *steam_dir*: Steam's folder (None: looked up); *run*: the run wrapper the shortcuts
         start; *fetch*: the download; *steam_closed* and *steam_running*: closing Steam for a change and asking
@@ -102,8 +111,9 @@ class MainWindow(QMainWindow):
         *covers_key*: where the covers are kept, how SteamGridDB is asked and the suite's key file (tests never touch
         the real ones); *vita3k_running*: whether Vita3K runs (its settings are left alone then); *user_home*: the
         home folder with the app's own folder, Games/Vita (library.fixed); *drives*: the removable drives looked at
-        for one; *log_path*: the app's log file, as the Log tab shows it (__main__ set it up); *open_url*: opens a
-        URL on the desktop (the Steam link)."""
+        for one; *log_path*: the app's log file, as the View logs tab shows it (__main__ set it up); *open_url*: opens a
+        URL on the desktop (the Steam link).
+        *steam_play*: starts a game by its Steam address and waits until it runs (Start game)."""
         super().__init__()
         self.setMinimumWidth(WIDTH)                     # never narrower (owner, 18-11-2026)
         self.resize(WIDTH, HEIGHT)
@@ -123,6 +133,7 @@ class MainWindow(QMainWindow):
         self.covers_key = covers_key
         self.log_path = log_path or applog.log_file(APP_ID)
         self.open_url = open_url
+        self.steam_play = steam_play
         self.devices = devices                          # the kernel's list of input devices, for the controller state
         self.controllers: list[str] | None = None       # the controllers last seen; None before the first look
         self.log = applog.logger(APP_ID)
@@ -141,6 +152,8 @@ class MainWindow(QMainWindow):
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
         self.no_cover: set[str] = set()               # games in Steam not yet looked up on SteamGridDB, with a key
+        self.doubles: dict[str, int] = {}             # games in Steam more than once: how many shortcuts too many
+        self._doubles_said: dict[str, int] = {}
         self.version = ""
         self.replaced = False                       # the AppImage updated itself to a build the app was not tried with
         self.vita_fs = userdata.default_storage()
@@ -167,13 +180,7 @@ class MainWindow(QMainWindow):
         self.emulator_box = style.action_pill("—", "Vita3K version", VERSIONS_TIP)
         self.versions_menu = QMenu(self)
         self.emulator_box.clicked.connect(self.on_versions_menu)
-        self.games_box = MetricBox("Your games", style.BLUE)
         self.steam_box = MetricBox("Available in Steam", style.BLUE)
-        # The header's pills spread over the window's width in equal parts, as the action pills below.
-        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box]
-        for box in self.header_pills:
-            box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            header.add_second(box, 1)
         # The two links alone (owner, 18-11-2026), in the type of a pill's caption (Click to refresh): what the
         # app is for is in the wiki.
         self.intro = hint_label(style.caption_link(self, emulator.RELEASE_PAGE, "Vita3K's release notes") + " · "
@@ -197,12 +204,23 @@ class MainWindow(QMainWindow):
         self.game_menu.addAction("From a dumped folder…", self.on_install_game_folder)
         self.game_pill.clicked.connect(
             lambda: self.game_menu.popup(self.game_pill.mapToGlobal(self.game_pill.rect().bottomLeft())))
-        self.actions = [self.install_pill, self.remove_pill, self.game_pill]
-        # Play time beside them (owner, 18-11-2026): all games together, as Vita3K counts it
+        # Games Uninstall (owner, 20-11-2026): a pill in place of the Remove game… button under the table
+        self.remove_game_pill = style.action_pill("Games", "Uninstall", UNINSTALL_GAME_TIP)
+        self.remove_game_pill.clicked.connect(self.on_remove_game)
+        # Play time (owner, 18-11-2026): all games together, as Vita3K counts it
         self.time_box = MetricBox("Play time", style.BLUE)
+        # The owner's order (20-11-2026), as shadPS4 Manager's. The header: Vita3K's version, Install and
+        # Uninstall, then Refresh. The row under it: the games' Install and Uninstall, Available in Steam and Play time
+        # (the Your games box went: the table lists them). Each row's pills share the width in equal parts.
+        self.header_pills = [self.emulator_box, self.install_pill, self.remove_pill, self.refresh_pill]
+        for box in self.header_pills:
+            box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            header.add_second(box, 1)
+        self.actions = [self.game_pill, self.remove_game_pill]    # the row's pills that act
+        self.second_row = [self.game_pill, self.remove_game_pill, self.steam_box, self.time_box]
         actions = QHBoxLayout()
         actions.setSpacing(8)
-        for pill in (*self.actions, self.time_box):     # each a quarter of the width, whatever the window's
+        for pill in self.second_row:                    # each a quarter of the width, whatever the window's
             pill.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             actions.addWidget(pill, 1)
 
@@ -218,11 +236,21 @@ class MainWindow(QMainWindow):
         infos = {self.firmware_state: self.firmware_info, self.folders_state: self.folders_info}
         for row, (name, state) in enumerate((("Vita3K", self.emulator_state), ("Firmware", self.firmware_state),
                                              ("Game folder", self.folders_state))):
-            label = QLabel(name)
-            label.setStyleSheet("font-weight:700;")
-            label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-            grid.addWidget(label, row, 0)
+            grid.addWidget(self._name_label(name), row, 0)
             grid.addWidget(_with_info(state, infos[state]) if state in infos else state, row, 1)
+        # A second column beside the states (owner, 20-11-2026): the Vita3K version installed
+        self.version_state = self._state_label()
+        second = QGridLayout()
+        second.setColumnStretch(1, 1)
+        second.setHorizontalSpacing(14)
+        second.setVerticalSpacing(6)
+        second.addWidget(self._name_label("Installed version"), 0, 0)
+        second.addWidget(self.version_state, 0, 1)
+        second.setRowStretch(1, 1)
+        columns = QHBoxLayout()
+        columns.setSpacing(14)
+        columns.addLayout(grid, 1)
+        columns.addLayout(second, 1)
 
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(["In Steam", "Game title", "Id", "Version", "Folder"])
@@ -244,10 +272,6 @@ class MainWindow(QMainWindow):
         self.vita3k_button.setToolTip("Open Vita3K's own window for what the Settings tab does not set: its other "
                                       "settings, the controls and its game list")
         self.vita3k_button.clicked.connect(self.on_open_vita3k)
-        self.remove_game_button = QPushButton("Remove game…")
-        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and "
-                                           "you untick what to keep; nothing is deleted before you confirm")
-        self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Steam artwork…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Steam "
                                       "gives each game a cover from SteamGridDB in Steam's library")
@@ -263,7 +287,6 @@ class MainWindow(QMainWindow):
         buttons.addWidget(self.steam_info)
         buttons.addStretch(1)
         buttons.addWidget(self.vita3k_button)
-        buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
         games_page = QWidget()
@@ -301,13 +324,14 @@ class MainWindow(QMainWindow):
         self.settings_scroll.setWidgetResizable(True)
         self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.settings_scroll.setWidget(self.settings_page)
-        self.tabs.addTab(self.settings_scroll, "Settings")
         # Memory cards (owner, 18-11-2026): the saves Vita3K keeps, each under its game's title (saves_page.py)
         self.saves_page = SavesPage(lambda: self.vita_fs, lambda: {g.name: g.title for g in self.games},
                                     self.vita3k_running, self.log)
         self.tabs.addTab(self.saves_page, "Memory cards")
-        self.tabs.addTab(log_page, "Log")
-        # Clear logs (owner, 18-11-2026): beside the Log tab, a tab that is a button and empties the log
+        # Memory cards before Settings, and the log's tab is View logs (owner, 20-11-2026)
+        self.tabs.addTab(self.settings_scroll, "Settings")
+        self.tabs.addTab(log_page, "View logs")
+        # Clear logs (owner, 18-11-2026): beside the View logs tab, a tab that is a button and empties the log
         self.clear_tab = ActionTab(self.tabs, "Clear logs", CLEAR_TIP, self.on_clear_logs)
 
         self.running = WrappedLabel()
@@ -321,7 +345,7 @@ class MainWindow(QMainWindow):
         lay.addSpacing(4)
         lay.addLayout(actions)
         lay.addSpacing(4)
-        lay.addLayout(grid)
+        lay.addLayout(columns)
         lay.addSpacing(6)
         lay.addWidget(self.tabs, 1)
         lay.addWidget(self.running)
@@ -336,6 +360,14 @@ class MainWindow(QMainWindow):
             self.restoreGeometry(geometry)
         self.refresh()
         self.release_check.start(newer_release)
+
+    @staticmethod
+    def _name_label(name: str) -> QLabel:
+        """What a state line is about, bold, with a colon (owner, 20-11-2026)."""
+        label = QLabel(f"{name}:")
+        label.setStyleSheet("font-weight:700;")
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        return label
 
     @staticmethod
     def _state_label() -> QLabel:
@@ -358,13 +390,22 @@ class MainWindow(QMainWindow):
         self.games = installed(self.vita_fs)
         try:
             self.in_steam = shortcuts.in_steam(self.steam_dir) if self.steam_dir else {}
+            self.doubles = shortcuts.doubles(self.steam_dir) if self.steam_dir else {}
             self.no_cover = ({g.name for g in self.games if g.name in self.in_steam
                               and not covers.known(self.covers_home, shortcuts.cover_name(g))}
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_cover = {}, set()
+            self.doubles = {}
         self._show_state()
         self._fill_table()
+        # The same game in Steam more than once (owner, 20-11-2026): said once, and Update Steam leaves one
+        if self.doubles and self.doubles != self._doubles_said:
+            titles = {g.name: g.title for g in self.games}
+            names = [f"{titles.get(key) or self.in_steam.get(key) or key} ({extra + 1} times)"
+                     for key, extra in self.doubles.items()]
+            self.say(f"In Steam more than once: {', '.join(names)}. Update Steam leaves one of each.", ok=False)
+        self._doubles_said = dict(self.doubles)
         self.settings_page.load()
         self.saves_page.load()
 
@@ -398,20 +439,20 @@ class MainWindow(QMainWindow):
                                        "it, before starting a game from Steam.")
 
     def say(self, text: str, ok: bool = True) -> None:
-        """What the window has to say: the line under the tabs, the Log tab and the log file."""
+        """What the window has to say: the line under the tabs, the View logs tab and the log file."""
         self.running.setStyleSheet("font-weight:600;" + ("" if ok else "color:#c62828;"))
         self.running.setText(text)
         self.note(text, ok)
 
     def note(self, text: str, ok: bool = True) -> None:
-        """Into the Log tab and the log file only: something that happened, not what the window is doing now."""
+        """Into the View logs tab and the log file only: something that happened, not what the window is doing now."""
         (self.log.info if ok else self.log.error)(text)
         stamp = time.strftime(applog.DATE)
         self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
 
     def on_clear_logs(self) -> None:
         """Clear logs (owner, 18-11-2026): the app's log file emptied, with the older ones kept beside it, and the
-        Log tab with them. Said in the line under the tabs only, so the log stays empty."""
+        View logs tab with them. Said in the line under the tabs only, so the log stays empty."""
         if not applog.clear(APP_ID, self.log_path):
             self.say(f"The log could not be cleared: {private(self.log_path)}", ok=False)
             return
@@ -460,6 +501,8 @@ class MainWindow(QMainWindow):
             tip += (f"\nVita3K build {self.newer.version} is out ({self.newer.published}). A later version of this "
                     f"app brings a newer build, once it has been tried on the board: {self.newer.url}")
         self.emulator_state.setToolTip(tip)
+        self.version_state.setText(escape(self.version) if self.version else "—")   # whole: the pill shortens it
+        self.version_state.setToolTip(tip)
 
         fw = self.firmware                      # the state of each part; where it comes from: the info symbol
         official = style.link(self, userdata.FIRMWARE_PAGE, "here")
@@ -488,7 +531,6 @@ class MainWindow(QMainWindow):
         self.folders_state.setToolTip("\n".join(private(f) for f in self.folders)
                                       + f"\n{len(self.games)} game(s) installed in Vita3K's storage, "
                                       f"{private(self.vita_fs)}.")
-        self.games_box.set_value(str(len(self.games)))
         self._show_play_time()
         found = {g.name for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
@@ -516,7 +558,9 @@ class MainWindow(QMainWindow):
             box = QTableWidgetItem()
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
             box.setCheckState(Qt.CheckState.Checked if game.name in self.in_steam else Qt.CheckState.Unchecked)
-            box.setToolTip("In Steam" if game.name in self.in_steam else "Not in Steam")
+            box.setToolTip(f"In Steam {self.doubles[game.name] + 1} times: Update Steam leaves one"
+                           if game.name in self.doubles else "In Steam" if game.name in self.in_steam else
+                           "Not in Steam")
             self.table.setItem(row, STEAM, box)
             for column, text in ((GAME, game.title), (SERIAL, game.title_id), (VERSION, game.version),
                                  (FOLDER, str(game.folder))):
@@ -551,10 +595,10 @@ class MainWindow(QMainWindow):
         self.game_pill.setEnabled(idle and installed_)
         self.vita3k_button.setEnabled(idle and installed_)
         self.covers_button.setEnabled(idle)
-        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
+        self.remove_game_pill.setEnabled(idle and self.chosen() is not None)
         add, remove = self.steam_plan()
         named = shortcuts.names(add)
-        changed = bool(remove) or any(self.in_steam.get(g.name) != named[g.name] or g.name in self.no_cover
+        changed = bool(remove) or bool(self.doubles) or any(self.in_steam.get(g.name) != named[g.name] or g.name in self.no_cover
                                       for g in add)
         self.steam_button.setEnabled(idle and changed and self.steam_dir is not None and not steam.game_mode())
         if self.steam_dir is None:
@@ -764,7 +808,7 @@ class MainWindow(QMainWindow):
             self.say("Steam could not be opened: xdg-open is missing.", ok=False)
 
     def on_remove_game(self) -> None:
-        """Remove game… (owner, 03-11-2026: before deleting anything, let
+        """Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026: before deleting anything, let
         the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
         every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
         the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves
@@ -809,7 +853,10 @@ class MainWindow(QMainWindow):
 
     def on_start_game(self) -> None:
         """The Start game tab (owner, 12-11-2026): the chosen game started through Steam, as its shortcut there
-        starts it (steam://rungameid/ with the shortcut's number; Steam starts first when it does not run)."""
+        starts it (steam://rungameid/ with the shortcut's number). Off the window's thread, with core's play(): a
+        Steam that does not run is started and waited for before the game's address is given, and the line says
+        the game runs only once Vita3K does (owner, 20-11-2026, first in shadPS4 Manager: Steam, started with
+        the address, came up and never started the game)."""
         game = self.chosen()
         if game is None:
             self.say("Choose a game under Your games first: Start game starts the chosen one in Steam.", ok=False)
@@ -822,10 +869,19 @@ class MainWindow(QMainWindow):
         if number is None:
             self.say(f"{game.title} is not in Steam yet: tick it and press Update Steam first.", ok=False)
             return
-        if self.open_url(steam.play_url(number)):
-            self.say(f"Steam starts {game.title}.")
-        else:
-            self.say(f"{game.title} could not be started: xdg-open is missing.", ok=False)
+        if self.vita3k_running():
+            self.say(RUNNING_START, ok=False)
+            return
+        url, title = steam.play_url(number), game.title
+        play, open_url, started = self.steam_play, self.open_url, self.vita3k_running
+
+        def job() -> tuple[bool, str]:
+            try:
+                play(url, open_url, started)
+            except steam.SteamError as error:
+                return False, f"{title} was not started: {error}"
+            return True, f"{title} runs, started through Steam."
+        self._start(f"Starting {title} through Steam (Steam starts first when it does not run)…", job)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:
@@ -839,6 +895,8 @@ class MainWindow(QMainWindow):
             self.say("Install Vita3K first: the games in Steam start it.", ok=False)
             return
         text = f"{len(add)} game(s) in Steam" + (f", {len(remove)} taken out." if remove else ".")
+        if self.doubles:
+            text += f"\n{sum(self.doubles.values())} double shortcut(s) taken out: each game stays in Steam once."
         if self.steam_running():
             text += "\n\nSteam closes for it and starts again in the background."
         if not self._ask("Steam", text):
@@ -895,7 +953,7 @@ class MainWindow(QMainWindow):
 
     def place_states(self) -> None:
         """The state ends at the middle of the last header pill: the spacer after it is half its width."""
-        self.states_spacer.setFixedWidth(max(0, self.steam_box.width() // 2))
+        self.states_spacer.setFixedWidth(max(0, self.header_pills[-1].width() // 2))
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
         if self.worker.running and not self._ask("Close", "A download, an install or a change to Steam is still "

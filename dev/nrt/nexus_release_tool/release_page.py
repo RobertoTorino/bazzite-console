@@ -53,9 +53,11 @@ RUNNING_ELSE = "A command runs. Its output is on the Commands tab; the steps go 
 REJECTED_KEY = "release/rejected"     # "<run url>|<portal tag>" of each Not OK, the newest 20
 DEFAULT_MESSAGE = "see changelog"      # the commit message the field starts with (owner, 05-11-2026)
 PILLS_PX = 360                        # the pills column of the steps: two pills side by side, or the message field
-CLOCK_KEY = "release/clock"           # "<start> <end>" of the release being made, seconds since the epoch; end 0
+CLOCK_KEY = "release/clock"           # "<start> <end> <worked> <since>" of the release being made (flow.Clock)
                                       # while it is made
-RECORDED_KEY = "release/recorded"     # "<release commit>:<seconds>" of each release timed here, the newest 20
+# "<release commit>:<seconds>" of each release timed here, the newest 20 (release/recorded held the times of before,
+# waiting included)
+RECORDED_KEY = "release/worked"
 TIME_BOX_PX = 240                     # each of the three time boxes (owner, 20-11-2026: wider; "9 min 39 s so far"
                                       # filled its box from edge to edge)
 
@@ -271,20 +273,22 @@ class ReleasePage(QWidget):
             self.times = result
         self.show_times()
 
-    def kept_clock(self) -> tuple[float, float]:
+    def kept_clock(self) -> flow.Clock:
         """The clock a window before this one left running, so a restart of the tool in the middle of a release keeps
-        its time. One that ended is over (owner, 20-11-2026: "If I open NRT to start a new release ... everything
-        before it is previous"), as is one that is too old to be a release still being made."""
+        its time: what was worked until then, not the time the tool was closed. One that ended is over (owner,
+        20-11-2026: "If I open NRT to start a new release ... everything before it is previous"), as is one that is
+        too old to be a release still being made, and one kept in the form of before (start and end alone)."""
         settings = self.release_window.settings
         try:
-            start, end = (float(x) for x in str(settings.value(CLOCK_KEY, "") or "").split()) \
-                if settings is not None else (0.0, 0.0)
+            start, end, worked, _since = (float(x) for x in str(settings.value(CLOCK_KEY, "") or "").split()) \
+                if settings is not None else flow.NO_CLOCK
         except ValueError:
-            return 0.0, 0.0
-        return (start, 0.0) if start and not end and time.time() - start < flow.CLOCK_STALE else (0.0, 0.0)
+            return flow.NO_CLOCK
+        return (start, 0.0, worked, 0.0) if start and not end and time.time() - start < flow.CLOCK_STALE \
+            else flow.NO_CLOCK
 
     def recorded(self) -> dict[str, float]:
-        """The releases this tool timed, by release commit: seconds from the first step to the device test."""
+        """The releases this tool timed, by release commit: the seconds their steps worked up to the device test."""
         settings = self.release_window.settings
         marks = str(settings.value(RECORDED_KEY, "") or "").split() if settings is not None else self.recorded_here
         found = {}
@@ -305,10 +309,10 @@ class ReleasePage(QWidget):
         self.clock = clock
         settings = self.release_window.settings
         if settings is not None:
-            settings.setValue(CLOCK_KEY, f"{clock[0]} {clock[1]}")
+            settings.setValue(CLOCK_KEY, " ".join(str(value) for value in clock))
         if clock[1] and facts.run is not None:
             self.clock_sha = facts.run.sha
-            mark = f"{facts.run.sha}:{round(clock[1] - clock[0])}"
+            mark = f"{facts.run.sha}:{round(clock[2])}"
             if settings is not None:
                 kept = str(settings.value(RECORDED_KEY, "") or "").split()
                 settings.setValue(RECORDED_KEY, " ".join([*kept, mark][-20:]))
@@ -323,7 +327,7 @@ class ReleasePage(QWidget):
         the device test, counting while it is made; a dash while none is. The banner when the current one takes more
         than the limit longer; while it is made a deviation says nothing yet unless it is over the limit already."""
         times, limit = self.times, self.deviation_limit()
-        start, end = self.clock
+        start, end = self.clock[:2]
         self.times_row.setVisible(bool(times) or bool(start))
         self.slow_banner.hide()
         if bool(start and not end) != self.ticking.isActive():
@@ -339,7 +343,7 @@ class ReleasePage(QWidget):
             previous = measured if measured is not None else before.total
             self.time_before.set_value(
                 flow.duration_text(previous), f"Release commit {before.sha[:7]}. " + (
-                    "Measured here: from the first step pressed to the device test, waiting included."
+                    "Measured here: the time its steps worked, up to the device test."
                     if measured is not None else
                     f"Not timed by this tool, so GitHub's own time: its CI before Start "
                     f"{flow.duration_text(before.before) if before.before else 'not known'}, and from Start to the "
@@ -347,10 +351,11 @@ class ReleasePage(QWidget):
                     "(the push with CI's jobs here, waiting) is in it."))
         current, counting = None, False
         if start:
-            current, counting = (end or time.time()) - start, not end
+            current, counting = flow.clock_time(self.clock, time.time()), not end
             self.time_now.set_value(flow.duration_text(current) + (" so far" if counting else ""),
-                                    "From the first step pressed for this release to the device test (the end of "
-                                    "the release on GitHub), on this computer's clock, waiting included.")
+                                    "The time the steps of this release worked, added up, from the first step "
+                                    "pressed to the device test: the commands on this computer, GitHub's CI and "
+                                    "the release run. The time the tool waited for you is not counted.")
         elif times and times[0].running:        # started elsewhere, or before this window: GitHub's time so far
             current, counting = times[0].total, True
             self.time_now.set_value(flow.duration_text(current) + " so far",
@@ -563,14 +568,15 @@ class ReleasePage(QWidget):
             # After Not OK, or after a restart of NRT, which keeps nothing of its own: the draft says it is still there
             return (f"{', '.join(facts.drafts)} is still a draft, not published: Start new release replaces it with "
                     "a new one.")
-        if key == "ready" and state == "done" and facts.run is not None:
-            return flow.READY                   # a release is out and GitHub runs nothing more
+        if key == "finish" and state == "done" and facts.run is not None:
+            return flow.READY                   # a release is out, GitHub runs nothing more and it is pulled in
         if state not in ("now", "failed"):
             return ""
         window = self.release_window
         if key == "ready":
             return (f"GitHub still runs {', '.join(facts.building)}: wait until "
-                    f"{'it' if len(facts.building) == 1 else 'they'} finished. Nothing to press.")
+                    f"{'it' if len(facts.building) == 1 else 'they'} finished. Nothing to press"
+                    + (": git pull comes after it." if facts.behind else "."))
         if key == "pull":
             return f"{facts.behind} commit{'s' if facts.behind != 1 else ''} on GitHub that this checkout lacks."
         if key == "commit":
@@ -614,7 +620,7 @@ class ReleasePage(QWidget):
         if key == "publish" and facts.drafts:
             return "After the device test: Publish, or Not OK."
         if key == "finish":
-            return "The release is out: git pull brings in its Pin ... commit."
+            return "The release is out and GitHub runs nothing more: git pull brings in its Pin ... commit."
         return ""
 
     def choose_drafts(self, drafts: list[str]) -> None:
