@@ -4,7 +4,7 @@ the journal and the boot command line."""
 
 APP_NAME = "PS5 Quickfix"
 APP_ID = "ps5-quickfix"
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from pathlib import Path
 
