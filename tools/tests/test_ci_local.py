@@ -28,6 +28,14 @@ def test_every_job_of_ci_yml_and_every_matrix_entry():
     assert not ci_local.Job("windows", {"runs-on": "windows-latest"}).runs_here     # GitHub's only, not here
 
 
+def test_a_job_that_compiles_runs_alone():
+    """The native job starts a compiler per core; beside five other jobs one of them crashed for lack of memory."""
+    jobs = {j.name: j for j in ci_local.load_jobs(CI)}
+    assert [name for name, job in jobs.items() if job.compiles] == ["native"]
+    assert ci_local.Job("wheel", {"steps": [{"run": "pip install maturin\nmaturin build --release"}]}).compiles
+    assert not ci_local.Job("docs", {"steps": [{"uses": "actions/checkout@v7"}, {"run": "mkdocs build"}]}).compiles
+
+
 def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
     """ci.yml's pytest matrix is the plan job's output (tools/ci_matrix.py, fromJSON): the plan job's steps run
     here and their $GITHUB_OUTPUT lines give the entries; the plan job itself is a job too."""

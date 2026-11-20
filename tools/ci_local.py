@@ -66,6 +66,11 @@ class Job:
     def runs_here(self) -> bool:
         return "ubuntu" in str(self.spec.get("runs-on", ""))
 
+    @property
+    def compiles(self) -> bool:
+        """A job that builds with cargo: a compiler per core, each with its own memory. It runs alone."""
+        return any(re.search(r"\b(cargo|maturin)\b", str(step.get("run", ""))) for step in self.spec.get("steps", []))
+
 
 @dataclass
 class Result:
@@ -358,8 +363,12 @@ def main(argv: list[str]) -> int:
     if left := [name for name, _ in WORKFLOWS if name not in names]:
         print(f"not run: {', '.join(left)}, which this push does not start on GitHub (--all runs them)", flush=True)
     results: list[Result] = []
+    # A job that compiles runs after the others, alone: beside them its compilers ran the machine short of memory
+    # and one crashed (owner, 20-11-2026: rustc's SIGSEGV in a crate that builds when the job runs alone).
+    light, heavy = [j for j in jobs if not j.compiles], [j for j in jobs if j.compiles]
     with concurrent.futures.ThreadPoolExecutor(workers) as pool:
-        for result in pool.map(lambda j: run_job(j, base), jobs):
+        for result in itertools.chain(pool.map(lambda j: run_job(j, base), light),
+                                      (run_job(j, base) for j in heavy)):
             results.append(result)
             mark = "skip" if result.skipped else "ok  " if result.ok else "FAIL"
             print(f"  {mark} {result.job:45s} {result.seconds:6.1f} s"

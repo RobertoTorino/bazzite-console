@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2912 test functions (3300 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+2913 test functions (3301 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -41,8 +41,8 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/studio](#devstudio) | 6 | 58 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
-| [tools](#tools) | 37 | 217 | 10.2 s |
-| **All** | | **2912** | **153 s** |
+| [tools](#tools) | 37 | 218 | 10.2 s |
+| **All** | | **2913** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -3016,7 +3016,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-217 tests in 37 files, 10.2 s in a local run.
+218 tests in 37 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3089,6 +3089,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_check_versions.py` | `test_core_the_portal_and_the_apps_not_dev` |  | 0.2 s | The released folders have a VERSION; the development apps in dev/ have none and are not checked. |
 | `test_check_versions.py` | `test_venvs_caches_and_tests_hold_no_copies` |  |  | Venvs caches and tests hold no copies. |
 | `test_ci_local.py` | `test_every_job_of_ci_yml_and_every_matrix_entry` |  | 0.1 s | Every job of ci yml and every matrix entry. |
+| `test_ci_local.py` | `test_a_job_that_compiles_runs_alone` |  |  | The native job starts a compiler per core; beside five other jobs one of them crashed for lack of memory. |
 | `test_ci_local.py` | `test_a_matrix_from_a_plan_job_is_read_by_running_it` |  |  | ci.yml's pytest matrix is the plan job's output (tools/ci_matrix.py, fromJSON): the plan job's steps run here and their $GITHUB_OUTPUT lines give the entries; the plan job itself is a job too. |
 | `test_ci_local.py` | `test_a_job_the_plan_leaves_out_is_not_run_and_its_outputs_reach_the_steps` |  |  | ci.yml's plan job names what a push runs (tools/ci_matrix.py plan): a job whose if compares one of its outputs is skipped when it is false, as on GitHub, and a step reads an output as its text. |
 | `test_ci_local.py` | `test_expressions_and_selection` |  | 0.1 s | Expressions and selection. |

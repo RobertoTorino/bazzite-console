@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 05:17:28
+
+Fixed. tools/ci-local.sh runs a job that compiles (native, with cargo) after the other jobs, alone. Beside five other jobs its compilers ran the computer short of memory and rustc crashed with a SIGSEGV in a crate that builds without fault when the job runs alone. The wiki's development page says so.
+
 Changelog: 20-11-2026 04:43:05
 
 Fixed. tools/ci-local.sh builds Remote Play's FFmpeg again when apps/remoteplay/native/ffmpeg/build.sh changes, as GitHub does: tools/ci_local.py keeps the key of an actions/cache step with its folder and skips the step that fills it only under the same key, and it fills in hashFiles() from the files. It took any filled folder for a hit, so the native job found the FFmpeg of the version before and failed in build.rs. The wiki's development page says so.

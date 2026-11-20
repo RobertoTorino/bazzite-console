@@ -127,7 +127,8 @@ runner has) and Remote Play's FFmpeg; both are kept, with the venvs and the logs
 is keyed on that file. It works on a copy of the checkout with every change staged, as the commit will
 have it. The copy is named as the checkout, as GitHub's is named after the repository. One run goes at a time on a
 computer: a second one, from a terminal or Nexus Release Tool's Push, says that another run is going and waits until
-it ends, as the two would share the venvs and the logs. The push commands Nexus Release Tool shows run it first
+it ends, as the two would share the venvs and the logs. Within a run the jobs go several at a time, except a job that compiles (`native`, with
+cargo): it runs after the others, alone, since its compilers need the computer's memory for themselves. The push commands Nexus Release Tool shows run it first
 (`tools/ci-local.sh && git push`): no push when a job fails.
 
 ### Line endings and file names
