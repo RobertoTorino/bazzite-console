@@ -56,8 +56,9 @@ Wallpaper: none until the user chooses one, the portal's example picture or one 
 pill's menu sets the veil, the picture's transparency (owner, 20-10-2026): a dark picture can take a stronger one,
 so the icons on it stand out. A pill that is not active is half transparent, so the picture shows through it.
 
-Sound (owner, 21-10-2026): the intro plays with its sound, and the Sound pill turns it off (the choice is kept;
-without an audio output the pill is disabled and the portal silent). Every action plays a short sound (owner,
+Sound (owner, 21-10-2026): the intro plays with its sound, the welcome follows when the intro has ended (owner,
+20-11-2026; not after a skip), and the Sound pill turns them off (the choice is kept; without an audio output the
+pill is disabled and the portal silent). Every action plays a short sound (owner,
 05-11-2026), whatever it comes from: a controller SDL reads, a key (a controller Steam turns into keys too) or a
 click on something that acts (_input_sound, the window's filter over the whole application).
 
@@ -1589,7 +1590,7 @@ class MainWindow(QMainWindow):
 
     def start_up(self) -> None:
         """Once the window is shown: the intro over it, with its sound, and the controller; when the intro ends,
-        the focus is on the first tile, and the music starts."""
+        the focus is on the first tile, the welcome plays (not after a skip), and the music starts."""
         self._show_sound()
         self._show_music()
         self.gamepad.start()
@@ -1598,9 +1599,12 @@ class MainWindow(QMainWindow):
         self.intro.skipped.connect(self.sounds.stop)
         self.intro.begin()
         self.sounds.play(audio.INTRO)
+        self.sounds.prepare(audio.WELCOME)
 
     def _intro_done(self) -> None:
-        self.intro = None
+        intro, self.intro = self.intro, None
+        if intro is not None and not intro.was_skipped:
+            self.sounds.play(audio.WELCOME)
         self._sync_music()
         self.big.focus_first()
 

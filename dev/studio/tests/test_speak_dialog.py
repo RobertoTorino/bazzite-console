@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Voice from a text: Text to Speech found in the checkout, its voices listed, the text spoken and saved to the
-target, a failure shown, and what the dialog says without Text to Speech or without its engine."""
+"""Voice from a text: Nexus TTS found in the checkout, its voices listed, the text spoken and saved to the
+target, a failure shown, and what the dialog says without Nexus TTS or without its engine."""
 
 from __future__ import annotations
 

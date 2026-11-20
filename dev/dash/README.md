@@ -8,7 +8,7 @@
 
 One door to the tools for working on the suite. Its tiles start the development apps of the checkout, each in a window
 of its own ([Nexus Release Tool](../nrt), [Nexus Installer Tests](../itests), [Nexus Demo Recorder](../demo),
-[Nexus Sound Lab](../sounds), [Nexus Deps](../deps), [Text to Speech](../text), [Nexus Remix Studio](../studio)), and
+[Nexus Sound Lab](../sounds), [Nexus Deps](../deps), [Nexus TTS](../text), [Nexus Remix Studio](../studio)), and
 open the suite's tools: the portal's and the apps' video tours, and the category icons. A development app: it runs from the checkout it lives in and has no releases of its own.
 
 ## Start it

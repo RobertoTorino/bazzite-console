@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Text to Speech for the current user: a launcher, an app menu entry and a Desktop icon that start
+# Installs Nexus TTS for the current user: a launcher, an app menu entry and a Desktop icon that start
 # run.sh in this checkout (Linux). Nothing is copied: the app runs from the checkout it lives in, so it always runs
 # the checkout's own code. It is not part of a portal's releases. Moving the checkout needs install.sh again.
 #
@@ -13,7 +13,7 @@ APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venvs
 
 APP_ID="nexus-text-to-speech"
-APP_NAME="Text to Speech"
+APP_NAME="Nexus TTS"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 LAUNCHER="$HOME/.local/bin/$APP_ID"

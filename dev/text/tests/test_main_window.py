@@ -121,7 +121,7 @@ def _window(settings: QSettings | None = None, tmp_path: Path | None = None) -> 
 
 
 def test_the_info_text_links_to_the_apps_place_in_the_wiki():
-    assert main_window.WIKI.endswith("/development/dashboard/#text-to-speech")
+    assert main_window.WIKI.endswith("/development/dashboard/#nexus-tts")
     assert "//development" not in main_window.WIKI
     assert f"<a href='{main_window.WIKI}'>the wiki</a>" in main_window.ABOUT
 
@@ -134,7 +134,7 @@ def test_the_icons_are_nexus_at_512_and_128_px():
 
 def test_the_window_opens_on_the_engine_and_lists_its_voices(qapp, installed):
     window = MainWindow(speech=FakeSpeech(), player=FakePlayer())
-    assert window.windowTitle() == APP_NAME == "Text to Speech"
+    assert window.windowTitle() == APP_NAME == "Nexus TTS"
     assert window.pages.currentIndex() == 0 and window.speech.started == 1
     assert window.state.text() == "Starting" and not window.speak_button.isEnabled()
     assert not window.voice_box.isEnabled() and not window.save_button.isEnabled()

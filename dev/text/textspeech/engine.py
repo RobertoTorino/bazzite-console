@@ -303,7 +303,7 @@ def serve(models: Path) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="engine", description="The speech engine of Text to Speech.")
+    parser = argparse.ArgumentParser(prog="engine", description="The speech engine of Nexus TTS.")
     parser.add_argument("action", choices=("fetch", "serve"))
     parser.add_argument("--models", type=Path, required=True, help="the folder of the model files")
     args = parser.parse_args(argv)

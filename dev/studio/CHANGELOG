@@ -1,3 +1,17 @@
+Changelog: 20-11-2026 20:48:17
+
+Fixed. The window, the dialog From a text and the README say Nexus TTS, the new name of Text to Speech (owner,
+20-11-2026).
+
+Changelog: 20-11-2026 20:13:31
+
+Added. The Voice part removes silence and saves the voice alone (owner, 20-11-2026: open a file, remove the silence
+and save a copy). Remove silence cuts the silence at the start and the end of the voice. A pause inside the voice
+stays. Silence below sets what counts as silence, from -60 dB to -20 dB, and the app opens with -40 dB. Each cut gets
+a fade of 5 ms, so it does not click. Only the voice in the window changes, and the sound file stays as it is. Save a
+copy writes the voice alone as an Ogg Vorbis, MP3, FLAC or WAV file. It never writes over the voice's own file. The
+silence level is remembered with the other settings.
+
 Changelog: 18-11-2026 16:36:28
 
 Added. Nexus Remix Studio, a Nexus app in dev/studio/ (owner, 18-11-2026: a small remix studio, a voice track

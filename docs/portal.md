@@ -10,7 +10,7 @@ keyboard, the mouse or a controller alike. The [Portal Tour](portal-tour.md) sho
 
 The portal opens with a short animated intro, about three seconds, with its own sound: the suite's icon and its
 name, **BAZZITE CONSOLE SUITE**, before the view appears. Press any key, click, or press any button on the controller
-to skip it.
+to skip it. When the intro has played to its end, a short welcome sound follows. A skipped intro gets none.
 
 **The header**: the suite's icon, as large as a tile's (click it to watch the [Portal Tour](portal-tour.md) over the whole screen: **A** or Space pauses it, **B** or Esc closes it, and without a connection it opens in the browser), its name (click it to open this wiki) with the version,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
@@ -136,7 +136,7 @@ checkout, or give it a menu entry with its `install.sh`.
 - **Nexus Installer Tests** runs the installer tests one at a time.
 - **Nexus Demo Recorder** records a portal installation.
 - **Nexus Sound Lab** makes short sound effects for the windows.
-- **Text to Speech** speaks a text aloud.
+- **Nexus TTS** speaks a text aloud.
 - **Nexus Remix Studio** mixes a voice with a synthesized background.
 - The video tours and the icons have a tile each.
 
@@ -226,7 +226,7 @@ checkout, or give it a menu entry with its `install.sh`.
   installers put there, at start and after each install. It only touches the icons of the suite's apps, never its
   own or anything else on the Desktop.
 - **Sound**, on the Settings page (Yes or No; click it to switch): the intro plays its sound when the portal opens,
-  and every action gives a short sound: each move and button on a controller, each key that acts (the arrow keys,
+  the welcome sound follows it, and every action gives a short sound: each move and button on a controller, each key that acts (the arrow keys,
   Enter, Space, Escape, Tab, Page Up and Page Down, Q, E, U, S, K, M and the Menu key) and each click on a tile, a
   symbol, a pill, a button, a category or a menu entry. Any controller works, also one Steam turns into keys. A key held down
   sounds once, and typing in a text field stays silent. No switches both off. The portal remembers the choice.

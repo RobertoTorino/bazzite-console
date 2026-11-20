@@ -26,6 +26,9 @@ class Output:
     def available(self) -> bool:
         return self.there
 
+    def prepare(self, _name: str) -> None:
+        pass
+
     def play(self, _name: str) -> bool:
         return False
 

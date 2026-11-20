@@ -1,3 +1,17 @@
+Changelog: 20-11-2026 21:19:22
+
+Added. The portal has its own welcome sound, which plays when the intro has ended (owner, 20-11-2026). It is
+sounds/welcome.wav, made by the owner in Nexus Remix Studio and turned up by 4 dB for the portal. It plays at full
+volume, where the other sounds play at 0.7. A skipped intro gets no welcome, and the Sound pill turns it off with the
+other sounds. The music starts at the same moment, as before.
+
+Changelog: 20-11-2026 20:45:28
+
+Added. The portal can play a welcome sound when the intro has ended (owner, 20-11-2026). It plays sounds/welcome.wav
+at full volume, where the other sounds play at 0.7. This suite has no such file, so its portal plays none and
+nothing changes. The code is the same as in the BC250 Bazzite Suite, which has its own welcome sound. A skipped
+intro gets no welcome, and the Sound pill turns it off with the other sounds.
+
 Changelog: 20-11-2026 19:26:09
 
 Release 4.5.0. Pins ps5-board-v0.8.0, ps5-quickfix-v0.4.0, ps5-upscaler-v0.6.0, ps5-rpcs3-v1.5.0, ps5-remoteplay-v1.5.0, ps5-clb-v1.5.0, ps5-shadps4-v1.5.0, ps5-datstation-v1.5.0, ps5-ppsspp-v1.5.0, ps5-pcsx2-v1.5.0, ps5-vita3k-v1.6.0, ps5-xenia-v1.6.0, ps5-sftp-v1.6.0, ps5-webcam-v1.6.0, ps5-controller-v1.6.0, ps5-ssd-v1.6.0, ps5-overlay-v1.5.0, ps5-fan-v2.5.0, ps5-cec-v2.5.0, ps5-bluetooth-v0.6.0, ps5-password-v0.4.0.

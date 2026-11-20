@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Sound files: another rate and one channel become the mix's rate in stereo, each format is written and read back,
-a failed write leaves nothing, and a drawing gets its peaks."""
+a failed write leaves nothing, a drawing gets its peaks, and the silence at a voice's start and end is cut."""
 
 from __future__ import annotations
 
@@ -91,3 +91,29 @@ def test_a_drawing_gets_the_lowest_and_highest_sample_of_each_part():
     assert found == [pytest.approx((0.1, 0.5)), pytest.approx((-0.3, 0.2))]
     assert len(audio.peaks(sound, 9)) == 9                  # more columns than samples: each still has one
     assert audio.peaks(sound, 0) == [] and audio.peaks(np.zeros((0, 2), np.float32), 5) == []
+
+
+def test_the_silence_at_the_start_and_the_end_is_cut_and_what_lies_between_stays():
+    quiet = np.zeros((RATE // 2, 2), np.float32)
+    voice = audio.stereo(tone(440.0, RATE, 1.0))
+    pause = np.zeros((RATE // 4, 2), np.float32)                # a pause inside the voice is no edge
+    found, start, end = audio.trim_silence(np.concatenate([quiet, voice, pause, voice, quiet, quiet]))
+    assert (start, end) == (0.5, 1.0) and len(found) == int(2.25 * RATE)
+    assert found[0].tolist() == [0.0, 0.0] and float(np.abs(found[: RATE // 100]).max()) > 0.1      # a short fade
+    assert np.array_equal(found[RATE // 100:RATE], voice[RATE // 100:])
+
+
+def test_the_level_says_what_counts_as_silence():
+    soft = audio.stereo(tone(440.0, RATE, 1.0)) * 0.004         # about -48 dB
+    loud = audio.stereo(tone(440.0, RATE, 1.0))
+    sound = np.concatenate([soft, loud])
+    assert audio.trim_silence(sound, -60)[1:] == (0.0, 0.0)
+    assert audio.trim_silence(sound, -40)[1:] == (1.0, 0.0)
+    assert audio.trim_silence(sound, -60)[0] is not sound       # a copy either way
+
+
+def test_a_voice_that_is_all_silence_says_so():
+    with pytest.raises(AudioError, match="The whole voice is softer than -40 dB"):
+        audio.trim_silence(np.zeros((RATE, 2), np.float32))
+    with pytest.raises(AudioError, match="softer than -20 dB"):
+        audio.trim_silence(audio.stereo(tone(440.0, RATE)) * 0.01, -20)

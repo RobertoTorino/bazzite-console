@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Sound files in and out. A voice file of any rate and any number of channels becomes float32 stereo at the mix's
 rate; the mix is written as Ogg Vorbis, MP3, FLAC or WAV, 16-bit where the format has a width. Both go through
-libsndfile (the soundfile package)."""
+libsndfile (the soundfile package). A voice can lose the silence at its start and its end (trim_silence)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,10 @@ FORMATS = {".ogg": ("OGG", "VORBIS"), ".mp3": ("MP3", "MPEG_LAYER_III"), ".flac"
            ".wav": ("WAV", "PCM_16")}
 OPEN_FILTER = "Sound files (*.wav *.ogg *.oga *.flac *.mp3 *.aiff *.aif);;All files (*)"
 TAPS = 16                               # the samples around each new one that resample() weighs
+SILENCE_LEVELS = (-60, -50, -40, -30, -20)  # dB under full scale: what stays below the one chosen counts as silence
+SILENCE_LEVEL = -40
+SILENCE_WINDOW = 0.01                   # seconds: the sound is weighed in parts this long
+EDGE_FADE = 0.005                       # seconds: the fade at a cut, so it does not click
 
 
 class AudioError(Exception):
@@ -82,6 +86,28 @@ def save(path: Path, sound: np.ndarray, rate: int = RATE) -> None:
         raise AudioError(f"{path.name} could not be written: {error}") from error
 
 
+def trim_silence(sound: np.ndarray, level: float = SILENCE_LEVEL,
+                 rate: int = RATE) -> tuple[np.ndarray, float, float]:
+    """*sound* without the silence at its start and its end, and the seconds taken from each. Silence is every part
+    of SILENCE_WINDOW whose loudest sample stays below *level* dB; what lies between the first and the last louder
+    part stays whole. A cut gets a fade of EDGE_FADE. Raises AudioError when no part reaches *level*."""
+    window = max(1, int(SILENCE_WINDOW * rate))
+    loudest = np.maximum.reduceat(np.abs(sound).max(axis=1), np.arange(0, len(sound), window)) if len(sound) else []
+    loud = np.flatnonzero(np.asarray(loudest) >= 10 ** (level / 20))
+    if not len(loud):
+        raise AudioError(f"The whole voice is softer than {level:g} dB. Choose a lower level.")
+    start, end = int(loud[0]) * window, min(len(sound), (int(loud[-1]) + 1) * window)
+    kept = sound[start:end].copy()
+    ramp = min(int(EDGE_FADE * rate), len(kept) // 2)
+    if ramp:
+        rise = (np.arange(ramp, dtype=np.float32) / ramp)[:, None]
+        if start:
+            kept[:ramp] *= rise
+        if end < len(sound):
+            kept[len(kept) - ramp:] *= rise[::-1]
+    return kept, start / rate, (len(sound) - end) / rate
+
+
 def pcm(sound: np.ndarray) -> bytes:
     """*sound* as 16-bit samples for the audio output."""
     return (np.clip(sound, -1.0, 1.0) * 32767).astype("<i2").tobytes()
@@ -100,4 +126,5 @@ def peaks(sound: np.ndarray, columns: int) -> list[tuple[float, float]]:
     return list(zip(low.tolist(), high.tolist()))
 
 
-__all__ = ["AudioError", "FORMATS", "OPEN_FILTER", "TAPS", "load", "pcm", "peaks", "resample", "save", "stereo"]
+__all__ = ["AudioError", "EDGE_FADE", "FORMATS", "OPEN_FILTER", "SILENCE_LEVEL", "SILENCE_LEVELS", "SILENCE_WINDOW",
+           "TAPS", "load", "pcm", "peaks", "resample", "save", "stereo", "trim_silence"]

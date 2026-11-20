@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the pills Play, Stop, Save as and Reset in the header, then the three parts of a remix from top to bottom. Voice takes
-a sound file or a text spoken by Text to Speech's engine. Background is a preset, a chord and three sliders, with Try
+a sound file or a text spoken by Nexus TTS's engine; Remove silence cuts the silence at its start and its end,
+and Save a copy writes the voice alone, as it is then. Background is a preset, a chord and three sliders, with Try
 background to hear it alone. Mix sets the volumes, the lead-in, the tail and the fade, and draws the result. The mix
 is made in a thread, so the window never waits on it; a mix that was just played is saved as it was heard. The
 voice file, the background, the mix and the save folder are remembered in the settings."""
@@ -45,6 +46,7 @@ VOICE_KEY = "voice_file"
 OPEN_DIR_KEY = "open_dir"
 SAVE_DIR_KEY = "save_dir"
 FORMAT_KEY = "format"
+SILENCE_KEY = "silence_level"
 DEFAULT_FORMAT = ".ogg"
 FILTERS = {".ogg": "Ogg Vorbis (*.ogg)", ".mp3": "MP3 (*.mp3)", ".flac": "FLAC (*.flac)", ".wav": "WAV (*.wav)"}
 CUSTOM = "Custom"                       # the preset box once a control left the preset
@@ -55,7 +57,9 @@ NO_VOICE = "No voice yet. The mix is the background alone."
 NO_OUTPUT = "No audio output was found, so the mix is not heard. Save as… still writes it."
 WIKI = f"{SUITE_MANUAL_URL}development/dashboard/#remix-studio"
 ABOUT = ("A remix has two tracks, a voice and a background.<br><br><b>Voice</b> is a sound file, or a text that "
-         "Text to Speech speaks for you. <b>Background</b> is a sustained sound made here. Choose a preset, a key "
+         "Nexus TTS speaks for you. <b>Remove silence</b> cuts the silence at the start and the end of the "
+         "voice. <b>Save a copy…</b> writes the voice alone. <b>Background</b> is a sustained sound made here. "
+         "Choose a preset, a key "
          "and a chord, and shape it with the sliders. <b>Try background</b> plays it alone.<br><br><b>Mix</b> sets "
          "how loud each track is. The background starts before the voice by the lead-in and goes on after it by the "
          "tail. It fades in and out. <b>Length</b> is how long the mix lasts. With a voice, moving it changes the "
@@ -122,6 +126,8 @@ class MainWindow(QMainWindow):
         self.resize(980, 760)
         self.voice: np.ndarray | None = None    # float32 stereo at RATE
         self.voice_path: Path | None = None
+        self.voice_name = ""                    # as the window names it: the file's name, or A spoken text
+        self.voice_cut = False                  # Remove silence took something off: no longer the file's sound
         self.voice_count = 0                    # goes up with every voice: part of what a mix was made from
         self.result: Result | None = None       # the last mix made
         self.result_of: tuple | None = None     # what it was made from
@@ -159,7 +165,7 @@ class MainWindow(QMainWindow):
         self.open_button.setToolTip("Use a WAV, Ogg Vorbis, FLAC or MP3 file as the voice")
         self.open_button.clicked.connect(lambda: self.open_voice())
         self.speak_button = QPushButton("From a text…")
-        self.speak_button.setToolTip("Have Text to Speech speak a text, and use that as the voice")
+        self.speak_button.setToolTip("Have Nexus TTS speak a text, and use that as the voice")
         self.speak_button.clicked.connect(lambda: self.speak_text())
         self.remove_button = QPushButton("Remove")
         self.remove_button.setToolTip("Take the voice out. The mix is then the background alone")
@@ -169,6 +175,23 @@ class MainWindow(QMainWindow):
             voice_row.addWidget(button)
         voice_row.addWidget(self.voice_label, 1)
         voice_layout.addLayout(voice_row)
+        silence_row = QHBoxLayout()
+        self.silence_box = self._combo([f"{level} dB" for level in audio.SILENCE_LEVELS],
+                                       "Sound that stays below this level counts as silence. A higher level cuts "
+                                       "further into a soft start or end")
+        self.silence_box.setCurrentText(f"{audio.SILENCE_LEVEL} dB")
+        self.silence_button = QPushButton("Remove silence")
+        self.silence_button.setToolTip("Cut the silence at the start and the end of the voice. The file itself is "
+                                       "not changed")
+        self.silence_button.clicked.connect(lambda: self.remove_silence())
+        self.copy_button = QPushButton("Save a copy…")
+        self.copy_button.setToolTip("Write the voice alone, as it is now, as an Ogg Vorbis, MP3, FLAC or WAV file")
+        self.copy_button.clicked.connect(lambda: self.save_voice())
+        silence_row.addWidget(QLabel("Silence below:"))
+        for widget in (self.silence_box, self.silence_button, self.copy_button):
+            silence_row.addWidget(widget)
+        silence_row.addStretch(1)
+        voice_layout.addLayout(silence_row)
         self.voice_view = WaveView()
         voice_layout.addWidget(self.voice_view, 1)
         layout.addWidget(voice_box, 2)
@@ -271,6 +294,9 @@ class MainWindow(QMainWindow):
         self.show_pad(synth.from_values(self._group(PAD_GROUP)))
         self.show_mix(mixer.from_values(self._group(MIX_GROUP)))
         if self.settings is not None:
+            level = str(self.settings.value(SILENCE_KEY, ""))
+            if self.silence_box.findText(level) >= 0:
+                self.silence_box.setCurrentText(level)
             path = str(self.settings.value(VOICE_KEY, ""))
             if path and Path(path).is_file():
                 self.open_voice(Path(path))
@@ -285,6 +311,7 @@ class MainWindow(QMainWindow):
                 self.settings.setValue(key, value)
             self.settings.endGroup()
         self.settings.setValue(VOICE_KEY, str(self.voice_path) if self.voice_path is not None else "")
+        self.settings.setValue(SILENCE_KEY, self.silence_box.currentText())
 
     # --- the background and the mix ------------------------------------------------------------------------------
     def show_pad(self, pad: Pad) -> None:
@@ -385,18 +412,44 @@ class MainWindow(QMainWindow):
         except AudioError as error:
             self.statusBar().showMessage(str(error))
             return False
-        self.voice, self.voice_path = voice, path
+        self.voice_name = "A spoken text" if path == SPOKEN else path.name
+        self.voice_path, self.voice_cut = path, False
+        self.show_voice(voice)
+        self.statusBar().showMessage(f"The voice is {self.voice_name}.")
+        return True
+
+    def show_voice(self, voice: np.ndarray) -> None:
+        """Take *voice* as the voice's sound: its label, its drawing and the mix's length follow."""
+        self.voice = voice
         self.voice_count += 1
-        name = "A spoken text" if path == SPOKEN else path.name
-        self.voice_label.setText(f"{name}, {len(voice) / RATE:.1f} s")
+        cut = ", silence removed" if self.voice_cut else ""
+        self.voice_label.setText(f"{self.voice_name}, {len(voice) / RATE:.1f} s{cut}")
         self.voice_view.set_sound(voice)
         self.show_length()
-        self.statusBar().showMessage(f"The voice is {name}.")
         self.update_controls()
+
+    def remove_silence(self) -> bool:
+        """Cut the silence at the start and the end of the voice, below the level chosen. Only the voice in the
+        window changes, never its file. False when nothing was cut."""
+        if self.busy() or self.voice is None:
+            return False
+        level = int(self.silence_box.currentText().split()[0])
+        try:
+            voice, start, end = audio.trim_silence(self.voice, level)
+        except AudioError as error:
+            self.statusBar().showMessage(str(error))
+            return False
+        if not start and not end:
+            self.statusBar().showMessage(f"The voice has no silence below {level} dB at its start or its end.")
+            return False
+        self.voice_cut = True
+        self.show_voice(voice)
+        self.statusBar().showMessage(f"Removed {start:.2f} s at the start and {end:.2f} s at the end. The file "
+                                     "itself is not changed.")
         return True
 
     def speak_text(self, dialog: SpeakDialog | None = None) -> bool:
-        """Have Text to Speech speak a text (in *dialog*; a test passes its own) and take it as the voice."""
+        """Have Nexus TTS speak a text (in *dialog*; a test passes its own) and take it as the voice."""
         dialog = dialog if dialog is not None else SpeakDialog(SPOKEN, self.settings, self)
         if not dialog.exec():
             return False
@@ -404,6 +457,7 @@ class MainWindow(QMainWindow):
 
     def remove_voice(self) -> None:
         self.voice = self.voice_path = None
+        self.voice_name, self.voice_cut = "", False
         self.voice_count += 1
         self.voice_label.setText(NO_VOICE)
         self.voice_view.set_sound(None)
@@ -419,7 +473,8 @@ class MainWindow(QMainWindow):
         for widget in (self.play_button, self.save_button, self.reset_button, self.try_button, self.open_button,
                        self.speak_button):
             widget.setEnabled(free)
-        self.remove_button.setEnabled(free and self.voice is not None)
+        for widget in (self.remove_button, self.silence_button, self.copy_button):
+            widget.setEnabled(free and self.voice is not None)
         self.sliders["voice_volume"].setEnabled(self.voice is not None)
         self.sliders["lead"].setEnabled(self.voice is not None)
         self.sliders["tail"].setEnabled(self.voice is not None)
@@ -517,11 +572,24 @@ class MainWindow(QMainWindow):
         is there once the status line says Saved."""
         if self.busy():
             return None
+        path = self.save_target(path, "Save the mix", "remix")
+        if path is None:
+            return None
+        self.remember()
+        def write(result: Result) -> None:
+            self.statusBar().showMessage(f"Saving {path.name}…")
+            self.run(lambda: audio.save(path, result.sound), lambda _none: self.statusBar().showMessage(
+                f"Saved {path}"), "Saving")
+        self.with_mix(write, "Making the mix")
+        return path
+
+    def save_target(self, path: Path | None, title: str, stem: str) -> Path | None:
+        """The file to write: *path*, or the one chosen in the dialog *title*, which offers *stem* in the last
+        format. None when canceled or when the suffix is no format. The folder and the format are remembered."""
         if path is None:
             suffix = self.save_format()
             filters = ";;".join([FILTERS[suffix], *(f for s, f in FILTERS.items() if s != suffix)])
-            chosen, used = QFileDialog.getSaveFileName(self, "Save the mix", str(self.save_dir() / f"remix{suffix}"),
-                                                       filters)
+            chosen, used = QFileDialog.getSaveFileName(self, title, str(self.save_dir() / f"{stem}{suffix}"), filters)
             if not chosen:
                 return None
             path = Path(chosen)
@@ -533,12 +601,24 @@ class MainWindow(QMainWindow):
         if self.settings is not None:
             self.settings.setValue(SAVE_DIR_KEY, str(path.parent))
             self.settings.setValue(FORMAT_KEY, path.suffix.lower())
-        self.remember()
-        def write(result: Result) -> None:
-            self.statusBar().showMessage(f"Saving {path.name}…")
-            self.run(lambda: audio.save(path, result.sound), lambda _none: self.statusBar().showMessage(
-                f"Saved {path}"), "Saving")
-        self.with_mix(write, "Making the mix")
+        return path
+
+    def save_voice(self, path: Path | None = None) -> Path | None:
+        """Write the voice alone, as it is now, to *path* or to the file chosen in the dialog; None when canceled.
+        Never over the voice's own file: a copy leaves that as it is."""
+        if self.busy() or self.voice is None:
+            return None
+        stem = "voice" if self.voice_path in (None, SPOKEN) else self.voice_path.stem
+        path = self.save_target(path, "Save a copy of the voice", f"{stem}-copy")
+        if path is None:
+            return None
+        if self.voice_path is not None and path.resolve() == self.voice_path.resolve():
+            self.statusBar().showMessage(f"{path.name} is the voice's own file. Choose another name for the copy.")
+            return None
+        voice = self.voice
+        self.statusBar().showMessage(f"Saving {path.name}…")
+        self.run(lambda: audio.save(path, voice), lambda _none: self.statusBar().showMessage(f"Saved {path}"),
+                 "Saving")
         return path
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
@@ -550,5 +630,5 @@ class MainWindow(QMainWindow):
 
 
 __all__ = ["ABOUT", "CUSTOM", "DEFAULT_FORMAT", "FILTERS", "FORMAT_KEY", "MIX_GROUP", "NO_OUTPUT", "NO_VOICE",
-           "OPEN_DIR_KEY", "PAD_GROUP", "SAVE_DIR_KEY", "SPOKEN", "TRY_SECONDS", "VOICE_KEY", "Job", "MainWindow",
-           "WaveView"]
+           "OPEN_DIR_KEY", "PAD_GROUP", "SAVE_DIR_KEY", "SILENCE_KEY", "SPOKEN", "TRY_SECONDS", "VOICE_KEY", "Job",
+           "MainWindow", "WaveView"]

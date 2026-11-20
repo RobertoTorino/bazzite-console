@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts Text to Speech with the checkout's dev venv, on the checkout it lives in.
+# Starts Nexus TTS with the checkout's dev venv, on the checkout it lives in.
 #
 #   dev/text/run.sh          # open the window
 #   dev/text/install.sh      # app menu entry and Desktop icon for this checkout (Linux)

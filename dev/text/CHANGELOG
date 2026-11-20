@@ -1,3 +1,10 @@
+Changelog: 20-11-2026 20:48:17
+
+Added. The app is named Nexus TTS (owner, 20-11-2026). It was Text to Speech. The window, the menu entry, the README
+and the wiki say the new name, and the wiki's section is #nexus-tts. The folder dev/text, the package textspeech, the
+APP_ID nexus-text-to-speech, the settings and the speech engine's folder stay as they are. Run dev/text/install.sh
+again to rename an installed menu entry.
+
 Changelog: 18-11-2026 15:27:51
 
 Added. Text to Speech, a Nexus app in dev/text/ (owner, 18-11-2026). It grew from a small Gradio example into a full

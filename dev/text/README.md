@@ -4,9 +4,9 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Text to Speech
+# Nexus TTS
 
-Text to Speech speaks an English text in a natural voice and saves the speech as an Ogg Vorbis, MP3, FLAC or WAV
+Nexus TTS speaks an English text in a natural voice and saves the speech as an Ogg Vorbis, MP3, FLAC or WAV
 file. Type or paste the text, choose one of 15 female voices, American or British, set a speed, and click Speak. The
 first sentence plays while the app makes the next ones. The voices run on the machine itself, and nothing of your text leaves it. It is a
 development app, so it runs from the checkout and has no releases. Start it from [Nexus Dashboard](../dash), or:
@@ -22,7 +22,7 @@ The first time, click Set up the speech engine in the window. It downloads the s
 about 350 MB together, into `~/.local/share/nexus-text-to-speech/`. The setup needs [uv](https://docs.astral.sh/uv/)
 (`brew install uv`), or a Python from 3.10 to 3.13 on the PATH.
 
-How to use it: [Text to Speech in the wiki](https://robertotorino.github.io/bazzite-console/development/dashboard/#text-to-speech).
+How to use it: [Nexus TTS in the wiki](https://robertotorino.github.io/bazzite-console/development/dashboard/#nexus-tts).
 
 ## License
 

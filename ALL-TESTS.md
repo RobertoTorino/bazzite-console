@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2952 test functions (3340 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+2962 test functions (3350 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -38,11 +38,11 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
 | [dev/nrt](#devnrt) | 4 | 135 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
-| [dev/studio](#devstudio) | 6 | 58 |  |
+| [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
-| [portal](#portal) | 17 | 217 | 30.2 s |
+| [portal](#portal) | 17 | 220 | 30.2 s |
 | [tools](#tools) | 38 | 225 | 10.2 s |
-| **All** | | **2952** | **153 s** |
+| **All** | | **2962** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -82,7 +82,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `sounds.sh` | Exercise dev/sounds/install.sh, Nexus Sound Lab's installer. |
 | `ssd.sh` | Exercise apps/ssd/install.sh. |
 | `studio.sh` | Exercise dev/studio/install.sh, Nexus Remix Studio's installer. |
-| `text.sh` | Exercise dev/text/install.sh, Text to Speech's installer. |
+| `text.sh` | Exercise dev/text/install.sh, Nexus TTS's installer. |
 | `upscaler.sh` | Exercise apps/upscaler/install.sh. |
 | `vita3k.sh` | Exercise apps/vita3k/install.sh. |
 | `webcam.sh` | Exercise apps/webcam/install.sh. |
@@ -2708,7 +2708,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## dev/studio
 
-58 tests in 6 files.
+65 tests in 6 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2722,12 +2722,19 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_audio.py` | `test_an_unknown_format_and_a_failed_write_leave_nothing` |  |  | An unknown format and a failed write leave nothing. |
 | `test_audio.py` | `test_the_output_gets_16_bit_samples_that_never_wrap` |  |  | The output gets 16 bit samples that never wrap. |
 | `test_audio.py` | `test_a_drawing_gets_the_lowest_and_highest_sample_of_each_part` |  |  | A drawing gets the lowest and highest sample of each part. |
+| `test_audio.py` | `test_the_silence_at_the_start_and_the_end_is_cut_and_what_lies_between_stays` |  |  | The silence at the start and the end is cut and what lies between stays. |
+| `test_audio.py` | `test_the_level_says_what_counts_as_silence` |  |  | The level says what counts as silence. |
+| `test_audio.py` | `test_a_voice_that_is_all_silence_says_so` |  |  | A voice that is all silence says so. |
 | `test_main_window.py` | `test_the_icons_are_nexus_at_512_and_128_px` |  |  | The icons are nexus at 512 and 128 px. |
 | `test_main_window.py` | `test_the_window_opens_on_the_warm_pad_without_a_voice` |  |  | The window opens on the warm pad without a voice. |
 | `test_main_window.py` | `test_without_an_output_the_status_line_says_so` |  |  | Without an output the status line says so. |
 | `test_main_window.py` | `test_a_preset_fills_the_controls_and_a_moved_control_says_custom` |  |  | A preset fills the controls and a moved control says custom. |
 | `test_main_window.py` | `test_the_sliders_show_their_value_with_its_unit` |  |  | The sliders show their value with its unit. |
 | `test_main_window.py` | `test_a_sound_file_becomes_the_voice` |  |  | A sound file becomes the voice. |
+| `test_main_window.py` | `test_remove_silence_cuts_the_voice_in_the_window_and_leaves_the_file` |  |  | Remove silence cuts the voice in the window and leaves the file. |
+| `test_main_window.py` | `test_a_voice_softer_than_the_level_stays_and_the_level_is_remembered` |  |  | A voice softer than the level stays and the level is remembered. |
+| `test_main_window.py` | `test_save_a_copy_writes_the_voice_alone_as_it_is_now` |  |  | Save a copy writes the voice alone as it is now. |
+| `test_main_window.py` | `test_a_spoken_text_is_offered_as_voice_copy` |  |  | A spoken text is offered as voice copy. |
 | `test_main_window.py` | `test_the_top_row_is_four_pills_of_one_width` |  |  | The top row is four pills of one width. |
 | `test_main_window.py` | `test_without_a_voice_length_sets_how_long_the_mix_lasts` |  |  | Without a voice length sets how long the mix lasts. |
 | `test_main_window.py` | `test_with_a_voice_length_is_lead_in_voice_and_tail_and_moving_it_sets_the_tail` |  |  | With a voice length is lead in voice and tail and moving it sets the tail. |
@@ -2824,11 +2831,13 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## portal
 
-217 tests in 17 files, 30.2 s in a local run.
+220 tests in 17 files, 30.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_bigpicture.py` | `test_the_sound_is_there_and_the_right_length` |  |  | The sound is there and the right length. |
+| `test_bigpicture.py` | `test_the_welcome_is_there_and_has_a_volume_of_its_own` |  |  | The welcome is there and has a volume of its own. |
+| `test_bigpicture.py` | `test_a_sound_is_read_ahead_only_when_it_can_play` |  |  | A sound is read ahead only when it can play. |
 | `test_bigpicture.py` | `test_sounds_stay_silent_without_output_or_when_off` |  |  | Sounds stay silent without output or when off. |
 | `test_bigpicture.py` | `test_stick_needs_a_real_push_and_goes_along_its_stronger_axis` |  |  | Stick needs a real push and goes along its stronger axis. |
 | `test_bigpicture.py` | `test_steams_virtual_pad_only_when_steam_started_the_portal` |  |  | Steams virtual pad only when steam started the portal. |
@@ -2840,6 +2849,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_bigpicture.py` | `test_the_view_is_the_window_with_the_suites_name_and_a_big_icon` |  | 0.2 s | One view (owner, 01-11-2026): the window's central widget, the header with the suite's icon larger than the 96 px of an app's header, the suite's name as the title with the version and the stage. |
 | `test_bigpicture.py` | `test_the_logo_plays_the_portal_tour_and_the_name_opens_the_wiki` |  | 0.2 s | Owner, 14-11-2026: the icon plays the Portal Tour in the portal (the wiki's video), the name opens the wiki; a tour that cannot be played opens the wiki's Portal Tour page in the browser. |
 | `test_bigpicture.py` | `test_the_portal_opens_with_the_intro_and_its_sound` |  | 0.2 s | The intro plays before the portal shows itself (owner, 01-11-2026): dark from its first frame, the suite's name in capitals; its sound plays; when it ends the focus is on the first tile and the controller listens. |
+| `test_bigpicture.py` | `test_a_skipped_intro_gets_no_welcome_and_sound_off_none_either` |  |  | The welcome follows only an intro that played to its end (owner, 20-11-2026): a skip stops the intro's sound and goes straight to the portal. |
 | `test_bigpicture.py` | `test_the_intro_draws_the_suites_name_in_capitals_and_the_1024_px_icon` |  | 0.2 s | The intro draws the suites name in capitals and the 1024 px icon. |
 | `test_bigpicture.py` | `test_any_key_skips_the_intro_and_stops_its_sound` |  | 0.2 s | Any key skips the intro and stops its sound. |
 | `test_bigpicture.py` | `test_the_controller_skips_the_intro` |  | 0.2 s | The controller skips the intro. |

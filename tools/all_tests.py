@@ -42,13 +42,13 @@ Kept = dict[tuple[str, str, str], tuple[int, float, str]]       # (folder, file,
 
 
 def suite_name(root: Path = ROOT) -> str:
-    """The suite's name as .claude/suite.md gives it in its title: "# This suite (Some Suite)". CLAUDE.md
-    is the same in every suite and names none."""
+    """The suite's name as its wiki gives it: mkdocs.yml's "site_name: Some Suite". CLAUDE.md is the same in every
+    suite and names none."""
     try:
-        text = (root / ".claude" / "suite.md").read_text(encoding="utf-8")
+        text = (root / "mkdocs.yml").read_text(encoding="utf-8")
     except OSError:
         return root.name
-    found = re.search(r"(?m)^# .*\((.+)\)\s*$", text)
+    found = re.search(r"(?m)^site_name:\s*(.+?)\s*$", text)
     return found[1] if found else root.name
 
 

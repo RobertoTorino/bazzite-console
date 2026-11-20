@@ -112,6 +112,28 @@ def test_the_sound_is_there_and_the_right_length():
     assert not (audio.SOUNDS / "swoosh.wav").exists()                   # the desktop's swoosh is gone
 
 
+def test_the_welcome_is_there_and_has_a_volume_of_its_own():
+    with wave.open(str(audio.SOUNDS / f"{audio.WELCOME}.wav"), "rb") as sound:
+        assert 1.0 <= sound.getnframes() / sound.getframerate() <= 8.0
+        assert sound.getnchannels() == 2 and sound.getsampwidth() == 2
+    assert audio.VOLUMES[audio.WELCOME] > audio.VOLUME
+
+
+def test_a_sound_is_read_ahead_only_when_it_can_play(tmp_path):
+    sounds = audio.Sounds(tmp_path)                 # no files here: nothing to read, no error
+    sounds.available = lambda: True
+    sounds.prepare(audio.WELCOME)
+    assert sounds._effects == {} and not sounds.play(audio.WELCOME)     # a suite without the file plays none
+    wanted = []
+    sounds._effect = wanted.append
+    sounds.prepare(audio.WELCOME)
+    sounds.enabled = False
+    sounds.prepare(audio.INTRO)
+    sounds.enabled, sounds.available = True, lambda: False
+    sounds.prepare(audio.INTRO)
+    assert wanted == [audio.WELCOME]
+
+
 def test_sounds_stay_silent_without_output_or_when_off(tmp_path):
     sounds = audio.Sounds(tmp_path)                 # no files here
     sounds.available = lambda: True
@@ -301,6 +323,28 @@ def test_the_portal_opens_with_the_intro_and_its_sound(made):
     intro.animation.setCurrentTime(intro.animation.duration())
     assert window.intro is None
     assert window.big.focused_tile() is window.big.current_tiles()[0]
+    assert sounds.played == [audio.INTRO, audio.WELCOME]                   # the welcome, once the intro has ended
+
+
+def test_a_skipped_intro_gets_no_welcome_and_sound_off_none_either(made):
+    """The welcome follows only an intro that played to its end (owner, 20-11-2026): a skip stops the intro's sound
+    and goes straight to the portal."""
+    sounds = FakeSounds()
+    window, _ = made(sounds=sounds)
+    window.show()
+    window.start_up()
+    window.intro.skip()
+    assert window.intro is None and sounds.played == [audio.INTRO] and sounds.stopped == 1
+
+    silent = FakeSounds()
+    silent.enabled = False
+    again, _ = made(sounds=silent)
+    again.settings.setValue(mw.SOUND_KEY, False)
+    again.sounds.enabled = False
+    again.show()
+    again.start_up()
+    again.intro.animation.setCurrentTime(again.intro.animation.duration())
+    assert again.intro is None and silent.played == []
 
 
 def test_the_intro_draws_the_suites_name_in_capitals_and_the_1024_px_icon(made):

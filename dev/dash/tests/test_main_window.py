@@ -24,7 +24,7 @@ def test_the_checkout_is_the_suite_with_its_development_apps():
     assert [app.key for app in apps] == ["nrt", "demo", "deps", "itests", "studio", "sounds", "text"]   # the release tool, then by name
     assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps",
                                           "Nexus Installer Tests", "Nexus Remix Studio", "Nexus Sound Lab",
-                                          "Text to Speech"]
+                                          "Nexus TTS"]
     assert all(app.icon is not None and app.icon.is_file() for app in apps)
     assert all(app.script.is_file() for app in apps)
     assert apps[1].log.name == "demo.log"
@@ -36,7 +36,7 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
     assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps", "Nexus Installer Tests",
-                     "Nexus Remix Studio", "Nexus Sound Lab", "Text to Speech", "Portal video tour", "Apps video tour",
+                     "Nexus Remix Studio", "Nexus Sound Lab", "Nexus TTS", "Portal video tour", "Apps video tour",
                      "Convert icons", "Close issues"]
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
     assert enabled == [True] * 11

@@ -52,7 +52,7 @@ of its own that keeps running when the dashboard closes.
 | **Nexus Installer Tests** | The suite's installer tests, one at a time ([below](#installer-tests)). |
 | **Nexus Remix Studio** | Mixes a voice with a synthesized background and saves the result ([below](#remix-studio)). |
 | **Nexus Sound Lab** | Short sound effects for the suite's windows, made from sliders ([below](#sound-lab)). |
-| **Text to Speech** | Speaks an English text in a natural voice and saves it as a sound file ([below](#text-to-speech)). |
+| **Nexus TTS** | Speaks an English text in a natural voice and saves it as a sound file ([below](#nexus-tts)). |
 
 The other tiles work on the suite:
 
@@ -194,9 +194,9 @@ preset Tick after silence shows the same from the other side: with the link asle
 window that plays such sounds needs the same loop while it is open. `dev/sounds/run.sh` and
 `dev/sounds/install.sh` start and install it on their own, and the dashboard's tile does the same.
 
-## Text to Speech
+## Nexus TTS
 
-**Text to Speech** speaks an English text in a natural voice and saves the speech as a sound file. Use it for a video's
+**Nexus TTS** speaks an English text in a natural voice and saves the speech as a sound file. Use it for a video's
 voice-over or a spoken note. The voices run on the machine itself, and nothing of your text leaves it. The app is in
 `dev/text/`.
 
@@ -252,10 +252,20 @@ The window has three parts, from top to bottom.
 
 - **Open a sound file…** takes a WAV, Ogg Vorbis, FLAC or MP3 file as the voice.
 - **From a text…** opens a small window. Type an English text, choose a voice and a speed, and click **Make the
-  voice**. [Text to Speech](#text-to-speech) speaks it, so its speech engine must be set up first.
+  voice**. [Nexus TTS](#nexus-tts) speaks it, so its speech engine must be set up first.
 - **Remove** takes the voice out. The mix is then the background alone.
+- **Remove silence** cuts the silence at the start and the end of the voice. A pause inside the voice stays.
+- **Save a copy…** writes the voice alone, as it is now, as an Ogg Vorbis, MP3, FLAC or WAV file.
 
 The voice is drawn below the buttons.
+
+**Silence below** sets what counts as silence, from -60 dB to -20 dB. The app opens with -40 dB. A higher level cuts
+further into a soft start or end. Choose -20 dB to cut a slow fade-in up to the first loud sound. The status line
+says how much was removed.
+
+**Remove silence** changes only the voice in the window. The sound file stays as it is. Open the file again to get
+the whole voice back. To trim a sound file, open it, click **Remove silence** and then **Save a copy…**. The copy
+gets a name of its own, because the app never writes over the voice's file.
 
 ### Background
 
@@ -292,7 +302,7 @@ always give the same sound.
 When both tracks together are too loud for the file, the app turns the whole mix down. It says by how much under
 the drawing. Nothing is clipped.
 
-The app remembers the voice file, the background, the mix, the save folder and the format.
+The app remembers the voice file, the silence level, the background, the mix, the save folder and the format.
 
 `dev/studio/run.sh` starts the app without the dashboard, and `dev/studio/install.sh` gives it a menu entry.
 

@@ -1082,6 +1082,7 @@ class Intro(QWidget):
         self.animation.valueChanged.connect(self._step)
         self.animation.finished.connect(self._done)
         self.done = False
+        self.was_skipped = False                # skip() ended it, not its last frame
         self.banner = ""                        # INTRO_BANNER, from set_banner()
         self.banner_at = 0.0                    # the progress when it came
 
@@ -1100,6 +1101,7 @@ class Intro(QWidget):
 
     def skip(self) -> None:
         if not self.done:
+            self.was_skipped = True
             self.skipped.emit()
         self.animation.stop()
         self._done()

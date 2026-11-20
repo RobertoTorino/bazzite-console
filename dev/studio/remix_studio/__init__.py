@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Nexus Remix Studio: a window that mixes a voice track with a synthesized background and saves the result. The
-voice is an audio file, or a text spoken by Text to Speech's engine; the background is a pad or a drone made from a
+voice is an audio file, or a text spoken by Nexus TTS's engine; the background is a pad or a drone made from a
 preset, a chord and a few sliders (pad.py); the mix sets their volumes, the lead-in, the tail and the fades (mix.py).
 A Nexus app (dev/), run from the checkout and never released (owner, 18-11-2026: a small remix studio beside Text to
 Speech and Nexus Sound Lab)."""

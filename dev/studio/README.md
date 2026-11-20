@@ -7,7 +7,7 @@
 # Nexus Remix Studio
 
 A window that mixes a voice with a synthesized background and saves the result as a sound file. The voice is a sound
-file, or a text spoken by [Text to Speech](../text). The background is a sustained sound, a pad or a drone, made in
+file, or a text spoken by [Nexus TTS](../text). The background is a sustained sound, a pad or a drone, made in
 the app from a preset, a chord and three sliders. The mix sets how loud each track is and how the background leads
 in, trails and fades.
 

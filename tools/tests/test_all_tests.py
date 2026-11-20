@@ -40,8 +40,8 @@ class TestCurve:
                                     "# Exercise apps/fan/install.sh (the guard too): install, then\n# uninstall. "
                                     "Runs with the shims.\nset -u\n", encoding="utf-8")
     (scripts / "shims.sh").write_text("# no test\n", encoding="utf-8")
-    (folder / ".claude").mkdir()
-    (folder / ".claude" / "suite.md").write_text("<!-- license -->\n\n# This suite (Some Suite)\n", encoding="utf-8")
+    (folder / "mkdocs.yml").write_text("# license\n\nsite_name: Some Suite\nsite_url: https://example.org/\n",
+                                       encoding="utf-8")
     return folder
 
 

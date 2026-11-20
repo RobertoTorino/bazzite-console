@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: the presets and Custom, a voice from a file and from a text, Play making the mix once and playing it,
+"""The window: the presets and Custom, a voice from a file and from a text, the silence cut from it and a copy of it
+saved, Play making the mix once and playing it,
 Try background, Save as in the format of the suffix, what a failure shows, the settings, and the work done in a
 thread; the icons are Nexus's."""
 
@@ -144,6 +145,89 @@ def test_a_sound_file_becomes_the_voice(window, tmp_path):
     window.remove_voice()
     assert window.voice is None and window.voice_label.text() == NO_VOICE and window.voice_view.sound is None
     assert not window.remove_button.isEnabled() and not window.sliders["lead"].isEnabled()
+
+
+def padded_voice(tmp_path, before: float = 0.5, after: float = 0.25, name: str = "padded.wav") -> Path:
+    """A second of tone with silence before and after it."""
+    path = tmp_path / name
+    tone = 0.3 * np.sin(2 * np.pi * 300 * np.arange(RATE) / RATE)
+    sound = np.concatenate([np.zeros(int(before * RATE)), tone, np.zeros(int(after * RATE))])
+    soundfile.write(str(path), sound.astype(np.float32), RATE)
+    return path
+
+
+def test_remove_silence_cuts_the_voice_in_the_window_and_leaves_the_file(window, tmp_path):
+    assert not window.silence_button.isEnabled() and not window.copy_button.isEnabled()
+    assert window.silence_box.currentText() == "-40 dB" and not window.remove_silence()
+    path = padded_voice(tmp_path)
+    before = path.read_bytes()
+    window.open_voice(path)
+    assert window.silence_button.isEnabled() and window.copy_button.isEnabled()
+    count = window.voice_count
+
+    assert window.remove_silence()
+    assert len(window.voice) == RATE and window.voice_view.sound is window.voice
+    assert window.voice_label.text() == "padded.wav, 1.0 s, silence removed"
+    assert window.statusBar().currentMessage() == ("Removed 0.50 s at the start and 0.25 s at the end. The file "
+                                                   "itself is not changed.")
+    assert window.voice_count == count + 1 and path.read_bytes() == before
+    assert window.sliders["length"].value() == 1 + 1 + 1           # the mix follows the shorter voice
+
+    assert not window.remove_silence()                              # nothing left to cut
+    assert window.statusBar().currentMessage() == "The voice has no silence below -40 dB at its start or its end."
+    assert window.voice_count == count + 1
+    window.open_voice(path)                                         # the file again: whole, as it is
+    assert window.voice_label.text() == "padded.wav, 1.8 s"
+
+
+def test_a_voice_softer_than_the_level_stays_and_the_level_is_remembered(qapp, tmp_path):
+    window = MainWindow(settings=settings_in(tmp_path), player=FakePlayer(), threads=False)
+    window.open_voice(voice_file(tmp_path))                         # a tone of 0.3, about -10 dB
+    window.voice = window.voice * 0.01
+    window.silence_box.setCurrentText("-30 dB")
+    assert not window.remove_silence() and len(window.voice) == RATE
+    assert window.statusBar().currentMessage() == "The whole voice is softer than -30 dB. Choose a lower level."
+    window.close()
+    again = MainWindow(settings=settings_in(tmp_path), player=FakePlayer(), threads=False)
+    assert again.silence_box.currentText() == "-30 dB"
+    again.close()
+
+
+def test_save_a_copy_writes_the_voice_alone_as_it_is_now(window, tmp_path, monkeypatch):
+    assert window.save_voice(tmp_path / "none.wav") is None        # no voice: nothing to write
+    path = padded_voice(tmp_path)
+    window.open_voice(path)
+    window.remove_silence()
+    asked = []
+    def dialog(_parent, title, start, _filters):
+        asked.append((title, start))
+        return str(tmp_path / "welcome"), "FLAC (*.flac)"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", dialog)
+    window.settings.setValue("save_dir", str(tmp_path))
+    assert window.save_voice() == tmp_path / "welcome.flac"
+    assert asked == [("Save a copy of the voice", str(tmp_path / "padded-copy.ogg"))]
+    sound, rate = soundfile.read(str(tmp_path / "welcome.flac"), dtype="float32")
+    assert rate == RATE and np.allclose(sound, window.voice, atol=1e-4)
+    assert window.statusBar().currentMessage() == f"Saved {tmp_path / 'welcome.flac'}"
+    assert window.result is None and not window.player.played      # the mix was not made for it
+
+    assert window.save_voice(path) is None                          # never over the voice's own file
+    assert window.statusBar().currentMessage() == ("padded.wav is the voice's own file. Choose another name for the "
+                                                   "copy.")
+    assert window.save_voice(tmp_path / "copy.txt") is None
+    assert window.statusBar().currentMessage() == "Unknown format .txt. Use .ogg, .mp3, .flac, .wav."
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *_: ("", ""))
+    assert window.save_voice() is None
+
+
+def test_a_spoken_text_is_offered_as_voice_copy(window, tmp_path, monkeypatch):
+    spoken = voice_file(tmp_path, 1.0, "voice-from-text.wav")
+    monkeypatch.setattr(main_window, "SPOKEN", spoken)
+    window.speak_text(FakeDialog(spoken))
+    asked = []
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda _p, _t, start, _f: (asked.append(start), ("", ""))[1])
+    window.settings.setValue("save_dir", str(tmp_path))
+    assert window.save_voice() is None and asked == [str(tmp_path / "voice-copy.ogg")]
 
 
 def test_the_top_row_is_four_pills_of_one_width(window):

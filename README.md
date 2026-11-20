@@ -52,7 +52,7 @@ The tools for working on the suite run from a checkout of the repository. They a
 - Nexus Installer Tests
 - Nexus Demo Recorder
 - Nexus Sound Lab
-- Text to Speech
+- Nexus TTS
 - Nexus Remix Studio
 - The video tours and the icons
 

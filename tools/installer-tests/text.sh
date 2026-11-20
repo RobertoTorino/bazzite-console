@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Exercise dev/text/install.sh, Text to Speech's installer: the launcher, menu entry and Desktop icon point at this
+# Exercise dev/text/install.sh, Nexus TTS's installer: the launcher, menu entry and Desktop icon point at this
 # checkout, --no-desktop-shortcut drops the icon, root and unknown options are refused, uninstall leaves the
 # checkout alone and keeps the settings and the speech engine, --purge removes both. Runs with the shims from
 # shims.sh (CI).

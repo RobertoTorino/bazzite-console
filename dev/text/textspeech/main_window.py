@@ -45,7 +45,7 @@ DEFAULT_FORMAT = ".ogg"
 FILTERS = {".ogg": "Ogg Vorbis (*.ogg)", ".mp3": "MP3 (*.mp3)", ".flac": "FLAC (*.flac)", ".wav": "WAV (*.wav)"}
 NO_OUTPUT = "No audio output was found, so the speech is not heard. Save as… still writes it."
 NO_TEXT = "Type a text first."
-WIKI = f"{SUITE_MANUAL_URL}development/dashboard/#text-to-speech"
+WIKI = f"{SUITE_MANUAL_URL}development/dashboard/#nexus-tts"
 SETUP_HINT = ("The speech engine is not on this machine yet. Setting it up downloads about 350 MB into {folder}. "
               "Nothing else on the machine changes.")
 ABOUT = ("Type or paste a text, choose a voice and a speed, and click <b>Speak</b> (Ctrl+Enter). <b>Stop</b> (Esc) "

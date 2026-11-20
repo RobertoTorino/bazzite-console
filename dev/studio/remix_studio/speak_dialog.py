@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""A voice track from a text: a small dialog that has Text to Speech's engine speak a text and write it as a sound
-file, which the window then takes as its voice. The engine is Text to Speech's own (dev/text in this checkout, its
-venv and model outside it); nothing of it is copied here. Where Text to Speech or its engine is not there, the dialog
+"""A voice track from a text: a small dialog that has Nexus TTS's engine speak a text and write it as a sound
+file, which the window then takes as its voice. The engine is Nexus TTS's own (dev/text in this checkout, its
+venv and model outside it); nothing of it is copied here. Where Nexus TTS or its engine is not there, the dialog
 says so and makes nothing."""
 
 from __future__ import annotations
@@ -30,14 +30,14 @@ from . import CHECKOUT
 TEXT_KEY = "speak/text"                 # the settings
 VOICE_KEY = "speak/voice"
 SPEED_KEY = "speak/speed"
-NO_TEXT_APP = "Text to Speech is not in this checkout, so a text cannot be spoken here. Open a sound file instead."
-NOT_SET_UP = ("The speech engine is not on this machine yet. Open Text to Speech from Nexus Dashboard and set it up "
+NO_TEXT_APP = "Nexus TTS is not in this checkout, so a text cannot be spoken here. Open a sound file instead."
+NOT_SET_UP = ("The speech engine is not on this machine yet. Open Nexus TTS from Nexus Dashboard and set it up "
               "there. Then come back.")
 NO_TEXT = "Type a text first."
 
 
 def text_to_speech(checkout: Path = CHECKOUT) -> SimpleNamespace | None:
-    """Text to Speech's engine, its setup and its Speech from *checkout* (dev/text), or None without it."""
+    """Nexus TTS's engine, its setup and its Speech from *checkout* (dev/text), or None without it."""
     folder = checkout / "dev" / "text"
     if not (folder / "textspeech" / "engine.py").is_file():
         return None
@@ -56,7 +56,7 @@ class SpeakDialog(QDialog):
 
     def __init__(self, target: Path, settings: QSettings | None = None, parent: QWidget | None = None,
                  parts: SimpleNamespace | None = None, speech=None, installed: bool | None = None):
-        """*parts* is Text to Speech (found in the checkout by default), *speech* its engine and *installed* whether
+        """*parts* is Nexus TTS (found in the checkout by default), *speech* its engine and *installed* whether
         that engine is on the machine; a test passes its own."""
         super().__init__(parent)
         self.setWindowTitle("Voice from a text")
