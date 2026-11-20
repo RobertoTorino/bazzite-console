@@ -8,7 +8,7 @@ import pytest
 from PyQt6 import sip
 from PyQt6.QtWidgets import QMessageBox, QWidget
 
-from sftp_tools import client_tab, common, connection, main_window, server_tab, settings
+from sftp_tools import client_tab, common, server_tab, settings
 from sftp_tools.connection import UnknownHostKeyError, server_status_after_action
 from sftp_tools.main_window import MainWindow
 from sftp_tools.server_tab import ServerManagerTab

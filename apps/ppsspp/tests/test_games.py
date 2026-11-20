@@ -8,7 +8,7 @@ import errno
 import os
 from pathlib import Path
 
-from conftest import cso_bytes, game_pictures, game_sfo, iso_bytes, make_disc, make_memstick, make_pbp, make_sfo, \
+from conftest import cso_bytes, game_pictures, game_sfo, iso_bytes, make_disc, make_pbp, make_sfo, \
     pbp_bytes
 
 from ppsspp_manager.games import (Game, installed, iso_file, memstick_game, pbp_part, ppsspp_home, read_disc,

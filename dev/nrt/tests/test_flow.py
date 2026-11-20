@@ -5,6 +5,7 @@ out), when Start can go, its one command, and the commands that follow the run."
 from __future__ import annotations
 
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -743,3 +744,109 @@ def test_the_portal_video_check(tmp_path):
     script.write_text("import sys\nsys.exit(0)\n")
     assert flow.video_reason(tmp_path, sys.executable) == ""
     assert "could not run" in flow.video_reason(tmp_path, str(tmp_path / "no-python"))
+
+
+# --- how long a release takes ---------------------------------------------------------------------------------------
+
+def _timed(sha, file, started, ended, conclusion="success", ref="main"):
+    """A run of *file* on *sha* that ran from *started* to *ended* (0: it still runs)."""
+    return rp.BuildRun("Release" if file == "release.yml" else "CI", ref, "completed" if ended else "in_progress",
+                       conclusion if ended else "", f"https://github.com/o/r/actions/runs/{sha}-{file}", sha, "t",
+                       started=started, file=file, ended=ended)
+
+
+def test_a_release_takes_its_ci_before_start_and_the_time_from_its_commit_to_the_end_of_its_run(suite):
+    """Two releases in the checkout, each a commit on top of the one CI passed on; a failed run and a run on a tag
+    are no releases; what the owner waited between CI and Start is not counted."""
+    shas = [sh(suite, "rev-parse", "HEAD").strip()]
+    for n in (1, 2, 3):
+        write(suite / "apps/test/app.py", f"print({n})\n")
+        sh(suite, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", f"change {n}")
+        shas.append(sh(suite, "rev-parse", "HEAD").strip())
+    before_old, old, before_new, new = shas
+    at = {sha: float(sh(suite, "log", "-1", "--format=%ct", sha)) for sha in shas}
+    asked = []
+
+    def read(url):
+        asked.append(url)
+        if "workflows/release.yml" in url:
+            return [_timed("zzz", "release.yml", at[new] + 500, at[new] + 600, ref="ps5-portal-v1.1.0"),
+                    _timed("yyy", "release.yml", at[new] + 300, at[new] + 400, conclusion="failure"),
+                    _timed(new, "release.yml", at[new] + 4, at[new] + 200),
+                    _timed(old, "release.yml", at[old] + 4, at[old] + 90)]
+        sha = url.split("head_sha=")[1].split("&")[0]
+        return {before_new: [_timed(before_new, "docs.yml", 10, 5000), _timed(before_new, "ci.yml", 1000, 1150)],
+                before_old: [_timed(before_old, "ci.yml", 2000, 2060)]}[sha]
+    times = flow.release_times(suite, read=read)
+    assert [(t.sha, t.ci, t.release, t.running) for t in times] == [(new, 150, 200, False), (old, 60, 90, False)]
+    assert times[0].total == 350 and flow.deviation(times) == 200
+    assert len(asked) == 3                                  # the release runs, and CI on each release's parent
+
+
+def test_a_release_that_still_runs_counts_the_time_so_far_and_a_first_release_has_no_deviation(suite):
+    head = sh(suite, "rev-parse", "HEAD").strip()
+    committed = float(sh(suite, "log", "-1", "--format=%ct", head))
+
+    def read(url):
+        return [_timed(head, "release.yml", committed + 3, 0)] if "workflows/release.yml" in url else []
+    times = flow.release_times(suite, now=lambda: committed + 75, read=read)
+    assert [(t.ci, t.release, t.running) for t in times] == [(0, 75, True)]      # the CI run is no longer listed
+    assert flow.deviation(times) is None and flow.release_times(suite, read=lambda url: []) == []
+
+
+def test_times_and_deviations_in_words():
+    assert [flow.duration_text(s) for s in (0, 42, 60, 185, 3725)] == ["0 s", "42 s", "1 min 00 s", "3 min 05 s",
+                                                                       "1 h 02 min"]
+    assert [flow.deviation_text(s) for s in (185, -42, 0, 0.2)] == ["+3 min 05 s", "−42 s", "0 s", "0 s"]
+
+
+def test_the_page_shows_both_times_and_the_deviation_and_a_banner_over_the_limit(release_window):
+    """Over the limit the deviation is orange and in the banner; 0 or less and under the limit it is in its box
+    only; while the release runs a deviation under the limit says nothing yet."""
+    page = release_window.release_page
+    assert page.times_row.isHidden() and page.slow_banner.isHidden()            # nothing read yet
+    page.times_checked([flow.ReleaseTime("a" * 40, 100, 400), flow.ReleaseTime("b" * 40, 100, 200)])
+    assert not page.times_row.isHidden() and not page.slow_banner.isHidden()
+    assert "3 min 20 s longer" in page.slow_note.text() and "8 min 20 s against 5 min 00 s" in page.slow_note.text()
+    page.times_checked([flow.ReleaseTime("a" * 40, 100, 250), flow.ReleaseTime("b" * 40, 100, 200)])
+    assert page.slow_banner.isHidden()                                          # 50 s longer: under the limit
+    page.times_checked([flow.ReleaseTime("a" * 40, 50, 100), flow.ReleaseTime("b" * 40, 100, 200)])
+    assert page.slow_banner.isHidden() and flow.deviation(page.times) == -150
+    page.times_checked([flow.ReleaseTime("a" * 40, 100, 30, running=True), flow.ReleaseTime("b" * 40, 100, 200)])
+    assert page.slow_banner.isHidden()
+    page.times_checked([flow.ReleaseTime("a" * 40, 100, 900, running=True), flow.ReleaseTime("b" * 40, 100, 200)])
+    assert "is taking 11 min 40 s longer" in page.slow_note.text() and not page.slow_banner.isHidden()
+    page.times_checked(OSError("offline"))                                      # GitHub not reached: as it was
+    assert len(page.times) == 2 and not page.slow_banner.isHidden()
+    page.times_checked([flow.ReleaseTime("a" * 40, 100, 400)])                  # the first release ever
+    assert page.slow_banner.isHidden() and not page.times_row.isHidden()
+    assert page.deviation_limit() == flow.DEVIATION_LIMIT and release_window.times_source is None
+
+
+def test_the_times_are_read_through_the_windows_source(release_window):
+    """The build indicator asks with each look (check_times): the source runs off the GUI thread and its answer
+    fills the boxes; a source that cannot reach GitHub leaves them as they were."""
+    from PyQt6.QtWidgets import QApplication
+    page = release_window.release_page
+    page.check_times()                                                          # no source: nothing to ask
+    assert page.times == [] and not page.time_checker.running
+    asked = []
+
+    def answered() -> None:
+        deadline = time.monotonic() + 5
+        while page.time_checker.running and time.monotonic() < deadline:
+            QApplication.processEvents()
+            time.sleep(0.01)
+    release_window.times_source = lambda root: (asked.append(root),
+                                                [flow.ReleaseTime("a" * 40, 60, 120)])[1]
+    page.check_times()
+    answered()
+    assert asked == [release_window.root] and [t.total for t in page.times] == [180]
+    assert not page.times_row.isHidden()
+
+    def offline(root):
+        raise OSError("no network")
+    release_window.times_source = offline
+    page.check_times()
+    answered()
+    assert [t.total for t in page.times] == [180] and not page.time_checker.running

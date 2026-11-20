@@ -511,11 +511,9 @@ CHECKS = {"shadps4": ("shadPS4", lambda: check_shadps4(load_shadps4_pin())),
 
 def markdown(reports: list[Report], failed: list[str]) -> str:
     """The issue's body: each upstream that moved with what to do, and those that could not be checked."""
-    parts = []
-    for report in reports:
-        if report.drift:
-            parts.append(f"### {report.name}\n\n{report.held.capitalize()} {report.pinned}, {report.newest} "
-                         f"{report.latest or 'unknown'}.\n\n" + "\n".join(f"- {line}" for line in report.drift))
+    parts = [f"### {report.name}\n\n{report.held.capitalize()} {report.pinned}, {report.newest} "
+             f"{report.latest or 'unknown'}.\n\n" + "\n".join(f"- {line}" for line in report.drift)
+             for report in reports if report.drift]
     if parts and failed:
         parts.append("Not checked this week: " + "; ".join(failed))
     if parts:

@@ -37,7 +37,10 @@ case " $* " in *" --list "*) ;; *)
     if ! flock -n 9; then
         info "Another ci-local.sh run is going on this computer: waiting until it ends"
         flock 9
-    fi ;;
+    fi
+    # What earlier runs and tests left behind goes first (venvs no run uses, old test files in /tmp, which is
+    # kept in memory): tools/clean_caches.py. It never stops a run.
+    python3 "$ROOT/tools/clean_caches.py" --quiet || true ;;
 esac
 
 if ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then

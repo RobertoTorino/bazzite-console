@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2914 test functions (3302 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+2925 test functions (3313 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -36,13 +36,13 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 102 | 2.1 s |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
-| [dev/nrt](#devnrt) | 4 | 123 | 23.1 s |
+| [dev/nrt](#devnrt) | 4 | 128 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [dev/studio](#devstudio) | 6 | 58 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
-| [tools](#tools) | 37 | 219 | 10.2 s |
-| **All** | | **2914** | **153 s** |
+| [tools](#tools) | 38 | 225 | 10.2 s |
+| **All** | | **2925** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -2517,7 +2517,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## dev/nrt
 
-123 tests in 4 files, 23.1 s in a local run.
+128 tests in 4 files, 23.1 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2578,6 +2578,11 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_flow.py` | `test_the_push_shows_ci_here_and_a_failure_stays_on_its_step` |  | 0.8 s | The push shows ci here and a failure stays on its step. |
 | `test_flow.py` | `test_a_push_github_has_no_runs_of_yet_shows_no_old_failure` |  | 0.4 s | Right after a push, GitHub's newest runs are the commit's before: one that failed showed this push as failed until GitHub had started its runs (owner, 15-11-2026). |
 | `test_flow.py` | `test_the_portal_video_check` |  |  | tools/portal_tour.py --check: "" when the video is current or the suite has none, else why it waits. |
+| `test_flow.py` | `test_a_release_takes_its_ci_before_start_and_the_time_from_its_commit_to_the_end_of_its_run` |  |  | Two releases in the checkout, each a commit on top of the one CI passed on; a failed run and a run on a tag are no releases; what the owner waited between CI and Start is not counted. |
+| `test_flow.py` | `test_a_release_that_still_runs_counts_the_time_so_far_and_a_first_release_has_no_deviation` |  |  | A release that still runs counts the time so far and a first release has no deviation. |
+| `test_flow.py` | `test_times_and_deviations_in_words` |  |  | Times and deviations in words. |
+| `test_flow.py` | `test_the_page_shows_both_times_and_the_deviation_and_a_banner_over_the_limit` |  |  | Over the limit the deviation is orange and in the banner; 0 or less and under the limit it is in its box only; while the release runs a deviation under the limit says nothing yet. |
+| `test_flow.py` | `test_the_times_are_read_through_the_windows_source` |  |  | The build indicator asks with each look (check_times): the source runs off the GUI thread and its answer fills the boxes; a source that cannot reach GitHub leaves them as they were. |
 | `test_main_window.py` | `test_every_widget_keeps_qts_window_method` |  | 0.4 s | An attribute named window on a widget hides QWidget.window(), which the suite's tooltip calls on the widget it is shown for: hovering the build indicator stopped the app that way. |
 | `test_main_window.py` | `test_without_notify_send_the_tray_icon_notifies` |  | 0.3 s | A desktop without notify-send: the notification comes from the tray icon instead (owner, 28-10-2026). |
 | `test_main_window.py` | `test_tooltip_over_the_build_indicator` |  | 0.4 s | Tooltip over the build indicator. |
@@ -3016,7 +3021,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-219 tests in 37 files, 10.2 s in a local run.
+225 tests in 38 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3112,6 +3117,12 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_ci_state.py` | `test_unreachable_and_the_stub` |  |  | Unreachable and the stub. |
 | `test_ci_state.py` | `test_a_suite_of_its_own_asks_for_its_own_workflow` |  |  | ci.yml by default (Nexus and the Bazzite Console Suite); --workflow another suite's CI (owner, 27-10-2026: one suite's CI never holds another suite's releases). |
 | `test_ci_state.py` | `test_a_release_commit_is_answered_by_its_work_commit` |  |  | --release-commit (owner, 30-10-2026): a commit that only writes a release takes the CI of its parent, the work commit; one that changes more, or whose work commit has no run of the workflow, takes its own. |
+| `test_clean_caches.py` | `test_a_venv_goes_a_week_after_its_last_run` |  |  | A venv goes a week after its last run. |
+| `test_clean_caches.py` | `test_a_venv_from_before_the_marks_is_marked_and_stays` |  |  | The first run removes nothing: a venv without a mark may be one a job uses. |
+| `test_clean_caches.py` | `test_pytests_folders_go_after_a_day` |  |  | Pytests folders go after a day. |
+| `test_clean_caches.py` | `test_a_scratch_folder_goes_when_nothing_in_it_changed_for_six_hours` |  |  | A session that still runs wrote to its folder lately: one new file keeps the whole folder. |
+| `test_clean_caches.py` | `test_a_link_is_never_followed_or_removed` |  |  | A link is never followed or removed. |
+| `test_clean_caches.py` | `test_the_run_removes_what_it_found_and_a_dry_run_nothing` |  |  | The run removes what it found and a dry run nothing. |
 | `test_design_panel.py` | `test_only_while_serving` |  |  | Only while serving. |
 | `test_design_panel.py` | `test_the_panel_names_the_files_of_each_wiki` |  |  | Copy CSS goes to the wiki's own stylesheet: the panel says which, as a path in the checkout. |
 | `test_design_panel.py` | `test_the_address_is_relative_to_the_page` |  |  | The address is relative to the page. |

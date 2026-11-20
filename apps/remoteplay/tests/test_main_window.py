@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
-from types import SimpleNamespace
 
 import pytest
 from PyQt6.QtWidgets import QDialog, QInputDialog, QMessageBox

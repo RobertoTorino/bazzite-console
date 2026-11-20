@@ -169,8 +169,8 @@ class AppTour(Recorder):
             if stack is None or not self.shown(nav) or not 1 < nav.count() <= 30 \
                     or self.at(nav)[0] > self.window.width() * 0.3:
                 continue
-            return [(lambda i=i: self.row_at(nav, i), lambda i=i: nav.setCurrentRow(i), nav.item(i).text(),
-                     nav.item(i).toolTip(), lambda: stack.currentWidget())
+            return [(lambda i=i, nav=nav: self.row_at(nav, i), lambda i=i, nav=nav: nav.setCurrentRow(i),
+                     nav.item(i).text(), nav.item(i).toolTip(), lambda: stack.currentWidget())
                     for i in range(nav.count()) if not nav.item(i).isHidden()]
         return []
 

@@ -133,6 +133,13 @@ it ends, as the two would share the venvs and the logs. Within a run the jobs go
 cargo): it runs after the others, alone, since its compilers need the computer's memory for themselves. The push commands Nexus Release Tool shows run it first
 (`tools/ci-local.sh && git push`): no push when a job fails.
 
+Before each run it removes what earlier runs and tests left on the computer (`tools/clean_caches.py`): a venv no run
+used for a week, the files pytest kept in `/tmp` of runs a day ago or longer, an AI assistant's scratch folders in
+`/tmp` that did not change for six hours, and container images without a name. `/tmp` is kept in memory on Bazzite, so
+what stays there takes memory from the tests. `python3 tools/clean_caches.py --dry-run` only says what would go. It
+reports the system's crash dumps once they pass 1 GB, with the command that removes them (it takes sudo).
+`./test.sh` keeps no files of a test that passed.
+
 ### Line endings and file names
 
 - **Line endings:** `.gitattributes` makes every text file LF in the repository and in the working tree. Scripts,

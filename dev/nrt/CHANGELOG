@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 12:37:04
+
+Added. The Nexus release tab shows how long the release took up to its device test, how long the one before it took, and the deviation between the two (owner, 20-11-2026), in three boxes above the steps. A deviation over 2 minutes also shows in an orange banner; under that, and at 0 or less, the box alone says it. The time is GitHub's: CI on the commit the release started from, and from the release commit to the end of the release on GitHub; the waiting between the two and the steps on this computer are not counted. While the release runs, its time is the time so far. The limit is DEVIATION_LIMIT in flow.py, or release/deviation_limit (seconds) in NRT's settings.
+
 Changelog: 19-11-2026 22:12:37
 
 Fixed. Retract and Remove suite say board instead of console, as do the board checks of a portal release (owner, 19-11-2026: board everywhere).

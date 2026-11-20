@@ -21,7 +21,8 @@ from PyQt6.QtWidgets import (QComboBox, QFrame, QGridLayout, QHBoxLayout, QHeade
                              QPushButton, QScrollArea, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from bazzite_console_core.theme import GREEN, GREY, ORANGE, RED
-from bazzite_console_core.widgets import accent_button
+from bazzite_console_core.updates import UpdateChecker
+from bazzite_console_core.widgets import MetricBox, accent_button
 
 from . import flow
 from . import plan as rp
@@ -100,6 +101,29 @@ class ReleasePage(QWidget):
         banner.addWidget(self.record_button)
         self.video_banner.hide()
         self.video_reason = ""                  # why the video must be recorded first; read with the checkout
+        # How long the release took up to its device test, the one before it and the deviation between the two
+        # (owner, 20-11-2026); a deviation over the limit also shows in an orange banner.
+        self.time_now = MetricBox("This release")
+        self.time_before = MetricBox("Previous release")
+        self.time_deviation = MetricBox("Deviation")
+        self.times_row = QWidget()
+        boxes = QHBoxLayout(self.times_row)
+        boxes.setContentsMargins(0, 0, 0, 0)
+        for box in (self.time_now, self.time_before, self.time_deviation):
+            boxes.addWidget(box)
+        boxes.addStretch(1)
+        self.times_row.hide()
+        self.slow_banner = QFrame()
+        self.slow_banner.setStyleSheet(f"QFrame {{ background:{ORANGE}; border-radius:6px; }}")
+        slow = QHBoxLayout(self.slow_banner)
+        self.slow_note = QLabel()
+        self.slow_note.setWordWrap(True)
+        self.slow_note.setStyleSheet("color:#1b1b1b; font-weight:700; background:transparent;")
+        slow.addWidget(self.slow_note, 1)
+        self.slow_banner.hide()
+        self.times: list[flow.ReleaseTime] = []
+        self.time_checker = UpdateChecker(self)
+        self.time_checker.finished.connect(self.times_checked)
         self.why_not = QLabel()                 # why Start cannot go yet
         self.why_not.setWordWrap(True)
         self.why_not.setStyleSheet(f"color:{ORANGE}; font-weight:600;")
@@ -184,6 +208,8 @@ class ReleasePage(QWidget):
             "orange ▶; a step done has a green ✓, one that failed a red !, and the line beside each says what there "
             "is to do. Only the lit pill does anything, so you never need a command or another tab."))
         lay.addWidget(self.video_banner)
+        lay.addWidget(self.slow_banner)
+        lay.addWidget(self.times_row)
         lay.addWidget(self.why_not)
         # The steps scroll when the window is lower than they are (owner, 01-11-2026: on a small screen the lines
         # beside the pills were cut off), never sideways: the pills' width is fixed, the lines wrap.
@@ -199,6 +225,67 @@ class ReleasePage(QWidget):
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         lay.addWidget(scroll, 1)
+
+    # --- how long the release takes -------------------------------------------------------------------------------
+
+    def check_times(self) -> None:
+        """Reads the releases' times from GitHub off the GUI thread; the build indicator asks with each of its looks."""
+        source, root = self.release_window.times_source, self.release_window.root
+        if source is None or self.time_checker.running:
+            return
+
+        def read() -> object:
+            try:
+                return source(root)
+            except (OSError, ValueError) as exc:      # offline, or GitHub's limit used up: the times stay as they are
+                return exc
+        self.time_checker.start(read)
+
+    def deviation_limit(self) -> int:
+        settings = self.release_window.settings
+        try:
+            return int(settings.value(flow.DEVIATION_KEY, flow.DEVIATION_LIMIT)) if settings is not None \
+                else flow.DEVIATION_LIMIT
+        except (TypeError, ValueError):
+            return flow.DEVIATION_LIMIT
+
+    def times_checked(self, result: object) -> None:
+        if isinstance(result, list):
+            self.times = result
+        self.show_times()
+
+    def show_times(self) -> None:
+        """This release, the one before it and the deviation; the banner when this one took more than the limit
+        longer. While this release runs its time is the time so far, and a deviation says nothing yet unless it
+        is over the limit already."""
+        times, limit = self.times, self.deviation_limit()
+        self.times_row.setVisible(bool(times))
+        self.slow_banner.hide()
+        if not times:
+            return
+        parts = ("CI before Start {ci}, from Start to the end of the release on GitHub {release}. Up to the device "
+                 "test; the waiting between the two is not counted.")
+        for box, taken in ((self.time_now, times[0]), (self.time_before, times[1] if len(times) > 1 else None)):
+            if taken is None:
+                box.set_value("—", "No release before this one on GitHub.")
+                continue
+            box.set_value(flow.duration_text(taken.total) + (" so far" if taken.running else ""),
+                          f"Release commit {taken.sha[:7]}. " + parts.format(
+                              ci=flow.duration_text(taken.ci) if taken.ci else "not known",
+                              release=flow.duration_text(taken.release)))
+        more = flow.deviation(times)
+        over = more is not None and round(more) > limit
+        known = more is not None and (over or not times[0].running)
+        self.time_deviation.set_value(flow.deviation_text(more) if known else "—",
+                                      f"This release against the one before it. Over {flow.duration_text(limit)} "
+                                      "longer shows an orange banner.")
+        self.time_deviation.set_colour(ORANGE if over else GREY)
+        if over:
+            self.slow_note.setText(
+                f"This release {'is taking' if times[0].running else 'took'} {flow.duration_text(more)} longer "
+                f"than the one before it up to the device test ({flow.duration_text(times[0].total)} against "
+                f"{flow.duration_text(times[1].total)}).")
+            self.slow_banner.show()
 
     # --- what the release holds -----------------------------------------------------------------------------------
 

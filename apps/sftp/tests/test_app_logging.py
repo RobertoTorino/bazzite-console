@@ -14,7 +14,6 @@ def test_logs_to_file(tmp_path):
 
 def test_the_log_writes_the_users_folders_as_home(tmp_path, monkeypatch):
     """No user name in the log (owner, 03-11-2026: the privacy rule): the home folder as ~ in every line."""
-    import logging
     from sftp_tools import app_logging
     monkeypatch.setenv("HOME", str(tmp_path))
     logger = app_logging.get_logger()

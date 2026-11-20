@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
 from ppsspp_manager import library
 from ppsspp_manager.games import Game

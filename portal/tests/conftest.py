@@ -22,6 +22,16 @@ def qapp():
     yield app
 
 
+@pytest.fixture(autouse=True)
+def same_folder_after():
+    """The tests' process is back in its folder after every test: the portal's restart moves to the launcher's
+    folder (os.chdir), which is in the test's temp folder here, and that folder goes when the test passed
+    (./test.sh keeps no files of a test that passed), so the next test stood in a folder that was gone."""
+    start = os.getcwd()
+    yield
+    os.chdir(start)
+
+
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     """HOME and XDG folders inside tmp_path, so detect paths like ~/.local/bin/x resolve there."""

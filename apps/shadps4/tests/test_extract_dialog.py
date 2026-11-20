@@ -7,7 +7,6 @@ app; the tests pump the event loop."""
 
 from __future__ import annotations
 
-import json
 import shutil
 from pathlib import Path
 
@@ -17,7 +16,7 @@ from PyQt6.QtGui import QColor, QContextMenuEvent, QDesktopServices, QDropEvent,
 from PyQt6.QtWidgets import QDialog, QFileDialog, QMenu, QMessageBox
 
 from shadps4_manager import INFO, extract_dialog
-from shadps4_manager.extract_dialog import OUTPUT_FOLDER_KEY, PKG_FOLDER_KEY, ExtractDialog
+from shadps4_manager.extract_dialog import OUTPUT_FOLDER_KEY, ExtractDialog
 from shadps4_manager.main_window import MainWindow, ShadSettings
 
 

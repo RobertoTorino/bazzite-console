@@ -2,7 +2,6 @@
 """Target identity, keyboard behavior and installer lifecycle."""
 
 import os
-from pathlib import Path
 import subprocess
 
 from PyQt6.QtCore import Qt

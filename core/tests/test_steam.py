@@ -5,10 +5,8 @@ added, updated and removed beside others, several in one write, closing Steam fo
 from __future__ import annotations
 
 import struct
-import sys
 import zlib
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 

@@ -345,6 +345,7 @@ class BuildIndicator(Pill):
         if finished:
             self.announce(finished)
         self.release_window.release_page.show_state()   # the release's run, from the same runs
+        self.release_window.release_page.check_times()  # and how long it takes
         latest = rp.latest_push(self.runs)
         ticker = self.release_window.ticker
         if self.awaiting_head():
@@ -689,12 +690,15 @@ class ReleaseWindow(QMainWindow):
     def __init__(self, root: Path = CHECKOUT, launch=launch_in_terminal,
                  runs_source=rp.fetch_runs, notify=desktop_notify, settings=None,
                  status_source=rp.fetch_github_status, claude_source=rp.fetch_claude_usage,
-                 jobs_source=rp.fetch_jobs):
+                 jobs_source=rp.fetch_jobs, times_source=None):
         """*runs_source* reads the GitHub Actions runs (None: no build indicator and no ticker); *jobs_source* the
         jobs of a run, for the ticker (None: the runs only); *notify* shows a desktop
         notification; *settings* keeps the command line's history (None: this session only); *status_source* reads
-        githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage (None: no Claude pill)."""
+        githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage (None: no Claude pill);
+        *times_source* reads how long the last two releases took (flow.release_times when the runs come from GitHub,
+        else none)."""
         super().__init__()
+        self.times_source = times_source or (flow.release_times if runs_source is rp.fetch_runs else None)
         self.root = root
         self.settings = settings
         self.base_ref = "origin/main"           # the last push, which the steps compare with (tests use another)
@@ -851,6 +855,7 @@ class ReleaseWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:
         self.build.stop()
+        self.release_page.time_checker.stop(2000)       # a look at the releases' times still under way
         self.ticker.stop()
         if _tray is not None:                           # no icon left behind in the notification area
             _tray.hide()

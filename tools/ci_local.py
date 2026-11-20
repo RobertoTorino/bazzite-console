@@ -51,6 +51,7 @@ EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
 NEEDS = re.compile(r"^\$\{\{\s*fromJSON\(needs\.(\w[\w-]*)\.outputs\.(\w+)\)\s*\}\}$")   # a plan job's output
 OUTPUT = re.compile(r"needs\.(\w[\w-]*)\.outputs\.(\w+)")
 CONDITION = re.compile(r"^needs\.(\w[\w-]*)\.outputs\.(\w+)\s*(==|!=)\s*'([^']*)'$")      # a job's if
+USED = ".last-used"                  # in a venv: when a job last took it (tools/clean_caches.py reads it)
 WORKER_MB = 1536                    # the free memory a job running beside others is given: default_workers
 _venv_locks: dict[str, threading.Lock] = {}
 _locks_lock = threading.Lock()
@@ -251,6 +252,7 @@ def venv_for(job: Job, steps: list[dict], base: str) -> Path:
         if not (venv / "bin" / "python").exists():
             shutil.rmtree(venv, ignore_errors=True)
             subprocess.run([sys.executable, "-m", "venv", str(venv)], check=True)
+        (venv / USED).touch()               # used now: tools/clean_caches.py removes a venv a week after its last use
     return venv
 
 

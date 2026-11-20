@@ -828,6 +828,7 @@ def suite_icon(root: Path) -> Path | None:
 RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?per_page={page}"
 RUNS_PAGE = 30
 HEAD_RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?head_sha={sha}&per_page=100"
+WORKFLOW_RUNS_URL = "https://api.github.com/repos/{repo}/actions/workflows/{file}/runs?branch=main&per_page=10"
 ACTIONS_URL = "{repo_url}/actions"
 OK_CONCLUSIONS = ("success", "skipped", "neutral")
 
@@ -846,6 +847,7 @@ class BuildRun:
     started: float = 0.0                # seconds since the epoch; 0 when GitHub does not say
     file: str = ""                      # its workflow's file: "ci.yml", "release.yml"
     attempt: int = 1                    # GitHub's run_attempt: a rerun is the same run, one attempt on
+    ended: float = 0.0                  # when it ended (GitHub's updated_at once completed); 0 while it runs
 
     @property
     def done(self) -> bool:
@@ -875,7 +877,8 @@ def parse_runs(data: object) -> list[BuildRun]:
                      str(r.get("conclusion") or ""), str(r.get("html_url") or ""), str(r.get("head_sha") or ""),
                      str(r.get("display_title") or ""), str(r.get("jobs_url") or ""),
                      epoch(r.get("run_started_at")), str(r.get("path") or "").split("@")[0].rsplit("/", 1)[-1],
-                     int(r.get("run_attempt") or 1))
+                     int(r.get("run_attempt") or 1),
+                     epoch(r.get("updated_at")) if r.get("status") == "completed" else 0.0)
             for r in runs if isinstance(r, dict)]
 
 
@@ -998,6 +1001,11 @@ def runs_at(url: str, etag: str) -> tuple[list[BuildRun], str, bool, RateInfo | 
     runs = parse_runs(data) if data is not None else _pages.get(url, ("", []))[1]
     _pages[url] = (etag, runs)
     return runs, etag, data is not None, rate
+
+
+def runs_again(url: str) -> list[BuildRun]:
+    """The runs at *url*, asked with the ETag of the last time: unchanged, they cost no request (runs_at)."""
+    return runs_at(url, _pages.get(url, ("", []))[0])[0]
 
 
 def fetch_runs(etag: str = "", sha: str = "") -> tuple[list[BuildRun] | None, str, RateInfo | None]:

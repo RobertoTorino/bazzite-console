@@ -5,13 +5,10 @@ from __future__ import annotations
 
 import pytest
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPixmap
 from PyQt6.QtWidgets import QMessageBox
 
 from bazzite_console_portal import APP_NAME, MANIFEST
 from bazzite_console_portal import desktop_icons
-from bazzite_console_portal.bigpicture import ICON_PX
 from bazzite_console_portal.main_window import DESKTOP_ICONS_KEY, MainWindow, Pending
 from bazzite_console_portal.manifest import load
 from bazzite_console_portal.sources import Records, Sources

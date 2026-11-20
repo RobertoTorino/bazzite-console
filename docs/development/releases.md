@@ -116,6 +116,14 @@ explanation.
    tag, so it lights as soon as Publish ends (or as soon as GitHub's runs on main show that commit). Then every
    step shows ✓.
 
+Above the steps, three boxes say how long the release takes: **This release**, **Previous release** and the
+**Deviation** between the two. The time runs up to the device test and is GitHub's: CI on the commit the release
+started from, plus the time from the release commit to the end of the release on GitHub. The waiting between the
+two is not counted, nor the steps on this computer. While the release runs, its box shows the time so far. A
+release that took more than 2 minutes longer than the one before it also shows the deviation in an orange banner;
+a deviation under that, or of 0 or less, shows in its box only. Each box's tooltip names the release commit and
+the two parts. The limit is `DEVIATION_LIMIT` in `dev/nrt/nexus_release_tool/flow.py`.
+
 By hand, without the tool, the same run starts on the newest pushed commit with:
 
 ```bash

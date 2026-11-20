@@ -112,8 +112,8 @@ def needs_update_text(result: DependencyStatus, apps: dict[str, App]) -> str:
     reasons = []
     specifiers = {source.owner: source.specifier for source in result.dependency.sources}
     for env in result.needs_update:
-        for owner in env.outdated:
-            reasons.append(f"{_app_name(owner, apps)} needs {specifiers[owner]}, installed is {env.version}.")
+        reasons.extend(f"{_app_name(owner, apps)} needs {specifiers[owner]}, installed is {env.version}."
+                       for owner in env.outdated)
         if env.fixes:
             fixed = max((vuln.fixed for vuln in env.fixes), key=release)
             reasons.append(f"{fixed} fixes known vulnerabilities in {env.version}.")

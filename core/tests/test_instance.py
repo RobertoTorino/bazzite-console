@@ -7,7 +7,6 @@ from __future__ import annotations
 import os
 import time
 
-import pytest
 from PyQt6.QtCore import QCoreApplication, QEvent, QObject
 from PyQt6.QtWidgets import QWidget
 

@@ -15,7 +15,7 @@ from PyQt6.QtCore import QObject, QSettings, pyqtSignal
 from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QApplication, QFileDialog
 
-from remix_studio import APP_NAME, LOGO_PATH, ROOT, main_window, mix as mixer, pad as synth
+from remix_studio import APP_NAME, LOGO_PATH, ROOT, main_window, mix as mixer
 from remix_studio.main_window import CUSTOM, NO_OUTPUT, NO_VOICE, TRY_SECONDS, MainWindow
 from remix_studio.mix import Mix
 from remix_studio.pad import PRESETS, RATE, Pad

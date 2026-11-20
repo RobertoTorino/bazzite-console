@@ -18,7 +18,8 @@ import re
 import shlex
 import subprocess
 import sys
-from collections.abc import Iterable
+import time
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -27,7 +28,10 @@ from . import plan as rp
 AUTO = "auto"                           # the portal's version, worked out when Start writes the release
 RELEASE_WORKFLOW = "release.yml"        # the release workflow, started on the release commit (workflow_dispatch)
 WORKFLOW_NAME = "Release"               # its name on GitHub, as the runs list it
+CI_WORKFLOW = "ci.yml"
 _RUN_ID = re.compile(r"/actions/runs/(\d+)")
+DEVIATION_LIMIT = 120                   # seconds a release may take longer than the one before it without a banner
+DEVIATION_KEY = "release/deviation_limit"       # another limit, in seconds, in NRT's settings
 
 
 def releases_on_github(root: Path) -> bool:
@@ -282,6 +286,66 @@ def stop_command(run: rp.BuildRun) -> str:
 def resume_command(run: rp.BuildRun) -> str:
     """Started again from where it stopped: only the jobs that failed or were canceled, and what needs them."""
     return f"gh run rerun {run_id(run)} --failed"
+
+
+# --- How long a release takes (owner, 20-11-2026: "the total time of the current release, so all steps combined up
+# and until the device test step, and the total time of the previous release", and the deviation between the two) ----
+
+@dataclass(frozen=True)
+class ReleaseTime:
+    """How long one release took up to its device test, as GitHub measured it: CI on the commit the release started
+    from (step 4) and from the release commit (Start new release) to the end of the release on GitHub (steps 5 and
+    6). What the owner waits between the two is not counted, nor the steps on this computer (pull, commit, push),
+    which no release before this one recorded."""
+    sha: str                            # the release commit
+    ci: float                           # seconds of CI before Start; 0 when GitHub no longer lists that run
+    release: float                      # seconds from the release commit to the end of its run (so far, while it runs)
+    running: bool = False
+
+    @property
+    def total(self) -> float:
+        return self.ci + self.release
+
+
+def release_times(root: Path, now: Callable[[], float] = time.time,
+                  read: Callable[[str], list[rp.BuildRun]] = rp.runs_again) -> list[ReleaseTime]:
+    """The times of the current release and the one before it, newest first (fewer when there are none): the two
+    newest runs of release.yml on main that passed or still run. A run that failed made no draft to test, so it is
+    not a release here. Asks GitHub (three requests, none when nothing changed): for a worker thread."""
+    repo = rp.repo_slug()
+    runs = read(rp.WORKFLOW_RUNS_URL.format(repo=repo, file=RELEASE_WORKFLOW))
+    times = []
+    for run in [r for r in runs if r.ref == "main" and (r.passed or not r.done)][:2]:
+        committed = (rp.git(root, "log", "-1", "--format=%ct", run.sha) or "").strip()
+        start = float(committed) if committed.isdigit() else run.started
+        parent = (rp.git(root, "rev-parse", "--verify", "--quiet", f"{run.sha}^") or "").strip()
+        before = read(rp.HEAD_RUNS_URL.format(repo=repo, sha=parent)) if parent else []
+        ci = next((r for r in before if r.file == CI_WORKFLOW and r.done and r.started and r.ended), None)
+        times.append(ReleaseTime(run.sha, max(0.0, ci.ended - ci.started) if ci else 0.0,
+                                 max(0.0, (run.ended or now()) - start) if start else 0.0, not run.done))
+    return times
+
+
+def duration_text(seconds: float) -> str:
+    """42 s, 3 min 05 s, 1 h 02 min."""
+    whole = round(abs(seconds))
+    if whole < 60:
+        return f"{whole} s"
+    if whole < 3600:
+        return f"{whole // 60} min {whole % 60:02d} s"
+    return f"{whole // 3600} h {whole % 3600 // 60:02d} min"
+
+
+def deviation(times: list[ReleaseTime]) -> float | None:
+    """How much longer the current release took than the one before it, in seconds (less than 0: shorter); None
+    without two releases."""
+    return times[0].total - times[1].total if len(times) > 1 else None
+
+
+def deviation_text(seconds: float) -> str:
+    """+3 min 05 s, −42 s, 0 s."""
+    sign = "+" if round(seconds) > 0 else "−" if round(seconds) < 0 else ""
+    return sign + duration_text(seconds)
 
 
 # --- The steps, in their order (owner, 30-10-2026: "if I open NRT I want to see exactly what has to be done in their

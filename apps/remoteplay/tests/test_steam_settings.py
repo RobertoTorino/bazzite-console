@@ -4,7 +4,6 @@ and writing localconfig.vdf, and the change with Steam running (closed, changed,
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest

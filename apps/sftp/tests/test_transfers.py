@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import stat
 from pathlib import Path
 from types import SimpleNamespace
 

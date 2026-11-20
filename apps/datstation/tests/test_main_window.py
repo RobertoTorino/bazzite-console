@@ -17,7 +17,6 @@ from bazzite_console_core import steam
 from datstation import news
 from datstation.front_page import COLUMNS, FEATURES, KEYS, ROWS
 from datstation.main_window import GUIDES_URL, MainWindow
-from datstation.news import NewsItem
 from datstation.quiz import ALL, QUICK, State
 from datstation.quiz_page import Music, QuizPage
 from datstation.scores import ScoreStore

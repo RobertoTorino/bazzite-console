@@ -86,8 +86,8 @@ def main(argv: list[str] | None = None) -> int:
             if pattern is None:
                 continue
             text = path.read_text(encoding="utf-8")
-            for line in unreadable(path, text):
-                errors.append(f"{path.relative_to(ROOT)}: version copy not in the form check_versions.py reads: {line}")
+            errors.extend(f"{path.relative_to(ROOT)}: version copy not in the form check_versions.py reads: {line}"
+                          for line in unreadable(path, text))
             for got in pattern.findall(text):
                 checked += 1
                 if got != want:

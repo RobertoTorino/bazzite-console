@@ -7,7 +7,6 @@ import datetime
 import json
 import os
 import subprocess
-import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -15,7 +14,6 @@ import pytest
 
 from nexus_release_tool import flow
 from nexus_release_tool import plan as rp
-from nexus_release_tool.command_line import command_lines
 
 SHA = "cd" * 32
 

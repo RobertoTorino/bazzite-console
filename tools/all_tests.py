@@ -118,7 +118,7 @@ def run(folders: list[str], root: Path = ROOT, python: str = sys.executable) -> 
         for folder in folders:
             report = Path(temp) / "junit.xml"
             done = subprocess.run([python, "-m", "pytest", "tests", "-q", "-p", "no:cacheprovider",
-                                   f"--junitxml={report}"], cwd=root / folder, env=env, capture_output=True,
+                                   "-o", "tmp_path_retention_policy=failed", f"--junitxml={report}"], cwd=root / folder, env=env, capture_output=True,
                                   text=True, check=False)
             print(f"  {folder}: {done.stdout.strip().splitlines()[-1] if done.stdout.strip() else done.stderr[-200:]}",
                   flush=True)

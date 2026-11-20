@@ -49,9 +49,7 @@ def convert_commands(root: Path, category: str, whole: Path | None, sizes: dict[
     also writes the copies to the apps."""
     base = [sys.executable, str(root / SYNC_ICONS), "--category", category]
     commands = [base + ["--from", str(whole)]] if whole is not None else []
-    for size in SIZES:
-        if size in sizes:
-            commands.append(base + ["--from", str(sizes[size]), "--size", str(size)])
+    commands.extend(base + ["--from", str(sizes[size]), "--size", str(size)] for size in SIZES if size in sizes)
     return commands
 
 

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import re
 import tomllib
-from pathlib import Path
 
 from quickfix import ROOT, state
 from quickfix.catalog import QUICKFIXES

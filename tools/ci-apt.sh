@@ -25,7 +25,7 @@ other_mirror() {
 }
 
 kept_packages() {
-    local mode=$1 kept="${CI_APT_DIR:-$HOME/.cache/ci-apt}" attempt limit=60
+    local mode=$1 kept="${CI_APT_DIR:-$HOME/.cache/ci-apt}" attempt limit=20
     shift
     mkdir -p "$kept/partial"
     local apt=(-o Dir::Cache::archives="$kept" -o APT::Keep-Downloaded-Packages=true -o Acquire::Retries=3
@@ -34,8 +34,10 @@ kept_packages() {
     # ends, however it ends, so the cache can read and write it.
     # shellcheck disable=SC2064  # the folder as it is now
     trap "sudo chown -R '$(id -u):$(id -g)' '$kept'; rm -rf '$kept/partial' '$kept/lock'" EXIT
-    # A try is cut off after a minute, as apt's own timeouts do not end a download that only slows down; the next
-    # one goes on where it stopped (the partial download stays), from another mirror and with its package lists.
+    # The first try is cut off after 20 seconds, as apt's own timeouts do not end a download that only slows down:
+    # all of it is 18 MB, a second or two from a mirror at its usual speed, and where Azure's mirror gave 109 kB/s
+    # the next one gave 26 MB/s (20-11-2026). The next try goes on where the first stopped (the partial download
+    # stays), from that other mirror and with its package lists, and has 90 seconds.
     # The runner's own lists usually name the packages' versions still, so the first try asks for no lists.
     for attempt in 1 2 3; do
         if sudo timeout -k 5 "$limit" apt-get "${apt[@]}" install -y -q --download-only "$@"; then

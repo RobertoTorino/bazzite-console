@@ -121,6 +121,17 @@ def mymc_data(tmp_path_factory) -> Path:
     return folder
 
 
+@pytest.fixture(autouse=True)
+def no_cards_left(request, tmp_path):
+    """The files of a test that passed go when it ends, however pytest was started: the memory cards are 8 to 64 MB
+    each, 1.1 GB a run, and pytest keeps its last three runs in /tmp, which Bazzite keeps in memory. A test that
+    failed keeps its files, to look at."""
+    failed = request.session.testsfailed
+    yield
+    if request.session.testsfailed == failed:
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
+
 @pytest.fixture
 def cards(mymc_data, tmp_path) -> Path:
     """A memcards folder with copies of both cards."""

@@ -19,7 +19,6 @@ from conftest import md5
 from pcsx2_manager import memcards
 from pcsx2_manager.memcards import CardError
 from pcsx2_manager.mymc import ps2icon, ps2mc
-from pcsx2_manager.mymc.ps2mc_dir import DF_PSX
 from pcsx2_manager.mymc.save import format_max_drive, lzari, ps2save
 
 REZ = "BESCES-50501REZ"

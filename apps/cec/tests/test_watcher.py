@@ -109,7 +109,7 @@ def test_find_adapter_renames_a_playback_adapter_unless_cecd_runs(tmp_path):
     for cecd, renamed in ((False, True), (True, False)):
         calls = []
 
-        def run(argv):
+        def run(argv, calls=calls, cecd=cecd):
             calls.append(argv)
             if argv[0] == "systemctl":
                 return Result(0 if cecd else 3, "active\n" if cecd else "inactive\n")

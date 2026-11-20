@@ -303,19 +303,17 @@ def check_rules(path: str, line: int, passage: str) -> list[Problem]:
         count = len(sentence.split())
         if count > LONG_WORDS:
             found.append(Problem(path, line, "rules", "long sentence", f"{count} words. Split it.", short))
-        for _ in range(sentence.count(";")):
-            found.append(Problem(path, line, "rules", "semicolon", "A semicolon chains two facts. Make two "
-                                 "sentences.", short))
+        found.extend(Problem(path, line, "rules", "semicolon", "A semicolon chains two facts. Make two "
+                             "sentences.", short) for _ in range(sentence.count(";")))
         bare = sentence.replace("**", "")
         for match in _MID_COLON.finditer(bare):
             after = bare[match.end():].split(None, 1)[0].strip(".,")
             if len(bare[:match.start()].split()) >= LEAD_WORDS and after not in ("code", "thing"):
                 found.append(Problem(path, line, "rules", "colon", "The sentence goes on after a colon. Make two "
                                      "sentences, or a list.", short))
-        for inside in _PAREN.findall(sentence):
-            if len(inside.split()) > ASIDE_WORDS:
-                found.append(Problem(path, line, "rules", "parenthesis", "More than four words in parentheses. "
-                                     "Make it a sentence.", f"({inside})"))
+        found.extend(Problem(path, line, "rules", "parenthesis", "More than four words in parentheses. "
+                             "Make it a sentence.", f"({inside})")
+                     for inside in _PAREN.findall(sentence) if len(inside.split()) > ASIDE_WORDS)
         for match in _WORD.finditer(sentence):
             word = match.group(1).lower()
             if not (word == "manual" and _MANUAL_BY_HAND.search(sentence)):
@@ -543,9 +541,8 @@ def gone(paths: list[str], root: Path = ROOT) -> list[str]:
         new = (root / path).read_text(encoding="utf-8", errors="replace") if (root / path).is_file() else ""
         before, after = _facts(old), _facts(new)
         for kind, items in before.items():
-            for item in items:
-                if item not in after.get(kind, {}) and not (kind == "heading" and path.endswith(".py")):
-                    lost.append(f"{path}: {kind} gone: {item}")
+            lost.extend(f"{path}: {kind} gone: {item}" for item in items
+                        if item not in after.get(kind, {}) and not (kind == "heading" and path.endswith(".py")))
     return lost
 
 

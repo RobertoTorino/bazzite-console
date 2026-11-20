@@ -9,7 +9,6 @@ import json
 import subprocess
 
 from nexus_deps import bazzite
-from nexus_deps.bazzite import BazziteState, Deployment
 
 IMAGE = "ostree-image-signed:docker://ghcr.io/ublue-os/bazzite:stable"
 RUNNING = {"booted": True, "staged": False, "pinned": False, "version": "44.20261012.1", "timestamp": 1791962757,

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
 from rpcs3_manager import library
 from rpcs3_manager.games import Game

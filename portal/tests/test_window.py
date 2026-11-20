@@ -457,7 +457,7 @@ def test_install_all_apps_is_a_symbol_that_fills_the_open_category(window, launc
         done.add(entry.key)
         window._check_pending()
         if i + 1 < len(expected):
-            assert wait_for(lambda: len(launched) == i + 2)
+            assert wait_for(lambda i=i: len(launched) == i + 2)
     assert window.batch is None and not window.busy()
     assert window.sources.prepared == [e.key for e in expected]
     assert pill.badge == "" and not pill.isEnabled()
@@ -587,7 +587,7 @@ def test_a_new_build_of_this_version_is_offered(qapp, home, settings_dir, tmp_pa
     for build, shown in ((None, False), ("a" * 64, False), ("b" * 64, True), ("", True)):
         w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
                           portal_check=lambda: update, build=build)
-        assert wait_for(lambda: not w.portal_checker.running, 3000)
+        assert wait_for(lambda w=w: not w.portal_checker.running, 3000)
         assert w.big.update_banner.isHidden() is not shown, build
         if shown:
             assert w.big.update_banner.toolTip().startswith(f"Portal {__version__}: a new build of this version.")

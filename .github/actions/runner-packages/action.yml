@@ -2,8 +2,10 @@
 # What a job needs from Ubuntu's mirror (Qt's libraries, Bazzite's font), without a download per job: the packages
 # are in GitHub's cache, and tools/ci-qt-libs.sh and tools/ci-font.sh install them from there (tools/ci-apt.sh).
 # ci.yml's plan job fills the cache (fetch-only) before the jobs that need the packages start, so they all find
-# them. The mirror is asked again when the runner's image or one of the scripts changes, or when GitHub dropped the
-# cache (a week without a run).
+# them. The cache is one per week and per Ubuntu release, not per image: GitHub's runners are on several images at a
+# time (four in one run on 20-11-2026), and a cache per image left the jobs on the other three to download for
+# themselves. A new week starts from the week before (restore-keys), so apt downloads only a package whose version
+# moved; all of it is downloaded again only when one of the scripts changes or GitHub dropped the cache.
 name: Runner packages
 description: Qt's libraries and Bazzite's font from GitHub's cache
 inputs:
@@ -19,16 +21,20 @@ inputs:
 runs:
   using: composite
   steps:
-    # The packages are those of the runner's image: its package lists name their versions.
     - id: image
       shell: bash
-      run: echo "name=${ImageOS:-none}-${ImageVersion:-none}" >> "$GITHUB_OUTPUT"
+      run: |
+        echo "name=${ImageOS:-none}" >> "$GITHUB_OUTPUT"
+        echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
     - uses: actions/cache@v6
       with:
         path: ~/.cache/ci-apt
         key: >-
           ci-apt-${{ steps.image.outputs.name }}-${{
-          hashFiles('tools/ci-apt.sh', 'tools/ci-qt-libs.sh', 'tools/ci-font.sh') }}
+          hashFiles('tools/ci-apt.sh', 'tools/ci-qt-libs.sh', 'tools/ci-font.sh') }}-${{ steps.image.outputs.week }}
+        restore-keys: >-
+          ci-apt-${{ steps.image.outputs.name }}-${{
+          hashFiles('tools/ci-apt.sh', 'tools/ci-qt-libs.sh', 'tools/ci-font.sh') }}-
     - shell: bash
       env:
         PULSE: ${{ inputs.pulse == 'true' && '--pulse' || '' }}

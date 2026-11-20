@@ -10,7 +10,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QColor, QImage
 from PyQt6.QtWidgets import QMessageBox
 
-from webcam import access, controls, firmware, loader, main_window, runner
+from webcam import access, firmware, loader, main_window, runner
 from test_controls import AUTO_WB, WB_TEMPERATURE, FakeKernel, open_fake
 from test_modes import reported
 

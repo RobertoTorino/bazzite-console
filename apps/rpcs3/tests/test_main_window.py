@@ -14,8 +14,7 @@ import time
 from pathlib import Path
 
 import pytest
-from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtTest import QTest
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QLabel, QMessageBox
 
 from conftest import make_disc_game, make_hdd_game, write_rpcs3_files

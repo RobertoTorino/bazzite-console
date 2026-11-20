@@ -4,7 +4,6 @@ Music track pills, with the player replaced by one that plays nothing (conftest'
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 from PyQt6.QtCore import Qt
