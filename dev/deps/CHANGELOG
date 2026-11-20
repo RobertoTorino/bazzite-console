@@ -1,3 +1,8 @@
+Changelog: 20-11-2026 02:18:33
+
+Fixed. The catalog pins Vita3K build 4377 and Xenia Canary build 54386cb (19-11-2026), the builds the managers now
+install.
+
 Changelog: 20-11-2026 01:14:33
 
 Added. The catalog knows PS5 CU Tools and PS5 CPU Tools: their launchers, and the tools they use (umr, memtest_vulkan, stress-ng, vkpeak, vkmark, glmark2, setpci, lspci, taskset, mprime, ras-mc-ctl, sudo, journalctl, and systemctl and PyQt6 as the other apps), as they came from its twin.

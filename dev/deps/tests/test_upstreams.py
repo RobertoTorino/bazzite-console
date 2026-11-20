@@ -93,9 +93,9 @@ def test_installed_behind_the_pin_and_upstream_past_it(tmp_path):
 def test_an_app_without_its_program_is_no_update(tmp_path):
     xenia = entry("xenia")
     install(tmp_path, xenia["apps"][0], None)
-    source = upstreams.check_github(xenia, release("838850f", "2026-11-04T16:38:00Z"), tmp_path)
+    source = upstreams.check_github(xenia, release("54386cb", "2026-11-19T20:05:38Z"), tmp_path)
     assert source.updates == () and "Installed without Xenia Canary so far: Xenia Manager." in source.detail
-    later = upstreams.check_github(xenia, release("cf206a3", "2026-11-09T09:00:00Z"), tmp_path)
+    later = upstreams.check_github(xenia, release("cf206a3", "2026-11-24T09:00:00Z"), tmp_path)
     assert later.updates[0].latest == "cf206a3"
 
 

@@ -85,8 +85,8 @@
             "version": "VERSION"
           },
           "repo": "Vita3K/Vita3K-builds",
-          "pin": "4269",
-          "version": "4269",
+          "pin": "4377",
+          "version": "4377",
           "home": "~/.local/share/ps5-vita3k-manager/emulator",
           "name": "Vita3K Manager",
           "launcher": "~/.local/bin/ps5-vita3k-manager"
@@ -108,8 +108,8 @@
             "version": "VERSION"
           },
           "repo": "xenia-canary/xenia-canary",
-          "pin": "2026-11-04T16:38:00Z",
-          "version": "838850f",
+          "pin": "2026-11-19T20:05:38Z",
+          "version": "54386cb",
           "home": "~/.local/share/ps5-xenia-manager/emulator",
           "name": "Xenia Manager",
           "launcher": "~/.local/bin/ps5-xenia-manager"

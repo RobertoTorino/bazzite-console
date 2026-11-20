@@ -26,13 +26,13 @@ from bazzite_console_core.updates import Fetch, ReleaseInfo, github_fetch
 
 from . import APP_ID, __version__
 
-BUILD = 4269                            # Vita3K's build number, counted over its whole history
+BUILD = 4377                            # Vita3K's build number, counted over its whole history
 VERSION = str(BUILD)                    # how the app names it; also the folder it is installed in
-SEMVER = "0.2.1"                        # what it calls itself (Vita3K --version: v0.2.1 4269-9409e2ec)
-COMMIT = "9409e2ecad1bdae275db2f85b83a97aa084c79bc"
+SEMVER = "0.2.1"                        # what it calls itself (Vita3K --version: v0.2.1 4377-685b80a6)
+COMMIT = "685b80a6acc93b9014b702c753d3698ec5287b24"
 ASSET = "Vita3K-x86_64.AppImage"        # the same name in every build's release
-SHA256 = "a0387e6e689bae297b8b0143b2b0836f68a31cc1e93e005d4b5ee59abe6e4573"
-SIZE = 89907735                         # bytes: how the app tells that the AppImage was replaced by another build
+SHA256 = "de1ddd4b5ae61a0f4f92f153dc4fa9752239a7a48c7ffcee663c84e932a09db2"
+SIZE = 89794395                         # bytes: how the app tells that the AppImage was replaced by another build
 SIZE_MB = round(SIZE / (1 << 20))       # for the question before downloading
 MEMBER = "vita3k.AppImage"              # the name it is installed under, the same for every build
 REPO = "Vita3K/Vita3K"

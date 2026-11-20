@@ -218,7 +218,7 @@ ps5-vita3k-run                                               # Vita3K's own wind
 ## New Vita3K builds
 
 Vita3K has no stable releases: it publishes a new build for almost every change, numbered over its whole history
-(4269). Each version of the app installs one build, the one pinned in it. When the window opens, the app asks
+(4377). Each version of the app installs one build, the one pinned in it. When the window opens, the app asks
 GitHub for Vita3K's newest build. When that one is newer, the Vita3K line's tooltip and the log say so, with a link
 to what is new; the app does not install it. A newer Vita3K comes with a newer version of the app, from the
 [portal](../portal.md): after updating the app, the tooltip and the log say so, and **Install** brings it.

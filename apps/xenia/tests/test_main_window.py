@@ -67,7 +67,7 @@ def test_before_installing(qapp, folders):
     assert window.pill.text() == "Not installed"
     # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
     assert window.emulator_state.text() == "Not installed. Install it with the Install button."
-    assert "Install downloads Xenia 838850f" in window.emulator_state.toolTip()
+    assert "Install downloads Xenia 54386cb" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.xenia_button.isEnabled() and not hasattr(window, "play_button")
     for name in ("folder_button", "forget_button"):
@@ -100,7 +100,7 @@ def test_an_older_build_is_offered_the_pinned_one(qapp, folders):
     (folders["home"] / "current").symlink_to("f42147a")
     window = _window(folders)
     assert window.emulator_state.text() == "Installed. Uninstall with the Uninstall button."
-    assert "Xenia f42147a is installed; this version of the app brings 838850f" in window.emulator_state.toolTip()
+    assert "Xenia f42147a is installed; this version of the app brings 54386cb" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled()
     window.refresh()
     assert window.output.toPlainText().count("Xenia f42147a is installed") == 1           # logged once

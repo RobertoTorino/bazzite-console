@@ -196,7 +196,7 @@ ps5-xenia-run                                         # Xenia's own window
 ## New Xenia builds
 
 Xenia has no stable releases: Xenia Canary publishes a build for almost every change, named after the change
-(`838850f`). Each version of the app installs one build, the one pinned in it. When the window opens, the app
+(`54386cb`). Each version of the app installs one build, the one pinned in it. When the window opens, the app
 asks GitHub for the newest build; when one was published after the app's, the Xenia line's tooltip and the log say
 so, with a link to what changed. The app does not install it. A newer build comes with a newer version of the app,
 from the [portal](../portal.md): after updating the app, the tooltip and the log say so, and **Install** brings it.

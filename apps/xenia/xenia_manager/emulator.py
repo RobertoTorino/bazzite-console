@@ -29,13 +29,13 @@ from bazzite_console_core.updates import Fetch, ReleaseInfo, github_fetch
 
 from . import APP_ID, __version__
 
-BUILD = "838850f"                       # the build's tag: the commit it was built from
-COMMIT = "838850fed8389bdb28dc38f89bcb73bb43db1494"
-PUBLISHED = "2026-11-04T16:38:00Z"      # when GitHub published it: a later release is a newer build
+BUILD = "54386cb"                       # the build's tag: the commit it was built from
+COMMIT = "54386cbbd36b1e5b9e3c8ea8616f4c7c8f0c56b6"
+PUBLISHED = "2026-11-19T20:05:38Z"      # when GitHub published it: a later release is a newer build
 VERSION = BUILD                         # how the app names it; also the folder it is installed in
 ASSET = "xenia_canary_linux.AppImage"   # the same name in every build's release
-SHA256 = "e1e1029f6a642161b8d99664bd3cc0e1bf531de15277613a27f1242b675ca3bf"
-SIZE = 18901496                         # bytes of the AppImage
+SHA256 = "fbd24aa75b09b2d808526b70616c092e89d9c8655becbb2d3b561cf48835e4b6"
+SIZE = 16546296                         # bytes of the AppImage
 SIZE_MB = round(SIZE / (1 << 20))       # for the question before downloading
 MEMBER = "xenia.AppImage"               # the name it is installed under, the same for every build
 CONFIG = "xenia-canary.config.toml"     # Xenia's settings file, in xenia_home()

@@ -1,3 +1,10 @@
+Changelog: 20-11-2026 02:18:33
+
+Added. The app installs Vita3K build 4377 (was 4269; action list, 20-11-2026): emulator.py pins build 4377 (0.2.1,
+commit 685b80a6), the SHA-256 GitHub publishes for its AppImage (de1ddd4b…9db2) and its size. Checked in Vita3K's
+source between the two builds (108 changes): the command line the app uses (--firmware, --pkg, --zrif, -r) and the
+config.yml keys it sets are unchanged.
+
 Changelog: 19-11-2026 22:33:16
 
 Release 1.3.1.

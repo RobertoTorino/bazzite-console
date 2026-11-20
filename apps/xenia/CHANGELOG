@@ -1,3 +1,11 @@
+Changelog: 20-11-2026 02:18:33
+
+Added. The app installs Xenia Canary build 54386cb (19-11-2026; was 838850f; action list, 20-11-2026): emulator.py
+pins its commit, release date, the SHA-256 GitHub publishes for its AppImage (fbd24aa7…e4b6) and its size, now
+about 16 MB (was 18: Xenia moved from SDL2 to SDL3 on 12-11-2026, for sound and controllers). Checked in Xenia's
+source between the two builds (152 changes): no setting the app writes changed. Xenia removed its ALSA sound
+system and sets a config that names it back to Automatic; the app offers Automatic and SDL only, as before.
+
 Changelog: 19-11-2026 22:33:16
 
 Release 1.3.1.
