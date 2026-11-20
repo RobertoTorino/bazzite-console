@@ -139,3 +139,35 @@ def test_only_the_workflows_a_push_starts():
     assert ci_local.glob_match("apps/**", "apps/a/b.py")
     assert not ci_local.glob_match("apps/**", "apps-x/a.py")
     assert ci_local.glob_match("test.sh", "test.sh") and not ci_local.glob_match("test.sh", "tools/test.sh")
+
+
+def test_a_cache_is_a_hit_only_under_its_key(tmp_path, monkeypatch):
+    """A step that fills a cache (if: cache-hit != 'true') is skipped only when the folder was filled under the
+    same key: when a file its hashFiles names changes, the step runs again, as on GitHub (owner, 20-11-2026: the
+    native job found the FFmpeg of the build.sh before its version changed, and failed)."""
+    work, cache, folder = tmp_path / "work", tmp_path / "cache", tmp_path / "kept"
+    work.mkdir()
+    (work / "build.sh").write_text("one", encoding="utf-8")
+    monkeypatch.setattr(ci_local, "WORK", work)
+    monkeypatch.setattr(ci_local, "CACHE", cache)
+    spec = {"runs-on": "ubuntu-latest", "steps": [
+        {"id": "kept", "uses": "actions/cache@v6",
+         "with": {"path": str(folder), "key": "kept-${{ runner.os }}-${{ hashFiles('build.sh') }}"}},
+        {"if": "steps.kept.outputs.cache-hit != 'true'", "run": f"mkdir -p {folder} && echo run >> {folder}/runs"}]}
+
+    def runs() -> int:
+        assert ci_local.run_job(ci_local.Job("native", spec), "").ok
+        return len((folder / "runs").read_text(encoding="utf-8").split())
+
+    assert runs() == 1
+    assert runs() == 1                                             # the same key: a hit
+    (work / "build.sh").write_text("two", encoding="utf-8")
+    assert runs() == 2                                             # another key: a miss
+    assert runs() == 2
+    (folder / ci_local.CACHE_KEY).unlink()
+    assert runs() == 3                                             # a folder without a key: a miss
+
+    spec["steps"][1]["run"] = "false"
+    (work / "build.sh").write_text("three", encoding="utf-8")
+    assert not ci_local.run_job(ci_local.Job("native", spec), "").ok
+    assert not ci_local.cache_hit(*ci_local.cache_of("kept", spec["steps"], ci_local.Job("native", spec), ""))

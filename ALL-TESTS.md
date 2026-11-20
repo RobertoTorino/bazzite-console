@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2911 test functions (3299 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+2912 test functions (3300 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -41,8 +41,8 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/studio](#devstudio) | 6 | 58 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 217 | 30.2 s |
-| [tools](#tools) | 37 | 216 | 10.2 s |
-| **All** | | **2911** | **153 s** |
+| [tools](#tools) | 37 | 217 | 10.2 s |
+| **All** | | **2912** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -3016,7 +3016,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-216 tests in 37 files, 10.2 s in a local run.
+217 tests in 37 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3095,6 +3095,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_ci_local.py` | `test_requirement_files_follow_includes` |  |  | Requirement files follow includes. |
 | `test_ci_local.py` | `test_ci_runs_for_every_branch_push_and_no_tag` |  |  | A push to a branch runs CI, a tag does not (tag-release.sh tags only a commit CI passed). |
 | `test_ci_local.py` | `test_only_the_workflows_a_push_starts` |  |  | Without job names, the workflows GitHub starts for the push: ci.yml has no paths filter, so every push. |
+| `test_ci_local.py` | `test_a_cache_is_a_hit_only_under_its_key` |  |  | A step that fills a cache (if: cache-hit != 'true') is skipped only when the folder was filled under the same key: when a file its hashFiles names changes, the step runs again, as on GitHub (owner, 20-11-2026: the native job found the FFmpeg of the build.sh before its version changed, and failed). |
 | `test_ci_matrix.py` | `test_the_pytest_matrix_is_every_folder_with_tests` |  |  | The pytest matrix is every folder with tests. |
 | `test_ci_matrix.py` | `test_the_suite_matches_its_workflow_and_the_layout_rule` |  | 0.1 s | ci.yml reads its matrix from this tool, and the list is what tools/tests/test_layout.py wants: every folder with tests/, core, tools and dev/ among them. |
 | `test_ci_matrix.py` | `test_the_command_line` |  | 0.1 s | The command line. |

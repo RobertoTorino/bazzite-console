@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 04:43:05
+
+Fixed. tools/ci-local.sh builds Remote Play's FFmpeg again when apps/remoteplay/native/ffmpeg/build.sh changes, as GitHub does: tools/ci_local.py keeps the key of an actions/cache step with its folder and skips the step that fills it only under the same key, and it fills in hashFiles() from the files. It took any filled folder for a hit, so the native job found the FFmpeg of the version before and failed in build.rs. The wiki's development page says so.
+
 Changelog: 20-11-2026 01:14:33
 
 Added. Two apps came from its twin as they are there (owner, 20-11-2026: "port over as is, I do the refactor on the PS5"): PS5 CU Tools (apps/compute) and PS5 CPU Tools (apps/cores), each one window for a bisect and an unlock. Their scripts still hold the twin's hardware and were never run on a PS5. The suite lists them everywhere it lists its apps: the README, the wiki's app pages, its navigation and home page, the bug report's App list, icons/categories.toml, requirements-dev.txt and .claude/suite.md, which also names them among the apps that change the board. Each has its wiki chapter and its installer test; tools/installer-tests/shims.sh also points PS5_OPT_DIR, CPU Tools' /opt, at the test's folder. tools/app_tour.py no longer names an app with two programs, as in its twin.

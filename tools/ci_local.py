@@ -46,6 +46,7 @@ CACHE = Path(os.environ.get("CI_LOCAL_CACHE", "/cache"))     # venvs, pip's cach
 WORKFLOWS = (("ci.yml", ""),)                               # each workflow run here, with the prefix of its job names
 COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "dist", "node_modules")
 SHELL = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c"]      # GitHub's shell for run steps on Linux
+CACHE_KEY = ".ci-local-key"                                 # in a cache step's folder: the key that filled it
 EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
 NEEDS = re.compile(r"^\$\{\{\s*fromJSON\(needs\.(\w[\w-]*)\.outputs\.(\w+)\)\s*\}\}$")   # a plan job's output
 OUTPUT = re.compile(r"needs\.(\w[\w-]*)\.outputs\.(\w+)")
@@ -193,10 +194,23 @@ def expand(text: str, job: Job, base: str) -> str:
             return output_text(job.needs.get(output[1], {}).get(output[2], ""))
         if "github.event" in expr and ("before" in expr or "base.sha" in expr):
             return base
-        if expr.startswith("hashFiles") or expr.startswith("runner."):
+        if expr.startswith("hashFiles"):
+            return hash_files(expr)
+        if expr.startswith("runner."):
             return "local"
         return ""
     return EXPR.sub(value, str(text))
+
+
+def hash_files(expr: str) -> str:
+    """hashFiles('a', 'b/**'): one hash of the files the patterns name in the copy, so a cache key changes with
+    them as on GitHub."""
+    digest = hashlib.sha256()
+    for pattern in re.findall(r"'([^']*)'", expr):
+        for path in sorted(WORK.glob(pattern)):
+            if path.is_file():
+                digest.update(path.read_bytes())
+    return digest.hexdigest()
 
 
 def requirement_files(text: str, folder: Path) -> list[Path]:
@@ -234,12 +248,21 @@ def venv_for(job: Job, steps: list[dict], base: str) -> Path:
     return venv
 
 
-def cache_hit(step_id: str, steps: list[dict], job: Job, base: str) -> bool:
+def cache_of(step_id: str, steps: list[dict], job: Job, base: str) -> tuple[Path, str] | None:
+    """The folder and the key of the actions/cache step with this id."""
     for step in steps:
         if step.get("id") == step_id and "cache" in str(step.get("uses", "")):
-            path = expand((step.get("with") or {}).get("path", ""), job, base).replace("~", str(Path.home()), 1)
-            return Path(path).is_dir() and any(Path(path).iterdir())        # an empty folder is no cache
-    return False
+            given = step.get("with") or {}
+            path = expand(given.get("path", ""), job, base).replace("~", str(Path.home()), 1)
+            return Path(path), expand(given.get("key", ""), job, base)
+    return None
+
+
+def cache_hit(folder: Path, key: str) -> bool:
+    """A hit as on GitHub: the folder was filled under this key. A folder filled under another key (the files
+    its hashFiles names changed since) is a miss, and so is one without a key."""
+    stamp = folder / CACHE_KEY
+    return stamp.is_file() and stamp.read_text(encoding="utf-8").strip() == key
 
 
 def run_job(job: Job, base: str) -> Result:
@@ -266,7 +289,8 @@ def run_job(job: Job, base: str) -> Result:
                 continue                            # checkout: the copy; setup-python: the image's 3.12
             condition = str(step.get("if", ""))
             hit = re.search(r"steps\.(\S+?)\.outputs\.cache-hit\s*!=\s*'true'", condition)
-            if hit and cache_hit(hit.group(1), steps, job, base):
+            cached = cache_of(hit.group(1), steps, job, base) if hit else None
+            if cached and cache_hit(*cached):
                 continue
             run = expand(step["run"], job, base)
             if "apt-get" in run:
@@ -283,6 +307,9 @@ def run_job(job: Job, base: str) -> Result:
                 result.ok, result.failed_step = False, label
                 result.tail = "\n".join(proc.stdout.rstrip().splitlines()[-25:])
                 break
+            if cached:                              # the step filled the cache: the next run with this key skips it
+                cached[0].mkdir(parents=True, exist_ok=True)
+                (cached[0] / CACHE_KEY).write_text(cached[1] + "\n", encoding="utf-8")
     result.seconds = time.monotonic() - started
     return result
 

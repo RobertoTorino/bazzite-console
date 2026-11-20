@@ -123,7 +123,8 @@ tools/ci-local.sh --list                     # the jobs
 It reads the jobs from the workflow itself and runs its plan job as GitHub does, against what differs from
 `origin/main`, so it runs the same jobs the push will, and a new app needs no change. The first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's
 runner has) and Remote Play's FFmpeg; both are kept, with the venvs and the logs, in
-`~/.cache/bazzite-console-ci-local`. It works on a copy of the checkout with every change staged, as the commit will
+`~/.cache/bazzite-console-ci-local`. FFmpeg is built again when `apps/remoteplay/native/ffmpeg/build.sh` changes, as GitHub's cache
+is keyed on that file. It works on a copy of the checkout with every change staged, as the commit will
 have it. The copy is named as the checkout, as GitHub's is named after the repository. One run goes at a time on a
 computer: a second one, from a terminal or Nexus Release Tool's Push, says that another run is going and waits until
 it ends, as the two would share the venvs and the logs. The push commands Nexus Release Tool shows run it first
