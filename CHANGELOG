@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 15:13:27
+
+Fixed. The wiki builds again: the Quick Fix chapter linked CPU Tools' "Longer burn-in" section by an anchor that does not exist (MkDocs names it longer-burn-in-mprime--rasdaemon, with two hyphens for the slash).
+
 Changelog: 20-11-2026 12:39:22
 
 Fixed. What ruff's F401, PERF and B023 rules found in the tools, the development apps and the tests: 45 imports nothing used are gone, seven loops that built a list are list expressions, and five functions made in a loop bind the loop's value (none was called after its turn, so nothing behaved wrongly). The portal's tests go back to their folder after each test: the portal's restart moved the process into the test's temp folder, which is gone once ./test.sh removed a passed test's files. Not changed: the same findings in the apps', the portal's and core's own code, which would make releases of their own.
