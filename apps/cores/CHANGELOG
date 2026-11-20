@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 01:51:46
+
+Release 0.1.0.
+
 Changelog: 20-11-2026 01:09:32
 
 Added. PS5 CPU Tools, one window for the core bisect and the core unlock, came from its twin as it is there (owner, 20-11-2026: "port over as is, I do the refactor on the PS5"). Its scripts, ps5-cores-bisect.sh and ps5-cores-unlock.sh, still hold the twin's hardware: its board check, its SMU message and its core presence mask of 0x77 with 6 of 8 cores on. They are not adapted to the PS5 yet and were never run on one.

@@ -8,8 +8,8 @@
 [apps.board]
 name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-board-v0.4.3"
-sha256 = "830228a722c79d23f0203e32921632976270841298d27304b948b581bbe48325"
+tag = "ps5-board-v0.5.0"
+sha256 = ""
 required = true
 changes_board = false
 category = "sustainable"
