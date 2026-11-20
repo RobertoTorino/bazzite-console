@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 15:16:09
+
+Release 1.5.1.
+
 Changelog: 20-11-2026 14:57:33
 
 Fixed. The app installs paramiko 5 (>=5.0,<6; it was >=3.4,<5). paramiko 5.0.0 is the release that fixes the known

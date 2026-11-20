@@ -8,8 +8,8 @@
 [apps.board]
 name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-board-v0.6.0"
-sha256 = "10b4578dff7260e2b6acfcba2b0347fdf76ed9c0562b183c84f4293cb2695b4b"
+tag = "ps5-board-v0.7.0"
+sha256 = ""
 required = true
 changes_board = false
 category = "sustainable"
@@ -151,8 +151,8 @@ launch = [["Open", "~/.local/bin/ps5-xenia-manager"]]
 [apps.sftp]
 name = "PS5 SFTP Tools"
 summary = "Transfer files over SFTP and manage SSH servers on Bazzite hosts."
-tag = "ps5-sftp-v1.5.0"
-sha256 = "00e2e35229874edf39c709b7f1c1ea47e60fe8fe84ab0b5af9b573b9e8bfd3fe"
+tag = "ps5-sftp-v1.5.1"
+sha256 = ""
 required = false
 changes_board = true
 board_change = "Starting or configuring an SSH server changes the local or remote Bazzite host. Starting the local server enables it at boot and may open the firewall for SSH. Review access and firewall rules before enabling it."
@@ -264,8 +264,8 @@ launch = [["Open", "~/.local/bin/ps5-bisect-gui"]]
 [apps.cores]
 name = "PS5 CPU Tools"
 summary = "Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock."
-tag = "ps5-cores-v0.1.0"
-sha256 = "652e85141756e28304c361e0df01ecf6869936d9504b1f13b6bd7cd02882eaee"
+tag = "ps5-cores-v0.1.1"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
@@ -314,8 +314,8 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 [apps.quickfix]
 name = "PS5 Quickfix"
 summary = "Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal and the boot command line. Always installed."
-tag = "ps5-quickfix-v0.2.0"
-sha256 = "882098096cb2821ef3ded4fb26044aac064d8bd6c3ffa3fc62fb9814dde6a5a0"
+tag = "ps5-quickfix-v0.3.0"
+sha256 = ""
 required = true
 changes_board = false
 category = "utilities"
