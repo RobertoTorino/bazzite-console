@@ -396,6 +396,16 @@ def too_old(version: str, specifier: str) -> bool:
     return False
 
 
+def refused_fix(dependency: Dependency, env: EnvironmentVersion) -> tuple[str, tuple[str, ...]]:
+    """The release that fixes the environment's known vulnerabilities, and the apps in it that do not accept that
+    release (their specifier ends below it): an update only a newer version of those apps can bring."""
+    if not env.fixes:
+        return "", ()
+    fixed = max((vuln.fixed for vuln in env.fixes), key=release)
+    specifiers = {source.owner: source.specifier for source in dependency.sources}
+    return fixed, tuple(owner for owner in env.owners if not satisfies(fixed, specifiers.get(owner, "")))
+
+
 def package_environments(
     dependency: Dependency,
     environments: dict[str, tuple[Path, ...]],

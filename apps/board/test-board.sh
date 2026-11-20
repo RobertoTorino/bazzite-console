@@ -2771,6 +2771,66 @@ rm -rf "$BENCH_TMP"
 echo
 fi
 fi  # TEST 42
+if want 60; then
+log_result "[TEST 60] VKCube Test (Vulkan on the screen)"
+log_result "Draws the Vulkan tools' spinning cube in a window for a few seconds: proof that Vulkan reaches the display"
+VKCUBE_SECS=5
+if ! find_tool vkcube; then
+    log_result "INFO: vkcube is not installed; nothing was drawn."
+    log_result "HINT: It is part of vulkan-tools, which comes with Bazzite. A Flatpak is not detected; it must be on PATH."
+elif [ -z "$GAME_USER" ] || [ "$GAME_USER" = root ]; then
+    log_result "INFO: No desktop user to draw for (the run was started as root itself); skipped."
+else
+    VKCUBE_BIN="$TOOL"
+    # The session of the desktop user's running compositor, the way test 41 takes it for its GPU load.
+    # A guessed WAYLAND_DISPLAY makes vkcube exit at once, so without a compositor nothing is started.
+    VKCUBE_ENV=(); VKCUBE_SESSION=""
+    for comm in kwin_wayland gamescope plasmashell gnome-shell Xwayland; do
+        VKCUBE_CPID=$(pgrep -u "$GAME_USER" -x "$comm" 2>/dev/null | head -1)
+        [ -n "$VKCUBE_CPID" ] && [ -r "/proc/$VKCUBE_CPID/environ" ] || continue
+        while IFS= read -r -d '' kv; do
+            case "$kv" in
+                WAYLAND_DISPLAY=*|DISPLAY=*|XDG_RUNTIME_DIR=*|XDG_SESSION_TYPE=*|\
+                DBUS_SESSION_BUS_ADDRESS=*|XAUTHORITY=*|HOME=*)
+                    VKCUBE_ENV+=("$kv") ;;
+            esac
+        done < "/proc/$VKCUBE_CPID/environ"
+        [ "${#VKCUBE_ENV[@]}" -gt 0 ] && { VKCUBE_SESSION="$comm"; break; }
+    done
+    if [ -z "$VKCUBE_SESSION" ]; then
+        log_result "INFO: No graphical session of $GAME_USER is running (a run over SSH, or before login); skipped."
+        log_result "HINT: Run this test from the desktop or from Game Mode to see the cube."
+    else
+        VKCUBE_LOG=$(mktemp)
+        # As the desktop user, never as root; timeout ends it even when this script is killed.
+        if [ "$(id -u)" = 0 ]; then
+            setsid sudo -u "$GAME_USER" env "${VKCUBE_ENV[@]}" \
+                timeout -k 5 "$((VKCUBE_SECS + 15))" "$VKCUBE_BIN" >"$VKCUBE_LOG" 2>&1 &
+        else
+            setsid env "${VKCUBE_ENV[@]}" timeout -k 5 "$((VKCUBE_SECS + 15))" "$VKCUBE_BIN" >"$VKCUBE_LOG" 2>&1 &
+        fi
+        VKCUBE_PID=$!
+        log_result "INFO: vkcube started as $GAME_USER in the session of $VKCUBE_SESSION; the cube shows for ${VKCUBE_SECS} s."
+        sleep "$VKCUBE_SECS"
+        VKCUBE_GPU=$(grep -m1 -oE "Selected GPU [0-9]+: .*" "$VKCUBE_LOG" 2>/dev/null | sed 's/, type:.*//')
+        if kill -0 "$VKCUBE_PID" 2>/dev/null; then
+            [ -n "$VKCUBE_GPU" ] && log_result "INFO: $VKCUBE_GPU"
+            log_result "SUCCESS: vkcube drew for ${VKCUBE_SECS} s without an error: Vulkan presents to the screen."
+        else
+            log_result "ERROR: vkcube ended by itself within ${VKCUBE_SECS} s; no cube was shown."
+            [ -s "$VKCUBE_LOG" ] && { log_result "INFO: Its output was:"; head -20 "$VKCUBE_LOG" | tee -a "$LOG_FILE"; }
+            log_result "HINT: Run it by hand from the desktop session to see the message: vkcube"
+            ERROR_FOUND=true
+        fi
+        kill "$VKCUBE_PID" 2>/dev/null
+        VKCUBE_PGID=$(ps -o pgid= "$VKCUBE_PID" 2>/dev/null | tr -d ' ')
+        [ -n "$VKCUBE_PGID" ] && kill -- "-$VKCUBE_PGID" 2>/dev/null
+        wait "$VKCUBE_PID" 2>/dev/null
+        rm -f "$VKCUBE_LOG"
+    fi
+fi
+echo
+fi  # TEST 60
 if want 43; then
 log_result "[TEST 43] Disk Speed Test (read, write, SLC cache)"
 if [ "$DISK_MODE" != true ]; then

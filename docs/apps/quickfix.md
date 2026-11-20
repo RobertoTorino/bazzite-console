@@ -36,6 +36,11 @@ listed in [PS5 Board Test](board.md#requirements). The RPM packages are installe
 layered with `rpm-ostree` and are active after a reboot (`systemctl reboot`); until then the tools of that group
 still show as missing. The tooltip of a group's pill says which one this board uses.
 
+The group **Prime95** is `mprime`, which no test uses: [PS5 CPU Tools](cores.md#longer-burn-in-mprime-rasdaemon)
+runs its torture test for a longer burn-in. The pill installs the release that mersenne.org's download page lists
+at that moment, compared with the SHA-256 listed there, into `~/mprime`, with a link in `~/.local/bin`. A newer
+release later shows in Nexus Deps as **Prime95 (mprime)**, and its **Update** installs it over the old one.
+
 A tool you put in `~/.local/bin` yourself counts when the file has the tool's own name and may be run. Ookla's
 download is a `.tgz` archive: unpack `speedtest` from it and make it executable, then press **Refresh**:
 

@@ -335,7 +335,9 @@ the pinned SHA-256, and the same file on the repository's default branch: change
 
 PS5 Board Test runs whichever speedtest CLI is installed; its development tool installs one release of Ookla's
 (`SPEEDTEST_VERSION` in `apps/board/development/tools/install-requirements.sh`). Ookla publishes no API;
-the tool reads the version from Ookla's Homebrew formula.
+the tool reads the version from Ookla's Homebrew formula. The same script installs Prime95's mprime: the release
+mersenne.org's download page lists, with the SHA-256 listed there. `MPRIME_URL` and `MPRIME_SHA256` in it are one
+known release, used only when the page cannot be read. Nexus Deps compares `~/mprime/.release` with the page.
 
 ```bash
 python3 tools/check_upstream.py            # all of them

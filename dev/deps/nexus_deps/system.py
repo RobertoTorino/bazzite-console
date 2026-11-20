@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What has a newer version on this machine besides the suite's apps (owner, 09-11-2026: Nexus Deps picks up every
 update system wide; it took over from tools/dev-updates.sh and its hourly timer): Bazzite's image, the Flatpaks,
-Homebrew's formulae and casks, the Rust toolchain and the checkout's development venv (.venv-linux).
+Homebrew's formulae and casks, the Rust toolchain, the checkout's development venv (.venv-linux) and Prime95's
+mprime when Quickfix installed it (owner, 20-11-2026: its update check and install belong here).
 
 Each source is asked with its own tool, without root; a source whose tool is not on the machine is left out.
 `brew update` fetches Homebrew's formulae first, else `brew outdated` only knows what the last fetch knew. A source
@@ -69,7 +70,7 @@ class Update:
 
 @dataclass(frozen=True)
 class Source:
-    key: str                            # "image", "dnf", "flatpak", "brew", "rust" or "venv"
+    key: str                            # "image", "dnf", "flatpak", "brew", "rust", "venv" or "mprime"
     name: str                           # the card's title
     updates: tuple[Update, ...] = ()
     held: tuple[Update, ...] = ()       # newer than the requirements allow (the venv): shown, not updated
@@ -404,6 +405,72 @@ def check_venv(run: Run, checkout: Path) -> Source:
 
 # --- Every source ---------------------------------------------------------------------------------------------
 
+# --- Prime95's mprime -----------------------------------------------------------------------------------------
+
+MPRIME_PAGE = "https://www.mersenne.org/download/"
+MPRIME_DIR = "mprime"                   # in the home folder: where Board Test's installer unpacks it
+MPRIME_RELEASE = ".release"             # in it: the name of the download that is unpacked there
+MPRIME_INSTALLER = "development/tools/install-requirements.sh"
+BOARD_TEST = Path("/opt/ps5-board-test")
+_MPRIME_FILE = re.compile(r'https://(?:www\.|download\.)?mersenne\.(?:org|ca)/[^" ]+/(p95v[0-9a-z]+\.linux64\.tar\.gz)"')
+MPRIME_ABOUT = ("<p>Prime95's mprime, which PS5 CPU Tools runs for a longer burn-in. It is no package: Quickfix's "
+                "<b>Prime95</b> pill unpacks the download from mersenne.org into <code>~/mprime</code>. <b>Update</b> "
+                "runs Board Test's installer again (<code>install-requirements.sh --mprime</code>): it takes the "
+                "release the download page lists, compares it with the SHA-256 listed there and unpacks it over the "
+                "old one. mprime's own files in the folder stay; nothing needs a restart.</p>")
+
+
+def parse_mprime(page: str) -> str:
+    """The 64-bit Linux download mersenne.org's page lists ("p95v3019b20.linux64.tar.gz"), "" when it has none."""
+    found = _MPRIME_FILE.search(page)
+    return found.group(1) if found else ""
+
+
+def mprime_version(file: str) -> str:
+    """"30.19 build 20" of "p95v3019b20.linux64.tar.gz"; the name itself when it is not built that way."""
+    found = re.match(r"p95v(\d\d)(\d+)b(\d+)\.", file)
+    return f"{found.group(1)}.{found.group(2)} build {found.group(3)}" if found else file
+
+
+def mprime_installer(checkout: Path, board_test: Path | None = None) -> Path | None:
+    """Board Test's installer that knows --mprime: the installed app's, else the checkout's (an installed Board
+    Test from before that option has none)."""
+    for folder in (board_test or BOARD_TEST, checkout / "apps" / "board"):
+        script = folder / MPRIME_INSTALLER
+        try:
+            if "--mprime)" in script.read_text(encoding="utf-8", errors="replace"):
+                return script
+        except OSError:
+            continue
+    return None
+
+
+def check_mprime(run: Run, home: Path, checkout: Path, board_test: Path | None = None) -> Source:
+    name = "Prime95 (mprime)"
+    done = run(["curl", "-fsSL", "--max-time", "30", MPRIME_PAGE], capture_output=True, text=True, timeout=TIMEOUT)
+    if done.returncode != 0:
+        return Source("mprime", name, error=f"mersenne.org could not be read: {_tail(done)}", about=MPRIME_ABOUT)
+    latest = parse_mprime(done.stdout)
+    if not latest:
+        return Source("mprime", name, error="mersenne.org's download page lists no 64-bit Linux file",
+                      about=MPRIME_ABOUT)
+    try:
+        installed = (home / MPRIME_DIR / MPRIME_RELEASE).read_text(encoding="utf-8").strip()
+    except OSError:
+        installed = ""                  # unpacked by hand: which release it is, is not known
+    detail = f"Latest: {mprime_version(latest)}"
+    if installed == latest:
+        return Source("mprime", name, about=MPRIME_ABOUT, detail=detail)
+    updates = (Update("mprime", mprime_version(installed) if installed else "unknown", mprime_version(latest)),)
+    script = mprime_installer(checkout, board_test)
+    if script is None:
+        return Source("mprime", name, updates, about=MPRIME_ABOUT, detail=detail,
+                      note="Board Test's installer is not there: install Board Test from the portal, then Update.")
+    step = Step("mprime", f"mprime {mprime_version(latest)} into ~/{MPRIME_DIR}", ("bash", str(script), "--mprime"))
+    return Source("mprime", name, updates, step=step, about=MPRIME_ABOUT, detail=detail,
+                  note="" if installed else "Unpacked by hand: Update installs the latest release over it.")
+
+
 def _guarded(key: str, name: str, job: Callable[[], Source]) -> Source:
     try:
         return job()
@@ -414,7 +481,8 @@ def _guarded(key: str, name: str, job: Callable[[], Source]) -> Source:
 
 
 def read_sources(run: Run = subprocess.run, which: Which = shutil.which,
-                 checkout: Path = CHECKOUT, booted: Callable[[], bool] = ostree_booted) -> tuple[Source, ...]:
+                 checkout: Path = CHECKOUT, booted: Callable[[], bool] = ostree_booted,
+                 home: Path | None = None) -> tuple[Source, ...]:
     """Every source this machine has, asked at the same time; in a fixed order. The system's own: the image on an
     Atomic system, dnf's packages on a flattened one."""
     jobs: list[tuple[str, str, Callable[[], Source]]] = []
@@ -431,6 +499,9 @@ def read_sources(run: Run = subprocess.run, which: Which = shutil.which,
         jobs.append(("rust", "Rust", lambda: check_rust(run, rustup)))
     if (checkout / VENV / "bin" / "python").is_file():
         jobs.append(("venv", f"Python venv ({VENV})", lambda: check_venv(run, checkout)))
+    home = home or Path.home()
+    if (home / MPRIME_DIR / "mprime").is_file() and which("curl"):
+        jobs.append(("mprime", "Prime95 (mprime)", lambda: check_mprime(run, home, checkout)))
     if not jobs:
         return ()
     with ThreadPoolExecutor(max_workers=len(jobs)) as pool:

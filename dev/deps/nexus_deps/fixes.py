@@ -4,7 +4,8 @@
 plan() turns a CheckResult into steps, each one command the window shows before it runs anything:
   * pip: a Python package that is missing, at a version an app does not accept, or that must be updated (an app
     wants a newer one, or a newer release fixes a known vulnerability), installed into the app's own venv with the
-    specifiers of the apps that run in it. One step per venv.
+    specifiers of the apps that run in it. One step per venv. A vulnerability's fix that an app does not accept
+    (paramiko 5.0.0 for an app that wants <5) is no step: the window says the app must be updated first.
   * brew: a missing tool an installed app needs, when Homebrew has it (the catalog's brew). No restart.
   * rpm-ostree: a missing tool Homebrew lacks, layered as the Fedora package (the catalog's rpm). It changes the
     Bazzite image and is active after a restart; the app says so and gives the command, it never restarts.
@@ -30,7 +31,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .bazzite import BazziteState, ostree_booted, reminder
-from .dependencies import CheckResult, DependencyStatus, EnvironmentVersion, release, tool_need
+from .dependencies import CheckResult, DependencyStatus, EnvironmentVersion, refused_fix, tool_need
 
 if TYPE_CHECKING:
     from .system import Source
@@ -45,7 +46,7 @@ NOTIFY_WAIT = 3000                       # a notification nobody answers lets th
 
 @dataclass(frozen=True)
 class Step:
-    kind: str                            # "pip", "brew", "rpm-ostree", "dnf", "flatpak" or "rustup"
+    kind: str                            # "pip", "brew", "rpm-ostree", "dnf", "flatpak", "rustup" or "mprime"
     title: str                           # what it does, for the confirmation and the log
     command: tuple[str, ...]
     restart: bool = False                # active only after a restart (rpm-ostree; dnf with a kernel)
@@ -91,17 +92,22 @@ class Plan:
         return bool(self.steps)
 
 
-def _broken(env: EnvironmentVersion) -> bool:
-    return not env.version or bool(env.unmet) or env.needs_update
+def _broken(status: DependencyStatus, env: EnvironmentVersion) -> bool:
+    """Fix has something to install here. Not when all that is wrong is a vulnerability whose fix is a release
+    the app does not accept: pip cannot meet both, and the app must move to that release first."""
+    if not env.version or env.unmet or env.outdated:
+        return True
+    return bool(env.fixes) and not refused_fix(status.dependency, env)[1]
 
 
 def requirement(status: DependencyStatus, env: EnvironmentVersion) -> str:
     """The pip requirement for one venv: the specifiers of the apps that run in it, and the release that fixes a
-    known vulnerability of the installed version."""
+    known vulnerability of the installed version, when the apps accept that release."""
     wanted = {source.owner: source.specifier for source in status.dependency.sources}
     specifiers = list(dict.fromkeys(wanted[owner] for owner in env.owners if wanted.get(owner)))
-    if env.fixes:
-        specifiers.append(">=" + max((vuln.fixed for vuln in env.fixes), key=release))
+    fixed, refusing = refused_fix(status.dependency, env)
+    if fixed and not refusing:
+        specifiers.append(">=" + fixed)
     return status.dependency.name + ",".join(specifiers)
 
 
@@ -114,7 +120,7 @@ def plan(result: CheckResult, which: Which = shutil.which, booted: Callable[[], 
     names: dict[str, list[str]] = {}
     for status in result.packages:
         for env in status.environments:
-            if _broken(env):
+            if _broken(status, env):
                 per_venv.setdefault(env.environment, []).append(requirement(status, env))
                 names.setdefault(env.environment, []).append(status.dependency.name)
     steps = [Step("pip", f"{', '.join(names[venv])} into {venv}",

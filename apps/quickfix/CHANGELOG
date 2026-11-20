@@ -1,3 +1,9 @@
+Changelog: 20-11-2026 14:57:33
+
+Added. Quickfix has a group Prime95 with mprime: its pill installs it through Board Test's installer (--mprime),
+and Install all does too. No test uses it: PS5 CPU Tools runs its torture test for a longer burn-in. It needs the
+Board Test release that has --mprime. vulkan-tools names test 60 (VKCube) too.
+
 Changelog: 20-11-2026 13:11:18
 
 Release 0.2.0.

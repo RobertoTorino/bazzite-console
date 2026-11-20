@@ -59,13 +59,16 @@ GROUPS: tuple[Group, ...] = (
           "privacy terms.", (
         Tool("speedtest", "Ookla speedtest", "44 (Internet Speed; speedtest-cli works too)"),
     )),
+    Group("--mprime", "Prime95", "The latest mprime from mersenne.org, into ~/mprime, with a link in ~/.local/bin.", (
+        Tool("mprime", "mprime", "no test: PS5 CPU Tools' longer burn-in (load tool mprime)"),
+    )),
     Group("--dev", "Development extras", LAYERED, (
         Tool("sqlite3", "sqlite", "no test: the app's history database, during development"),
     )),
 )
 # Already on Bazzite: what the tests use besides.
 BUILT_IN = (Tool("glmark2", "glmark2", "41 (GPU load, last resort)"),
-            Tool("vulkaninfo", "vulkan-tools", "20, 21 (Vulkan, compute units)"),
+            Tool("vulkaninfo", "vulkan-tools", "20, 21 (Vulkan, compute units), 60 (VKCube)"),
             Tool("smartctl", "smartmontools", "10 (SMART health)"))
 INSTALLER = "development/tools/install-requirements.sh"             # in Board Test's folder
 BOARD_TEST = Path("/opt/ps5-board-test")

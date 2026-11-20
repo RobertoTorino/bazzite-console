@@ -144,6 +144,9 @@ CATEGORIES: list[Category] = [
         TestDef(BENCH_TEST_ID, "Performance Benchmark (CPU / GPU score)",
                 "Opt-in. CPU single/multi-thread (stress-ng) and GPU FP32 compute (vkpeak), scored against a baseline "
                 "saved on this PS5 (= 100) to compare kernels and settings, plus a ladder against known systems."),
+        TestDef("60", "VKCube (Vulkan on the screen)",
+                "Draws the Vulkan tools' spinning cube in a window for five seconds, as the desktop user in the "
+                "running session: Vulkan reaches the screen. An error when vkcube ends by itself."),
     ]),
     Category("ps5", "PS5", [
         TestDef("54", "Loader and Boot Partition",

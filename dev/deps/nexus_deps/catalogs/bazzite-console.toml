@@ -205,8 +205,9 @@ anchor = "requirements"
 
 [[tool]]
 name = "mprime"
-description = "Prime95 for Linux. Its torture test is a long, heavy CPU and memory load that finds marginal cores other tests miss."
+description = "Prime95 for Linux. Its torture test is a long, heavy CPU and memory load that finds marginal cores other tests miss. A download from mersenne.org that is unpacked into a folder, ~/mprime by default; no package installs it."
 executables = ["mprime"]
+locations = ["~/mprime/mprime", "~/.local/bin/mprime", "/opt/mprime/mprime", "/usr/local/bin/mprime"]
 
 [[tool.source]]
 owner = "cores"
@@ -441,7 +442,7 @@ description = "SSH and SFTP support used by SFTP Tools."
 
 [[dependency.source]]
 owner = "sftp"
-specifier = ">=3.4,<5"
+specifier = ">=5.0,<6"
 
 [app.quickfix]
 name = "PS5 Quickfix"

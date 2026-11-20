@@ -8,7 +8,7 @@
 
 A window that lists the Python packages and external tools of the suite's apps installed on this machine, which apps
 use them, what is missing or must be updated (with the known vulnerabilities from OSV.dev), Bazzite's update
-state, and every update of the machine (Bazzite's image, Flatpaks, Homebrew, Rust, the development venv); **Fix**
+state, and every update of the machine (Bazzite's image, Flatpaks, Homebrew, Rust, the development venv, Prime95's mprime); **Fix**
 installs what is missing, outdated or newer, after it shows every command and asks. An hourly notification
 says when something needs you. A development app: it runs from the checkout it lives in and has no releases of its own.
 Start it from [Nexus Dashboard](../dash), or:

@@ -29,8 +29,8 @@ from bazzite_console_core.widgets import (
 from . import APP_NAME, CHECKOUT, INFO, LOGO_PATH, SUITE_NAME
 from .bazzite import BazziteState, describe, read_state
 from .dependencies import (
-    App, CheckResult, Dependency, DependencyStatus, ExternalTool, ToolSource, ToolStatus, check_all, release,
-    tool_need,
+    App, CheckResult, Dependency, DependencyStatus, ExternalTool, ToolSource, ToolStatus, check_all, refused_fix,
+    release, tool_need,
 )
 from .fixes import RESTART, Plan, Step, plan as fix_plan
 from .system import Source, Update, read_sources, steps as system_steps, summary as system_summary
@@ -96,8 +96,18 @@ def package_advice(result: DependencyStatus, apps: dict[str, App]) -> str:
         if vuln.fixed:
             fixes.setdefault(version, []).append(vuln.fixed)
     users: dict[str, list[str]] = {}
+    specifiers = {source.owner: source.specifier for source in result.dependency.sources}
     for env in result.environments:
-        if env.version in fixes:
+        if env.version not in fixes:
+            continue
+        refusing = refused_fix(result.dependency, env)[1]
+        for owner in refusing:                      # the fix is a release this app does not accept: not for Fix
+            fixed = max(fixes[env.version], key=release)
+            parts.append(f"{escape(fixed)} fixes the known vulnerabilities of {name} {escape(env.version)}, but "
+                         f"{escape(_app_name(owner, apps))} accepts only {escape(specifiers[owner])}. Fix cannot "
+                         f"install it: a version of {escape(_app_name(owner, apps))} that accepts it has to come "
+                         "first.")
+        if not refusing:
             users.setdefault(env.version, []).extend(_app_name(owner, apps) for owner in env.owners)
     for version, names in users.items():
         fixed = max(fixes[version], key=release)

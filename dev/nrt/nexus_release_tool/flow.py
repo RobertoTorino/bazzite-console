@@ -294,17 +294,15 @@ def resume_command(run: rp.BuildRun) -> str:
 
 @dataclass(frozen=True)
 class ReleaseTime:
-    """How long one release took up to its device test, every step of it (owner, 20-11-2026: the time was GitHub's
-    CI and release only, 9 min 46 s for a release whose push alone ran CI's jobs here for 17 minutes): from the
-    commit the release started from (Commit your changes) to the end of GitHub's CI on it (steps 2 to 4: the push
-    with CI's jobs here, then GitHub's), and from the release commit (Start new release) to the end of the release
-    on GitHub (steps 5 and 6). Read from the commits' times and GitHub's runs, so a release made before this one
-    has its time too. What the owner waits between CI passed and Start is not counted."""
+    """How long GitHub worked on one release up to its device test: CI on the commit the release started from (step
+    4) and from the release commit (Start new release) to the end of the release on GitHub (steps 5 and 6). It is
+    what the Previous release box shows for a release this tool did not time itself (release_page.py's clock, which
+    runs from the first step pressed)."""
     sha: str                            # the release commit
-    before: float                       # seconds from the commit before it to the end of GitHub's CI on that
-                                        # commit; 0 when GitHub no longer lists that run
+    before: float                       # seconds of GitHub's CI before Start; 0 when GitHub no longer lists that run
     release: float                      # seconds from the release commit to the end of its run (so far, while it runs)
     running: bool = False
+    at: float = 0.0                     # when the release commit was made, seconds since the epoch
 
     @property
     def total(self) -> float:
@@ -313,9 +311,9 @@ class ReleaseTime:
 
 def release_times(root: Path, now: Callable[[], float] = time.time,
                   read: Callable[[str], list[rp.BuildRun]] = rp.runs_again) -> list[ReleaseTime]:
-    """The times of the current release and the one before it, newest first (fewer when there are none): the two
-    newest runs of release.yml on main that passed or still run. A run that failed made no draft to test, so it is
-    not a release here. Asks GitHub (three requests, none when nothing changed): for a worker thread."""
+    """GitHub's times of the two newest releases, newest first (fewer when there are none): the two newest runs of
+    release.yml on main that passed or still run. A run that failed made no draft to test, so it is not a release
+    here. Asks GitHub (three requests, none when nothing changed): for a worker thread."""
     repo = rp.repo_slug()
     runs = read(rp.WORKFLOW_RUNS_URL.format(repo=repo, file=RELEASE_WORKFLOW))
     times = []
@@ -325,11 +323,35 @@ def release_times(root: Path, now: Callable[[], float] = time.time,
         parent = (rp.git(root, "rev-parse", "--verify", "--quiet", f"{run.sha}^") or "").strip()
         before = read(rp.HEAD_RUNS_URL.format(repo=repo, sha=parent)) if parent else []
         ci = next((r for r in before if r.file == CI_WORKFLOW and r.done and r.started and r.ended), None)
-        worked = (rp.git(root, "log", "-1", "--format=%ct", parent) or "").strip() if ci else ""
-        times.append(ReleaseTime(run.sha, max(0.0, ci.ended - (float(worked) if worked.isdigit() else ci.started))
-                                 if ci else 0.0,
-                                 max(0.0, (run.ended or now()) - start) if start else 0.0, not run.done))
+        times.append(ReleaseTime(run.sha, max(0.0, ci.ended - ci.started) if ci else 0.0,
+                                 max(0.0, (run.ended or now()) - start) if start else 0.0, not run.done, start))
     return times
+
+
+# The release's clock (owner, 20-11-2026: "the release that is NOW started with step 1 in NRT"): the Current release
+# box counts from the first step pressed for a release to the device test, on this computer's clock, waiting
+# included. The steps whose command starts it, and the ones that say the release on GitHub is through.
+CLOCK_STARTS = ("pull", "commit", "push", "ci", "start")
+CLOCK_ENDS = ("test", "finish", "ready", "")
+CLOCK_STALE = 12 * 3600                 # a clock older than this that never ended is no release still being made
+
+
+def clock_step(clock: tuple[float, float], step: str, running: bool, facts: "Facts", now: float) -> tuple[float, float]:
+    """The clock (start, end; 0: not yet) after a look at the steps: it starts when a command runs for one of the
+    first steps while no release is being timed, and ends when the release on GitHub passed (at the end of its run,
+    as GitHub has it)."""
+    start, end = clock
+    if running and step in CLOCK_STARTS and (not start or end):
+        return now, 0.0
+    if start and not end and facts.run is not None and facts.run.passed and step in CLOCK_ENDS:
+        return start, max(start, min(now, facts.run.ended or now))
+    return clock
+
+
+def deviation(current: float | None, previous: float | None) -> float | None:
+    """How much longer the current release takes than the previous one, in seconds (less than 0: shorter); None
+    without both."""
+    return current - previous if current is not None and previous is not None else None
 
 
 def duration_text(seconds: float) -> str:
@@ -340,12 +362,6 @@ def duration_text(seconds: float) -> str:
     if whole < 3600:
         return f"{whole // 60} min {whole % 60:02d} s"
     return f"{whole // 3600} h {whole % 3600 // 60:02d} min"
-
-
-def deviation(times: list[ReleaseTime]) -> float | None:
-    """How much longer the current release took than the one before it, in seconds (less than 0: shorter); None
-    without two releases."""
-    return times[0].total - times[1].total if len(times) > 1 else None
 
 
 def deviation_text(seconds: float) -> str:

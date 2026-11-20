@@ -262,3 +262,48 @@ def test_a_flattened_image_has_dnf_instead_of_the_image(tmp_path):
                                   tmp_path, booted=lambda: False)
     assert [source.key for source in sources] == ["dnf"]
     assert all(argv[0] != "rpm-ostree" for argv in run.calls)
+
+
+MPRIME_ROW = ('<td><a href="https://download.mersenne.ca/gimps/v30/30.20/p95v3020b3.linux64.tar.gz"><span>'
+              'p95v3020b3.linux64.tar.gz</span></a></td><td>SHA256:&nbsp;' + "ab" * 32 + "<br></td>")
+
+
+def test_mprime_is_checked_against_mersenne_orgs_page_and_updated_by_board_tests_installer(tmp_path):
+    """Prime95's mprime, when Quickfix installed it: the release in ~/mprime/.release against the one the download
+    page lists; Update runs Board Test's installer, which installs that release (owner, 20-11-2026)."""
+    assert system.parse_mprime(MPRIME_ROW) == "p95v3020b3.linux64.tar.gz"
+    assert system.parse_mprime('<a href="https://evil.example/p95v3020b3.linux64.tar.gz">') == ""
+    assert system.mprime_version("p95v3019b20.linux64.tar.gz") == "30.19 build 20"
+    home, opt = tmp_path / "home", tmp_path / "opt"
+    (home / "mprime").mkdir(parents=True)
+    (home / "mprime" / "mprime").write_text("", encoding="utf-8")
+    (home / "mprime" / ".release").write_text("p95v3019b20.linux64.tar.gz\n", encoding="utf-8")
+    script = opt / system.MPRIME_INSTALLER
+    script.parent.mkdir(parents=True)
+    script.write_text("#!/bin/sh\n", encoding="utf-8")                    # a Board Test from before --mprime
+    assert system.mprime_installer(tmp_path / "none", opt) is None
+    script.write_text("#!/bin/sh\ncase $1 in\n    --mprime)    install_mprime ;;\nesac\n", encoding="utf-8")
+
+    def run(argv, **_kwargs):
+        assert argv[0] == "curl" and argv[-1] == system.MPRIME_PAGE
+        return subprocess.CompletedProcess(argv, 0, MPRIME_ROW, "")
+    source = system.check_mprime(run, home, tmp_path / "none", opt)
+    assert source.updates == (system.Update("mprime", "30.19 build 20", "30.20 build 3"),)
+    assert source.step.command == ("bash", str(script), "--mprime") and not source.step.restart
+    (home / "mprime" / ".release").write_text("p95v3020b3.linux64.tar.gz\n", encoding="utf-8")
+    assert not system.check_mprime(run, home, tmp_path / "none", opt).outdated            # the latest: nothing to do
+    (home / "mprime" / ".release").unlink()                                                # unpacked by hand
+    by_hand = system.check_mprime(run, home, tmp_path / "none", opt)
+    assert by_hand.updates[0].current == "unknown" and by_hand.step and "by hand" in by_hand.note
+    no_installer = system.check_mprime(run, home, tmp_path / "none", tmp_path / "gone")
+    assert no_installer.manual and "Board Test" in no_installer.note
+    offline = system.check_mprime(lambda argv, **_k: subprocess.CompletedProcess(argv, 6, "", "curl: (6) no host"),
+                                  home, tmp_path / "none", opt)
+    assert offline.error == "mersenne.org could not be read: curl: (6) no host" and not offline.outdated
+    assert system.mprime_installer(system.CHECKOUT, tmp_path / "gone") == \
+        system.CHECKOUT / "apps" / "board" / system.MPRIME_INSTALLER
+    # a machine without ~/mprime has no such card
+    keys = [s.key for s in system.read_sources(run, lambda name: None, tmp_path, home=tmp_path / "empty")]
+    assert "mprime" not in keys
+    listed = system.read_sources(run, lambda name: "/usr/bin/curl" if name == "curl" else None, tmp_path, home=home)
+    assert [s.key for s in listed] == ["mprime"]

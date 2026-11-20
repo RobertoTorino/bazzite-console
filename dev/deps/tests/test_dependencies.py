@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import re
+import shlex
 import tomllib
 from pathlib import Path
 
@@ -315,6 +316,23 @@ def test_tools_are_found_in_the_apps_extra_folders(tmp_path, monkeypatch):
     monkeypatch.setenv("PATH", str(tmp_path / "empty"))
     assert find_executable("speedtest") == str(speedtest)
     assert check_tools([SPEEDTEST])[0].path == str(speedtest)
+
+
+def test_mprime_is_found_where_its_download_is_unpacked(tmp_path, monkeypatch):
+    """mprime is a tarball from mersenne.org, unpacked into ~/mprime and on no PATH: found where CPU Tools looks."""
+    mprime = next(tool for tool in load_tools(CATALOG) if tool.name == "mprime")
+    script = (SUITE / "apps" / "cores" / "ps5-cores-bisect.sh").read_text(encoding="utf-8")
+    looked = re.search(r"for p in (.+?); do\n\s+\[\[ -x \$p \]\] && { MPRIME_BIN=\$p", script).group(1)
+    assert mprime.locations == tuple(shlex.split(looked.replace("$HOME", "~")))
+    home = tmp_path / "home"
+    binary = home / "mprime" / "mprime"
+    binary.parent.mkdir(parents=True)
+    binary.write_text("#!/bin/sh\n", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+    assert check_tools([mprime])[0].path == ""           # the unpacked file is not executable: not found
+    binary.chmod(0o755)
+    assert check_tools([mprime])[0].path == str(binary)
 
 
 def test_either_speed_test_will_do(tmp_path, monkeypatch):

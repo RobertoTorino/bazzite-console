@@ -1,3 +1,9 @@
+Changelog: 20-11-2026 14:57:33
+
+Fixed. The app installs paramiko 5 (>=5.0,<6; it was >=3.4,<5). paramiko 5.0.0 is the release that fixes the known
+vulnerabilities of the 3.x and 4.x versions, which the app could not take. An installed app gets it when it is
+installed again from the portal, or with Nexus Deps' Fix.
+
 Changelog: 20-11-2026 13:11:18
 
 Release 1.5.0.

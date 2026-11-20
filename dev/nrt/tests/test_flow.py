@@ -759,10 +759,9 @@ def _timed(sha, file, started, ended, conclusion="success", ref="main"):
                        started=started, file=file, ended=ended)
 
 
-def test_a_release_takes_from_its_work_commit_to_ci_passed_and_from_its_commit_to_the_end_of_its_run(suite):
+def test_githubs_time_of_a_release_is_its_ci_before_start_and_from_its_commit_to_the_end_of_its_run(suite):
     """Two releases in the checkout, each a commit on top of the one CI passed on; a failed run and a run on a tag
-    are no releases; what the owner waited between CI and Start is not counted. The time before Start runs from
-    the work's commit, so the push with CI's jobs here is in it (owner, 20-11-2026), not GitHub's CI alone."""
+    are no releases; what the owner waited between CI and Start is not counted."""
     shas = [sh(suite, "rev-parse", "HEAD").strip()]
     for n in (1, 2, 3):
         write(suite / "apps/test/app.py", f"print({n})\n")
@@ -780,12 +779,11 @@ def test_a_release_takes_from_its_work_commit_to_ci_passed_and_from_its_commit_t
                     _timed(new, "release.yml", at[new] + 4, at[new] + 200),
                     _timed(old, "release.yml", at[old] + 4, at[old] + 90)]
         sha = url.split("head_sha=")[1].split("&")[0]
-        return {before_new: [_timed(before_new, "docs.yml", 10, 5000),
-                             _timed(before_new, "ci.yml", at[before_new] + 900, at[before_new] + 1050)],
-                before_old: [_timed(before_old, "ci.yml", at[before_old] + 20, at[before_old] + 80)]}[sha]
+        return {before_new: [_timed(before_new, "docs.yml", 10, 5000), _timed(before_new, "ci.yml", 1000, 1150)],
+                before_old: [_timed(before_old, "ci.yml", 2000, 2060)]}[sha]
     times = flow.release_times(suite, read=read)
-    assert [(t.sha, t.before, t.release, t.running) for t in times] == [(new, 1050, 200, False), (old, 80, 90, False)]
-    assert times[0].total == 1250 and flow.deviation(times) == 1080
+    assert [(t.sha, t.before, t.release, t.running) for t in times] == [(new, 150, 200, False), (old, 60, 90, False)]
+    assert times[0].total == 350 and times[0].at == at[new]
     assert len(asked) == 3                                  # the release runs, and CI on each release's parent
 
 
@@ -797,7 +795,8 @@ def test_a_release_that_still_runs_counts_the_time_so_far_and_a_first_release_ha
         return [_timed(head, "release.yml", committed + 3, 0)] if "workflows/release.yml" in url else []
     times = flow.release_times(suite, now=lambda: committed + 75, read=read)
     assert [(t.before, t.release, t.running) for t in times] == [(0, 75, True)]      # the CI run is no longer listed
-    assert flow.deviation(times) is None and flow.release_times(suite, read=lambda url: []) == []
+    assert flow.release_times(suite, read=lambda url: []) == []
+    assert flow.deviation(None, 5) is None and flow.deviation(5, None) is None and flow.deviation(350, 150) == 200
 
 
 def test_times_and_deviations_in_words():
@@ -806,31 +805,80 @@ def test_times_and_deviations_in_words():
     assert [flow.deviation_text(s) for s in (185, -42, 0, 0.2)] == ["+3 min 05 s", "−42 s", "0 s", "0 s"]
 
 
-def test_the_page_shows_both_times_and_the_deviation_and_a_banner_over_the_limit(release_window):
-    """Over the limit the deviation is orange and in the banner; 0 or less and under the limit it is in its box
-    only; while the release runs a deviation under the limit says nothing yet."""
+def test_the_clock_starts_with_the_first_step_pressed_and_ends_when_the_release_on_github_passed():
+    """Owner, 20-11-2026: the current release is "the release that is NOW started with step 1 in NRT"."""
+    none = flow.Facts()
+    assert flow.clock_step((0, 0), "commit", False, none, 100) == (0, 0)             # nothing pressed yet
+    assert flow.clock_step((0, 0), "commit", True, none, 100) == (100, 0)            # Commit runs: it starts
+    assert flow.clock_step((100, 0), "push", True, none, 160) == (100, 0)            # and goes on through the steps
+    running = flow.Facts(run=_timed("abc", "release.yml", 300, 0))
+    assert flow.clock_step((100, 0), "run", False, running, 400) == (100, 0)
+    passed = flow.Facts(run=_timed("abc", "release.yml", 300, 520), drafts=["x"])
+    assert flow.clock_step((100, 0), "test", False, passed, 530) == (100, 520)       # the run's end, as GitHub has it
+    assert flow.clock_step((100, 520), "ready", False, passed, 900) == (100, 520)    # the later steps add nothing
+    assert flow.clock_step((100, 520), "finish", True, passed, 900) == (100, 520)    # nor does its git pull
+    assert flow.clock_step((100, 520), "commit", True, none, 2000) == (2000, 0)      # the next release: anew
+    failed = flow.Facts(run=_timed("abc", "release.yml", 300, 520, conclusion="failure"))
+    assert flow.clock_step((100, 0), "run", False, failed, 530) == (100, 0)          # its fix is still this release
+
+
+def test_the_page_shows_the_previous_release_the_current_one_and_the_deviation(release_window, monkeypatch):
+    """Owner, 20-11-2026: opened for a new release, what is out is the Previous release, with GitHub's own time
+    (its CI and its release run) while this tool did not time it; the Current release is a dash until its first
+    step is pressed, then counts; the deviation and its banner are the current one against the previous."""
+    from nexus_release_tool import release_page
     page = release_window.release_page
     assert page.times_row.isHidden() and page.slow_banner.isHidden()            # nothing read yet
-    page.times_checked([flow.ReleaseTime("a" * 40, 100, 400), flow.ReleaseTime("b" * 40, 100, 200)])
-    assert not page.times_row.isHidden() and not page.slow_banner.isHidden()
-    assert "3 min 20 s longer" in page.slow_note.text() and "8 min 20 s against 5 min 00 s" in page.slow_note.text()
-    # No release is being made: the first box is the latest one GitHub has, not "this" one (owner, 20-11-2026)
-    assert page.time_now.caption.text() == "Latest release" and page.time_before.caption.text() == "Release before it"
-    assert page.slow_note.text().startswith("The latest release took")
-    page.times_checked([flow.ReleaseTime("a" * 40, 100, 250), flow.ReleaseTime("b" * 40, 100, 200)])
-    assert page.slow_banner.isHidden()                                          # 50 s longer: under the limit
-    page.times_checked([flow.ReleaseTime("a" * 40, 50, 100), flow.ReleaseTime("b" * 40, 100, 200)])
-    assert page.slow_banner.isHidden() and flow.deviation(page.times) == -150
-    page.times_checked([flow.ReleaseTime("a" * 40, 100, 30, running=True), flow.ReleaseTime("b" * 40, 100, 200)])
-    assert page.slow_banner.isHidden()
-    page.times_checked([flow.ReleaseTime("a" * 40, 100, 900, running=True), flow.ReleaseTime("b" * 40, 100, 200)])
-    assert "is taking 11 min 40 s longer" in page.slow_note.text() and not page.slow_banner.isHidden()
-    assert page.time_now.caption.text() == "This release"                       # its run goes on
+    assert page.time_before.caption.text() == "Previous release" and page.time_now.caption.text() == "Current release"
+    out, older = flow.ReleaseTime("a" * 40, 100, 400, at=5000), flow.ReleaseTime("b" * 40, 100, 200, at=1000)
+    page.times_checked([out, older])
+    assert not page.times_row.isHidden() and page.slow_banner.isHidden()        # two old releases: no banner
+    assert page.time_before.value.text() == "8 min 20 s" and "GitHub's own time" in page.time_before.toolTip()
+    assert page.time_now.value.text() == page.time_deviation.value.text() == "—"
+    monkeypatch.setattr(release_page.time, "time", lambda: 10_000.0)
+    page.run_clock("commit", True, flow.Facts())                                # Commit pressed: the clock starts
+    assert page.clock == (10_000.0, 0.0) and page.ticking.isActive()
+    monkeypatch.setattr(release_page.time, "time", lambda: 10_090.0)
+    page.show_times()
+    assert page.time_now.value.text() == "1 min 30 s so far" and page.time_deviation.value.text() == "—"
+    assert page.time_before.value.text() == "8 min 20 s"
+    new = flow.ReleaseTime("c" * 40, 60, 30, running=True, at=10_200)           # Start made its commit: not previous
+    monkeypatch.setattr(release_page.time, "time", lambda: 10_700.0)
+    page.times_checked([new, out])
+    assert page.time_before.value.text() == "8 min 20 s" and page.time_now.value.text() == "11 min 40 s so far"
+    assert "is taking 3 min 20 s longer" in page.slow_note.text() and not page.slow_banner.isHidden()
+    passed = flow.Facts(run=_timed("c" * 40, "release.yml", 10_210, 10_400), drafts=["x"])
+    page.run_clock("test", False, passed)                                       # the release on GitHub passed
+    assert page.clock == (10_000.0, 10_400.0) and not page.ticking.isActive()
+    page.times_checked([flow.ReleaseTime("c" * 40, 60, 200, at=10_200), out])
+    assert page.time_now.value.text() == "6 min 40 s" and page.time_before.value.text() == "8 min 20 s"
+    assert page.time_deviation.value.text() == "−1 min 40 s" and page.slow_banner.isHidden()
+    assert page.recorded() == {"c" * 40: 400.0}
     page.times_checked(OSError("offline"))                                      # GitHub not reached: as it was
-    assert len(page.times) == 2 and not page.slow_banner.isHidden()
-    page.times_checked([flow.ReleaseTime("a" * 40, 100, 400)])                  # the first release ever
-    assert page.slow_banner.isHidden() and not page.times_row.isHidden()
+    assert len(page.times) == 2 and page.time_now.value.text() == "6 min 40 s"
+    page.clock, page.clock_sha = (0.0, 0.0), ""                                 # the tool opened for the next release
+    page.show_times()
+    assert page.time_before.value.text() == "6 min 40 s" and "Measured here" in page.time_before.toolTip()
+    assert page.time_now.value.text() == "—"
     assert page.deviation_limit() == flow.DEVIATION_LIMIT and release_window.times_source is None
+
+
+def test_a_clock_left_running_is_kept_and_one_that_ended_or_is_old_is_not(release_window):
+    import time as clock
+    from PyQt6.QtCore import QSettings
+    from nexus_release_tool import release_page
+    w, page = release_window, release_window.release_page
+    assert page.kept_clock() == (0.0, 0.0)                                      # no settings
+    w.settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "nexus", "nrt-test")
+    start = clock.time() - 60
+    w.settings.setValue(release_page.CLOCK_KEY, f"{start} 0.0")
+    assert page.kept_clock() == (start, 0.0)                                    # the tool restarted during a release
+    w.settings.setValue(release_page.CLOCK_KEY, f"{start} {start + 30}")
+    assert page.kept_clock() == (0.0, 0.0)                                      # ended: the next release is new
+    w.settings.setValue(release_page.CLOCK_KEY, f"{start - flow.CLOCK_STALE} 0.0")
+    assert page.kept_clock() == (0.0, 0.0)
+    w.settings.setValue(release_page.CLOCK_KEY, "nonsense")
+    assert page.kept_clock() == (0.0, 0.0)
 
 
 def test_the_times_are_read_through_the_windows_source(release_window):
@@ -852,7 +900,7 @@ def test_the_times_are_read_through_the_windows_source(release_window):
     page.check_times()
     answered()
     assert asked == [release_window.root] and [t.total for t in page.times] == [180]
-    assert not page.times_row.isHidden()
+    assert not page.times_row.isHidden() and page.time_before.value.text() == "3 min 00 s"
 
     def offline(root):
         raise OSError("no network")

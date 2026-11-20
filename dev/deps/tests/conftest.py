@@ -58,3 +58,9 @@ def atomic(tmp_path, monkeypatch):
     marker.touch()
     monkeypatch.setattr(bazzite, "OSTREE_BOOTED", marker)
     return marker
+
+
+@pytest.fixture(autouse=True)
+def home_in_a_temp_folder(tmp_path, monkeypatch):
+    """No test looks in the user's own home folder: an mprime unpacked there would add a card and a request."""
+    monkeypatch.setenv("HOME", str(tmp_path / "home-of-the-test"))

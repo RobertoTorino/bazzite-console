@@ -9,10 +9,12 @@ import subprocess
 from nexus_deps import CATALOG
 from nexus_deps.bazzite import BazziteState, Deployment
 from nexus_deps.dependencies import (
-    CheckResult, DependencyStatus, EnvironmentVersion, ExternalTool, ToolSource, ToolStatus, Vulnerability,
+    CheckResult, Dependency, DependencySource, DependencyStatus, EnvironmentVersion, ExternalTool, ToolSource,
+    ToolStatus, Vulnerability, load_apps, refused_fix,
     load_catalog, load_tools,
 )
 from nexus_deps.fixes import Plan, Step, dnf_step, notify, plan, problems, reminder_text, requirement
+from nexus_deps.main_window import package_advice
 from nexus_deps.system import Source, Update
 
 VENV = "/home/u/.local/share/bazzite-console-suite/venv"
@@ -71,6 +73,26 @@ def test_missing_and_outdated_packages_go_into_their_own_venv():
     assert steps[1].command[6:] == (requirement(statuses[1], statuses[1].environments[0]),)
     assert steps[1].command[6].startswith("paramiko") and steps[1].command[6].endswith(",>=5.0.1")
     assert not any(step.restart for step in steps)
+
+
+def test_a_fix_the_app_does_not_accept_is_not_for_fix():
+    """A vulnerability fixed only in a release above the app's specifier: pip cannot meet both (owner, 20-11-2026:
+    "paramiko>=3.4,<5,>=5.0.0", no version found), so Fix leaves it and the card says the app comes first."""
+    capped = Dependency("paramiko", (DependencySource("sftp", ">=3.4,<5"),))
+    vuln = Vulnerability("CVE-1", fixed="5.0.0")
+    env = EnvironmentVersion(OWN, ("sftp",), "4.0.0", vulnerabilities=(vuln,))
+    status = DependencyStatus(capped, (env,))
+    assert refused_fix(capped, env) == ("5.0.0", ("sftp",))
+    assert requirement(status, env) == "paramiko>=3.4,<5"
+    assert not plan(result([status]), which_all)
+    advice = package_advice(status, load_apps(CATALOG))
+    assert "5.0.0 fixes the known vulnerabilities of paramiko 4.0.0, but PS5 SFTP Tools accepts only &gt;=3.4,&lt;5." in advice
+    assert "Fix cannot install it" in advice and "Update paramiko" not in advice
+    older = EnvironmentVersion(OWN, ("sftp",), "3.3.0", ("sftp",), (vuln,), ("sftp",))       # too old as well
+    assert plan(result([DependencyStatus(capped, (older,))]), which_all).steps[0].command[6:] == ("paramiko>=3.4,<5",)
+    inside = EnvironmentVersion(OWN, ("sftp",), "4.0.0", vulnerabilities=(Vulnerability("CVE-2", fixed="4.0.1"),))
+    assert refused_fix(capped, inside) == ("4.0.1", ())
+    assert requirement(DependencyStatus(capped, (inside,)), inside) == "paramiko>=3.4,<5,>=4.0.1"
 
 
 def test_a_missing_required_tool_comes_from_homebrew_first_then_rpm_ostree():

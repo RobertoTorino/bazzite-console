@@ -9,6 +9,7 @@
 #                                                          # rpm-ostree on an Atomic one (needs a reboot)
 #   ./development/tools/install-requirements.sh --bins     # vkpeak + memtest_vulkan into ~/.local/bin
 #   ./development/tools/install-requirements.sh --speedtest# Ookla speedtest CLI into ~/.local/bin
+#   ./development/tools/install-requirements.sh --mprime   # Prime95's mprime into ~/mprime (PS5 CPU Tools' longer burn-in)
 #   ./development/tools/install-requirements.sh --dev      # development extras (sqlite, to inspect the GUI history DB)
 #   ./development/tools/install-requirements.sh --all      # everything above except --dev
 set -euo pipefail
@@ -16,6 +17,13 @@ set -euo pipefail
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
 RPMS=(stress-ng lm_sensors vkmark nvme-cli fio)
 SPEEDTEST_VERSION="${SPEEDTEST_VERSION:-1.2.0}"
+# Prime95 for Linux: the release mersenne.org's download page lists now, with the SHA-256 it lists for it. The
+# three values below are one known release, used only when the page cannot be read.
+MPRIME_DIR="${MPRIME_DIR:-$HOME/mprime}"
+MPRIME_PAGE="${MPRIME_PAGE:-https://www.mersenne.org/download/}"
+MPRIME_FILE="p95v3019b20.linux64.tar.gz"
+MPRIME_URL="https://download.mersenne.ca/gimps/v30/30.19/$MPRIME_FILE"
+MPRIME_SHA256="4ce2377e03deb4cf189523136e26401ba08f67857a128e420dd030d00cdca601"
 # A flattened image (the PS5's own) has no ostree and masks rpm-ostree: dnf installs there, at once. An Atomic
 # Bazzite (booted from an ostree deployment) layers with rpm-ostree, active after a reboot.
 OSTREE_BOOTED="${OSTREE_BOOTED:-/run/ostree-booted}"
@@ -117,6 +125,53 @@ install_speedtest() {
     say "Installed $BIN_DIR/speedtest"
 }
 
+# -------------------------------------------------------------------- mprime
+# No test uses it: PS5 CPU Tools' bisect does, for its longer burn-in (--load mprime). The whole download stays
+# together in $MPRIME_DIR, where the bisect looks; the link in $BIN_DIR puts it on PATH. A run with a newer
+# release on the page installs that one over it (Nexus Deps does so with its Update); mprime's own files stay.
+mprime_latest() {  # sets MPRIME_URL, MPRIME_FILE and MPRIME_SHA256 from the download page; 1 when it cannot
+    local page row url sha
+    page=$(curl -fsSL --max-time 30 "$MPRIME_PAGE" | tr -d '\n') || return 1
+    row=$(grep -oE 'https://(www\.|download\.)?mersenne\.(org|ca)/[^" ]+/p95v[0-9a-z]+\.linux64\.tar\.gz".{0,900}' <<<"$page" | head -1)
+    url=${row%%\"*}
+    sha=$(grep -oE 'SHA256:(&nbsp;|[[:space:]])*[0-9a-f]{64}' <<<"$row" | head -1 | grep -oE '[0-9a-f]{64}$')
+    [ -n "$url" ] && [ -n "$sha" ] || return 1
+    MPRIME_URL=$url; MPRIME_FILE=${url##*/}; MPRIME_SHA256=$sha
+}
+
+install_mprime() {
+    local found
+    found=$(command -v mprime 2>/dev/null || true)
+    if [ -n "$found" ] && [ "$(readlink -f "$found")" != "$(readlink -f "$MPRIME_DIR/mprime")" ]; then
+        say "mprime is already on PATH, not installed by this script: $found"
+        return
+    fi
+    if mprime_latest; then
+        say "The release on mersenne.org's download page: $MPRIME_FILE"
+    else
+        warn "Could not read $MPRIME_PAGE; using the release this script knows: $MPRIME_FILE"
+    fi
+    # .release names the download that is unpacked there: the same name is the same release.
+    if [ -x "$MPRIME_DIR/mprime" ] && [ "$(cat "$MPRIME_DIR/.release" 2>/dev/null)" = "$MPRIME_FILE" ]; then
+        say "mprime is already that release: $MPRIME_DIR/mprime"
+    else
+        say "Downloading mprime: $MPRIME_URL"
+        local tmp
+        tmp=$(mktemp -d)
+        curl -fsSL -o "$tmp/$MPRIME_FILE" "$MPRIME_URL"
+        echo "$MPRIME_SHA256  $tmp/$MPRIME_FILE" | sha256sum -c --quiet - \
+            || { rm -rf "$tmp"; die "The download is not the file mersenne.org lists (SHA-256 differs); nothing was installed."; }
+        mkdir -p "$MPRIME_DIR"
+        tar -xzf "$tmp/$MPRIME_FILE" -C "$MPRIME_DIR"
+        rm -rf "$tmp"
+        [ -x "$MPRIME_DIR/mprime" ] || die "No mprime in $MPRIME_DIR after unpacking."
+        echo "$MPRIME_FILE" >"$MPRIME_DIR/.release"
+        say "Installed $MPRIME_DIR/mprime"
+    fi
+    ln -sfn "$MPRIME_DIR/mprime" "$BIN_DIR/mprime"
+    say "mprime is at $MPRIME_DIR/mprime (link: $BIN_DIR/mprime)"
+}
+
 # --------------------------------------------------------- development extras
 install_dev() {
     if command -v sqlite3 >/dev/null 2>&1; then
@@ -139,8 +194,9 @@ case "$MODE" in
     --rpms)      install_rpms ;;
     --bins)      install_vkpeak; install_memtest_vulkan ;;
     --speedtest) install_speedtest ;;
+    --mprime)    install_mprime ;;
     --dev)       install_dev ;;
-    --all)       install_rpms; install_vkpeak; install_memtest_vulkan; install_speedtest ;;
+    --all)       install_rpms; install_vkpeak; install_memtest_vulkan; install_speedtest; install_mprime ;;
     interactive)
         echo
         say "RPM packages: ${RPMS[*]}"
@@ -162,10 +218,14 @@ case "$MODE" in
         echo "    speedtest: test 44 (Internet Speed); running it accepts Ookla's license and GDPR terms"
         ask "Install the Ookla speedtest CLI?" && install_speedtest
         echo
+        say "mprime: the latest Prime95 from mersenne.org, into $MPRIME_DIR, with a link in $BIN_DIR"
+        echo "    mprime: no test uses it; PS5 CPU Tools' longer burn-in does (its load tool mprime)"
+        ask "Install mprime?" && install_mprime
+        echo
         say "Development extras: sqlite"
         echo "    sqlite3: look into the GUI's history database (no test uses it)"
         ask "Install the development extras?" && install_dev
         ;;
-    *) die "Unknown option: $MODE (use --rpms, --bins, --speedtest, --dev, --all or no option)" ;;
+    *) die "Unknown option: $MODE (use --rpms, --bins, --speedtest, --mprime, --dev, --all or no option)" ;;
 esac
 say "Done."

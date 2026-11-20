@@ -121,16 +121,19 @@ explanation.
     portal's tag), and the step waits for them, with their names in its line. When GitHub runs nothing more, the
     line reads *All runs finished, ready.* and every step shows ✓.
 
-Above the steps, three boxes say how long the release takes: **This release**, **Release before it** and the
-**Deviation** between the two. The first box is the newest release GitHub has: until **Start new release** has
-started the new one, that is the last one that went out, and the box reads **Latest release**. The time runs up to the device test and has two parts: from the commit the
-release started from (**Commit your changes**) to the end of GitHub's CI on it, which holds the push with CI's
-jobs here, and from the release commit to the end of the release on GitHub. The waiting between CI passed and
-Start is not counted. The times come from the commits and GitHub's runs. While the release runs, its box shows
-the time so far. A
-release that took more than 2 minutes longer than the one before it also shows the deviation in an orange banner;
-a deviation under that, or of 0 or less, shows in its box only. Each box's tooltip names the release commit and
-the two parts. The limit is `DEVIATION_LIMIT` in `dev/nrt/nexus_release_tool/flow.py`.
+Above the steps, three boxes say how long a release takes up to its device test: **Previous release**, **Current
+release** and the **Deviation** between the two.
+
+- **Previous release** is the last release that went out before the one you are making. Its time is the one the
+  tool measured for it. For a release the tool did not time, it is GitHub's own time: its CI before Start and its
+  release run. The box's tooltip says which.
+- **Current release** is the release you are making. Its time starts with the first step you press (Get up to
+  date, Commit, Push or Start new release), runs on this computer's clock with the waiting included, and ends when
+  the release on GitHub passed. Until you press a step it shows a dash. A tool that is closed and opened again
+  during a release keeps the time.
+- **Deviation** is the current release against the previous one. Over 2 minutes longer, it also shows in an
+  orange banner; under that, or at 0 or less, it shows in its box only. The limit is `DEVIATION_LIMIT` in
+  `dev/nrt/nexus_release_tool/flow.py`.
 
 By hand, without the tool, the same run starts on the newest pushed commit with:
 

@@ -301,7 +301,7 @@ The app remembers the voice file, the background, the mix, the save folder and t
 **Nexus Deps** (`dev/deps/`) lists the Python packages and external tools of the suite's apps installed on this
 machine, which apps and features use them, and what is missing or must be updated; **Fix** installs that. On top,
 it shows whether a Bazzite update waits for you and every update the machine has: Bazzite's image, the Flatpaks,
-Homebrew, Rust and the development venv. It runs from the checkout, like every development app; its catalog of the
+Homebrew, Rust, the development venv and Prime95's mprime when it is in `~/mprime`. It runs from the checkout, like every development app; its catalog of the
 suite is `dev/deps/nexus_deps/catalogs/bazzite-console.toml`.
 
 ```bash

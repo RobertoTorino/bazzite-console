@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import shlex
 import sys
+import time
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt, QTimer
@@ -52,6 +53,9 @@ RUNNING_ELSE = "A command runs. Its output is on the Commands tab; the steps go 
 REJECTED_KEY = "release/rejected"     # "<run url>|<portal tag>" of each Not OK, the newest 20
 DEFAULT_MESSAGE = "see changelog"      # the commit message the field starts with (owner, 05-11-2026)
 PILLS_PX = 360                        # the pills column of the steps: two pills side by side, or the message field
+CLOCK_KEY = "release/clock"           # "<start> <end>" of the release being made, seconds since the epoch; end 0
+                                      # while it is made
+RECORDED_KEY = "release/recorded"     # "<release commit>:<seconds>" of each release timed here, the newest 20
 TIME_BOX_PX = 240                     # each of the three time boxes (owner, 20-11-2026: wider; "9 min 39 s so far"
                                       # filled its box from edge to edge)
 
@@ -64,6 +68,7 @@ class ReleasePage(QWidget):
         self.release_window = window
         self.rejected_here: dict[str, list[str]] = {}     # Not OK without settings: by run url
         self.push_failed: tuple[str, str] = ("", "")       # HEAD and why, when its last Push ended badly
+        self.recorded_here: list[str] = []                 # the releases timed, without settings
         self.table = QTableWidget(0, len(COLUMNS))
         self.table.setHorizontalHeaderLabels(COLUMNS)
         self.table.verticalHeader().setVisible(False)
@@ -103,15 +108,15 @@ class ReleasePage(QWidget):
         banner.addWidget(self.record_button)
         self.video_banner.hide()
         self.video_reason = ""                  # why the video must be recorded first; read with the checkout
-        # How long the release took up to its device test, the one before it and the deviation between the two
-        # (owner, 20-11-2026); a deviation over the limit also shows in an orange banner.
-        self.time_now = MetricBox("This release")
-        self.time_before = MetricBox("Release before it")
+        # How long the previous release took up to its device test, the one being made and the deviation between
+        # the two (owner, 20-11-2026); a deviation over the limit also shows in an orange banner.
+        self.time_before = MetricBox("Previous release")
+        self.time_now = MetricBox("Current release")
         self.time_deviation = MetricBox("Deviation")
         self.times_row = QWidget()
         boxes = QHBoxLayout(self.times_row)
         boxes.setContentsMargins(0, 0, 0, 0)
-        for box in (self.time_now, self.time_before, self.time_deviation):
+        for box in (self.time_before, self.time_now, self.time_deviation):
             box.setMinimumWidth(TIME_BOX_PX)
             boxes.addWidget(box)
         boxes.addStretch(1)
@@ -125,6 +130,10 @@ class ReleasePage(QWidget):
         slow.addWidget(self.slow_note, 1)
         self.slow_banner.hide()
         self.times: list[flow.ReleaseTime] = []
+        self.clock = self.kept_clock()          # the release being made: when its first step was pressed, and its end
+        self.clock_sha = ""                     # its release commit, once its run passed
+        self.ticking = QTimer(self, interval=1000)      # the Current release box counts while its release is made
+        self.ticking.timeout.connect(self.show_times)
         self.time_checker = UpdateChecker(self)
         self.time_checker.finished.connect(self.times_checked)
         self.why_not = QLabel()                 # why Start cannot go yet
@@ -262,46 +271,106 @@ class ReleasePage(QWidget):
             self.times = result
         self.show_times()
 
-    def show_times(self) -> None:
-        """This release, the one before it and the deviation; the banner when this one took more than the limit
-        longer. While this release runs its time is the time so far, and a deviation says nothing yet unless it
-        is over the limit already."""
-        times, limit = self.times, self.deviation_limit()
-        self.times_row.setVisible(bool(times))
-        self.slow_banner.hide()
-        if not times:
-            return
-        # The first box is the newest release GitHub has: This release only while it is the one being made (its run
-        # goes on, or its steps are not done), else Latest release (owner, 20-11-2026: during steps 1 to 4 it read
-        # This release for the one that was out already).
-        run = self.facts.run
-        mine = times[0].running or (run is not None and run.sha == times[0].sha
-                                    and bool(flow.current_step(self.facts)))
-        self.time_now.caption.setText("This release" if mine else "Latest release")
-        parts = ("From Commit your changes to CI passed on GitHub {before} (the push with CI's jobs here, then "
-                 "GitHub's CI); from Start to the end of the release on GitHub {release}. Up to the device test; the "
-                 "waiting between the two is not counted.")
-        for box, taken in ((self.time_now, times[0]), (self.time_before, times[1] if len(times) > 1 else None)):
-            if taken is None:
-                box.set_value("—", "No release before this one on GitHub.")
+    def kept_clock(self) -> tuple[float, float]:
+        """The clock a window before this one left running, so a restart of the tool in the middle of a release keeps
+        its time. One that ended is over (owner, 20-11-2026: "If I open NRT to start a new release ... everything
+        before it is previous"), as is one that is too old to be a release still being made."""
+        settings = self.release_window.settings
+        try:
+            start, end = (float(x) for x in str(settings.value(CLOCK_KEY, "") or "").split()) \
+                if settings is not None else (0.0, 0.0)
+        except ValueError:
+            return 0.0, 0.0
+        return (start, 0.0) if start and not end and time.time() - start < flow.CLOCK_STALE else (0.0, 0.0)
+
+    def recorded(self) -> dict[str, float]:
+        """The releases this tool timed, by release commit: seconds from the first step to the device test."""
+        settings = self.release_window.settings
+        marks = str(settings.value(RECORDED_KEY, "") or "").split() if settings is not None else self.recorded_here
+        found = {}
+        for mark in marks:
+            sha, _, seconds = mark.partition(":")
+            try:
+                found[sha] = float(seconds)
+            except ValueError:
                 continue
-            box.set_value(flow.duration_text(taken.total) + (" so far" if taken.running else ""),
-                          f"Release commit {taken.sha[:7]}. " + parts.format(
-                              before=flow.duration_text(taken.before) if taken.before else "not known",
-                              release=flow.duration_text(taken.release)))
-        more = flow.deviation(times)
+        return found
+
+    def run_clock(self, step: str, running: bool, facts: flow.Facts) -> None:
+        """The clock after a look at the steps (flow.clock_step), kept in the settings; a release whose run passed
+        is written down with its time, for the Previous release box of the next one."""
+        clock = flow.clock_step(self.clock, step, running, facts, time.time())
+        if clock == self.clock:
+            return
+        self.clock = clock
+        settings = self.release_window.settings
+        if settings is not None:
+            settings.setValue(CLOCK_KEY, f"{clock[0]} {clock[1]}")
+        if clock[1] and facts.run is not None:
+            self.clock_sha = facts.run.sha
+            mark = f"{facts.run.sha}:{round(clock[1] - clock[0])}"
+            if settings is not None:
+                kept = str(settings.value(RECORDED_KEY, "") or "").split()
+                settings.setValue(RECORDED_KEY, " ".join([*kept, mark][-20:]))
+            else:
+                self.recorded_here.append(mark)
+        self.show_times()
+
+    def show_times(self) -> None:
+        """Previous release, Current release and the deviation (owner, 20-11-2026). Previous: the last release that
+        went out before the one being made, with the time this tool measured for it, or GitHub's own (its CI and its
+        release run) for a release it did not time. Current: the release being made, from the first step pressed to
+        the device test, counting while it is made; a dash while none is. The banner when the current one takes more
+        than the limit longer; while it is made a deviation says nothing yet unless it is over the limit already."""
+        times, limit = self.times, self.deviation_limit()
+        start, end = self.clock
+        self.times_row.setVisible(bool(times) or bool(start))
+        self.slow_banner.hide()
+        if bool(start and not end) != self.ticking.isActive():
+            self.ticking.start() if start and not end else self.ticking.stop()
+        # The previous one: out, and not the one the clock times (its commit is younger than the clock's start)
+        before = next((t for t in times if not t.running and t.sha != self.clock_sha
+                       and (not start or t.at < start)), None)
+        previous = None
+        if before is None:
+            self.time_before.set_value("—", "No release before this one on GitHub.")
+        else:
+            measured = self.recorded().get(before.sha)
+            previous = measured if measured is not None else before.total
+            self.time_before.set_value(
+                flow.duration_text(previous), f"Release commit {before.sha[:7]}. " + (
+                    "Measured here: from the first step pressed to the device test, waiting included."
+                    if measured is not None else
+                    f"Not timed by this tool, so GitHub's own time: its CI before Start "
+                    f"{flow.duration_text(before.before) if before.before else 'not known'}, and from Start to the "
+                    f"end of the release on GitHub {flow.duration_text(before.release)}. Nothing of this computer "
+                    "(the push with CI's jobs here, waiting) is in it."))
+        current, counting = None, False
+        if start:
+            current, counting = (end or time.time()) - start, not end
+            self.time_now.set_value(flow.duration_text(current) + (" so far" if counting else ""),
+                                    "From the first step pressed for this release to the device test (the end of "
+                                    "the release on GitHub), on this computer's clock, waiting included.")
+        elif times and times[0].running:        # started elsewhere, or before this window: GitHub's time so far
+            current, counting = times[0].total, True
+            self.time_now.set_value(flow.duration_text(current) + " so far",
+                                    f"Release commit {times[0].sha[:7]}, not started from this window: GitHub's own "
+                                    "time, its CI before Start and its release run so far.")
+        else:
+            self.time_now.set_value("—", "No release is being made. The time starts with the first step you press "
+                                         "(Get up to date, Commit, Push or Start new release).")
+        more = flow.deviation(current, previous)
         over = more is not None and round(more) > limit
-        known = more is not None and (over or not times[0].running)
+        known = more is not None and (over or not counting)
         self.time_deviation.set_value(flow.deviation_text(more) if known else "—",
-                                      f"The first box against the second. Over {flow.duration_text(limit)} "
-                                      "longer shows an orange banner.")
+                                      f"The current release against the previous one. Over "
+                                      f"{flow.duration_text(limit)} longer shows an orange banner.")
         self.time_deviation.set_colour(ORANGE if over else GREY)
         if over:
             self.slow_note.setText(
-                f"{'This' if mine else 'The latest'} release {'is taking' if times[0].running else 'took'} "
-                f"{flow.duration_text(more)} longer "
-                f"than the one before it up to the device test ({flow.duration_text(times[0].total)} against "
-                f"{flow.duration_text(times[1].total)}).")
+                f"This release {'is taking' if counting else 'took'} {flow.duration_text(more)} longer than the "
+                f"previous one up to the device test ({flow.duration_text(current)} against "
+                f"{flow.duration_text(previous)}).")
             self.slow_banner.show()
 
     # --- what the release holds -----------------------------------------------------------------------------------
@@ -417,6 +486,7 @@ class ReleasePage(QWidget):
         running = window.commands.is_running()
         if running and now:
             states[now] = "running"
+        self.run_clock(now, running, facts)
         for key, _title, what in flow.STEPS:
             sign, color = MARKS[states[key]]
             self.marks[key].setText(sign)

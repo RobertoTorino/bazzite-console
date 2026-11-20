@@ -1,3 +1,30 @@
+Changelog: 20-11-2026 15:09:02
+
+Added. A card Prime95 (mprime) among the machine's updates, when mprime is in ~/mprime: the release named in
+~/mprime/.release against the one mersenne.org's download page lists. Its Update, and Fix, run Board Test's
+installer (install-requirements.sh --mprime), which installs that release over the old one. An mprime unpacked by
+hand has no release name: the card says so and Update installs the latest. The hourly reminder names it with the
+other updates.
+
+Changelog: 20-11-2026 14:57:33
+
+Fixed. The catalog says PS5 SFTP Tools wants paramiko >=5.0,<6, as the app's requirements.txt now does.
+
+Changelog: 20-11-2026 14:49:35
+
+Fixed. Fix no longer asks pip for a version that cannot exist. A known vulnerability whose fix is a release above
+what the app accepts (paramiko 5.0.0 for an app that wants >=3.4,<5) made the requirement
+"paramiko>=3.4,<5,>=5.0.0", and pip found no version for it. Such an update is left out of Fix, and the package's
+advice says which release fixes it, what the app accepts, and that a newer version of the app has to come first.
+The card keeps its vulnerabilities.
+
+Changelog: 20-11-2026 14:23:36
+
+Fixed. mprime is found where its download is unpacked: ~/mprime/mprime, ~/.local/bin/mprime, /opt/mprime/mprime and
+/usr/local/bin/mprime, the places PS5 CPU Tools looks in. It was looked for on PATH alone, so an mprime the app
+used showed as Not installed. Its card's link to the manual now leads to the commands that install it
+(docs/apps/cores.md, Installing mprime).
+
 Changelog: 20-11-2026 02:18:33
 
 Fixed. The catalog pins Vita3K build 4377 and Xenia Canary build 54386cb (19-11-2026), the builds the managers now

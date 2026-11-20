@@ -477,6 +477,7 @@ panics, throttling and out-of-memory events the kernel logged during the run.
 | #  | Test                                    | Checks                                                                                              |
 |----|-----------------------------------------|-----------------------------------------------------------------------------------------------------|
 | 42 | Performance Benchmark (CPU / GPU score) | **Opt-in**: run it from its button. CPU single- and multi-thread and GPU FP32 compute, scored against a baseline saved on this PS5, plus a comparison ladder against known systems. |
+| 60 | VKCube (Vulkan on the screen)           | Draws the Vulkan tools' spinning cube (`vkcube`) in a window for five seconds, as the desktop user in the running session. A pass when it is still drawing after that time; an error when it ended by itself, with its output. Skipped without a graphical session (a run over SSH) or without `vkcube`. |
 
 See [Performance score](#performance-score-comparing-kernels-and-settings) below.
 

@@ -253,8 +253,8 @@ longer burn-in before you trust the unlock, two optional tools can be folded in:
 - With **`--load both`** the two tools run **one after the other**, never at the same time, so they
   don't fight over the same threads. Each attempt therefore takes **2 × `--time`** — budget double
   the wall clock from the table above.
-- **`--mprime-bin PATH`** points at an mprime binary that isn't on `$PATH` (the official builds from
-  mersenne.org are a plain tarball, so this is the normal case).
+- **`--mprime-bin PATH`** points at an mprime binary in another place than the ones named under
+  [Installing mprime](#installing-mprime).
 - **`--rasdaemon`** reads `ras-mc-ctl --errors` before and after every attempt and records the
   difference. Any new hardware error makes the attempt **`RAS-ERROR`**. It needs a running
   `rasdaemon` service; if `ras-mc-ctl` is missing or unusable the script says so and carries on
@@ -265,6 +265,27 @@ longer burn-in before you trust the unlock, two optional tools can be folded in:
 
 Like `-t`/`-r`, pick these before you start: the settings are stored in `config`, reused after
 every reboot, and carried into the `--auto` service's command line.
+
+#### Installing mprime
+
+[Quickfix](quickfix.md#quickfix) installs mprime with its **Prime95** pill. By hand: no package installs it, it is a
+download from [mersenne.org](https://www.mersenne.org/download/) that is unpacked into a folder. Version 30.19
+build 20, for 64-bit Linux:
+
+```bash
+mkdir -p ~/mprime && cd ~/mprime
+curl -O https://download.mersenne.ca/gimps/v30/30.19/p95v3019b20.linux64.tar.gz
+echo "4ce2377e03deb4cf189523136e26401ba08f67857a128e420dd030d00cdca601  p95v3019b20.linux64.tar.gz" | sha256sum -c
+tar -xzf p95v3019b20.linux64.tar.gz
+```
+
+The third line compares the download with the SHA-256 that mersenne.org's download page lists, and prints
+`p95v3019b20.linux64.tar.gz: OK`. Nothing more is needed: PS5 CPU Tools and Nexus Deps look for `mprime` on `$PATH`,
+then at `~/mprime/mprime`, `~/.local/bin/mprime`, `/opt/mprime/mprime` and `/usr/local/bin/mprime`.
+
+To try it by hand, `./mprime -t` in that folder starts the torture test on all cores right away, without the
+questions about PrimeNet. It runs until Ctrl+C stops it, and writes its settings and `results.txt` into the
+folder. The bisect does not use these: it runs mprime from a working folder of its own, with its own settings.
 
 ## Making it persistent
 

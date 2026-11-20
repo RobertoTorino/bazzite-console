@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 14:17:31
+
+Fixed. The time boxes are Previous release, Current release and Deviation (owner, 20-11-2026: "Recorded time is incorrect"; opened for a new release, what is out is the previous one). Previous release is the last release that went out, with the time this tool measured for it, or GitHub's own (its CI and its release run) for one it did not time. Current release is the release being made: its time starts with the first step pressed, runs on this computer's clock and ends when the release on GitHub passed; a dash until a step is pressed. Before, the first box read This release for the release that was out already and counted GitHub's CI and release run only.
+
 Changelog: 20-11-2026 13:38:39
 
 Added. Start new release starts by itself, without its question, when CI passes on the commit while the window is open and waited for it (owner, 20-11-2026); a window opened on a commit whose CI passed earlier starts nothing by itself, and release/autostart=false in NRT's settings turns it off. A tenth step, All runs finished (owner, 20-11-2026): after Publish and the pin commit it waits while GitHub still runs something (the wiki, the runs on the portal's tag) and names the runs, then reads "All runs finished, ready."; before, every step had its check while a run went on.

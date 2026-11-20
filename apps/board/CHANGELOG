@@ -1,3 +1,20 @@
+Changelog: 20-11-2026 14:57:33
+
+Added. Test 60, VKCube, on the Performance page: it draws the Vulkan tools' spinning cube in a window for five
+seconds, as the desktop user in the running session, and passes when vkcube is still drawing after that time. It is
+an error when vkcube ended by itself, with its output. Without a graphical session or without vkcube it is skipped.
+It runs with Run all and by itself (--only=60). Test 41 starts vkcube only when no other GPU load tool is
+installed, so the cube was never seen on a console that has them.
+
+Changelog: 20-11-2026 14:57:33
+
+Added. development/tools/install-requirements.sh installs Prime95's mprime with --mprime, and with --all: the
+release mersenne.org's download page lists at that moment, compared with the SHA-256 listed there, unpacked into
+~/mprime with a link in ~/.local/bin. A run with a newer release on the page installs that one over it;
+~/mprime/.release names the release that is there. When the page cannot be read, it installs the one release the
+script knows (30.19 build 20). No test uses mprime: PS5 CPU Tools runs its torture test for a longer burn-in, and
+looks in ~/mprime first.
+
 Changelog: 20-11-2026 13:11:18
 
 Release 0.6.0.
