@@ -1,3 +1,7 @@
+Changelog: 20-11-2026 05:35:36
+
+Fixed. tools/ci-local.sh runs fewer jobs at a time when the computer's free memory is short: one job per 1.5 GB of it, at least two and at most half the cores as before; --workers still sets the number. With six jobs side by side on a computer whose swap was full, a portal test crashed inside Qt (a segmentation fault while it scaled a picture) and passed three times when the job ran alone. The wiki's development page says so.
+
 Changelog: 20-11-2026 05:17:28
 
 Fixed. tools/ci-local.sh runs a job that compiles (native, with cargo) after the other jobs, alone. Beside five other jobs its compilers ran the computer short of memory and rustc crashed with a SIGSEGV in a crate that builds without fault when the job runs alone. The wiki's development page says so.

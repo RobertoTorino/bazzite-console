@@ -28,6 +28,16 @@ def test_every_job_of_ci_yml_and_every_matrix_entry():
     assert not ci_local.Job("windows", {"runs-on": "windows-latest"}).runs_here     # GitHub's only, not here
 
 
+def test_the_free_memory_limits_the_jobs_at_a_time():
+    """Half the cores, fewer when the memory is short, never under two; a system that names no memory gets half."""
+    assert ci_local.default_workers(12, 32000) == 6
+    assert ci_local.default_workers(12, 5000) == 3
+    assert ci_local.default_workers(12, 900) == 2
+    assert ci_local.default_workers(2, 32000) == 2
+    assert ci_local.default_workers(12, 0) == 6
+    assert ci_local.free_memory() > 0
+
+
 def test_a_job_that_compiles_runs_alone():
     """The native job starts a compiler per core; beside five other jobs one of them crashed for lack of memory."""
     jobs = {j.name: j for j in ci_local.load_jobs(CI)}

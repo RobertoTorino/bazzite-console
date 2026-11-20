@@ -51,6 +51,7 @@ EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
 NEEDS = re.compile(r"^\$\{\{\s*fromJSON\(needs\.(\w[\w-]*)\.outputs\.(\w+)\)\s*\}\}$")   # a plan job's output
 OUTPUT = re.compile(r"needs\.(\w[\w-]*)\.outputs\.(\w+)")
 CONDITION = re.compile(r"^needs\.(\w[\w-]*)\.outputs\.(\w+)\s*(==|!=)\s*'([^']*)'$")      # a job's if
+WORKER_MB = 1536                    # the free memory a job running beside others is given: default_workers
 _venv_locks: dict[str, threading.Lock] = {}
 _locks_lock = threading.Lock()
 
@@ -338,8 +339,25 @@ def selected(jobs: list[Job], wanted: list[str]) -> list[Job]:
     return [j for j in jobs if any(j.name == w or j.name.split("/", 1)[0] == w for w in wanted)]
 
 
+def free_memory() -> int:
+    """The memory programs can still get, in MiB (MemAvailable); 0 when the system does not say."""
+    try:
+        found = re.search(r"^MemAvailable:\s+(\d+) kB", Path("/proc/meminfo").read_text(encoding="utf-8"), re.M)
+    except OSError:
+        return 0
+    return int(found.group(1)) // 1024 if found else 0
+
+
+def default_workers(cpus: int, free: int) -> int:
+    """The jobs that run at a time: half the cores, and no more than the free memory carries (WORKER_MB each),
+    never under two. On a computer short of memory six jobs side by side crashed at random, in rustc and in Qt
+    (owner, 20-11-2026); each job passed when it ran alone."""
+    by_cores = max(2, cpus // 2)
+    return max(2, min(by_cores, free // WORKER_MB)) if free else by_cores
+
+
 def main(argv: list[str]) -> int:
-    workers = max(2, (os.cpu_count() or 4) // 2)
+    workers = default_workers(os.cpu_count() or 4, free_memory())
     if "--workers" in argv:
         i = argv.index("--workers")
         workers, argv = int(argv[i + 1]), argv[:i] + argv[i + 2:]
