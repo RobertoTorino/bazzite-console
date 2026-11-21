@@ -1,3 +1,7 @@
+Changelog: 21-11-2026 12:04:44
+
+Version 4.6.0.
+
 Changelog: 21-11-2026 11:51:00
 
 Added. same_width() takes a floor: a row's places are at least that wide (the first box's floor), for a card whose

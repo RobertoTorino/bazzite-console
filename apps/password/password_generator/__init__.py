@@ -3,7 +3,7 @@
 
 APP_NAME = "PS5 Password Generator"
 APP_ID = "ps5-password"
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 from pathlib import Path
 
