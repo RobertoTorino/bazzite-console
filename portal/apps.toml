@@ -8,8 +8,8 @@
 [apps.board]
 name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-board-v0.9.0"
-sha256 = "d229d830896d140eb542dc008496ba8b60fa9e9e0c16f58564acdec681e00b8c"
+tag = "ps5-board-v0.10.0"
+sha256 = ""
 required = true
 changes_board = false
 category = "sustainable"
@@ -288,8 +288,8 @@ launch = [["Open", "~/.local/bin/ps5-cores-bisect-gui"]]
 [apps.cec]
 name = "PS5 CEC Manager"
 summary = "Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC."
-tag = "ps5-cec-v2.6.0"
-sha256 = "d0ec76d4d17752a27aa83999a77123fa15ea8e4257c4d007db665da47a3db701"
+tag = "ps5-cec-v2.7.0"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
@@ -324,8 +324,8 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 [apps.quickfix]
 name = "PS5 Quickfix"
 summary = "Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal, Ethernet First and the boot command line. Always installed."
-tag = "ps5-quickfix-v0.5.0"
-sha256 = "b4ced2f56f2dc30042afdb7224a0576eb6fb9151ff69ee968b0ad77655b02832"
+tag = "ps5-quickfix-v0.6.0"
+sha256 = ""
 required = true
 changes_board = false
 category = "utilities"

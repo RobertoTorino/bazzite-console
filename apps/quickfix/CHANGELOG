@@ -1,3 +1,7 @@
+Changelog: 21-11-2026 20:53:56
+
+Release 0.6.0.
+
 Changelog: 21-11-2026 19:51:41
 
 Added. Ethernet First, a new quickfix: it turns the Wi-Fi off while a network cable is connected, and on again when

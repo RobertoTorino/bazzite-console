@@ -1,3 +1,7 @@
+Changelog: 21-11-2026 20:53:56
+
+Release 0.10.0.
+
 Changelog: 21-11-2026 19:53:10
 
 Added. Test 19 compares the clock amdgpu reads from the GPU with the one ps5-gpufreq asked for. When the GPU runs
