@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The quickfixes' windows. Each is the suite's window: the icon at 96 px, the quickfix's name with the version, its
-state, the info symbol with what it contains and does, and Refresh; its status boxes and controls on the second row.
+state, the info symbol with what it contains and does, and the refresh symbol at the right end; its status boxes
+and pills on the rows under the title, five on a row at most (core's card.py: the card).
 Game Memory Map and Persistent Journal are switches (SwitchWindow): Turn on when it is off, Turn off when the quickfix
 turned it on, one password each (pkexec, system.py); what is on already cannot be turned on again. Boot Command Line
-edits the PS5 loader's cmdline.txt one argument per row (kargs.py says what each does), and its Save changes asks
+edits the PS5 loader's cmdline.txt one argument per row (kargs.py says what each does), and its Save asks
 Yes, No or Cancel first."""
 
 from __future__ import annotations
@@ -17,15 +18,15 @@ from pathlib import Path
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFontDatabase
 from PyQt6.QtWidgets import (QAbstractItemView, QComboBox, QDialog, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-                             QLineEdit, QMainWindow, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QTableWidget,
-                             QTableWidgetItem, QTextBrowser, QVBoxLayout, QWidget)
+                             QLineEdit, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QTableWidget,
+                             QTableWidgetItem, QTextBrowser, QVBoxLayout)
 
 from bazzite_console_core import window_title
 from bazzite_console_core.appinfo import SUITE_MANUAL_URL
 from bazzite_console_core.platform import launch_in_terminal, show_in_folder
 from bazzite_console_core.theme import GREEN, GREY, ORANGE
-from bazzite_console_core.widgets import (ActionPill, AppHeader, InfoButton, MetricBox, StatusText, hint_label,
-                                          same_width)
+from bazzite_console_core.card import CardWindow
+from bazzite_console_core.widgets import ActionPill, MetricBox, hint_label, same_width
 
 from . import LOGO_PATH, __version__, kargs, runner, state, system
 from .catalog import BY_KEY, Quickfix
@@ -35,33 +36,16 @@ BOARD = ("<br><br><b>Changes the board.</b> It asks for your password once (pkex
          "firmware, and Turn off undoes it.")
 
 
-class QuickfixWindow(QMainWindow):
-    """One quickfix's window: the header, then the page the quickfix fills (self.page)."""
+class QuickfixWindow(CardWindow):
+    """One quickfix's window, a card (core's card.py): the header, then the page the quickfix fills (self.page)."""
 
     BOARD_NOTE = BOARD                  # the info's last paragraph, for a quickfix that changes the board
 
     def __init__(self, quickfix: Quickfix, info: str, run_root: RootRunner = runner.run_root,
                  root: Path = state.ROOT, home: Path | None = None) -> None:
-        super().__init__()
+        super().__init__(LOGO_PATH, quickfix.name, __version__,
+                         info + (self.BOARD_NOTE if quickfix.changes_board else ""))
         self.quickfix, self.run_root, self.root, self.home = quickfix, run_root, root, home or Path.home()
-        self.setWindowTitle(quickfix.name)
-        self.resize(820, 420)
-        self.header = AppHeader(LOGO_PATH, quickfix.name, __version__)
-        self.state = StatusText()
-        self.header.add_state(self.state)
-        self.info = InfoButton(info + (self.BOARD_NOTE if quickfix.changes_board else ""))
-        self.header.add_state(self.info)
-        self.refresh_button = ActionPill("Refresh", "Click to refresh")
-        self.refresh_button.setToolTip("Read again")
-        self.refresh_button.clicked.connect(self.refresh)
-        self.header.add_action(self.refresh_button)
-        contents = QWidget()
-        self.page = QVBoxLayout(contents)
-        self.page.addLayout(self.header)
-        self.setCentralWidget(contents)
-
-    def refresh(self) -> None:
-        raise NotImplementedError
 
     def as_root(self, args: list[str], title: str) -> bool:
         """Runs system.py as root; a canceled password or a failure shows a message, and the window reads again."""
@@ -94,16 +78,13 @@ class ToolsWindow(QuickfixWindow):
         self.launch, self.board_test = launch, board_test
         self.resize(900, 560)
         self.found_box = MetricBox("Tools found")
-        self.header.add_second(self.found_box)
         self.all_button = ActionPill("Install all", "Every missing tool")
         self.all_button.setToolTip("Every group but the development extras, in a terminal (--all)")
         self.all_button.clicked.connect(lambda: self.install("--all"))
-        self.header.add_second(self.all_button)
-        self.header.title_row.removeWidget(self.refresh_button)         # here beside Install all, not top right
-        self.header.add_second(self.refresh_button)
-        self.header.add_second(QWidget(), 1)
+        self.set_rows([self.found_box, self.all_button])
         self.grid = QGridLayout()
-        self.grid.setColumnStretch(2, 1)
+        self.grid.setColumnStretch(3, 1)
+        self.grid.setHorizontalSpacing(10)
         self.page.addLayout(self.grid)
         self.page.addStretch(1)
         self.rows: dict[str, QLabel] = {}
@@ -113,28 +94,35 @@ class ToolsWindow(QuickfixWindow):
             # The group's heading is its Install pill (owner, 17-11-2026): the name, and what a click does under it.
             button = ActionPill(group.name, "Install")
             button.clicked.connect(lambda _=False, o=group.option: self.install(o))
-            self.grid.addWidget(button, row, 0, 1, 3, Qt.AlignmentFlag.AlignLeft)
             self.buttons[group.option] = button
-            row += 1
-            for tool in group.tools:
-                row = self._tool_row(tool, row)
+            row = self._group(button, group.tools, row)
         self.built_in = ActionPill("With Bazzite", "Included")
         self.built_in.setToolTip("Already on Bazzite: nothing to install.")
         self.built_in.setEnabled(False)
-        self.grid.addWidget(self.built_in, row, 0, 1, 3, Qt.AlignmentFlag.AlignLeft)
-        row += 1
-        for tool in state.BUILT_IN:
-            row = self._tool_row(tool, row)
-        same_width([self.found_box, self.all_button, self.refresh_button, *self.buttons.values(), self.built_in])
+        self._group(self.built_in, state.BUILT_IN, row)
+        # The exception among the cards (owner, 21-11-2026): the pills as wide as the widest group's, and the
+        # window at its own width, which the tools' text fills.
+        same_width([self.found_box, self.all_button, *self.buttons.values(), self.built_in])
+        self.resize(900, 560)
         self.refresh()
+
+    def _group(self, pill: ActionPill, tools, row: int) -> int:
+        """A group: its pill on the left, its tools beside it (owner, 21-11-2026: the text next to the pill, not
+        under it, so the card's width is used). The row after the tools takes the height the pill has left."""
+        self.grid.addWidget(pill, row, 0, len(tools) + 1, 1, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        for tool in tools:
+            row = self._tool_row(tool, row)
+        self.grid.setRowStretch(row, 1)
+        self.grid.setRowMinimumHeight(row, 6)
+        return row + 1
 
     def _tool_row(self, tool: state.Tool, row: int) -> int:
         mark = QLabel()
         self.rows[tool.command] = mark
-        self.grid.addWidget(mark, row, 0)
-        self.grid.addWidget(QLabel(tool.package), row, 1)
+        self.grid.addWidget(mark, row, 1)
+        self.grid.addWidget(QLabel(tool.package), row, 2)
         self.grid.addWidget(hint_label(f"Tests {tool.used_by}" if tool.used_by[0].isdigit() else tool.used_by),
-                            row, 2)
+                            row, 3)
         return row + 1
 
     def refresh(self) -> None:
@@ -182,7 +170,7 @@ MANGOHUD_INFO = ("<b>MangoHud Config</b> opens MangoHud's own settings file, <co
                  "<b>FPS log</b> sets the three lines PS5 Board Test needs to show a game's FPS: "
                  "<code>output_folder=~/mangohud-logs</code>, <code>autostart_log=1</code> and "
                  "<code>log_interval=500</code>; Save then makes the folder. MangoHud writes a log file per game "
-                 "session while the game runs. Delete old logs removes the ones older than 30 days.<br><br>"
+                 "session while the game runs. Delete logs removes the ones older than 30 days.<br><br>"
                  "MangoHud must be active for the game, for example with the Steam launch option "
                  "<code>mangohud %command%</code>. Without the log, Board Test still shows the game's name and its "
                  "CPU and GPU share.")
@@ -203,25 +191,17 @@ class MangoHudWindow(QuickfixWindow):
         self.log_button.clicked.connect(self.add_logging)
         self.save_button = ActionPill("Save", "Your edits")
         self.save_button.clicked.connect(self.save)
-        self.revert_button = ActionPill("Revert", "Read the file again")
+        self.revert_button = ActionPill("Revert", "Revert changes")
         self.revert_button.setToolTip("Read the file again; your edits go")
         self.revert_button.clicked.connect(self.refresh)
         self.folder_button = ActionPill("Log folder", "Click to open")
         self.folder_button.setToolTip(f"Open {self.folder}")
         self.folder_button.clicked.connect(lambda: show_in_folder(self.folder))
-        self.clean_button = ActionPill("Delete old logs", f"Older than {OLD_LOG_DAYS} days")
+        self.clean_button = ActionPill("Delete logs", f"Older than {OLD_LOG_DAYS} days")
         self.clean_button.setToolTip(f"Remove the log files older than {OLD_LOG_DAYS} days")
         self.clean_button.clicked.connect(self.delete_old_logs)
-        for widget in (self.file_box, self.log_box, self.logs_box):
-            self.header.add_second(widget)
-        self.header.add_second(QWidget(), 1)
-        for widget in (self.revert_button, self.save_button):
-            self.header.add_second(widget)
-        logs = QHBoxLayout()                    # the FPS log's actions on their own row, so no pill is squeezed
-        for widget in (self.log_button, self.folder_button, self.clean_button):
-            logs.addWidget(widget)
-        logs.addStretch(1)
-        self.page.addLayout(logs)
+        self.set_rows([self.file_box, self.log_box, self.logs_box, self.revert_button, self.save_button],
+                      [self.log_button, self.folder_button, self.clean_button])
         self.editor = QPlainTextEdit()
         self.editor.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
@@ -292,7 +272,7 @@ class MangoHudWindow(QuickfixWindow):
     def delete_old_logs(self) -> None:
         old = self.old_logs()
         if not old or QMessageBox.question(
-                self, window_title("Delete old logs"), f"Delete the {len(old)} log files older than {OLD_LOG_DAYS} "
+                self, window_title("Delete logs"), f"Delete the {len(old)} log files older than {OLD_LOG_DAYS} "
                 f"days in {self.folder}?") != QMessageBox.StandardButton.Yes:
             return
         for path in old:
@@ -310,15 +290,15 @@ class SwitchWindow(QuickfixWindow):
     def __init__(self, quickfix: Quickfix, info: str, boxes: tuple[str, ...], **kwargs) -> None:
         super().__init__(quickfix, info, **kwargs)
         self.boxes = {caption: MetricBox(caption) for caption in boxes}
-        for box in self.boxes.values():
-            self.header.add_second(box)
-        self.header.add_second(QWidget(), 1)
         self.on_button = ActionPill("Turn on", "Click to apply")
         self.on_button.clicked.connect(self.turn_on)
         self.off_button = ActionPill("Turn off", "Click to undo")
         self.off_button.clicked.connect(self.turn_off)
-        self.header.add_second(self.on_button)
-        self.header.add_second(self.off_button)
+        boxes, pills = list(self.boxes.values()), [self.on_button, self.off_button]
+        if len(boxes) + len(pills) <= self.ROW_MAX:
+            self.set_rows(boxes + pills)
+        else:                                   # more than five: the boxes on their row, the pills under them
+            self.set_rows(boxes, pills)
         self.note = hint_label("")
         self.page.addWidget(self.note)
         self.page.addStretch(1)
@@ -399,29 +379,33 @@ class JournalWindow(SwitchWindow):
 
 # ------------------------------------------------------------------------------------------- Boot Command Line
 CMDLINE_INFO = ("<b>Boot Command Line</b> edits <code>/boot/efi/cmdline.txt</code>, the kernel command line the PS5 "
-                "loader starts Linux with, one argument per row, with what each one does. <b>All settings</b> lists "
+                "loader starts Linux with, one argument per row, with what each one does. <b>Settings</b> lists "
                 "every argument the PS5 Linux command lines use, with its values. The list above the table also "
                 "opens the fallback lines beside it (<code>cmdline.txt.m2</code>, <code>cmdline.txt.usb</code>), "
                 "which you copy over <code>cmdline.txt</code> to start another system.<br><br><b>Add</b> puts a "
                 "known argument, or an empty row, under the selected one; <b>Remove</b>, <b>Up</b> and <b>Down</b> "
-                "work on the selected row; a double click edits a row. <b>Save changes</b> asks first: <b>Yes</b> "
+                "work on the selected row; a double click edits a row. <b>Save</b> asks first: <b>Yes</b> "
                 "writes the line, after a dated backup of the file beside it "
                 "(<code>cmdline.txt.bak-YYYYMMDD-HHMMSS</code>); <b>No</b> drops your edits; <b>Cancel</b> goes back "
                 "to editing. A line without <code>root=</code> is not saved. The change applies from the next boot: "
                 "restart the board (<code>systemctl reboot</code>). When your user may not read the file, "
-                "<b>Read</b> shows it after your password.")
+                "<b>Read</b> shows it after your password.<br><br><b>The boot partition.</b> ")
 CMDLINE_BOARD = ("<br><br><b>Changes the board.</b> It changes the boot settings of PS5 Linux: a wrong argument can "
-                 "keep Linux from starting. Save changes asks for your password (pkexec) and keeps a backup of the "
+                 "keep Linux from starting. Save asks for your password (pkexec) and keeps a backup of the "
                  "file; it never touches the board's firmware.")
 SAVE_QUESTION = ("Save the changes to /boot/efi/{name}?\n\nThis changes the boot settings of PS5 Linux: a wrong "
                  "argument can keep Linux from starting. A dated backup of the file is kept beside it, and the change "
                  "applies from the next boot.\n\nYes saves, No drops your edits, Cancel goes back to editing.")
 BOOT_PARTITION_URL = SUITE_MANUAL_URL + "boot-partition/"
-BOOT_PARTITION_INFO = ("The loader's partition, <code>/boot/efi</code>, holds what the PS5 starts Linux with: "
+CMDLINE_INFO += ("The loader's partition, <code>/boot/efi</code>, holds what the PS5 starts Linux with: "
                        "<code>bzImage</code>, <code>initrd.img</code>, <code>cmdline.txt</code> and <code>vram.txt</code>"
                        ", with the fallback lines and backups beside them. <a href=\"{url}\">PS5 Linux boot partition"
                        "</a> in the wiki describes every file and every argument, and the way back when Linux does not "
                        "start after a change.").format(url=BOOT_PARTITION_URL)
+# Settings: chapters with a heading, each argument's name on its own line, room between them.
+SETTINGS_STYLE = ("h3 { font-size:16px; font-weight:800; margin-top:18px; margin-bottom:6px; }"
+                  "p { margin-top:10px; margin-bottom:2px; } ul { margin-top:2px; margin-bottom:0; }"
+                  "li { margin-bottom:3px; } code { font-family:monospace; }")
 ARGUMENT, MEANING = range(2)
 
 
@@ -434,23 +418,26 @@ class CmdlineWindow(QuickfixWindow):
         self.file_box = MetricBox("File")
         self.args_box = MetricBox("Arguments")
         self.backups_box = MetricBox("Backups")
-        for widget in (self.file_box, self.args_box, self.backups_box):
-            self.header.add_second(widget)
         self.file_list = QComboBox()
+        self.file_list.setMinimumWidth(280)          # every name in full, the longest fallback line's too
+        self.file_list.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.file_list.setToolTip("The command line to edit: cmdline.txt, or a fallback line beside it")
         self.file_list.currentTextChanged.connect(self.open_file)
-        self.header.add_second(self.file_list)
-        self.header.add_second(QWidget(), 1)
-        self.read_button = ActionPill("Read", "With your password")
+        self.read_button = ActionPill("Read", "With password")
         self.read_button.setToolTip("Read the file with your password: your user may not read it")
         self.read_button.clicked.connect(self.read_as_root)
-        self.revert_button = ActionPill("Revert", "Read the file again")
+        self.revert_button = ActionPill("Revert", "Revert changes")
         self.revert_button.setToolTip("Read the file again; your edits go")
         self.revert_button.clicked.connect(self.refresh)
-        self.save_button = ActionPill("Save changes", "Click to save")
+        self.save_button = ActionPill("Save", "Your changes")
         self.save_button.clicked.connect(self.save)
-        for widget in (self.read_button, self.save_button):            # Revert is with the rows' actions
-            self.header.add_second(widget)
+        # One row (owner, 21-11-2026). Revert is with the rows' actions, the list of files above the table.
+        self.set_rows([self.file_box, self.args_box, self.backups_box, self.read_button, self.save_button])
+        files = QHBoxLayout()
+        files.addWidget(QLabel("Command line:"))
+        files.addWidget(self.file_list)
+        files.addStretch(1)
+        self.page.addLayout(files)
 
         self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels(["Argument", "What it does"])
@@ -465,7 +452,7 @@ class CmdlineWindow(QuickfixWindow):
         self.page.addWidget(self.table, 1)
 
         rows = QHBoxLayout()
-        self.add_button = ActionPill("Add", "Under the selected row")
+        self.add_button = ActionPill("Add", "New row")
         self.add_button.setToolTip("Add an argument under the selected row")
         menu = QMenu(self.add_button)
         for setting in kargs.SETTINGS:
@@ -474,32 +461,36 @@ class CmdlineWindow(QuickfixWindow):
         menu.addSeparator()
         menu.addAction("Empty row", lambda: self.add_row(""))
         self.add_button.setMenu(menu)
-        self.remove_button = ActionPill("Remove", "The selected row")
+        self.remove_button = ActionPill("Remove", "Selected row")
         self.remove_button.clicked.connect(self.remove_row)
         self.up_button = ActionPill("Up", "Move the row")
         self.up_button.clicked.connect(lambda: self.move_row(-1))
         self.down_button = ActionPill("Down", "Move the row")
         self.down_button.clicked.connect(lambda: self.move_row(1))
-        self.settings_button = ActionPill("All settings", "What they do")
+        self.settings_button = ActionPill("Settings", "Explain")
         self.settings_button.setToolTip("What every argument of the PS5 Linux command lines does")
         self.settings_button.clicked.connect(self.show_settings)
         for widget in (self.add_button, self.remove_button, self.up_button, self.down_button, self.revert_button):
             rows.addWidget(widget)
         rows.addStretch(1)
         rows.addWidget(self.settings_button)
-        self.partition_info = InfoButton(BOOT_PARTITION_INFO, "The PS5 Linux boot partition")
-        rows.addWidget(self.partition_info)
         self.page.addLayout(rows)
         self.line = QLineEdit()
         self.line.setReadOnly(True)
         self.line.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
-        self.line.setToolTip("The line Save changes writes")
+        self.line.setToolTip("The line Save writes")
         self.page.addWidget(self.line)
         self.note = hint_label("")
         self.page.addWidget(self.note)
         self.name = system.CMDLINES[0]
         self.saved = ""                 # the file's text as last read or saved
         self.readable = True
+        # The rows' pills under the table need more width than five places do: the places grow to fill the row.
+        need = self.centralWidget().sizeHint().width()
+        if need > self.width():
+            places = [self.file_box, self.args_box, self.backups_box, self.read_button, self.save_button]
+            places[0].floor = places[0].minimumWidth() + -(-(need - self.width()) // self.ROW_MAX)   # rounded up
+            self.even(places)
         self.refresh()
 
     # ------------------------------------------------------------------------------------------ the rows
@@ -567,10 +558,12 @@ class CmdlineWindow(QuickfixWindow):
 
     def show_settings(self) -> None:
         dialog = QDialog(self)
-        dialog.setWindowTitle(window_title("All settings"))
+        dialog.setWindowTitle(window_title("Settings"))
         dialog.resize(760, 620)
         box = QVBoxLayout(dialog)
         text = QTextBrowser()
+        text.setOpenExternalLinks(True)
+        text.document().setDefaultStyleSheet(SETTINGS_STYLE)
         text.setHtml(kargs.info_list())
         box.addWidget(text)
         close = QPushButton("Close")
@@ -646,7 +639,7 @@ class CmdlineWindow(QuickfixWindow):
     def save(self) -> None:
         buttons = (QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                    | QMessageBox.StandardButton.Cancel)
-        answer = QMessageBox.question(self, window_title("Save changes"), SAVE_QUESTION.format(name=self.name),
+        answer = QMessageBox.question(self, window_title("Save"), SAVE_QUESTION.format(name=self.name),
                                       buttons, QMessageBox.StandardButton.Cancel)
         if answer == QMessageBox.StandardButton.No:
             self.show_text(self.saved)                      # the edits go
@@ -660,7 +653,7 @@ class CmdlineWindow(QuickfixWindow):
             result = self.run_root(system.command(["cmdline", "save", "--text", str(source), "--file", self.name]))
         problem = system.answer(result.code, result.out)
         if problem:
-            QMessageBox.warning(self, window_title("Save changes"), problem)    # the edits stay
+            QMessageBox.warning(self, window_title("Save"), problem)    # the edits stay
             return
         self.saved = text
         self.refresh()

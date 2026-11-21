@@ -1,3 +1,8 @@
+Changelog: 21-11-2026 10:50:07
+
+Fixed. Refresh is the round refresh symbol at the right end of the title row, of the info symbol's size, and no
+longer a button there (owner, 21-11-2026: no button or pill alone in the title row).
+
 Changelog: 20-11-2026 19:26:09
 
 Release 1.5.0.

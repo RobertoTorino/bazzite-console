@@ -23,7 +23,8 @@ from bazzite_console_core import window_title
 from bazzite_console_core.settings import SettingsStore
 from bazzite_console_core.theme import GREEN, GREY, ORANGE, RED
 from bazzite_console_core.updates import UpdateChecker
-from bazzite_console_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, hint_label, same_width
+from bazzite_console_core.widgets import (AppHeader, InfoButton, MetricBox, RefreshButton,
+                                          StatusText, Terminal, hint_label, same_width)
 
 from . import APP_NAME, INFO, LOGO_PATH, __version__, bluez, boot, plasma, runner
 
@@ -137,9 +138,8 @@ class MainWindow(QMainWindow):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         self.state = StatusText()
         header.add_state(self.state)
-        self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.setToolTip("Read Bluetooth, the system part and the last search again")
-        self.refresh_button.clicked.connect(self.refresh)
+        self.refresh_button = RefreshButton("Read Bluetooth, the system part and the last search again")
+        self.refresh_button.clicked.connect(lambda: self.refresh())
         header.add_action(self.refresh_button)
         self.bluetooth_box = MetricBox("Bluetooth")
         self.boot_box = MetricBox("After boot")
@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
         for box in (self.bluetooth_box, self.boot_box, self.battery_box, self.login_box):
             header.add_second(box)
         self.about = InfoButton(ABOUT, "What this app does")
-        header.add_second(self.about)
+        header.add_state(self.about)                 # beside the state, as on a card (owner, 21-11-2026)
         header.second_row.addStretch(1)
 
         listed = QGroupBox("Devices to pair after boot")

@@ -369,7 +369,7 @@ summary = "Edit cmdline.txt, the kernel command line the PS5 loader starts Linux
 launch = "~/.local/bin/ps5-quickfix cmdline"
 changes_board = true
 board_change = """
-Save changes writes the edited line to /boot/efi/cmdline.txt, the kernel command line the PS5 loader starts Linux
+Save writes the edited line to /boot/efi/cmdline.txt, the kernel command line the PS5 loader starts Linux
 with, or to the fallback line it opened beside it (cmdline.txt.m2 or cmdline.txt.usb), after it asks and after your
 password, and keeps the file it replaces as a dated backup beside it (for example cmdline.txt.bak-YYYYMMDD-HHMMSS). A
 change to cmdline.txt changes the boot settings of PS5 Linux from the next boot: a wrong argument can keep Linux from

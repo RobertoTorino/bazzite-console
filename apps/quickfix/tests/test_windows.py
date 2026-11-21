@@ -49,9 +49,12 @@ def test_quickfix_lists_and_installs(qapp, tmp_path, monkeypatch):
     assert window.rows["vkpeak"].toolTip() == str(tool)
     assert window.buttons["--bins"].isEnabled()                         # memtest_vulkan is still missing
     assert window.buttons["--bins"].text() == "Binaries" and window.buttons["--bins"].caption.text() == "Install"
-    assert window.header.second_row.indexOf(window.refresh_button) > 0  # beside Install all
+    assert window.header.title_row.indexOf(window.refresh_button) > 0   # the symbol, not a pill
+    assert window.grid.getItemPosition(window.grid.indexOf(window.buttons["--bins"]))[1] == 0
+    assert window.grid.getItemPosition(window.grid.indexOf(window.rows["vkpeak"]))[1] == 1      # beside its pill
+    assert window.width() == 900                                        # the exception: its own width
     assert not window.built_in.isEnabled()                              # with Bazzite: nothing to install
-    pills = [window.found_box, window.all_button, window.refresh_button, *window.buttons.values(), window.built_in]
+    pills = [window.found_box, window.all_button, *window.buttons.values(), window.built_in]
     assert len({pill.minimumWidth() for pill in pills}) == 1            # all as wide as the widest
     window.buttons["--speedtest"].click()
     window.all_button.click()
@@ -61,11 +64,27 @@ def test_quickfix_lists_and_installs(qapp, tmp_path, monkeypatch):
     assert missing.state.text() == "Board Test not found" and not missing.all_button.isEnabled()
 
 
+def test_a_switch_is_one_row_of_even_places_with_the_refresh_symbol_in_the_title_row(qapp, tmp_path):
+    """Three boxes, Turn on and Turn off fill the row under the title; Refresh is the symbol at the right end of the
+    title row, not a pill. With a fourth box the two pills go on a row under the boxes."""
+    quickfix = windows.BY_KEY["mapcount"]
+    window = windows.SwitchWindow(quickfix, "", ("One", "Two", "Three"), root=tmp_path, home=tmp_path)
+    header = window.header
+    row = [header.second_row.itemAt(i).widget() for i in range(header.second_row.count())]
+    assert row == [*window.boxes.values(), window.on_button, window.off_button, None]       # None: the stretch
+    assert header.right.count() == 2 and len({widget.minimumWidth() for widget in row[:5]}) == 1
+    assert header.title_row.itemAt(header.title_row.count() - 1).widget() is window.refresh_button
+    assert window.width() == window.card_width(window.on_button.minimumWidth())             # no blank on the right
+    four = windows.SwitchWindow(quickfix, "", ("One", "Two", "Three", "Four"), root=tmp_path, home=tmp_path)
+    assert four.header.right.count() == 3 and four.header.right.itemAt(2).layout().itemAt(0).widget() is four.on_button
+
+
 def test_mangohud_config_made_and_logging_set(qapp, tmp_path):
     home = tmp_path / "home"
     window = windows.MangoHudWindow(home=home)
     assert window.file_box.value.text() == "New" and window.log_box.value.text() == "Off"
     assert not window.save_button.isEnabled() and window.log_button.isEnabled()
+    assert window.revert_button.caption.text() == "Revert changes" and window.clean_button.text() == "Delete logs"
     window.editor.setPlainText("fps\n")
     window.log_button.click()
     assert window.log_box.value.text() == "On" and window.save_button.isEnabled()
@@ -123,7 +142,7 @@ USB = ("root=UUID=00000000-1111-2222-3333-444444444444 rw rootwait console=ttyTi
 
 @pytest.fixture
 def saving(monkeypatch):
-    """What Save changes asks system.py to write as root: the text of its --text file and the --file it names."""
+    """What Save asks system.py to write as root: the text of its --text file and the --file it names."""
     calls: list[str] = []
 
     def run_root(argv):
@@ -164,7 +183,20 @@ def test_boot_command_line_shows_every_argument_with_what_it_does(qapp, root, sa
     window.settings_button.click()
     assert "ttm.pages_limit" in window.settings_dialog.findChild(windows.QTextBrowser).toPlainText()
     window.settings_dialog.close()
-    assert windows.BOOT_PARTITION_URL in window.partition_info.text_              # the wiki's chapter
+    assert window.settings_dialog.windowTitle().startswith("Settings")
+    assert "<b>The boot partition.</b>" in window.info.text_                      # one info symbol, with both texts
+    assert windows.BOOT_PARTITION_URL in window.info.text_                        # the wiki's chapter
+    assert not hasattr(window, "partition_info")
+    row = [window.header.second_row.itemAt(i).widget() for i in range(5)]         # one row of five even places
+    assert row == [window.file_box, window.args_box, window.backups_box, window.read_button, window.save_button]
+    assert len({place.minimumWidth() for place in row}) == 1 and window.header.right.count() == 2
+    assert window.width() >= window.centralWidget().sizeHint().width()            # the pills under the table fit
+    assert window.file_list.minimumWidth() == 280                                 # every file name in full
+    captions = {pill.text(): pill.caption.text() for pill in (
+        window.read_button, window.save_button, window.add_button, window.remove_button, window.revert_button,
+        window.settings_button)}
+    assert captions == {"Read": "With password", "Save": "Your changes", "Add": "New row", "Remove": "Selected row",
+                        "Revert": "Revert changes", "Settings": "Explain"}
     assert windows.BOOT_PARTITION_URL.endswith("/bazzite-console/boot-partition/")
 
 

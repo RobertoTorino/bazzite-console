@@ -1,3 +1,23 @@
+Changelog: 21-11-2026 11:51:00
+
+Added. Boot Command Line has one row of five even places: its boxes, Read and Save. Save changes is Save now, with Your
+changes under it, and the question's title says Save. The list of command lines is above the table, labeled Command
+line, and wide enough for every name. The captions are New row under Add, Selected row under Remove, Revert changes
+under Revert and Explain under Settings, which was All settings. The window has one info symbol: the second one's
+text about the boot partition is a chapter of the first. Settings lists the arguments in six chapters with a heading,
+each argument's name on its own line and its values as a list. MangoHud Config's Revert says Revert changes too.
+
+Changelog: 21-11-2026 10:40:50
+
+Added. Every quickfix's window is a card now, core's template (owner, 21-11-2026). The Refresh pill is gone: a round
+refresh symbol of the info symbol's size sits at the right end of the title row, and no pill stands in that row. The
+boxes and pills are all as wide as the widest, five on a row at most, and the window is as wide as a full row. A
+switch has its boxes, Turn on and Turn off on one row. A switch with four boxes has Turn on and Turn off on a second
+row. MangoHud Config has its boxes, Revert and Save on the first row and the FPS log's pills on the second, and its
+Delete old logs pill is Delete logs. Tools is the exception: its group pills stay on the left at their own width, with
+each group's tools beside its pill instead of under it. Boot Command Line has its boxes and the file list on the first row and Read and Save
+changes on the second.
+
 Changelog: 20-11-2026 19:26:09
 
 Release 0.4.0.

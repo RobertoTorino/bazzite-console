@@ -65,14 +65,14 @@ The app stays signed in after it closes, so you sign in once.
 **Consoles** (the first tab) lists the account's XBOX consoles with their model, their power state (**On**,
 **Sleep** or **Off**) and whether remote play is on.
 
-- **Wake:** wakes the selected XBOX from sleep. Give it a few seconds, then **Refresh** or **Stream**.
+- **Wake:** wakes the selected XBOX from sleep. Give it a few seconds, then click the round arrow at the top right or **Stream**.
 - **Stream** (or a double click): streams the XBOX to this PS5.
 
 **Cloud games** (the second tab) lists the games the account may play from the cloud, by name. Type in **Find a
 game** to narrow the list. **Stream** (or a double click) starts the selected game. When many people play, the
 cloud may put you in a queue first: the stream's window shows the expected wait.
 
-**Refresh**, at the top right, asks XBOX Live for the consoles and the cloud games again.
+The round arrow at the top right asks XBOX Live for the consoles and the cloud games again.
 
 Escape closes the main window. During a stream the keys are the game's, and Escape does not leave it.
 
@@ -120,7 +120,7 @@ are not masked: check them before you share a log if you gave an XBOX your own n
 - **The code expired before it was entered:** sign in again for a new one.
 - **The app says to sign in again:** Microsoft no longer accepts the saved sign-in. Sign in again with a new code.
 - **No consoles:** the XBOX must be signed in with the same account. Check remote features on the XBOX (see
-  [What you need](#what-you-need)), then **Refresh**.
+  [What you need](#what-you-need)), then click the round arrow at the top right.
 - **Wake does nothing:** the XBOX's power mode must be **Sleep**, not shut down, and remote features must be on.
 - **Remote play is off:** switch it on on the XBOX (see [What you need](#what-you-need)).
 - **No cloud games:** XBOX Cloud Gaming is not open to the account, or not in its country. The free-to-play games

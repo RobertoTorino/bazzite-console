@@ -8,8 +8,10 @@ Small windows for one job each, which come with the suite: the portal installs t
 and keeps them. In the portal's **Utilities** tab each quickfix is a tile of its own; the app's menu entry,
 **PS5 Quickfix**, lists them all in one window.
 
-Every quickfix's window has the suite's header: the quickfix's name with the version, its state, and **Refresh**. The
-small round **i** beside the state says what the quickfix contains and does. The quickfixes that change the board say so
+Every quickfix's window has the suite's header: the quickfix's name with the version and its state.
+The status boxes and the pills are on the rows under it.
+The round arrow at the right end of the title row reads the state again.
+The small round **i** beside the state says what the quickfix contains and does. The quickfixes that change the board say so
 on their tile; the portal asks before it opens one. Each of those asks for your password (pkexec) for every change,
 turns on only what is off, and turns off only what it turned on itself.
 
@@ -30,7 +32,10 @@ box counts them. It looks where the tests look: on `PATH`, in `~/.local/bin` and
 Each group's heading is a pill: a click on it (**Install**) runs Board Test's own installer for that group in a
 terminal, `/opt/ps5-board-test/development/tools/install-requirements.sh` with the group's option; it reads
 **Installed** and is off when everything in the group is there. **Install all** installs every group but
-the development extras (`--all`), and **Refresh** beside it reads the tools again. The groups and their tools are
+the development extras (`--all`).
+The round arrow in the title row reads the tools again.
+Each group's tools are listed beside its pill.
+The groups and their tools are
 listed in [PS5 Board Test](board.md#requirements). The RPM packages are installed with `dnf` on a flattened image
 (one that does not boot from ostree, such as a PS5 image) and are there at once. On an Atomic image they are
 layered with `rpm-ostree` and are active after a reboot (`systemctl reboot`); until then the tools of that group
@@ -42,7 +47,7 @@ at that moment, compared with the SHA-256 listed there, into `~/mprime`, with a 
 release later shows in Nexus Deps as **Prime95 (mprime)**, and its **Update** installs it over the old one.
 
 A tool you put in `~/.local/bin` yourself counts when the file has the tool's own name and may be run. Ookla's
-download is a `.tgz` archive: unpack `speedtest` from it and make it executable, then press **Refresh**:
+download is a `.tgz` archive: unpack `speedtest` from it and make it executable, then click the round arrow in the title row:
 
 ```bash
 cd ~/.local/bin && tar -xzf ookla-speedtest-*.tgz speedtest && chmod +x speedtest
@@ -65,7 +70,7 @@ log_interval=500
 
 A line that sets one of them already is changed where it is; the others are added at the end. **Save** writes the
 file and makes the log folder. MangoHud must be active for the game, for example with the Steam launch option
-`mangohud %command%`. A log file is written per game session: **Delete old logs** removes the ones older than 30
+`mangohud %command%`. A log file is written per game session: **Delete logs** removes the ones older than 30
 days, and **Log folder** opens the folder. Without the log, Board Test still shows the game's name and its CPU and
 GPU share.
 
@@ -98,7 +103,7 @@ as it removes the logs of every earlier boot.
 ## Boot Command Line
 
 !!! warning "Changes the board"
-    Save changes writes the edited line to /boot/efi/cmdline.txt, the kernel command line the PS5 loader starts Linux
+    Save writes the edited line to /boot/efi/cmdline.txt, the kernel command line the PS5 loader starts Linux
     with, or to the fallback line it opened beside it (cmdline.txt.m2 or cmdline.txt.usb), after it asks and after your
     password, and keeps the file it replaces as a dated backup beside it (for example cmdline.txt.bak-YYYYMMDD-HHMMSS).
     A change to cmdline.txt changes the boot settings of PS5 Linux from the next boot: a wrong argument can keep Linux
@@ -112,16 +117,19 @@ file, and its hints say which arguments to add there.
 
 The table shows the line one argument per row, in its order, with what each argument does; an argument the quickfix
 does not know says so. A double click edits a row. **Add** puts a known argument (or an empty row for your own) under
-the selected row; **Remove**, **Up** and **Down** work on the selected row; the line below the table is what **Save
-changes** writes. **All settings** lists every argument the PS5 Linux command lines use, with its values; the info
-symbol beside it links the [PS5 Linux boot partition](../boot-partition.md) chapter. The boxes show whether the file
+the selected row; **Remove**, **Up** and **Down** work on the selected row; the line below the table is what **Save**
+writes.
+**Settings** lists every argument the PS5 Linux command lines use, by chapter, with its values.
+The info symbol beside the state also describes the boot partition.
+It links the [PS5 Linux boot partition](../boot-partition.md) chapter.
+The boxes show whether the file
 is there, how many arguments the line has, and how many backups the quickfix kept.
 
-The list beside the boxes opens the fallback lines when they are on the partition: `cmdline.txt.m2` and
+The **Command line** list above the table opens the fallback lines when they are on the partition: `cmdline.txt.m2` and
 `cmdline.txt.usb`, the lines you copy over `cmdline.txt` to start the system on the M.2 SSD or the USB drive. Save
 or Revert your edits before you open another file.
 
-**Save changes** asks first, with the warning that it changes the boot settings of PS5 Linux: **Yes** saves, **No**
+**Save** asks first, with the warning that it changes the boot settings of PS5 Linux: **Yes** saves, **No**
 drops your edits, **Cancel** goes back to editing. A line without `root=` is not saved. **Revert** reads the file
 again. When your user may not read the file, the File box says **Locked**, and **Read** shows it after your password.
 A change to `cmdline.txt` applies from the next boot: restart the board with `systemctl reboot`.

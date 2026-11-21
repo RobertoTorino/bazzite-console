@@ -259,7 +259,7 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
                  "tests/test_main_window.py"):
         compile((app / name).read_text(), name, "exec")                   # valid Python
     window = (app / "fan_two" / "main_window.py").read_text()
-    assert "AppHeader(LOGO_PATH, APP_NAME, __version__)" in window and "A second fan." in window
+    assert "class MainWindow(CardWindow):" in window and "A second fan." in window
     # The installer: the standard options, the refusal of root, pip --upgrade -r (tools/tests/test_layout.py).
     installer = (app / "install.sh").read_text()
     for option in ("--no-desktop-shortcut)", "--uninstall)", "--purge)", "--help)"):

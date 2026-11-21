@@ -1,3 +1,21 @@
+Changelog: 21-11-2026 11:51:00
+
+Added. same_width() takes a floor: a row's places are at least that wide (the first box's floor), for a card whose
+page needs more width than five places do.
+
+Changelog: 21-11-2026 10:50:07
+
+Added. The refresh symbol is drawn muted while it is off (an app that is busy turns it off).
+
+Changelog: 21-11-2026 10:40:50
+
+Added. The card, a template for a small window (card.py, CardWindow; owner, 21-11-2026): the header with the state,
+the info symbol and a refresh symbol at the right end of the title row, rows of boxes and pills under it, five on a
+row at most and all as wide as the widest, and a width of exactly a full row. RefreshButton is the refresh symbol, of
+the info symbol's size and look. AppHeader.add_row() gives a row under the second row; a header without one is as it
+was. The info symbol is always filled now, with a white "i": it was outlined, and filled only under the pointer or
+with the focus.
+
 Changelog: 20-11-2026 19:26:09
 
 Version 4.5.0.

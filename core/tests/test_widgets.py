@@ -8,8 +8,8 @@ from PyQt6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QPushButton, QTa
 
 from bazzite_console_core import theme
 from bazzite_console_core.widgets import (
-    ActionPill, AppHeader, InfoButton, MetricBox, Pill, RoundedToolTip, StatusPill, StatusText, Terminal, TextDialog,
-    accent_button, hide_tooltip, same_width, set_button_active, show_tooltip,
+    ActionPill, AppHeader, InfoButton, MetricBox, Pill, RefreshButton, RoundedToolTip, StatusPill, StatusText, Terminal,
+    TextDialog, accent_button, hide_tooltip, same_width, set_button_active, show_tooltip,
 )
 
 
@@ -110,6 +110,9 @@ def test_same_width_follows_the_widest(qapp):
     assert {b.minimumWidth() for b in boxes} == {wide} and wide > MetricBox.MIN_WIDTH
     boxes[1].set_value("—")                                    # and shrinks back
     assert {b.minimumWidth() for b in boxes} == {max(MetricBox.MIN_WIDTH, *(b.sizeHint().width() for b in boxes))}
+    boxes[0].floor = 400                                       # a card's row that must fill a wider page
+    same_width(boxes)
+    assert {b.minimumWidth() for b in boxes} == {400}
 
 
 def test_set_button_active_keeps_height(qapp):
@@ -319,6 +322,10 @@ def test_app_header_layout(qapp, tmp_path):
     assert header.second_row.itemAt(0).widget() is box and header.second_row.itemAt(1).layout() is second
     assert "v" not in AppHeader(tmp_path / "x.png", "Name").title.text().replace("Name", "")
     assert isinstance(header.title, QLabel)
+    third, pill = header.add_row(), MetricBox("More")                    # under the second row, the icon at the top
+    third.addWidget(pill)
+    assert header.right.itemAt(2).layout() is third and third.spacing() == header.second_row.spacing()
+    assert header.itemAt(0).alignment() == Qt.AlignmentFlag.AlignTop
 
 
 def test_app_header_title_lines_up_with_the_second_row(qapp, tmp_path):
@@ -399,7 +406,11 @@ def test_info_button_opens_its_text_below_it(qapp):
                         parent=owner)
     owner.show()
     assert button.text() == "i" and button.toolTip() == "What this does"
-    assert button.width() == button.height() == InfoButton.SIZE and theme.ACCENT in button.styleSheet()
+    assert button.width() == button.height() == InfoButton.SIZE
+    assert f"background:{theme.ACCENT}" in button.styleSheet() and "color:white" in button.styleSheet()  # filled
+    refresh = RefreshButton()                                           # the same family, beside it
+    assert refresh.size() == button.size() and f"background:{theme.ACCENT}" in refresh.styleSheet()
+    assert refresh.text() == "↻" and refresh.toolTip() == "Read again"
     button.click()
     assert button.popup is not None and button.popup.isVisible()
     assert button.popup.windowFlags() & Qt.WindowType.Popup

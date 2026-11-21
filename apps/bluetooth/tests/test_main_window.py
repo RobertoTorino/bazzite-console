@@ -92,6 +92,7 @@ def test_window_opens_with_the_suites_header(qapp, tmp_path):
     assert window.login_box.value.text() == "Restored" and not window.login_check.isChecked()
     assert items(window) == [] and not window.save_button.isVisible() and not window.search_button.isEnabled()
     assert window.log_view.toPlainText() == ""                          # not installed: no search ran
+    assert window.about.parentWidget() is not None and window.refresh_button.toolTip().startswith("Read Bluetooth")
     window.close()
 
 

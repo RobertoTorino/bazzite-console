@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2962 test functions (3350 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+2966 test functions (3354 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
 
 ## Summary
 
@@ -21,7 +21,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
 | [apps/pcsx2](#appspcsx2) | 14 | 147 | 19.0 s |
 | [apps/ppsspp](#appsppsspp) | 11 | 96 | 4.5 s |
-| [apps/quickfix](#appsquickfix) | 6 | 39 |  |
+| [apps/quickfix](#appsquickfix) | 6 | 41 |  |
 | [apps/remoteplay](#appsremoteplay) | 26 | 242 | 9.6 s |
 | [apps/rpcs3](#appsrpcs3) | 12 | 119 | 5.6 s |
 | [apps/sftp](#appssftp) | 11 | 86 | 5.6 s |
@@ -31,7 +31,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/vita3k](#appsvita3k) | 9 | 78 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
 | [apps/xenia](#appsxenia) | 8 | 72 | 4.2 s |
-| [core](#core) | 26 | 191 | 3.5 s |
+| [core](#core) | 27 | 193 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 105 | 2.1 s |
@@ -42,7 +42,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 220 | 30.2 s |
 | [tools](#tools) | 38 | 225 | 10.2 s |
-| **All** | | **2962** | **153 s** |
+| **All** | | **2966** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -970,7 +970,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/quickfix
 
-39 tests in 6 files.
+41 tests in 6 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -981,6 +981,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_kargs.py` | `test_split_and_join_keep_the_line` |  |  | Split and join keep the line. |
 | `test_kargs.py` | `test_every_argument_of_the_ps5_lines_is_described` |  |  | Every argument of the ps5 lines is described. |
 | `test_kargs.py` | `test_the_add_menu_and_the_list` |  |  | The add menu and the list. |
+| `test_kargs.py` | `test_settings_are_listed_by_chapter_each_once` |  |  | Settings are listed by chapter each once. |
 | `test_main_window.py` | `test_version_is_the_single_source` |  |  | Version is the single source. |
 | `test_main_window.py` | `test_icons_are_beside_the_package` |  |  | Icons are beside the package. |
 | `test_main_window.py` | `test_window_lists_every_quickfix_and_opens_one` |  |  | Window lists every quickfix and opens one. |
@@ -999,6 +1000,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_system.py` | `test_cmdline_without_the_loaders_partition` |  |  | Cmdline without the loaders partition. |
 | `test_system.py` | `test_the_changes_take_only_their_own_states` |  |  | The changes take only their own states. |
 | `test_windows.py` | `test_quickfix_lists_and_installs` |  |  | Quickfix lists and installs. |
+| `test_windows.py` | `test_a_switch_is_one_row_of_even_places_with_the_refresh_symbol_in_the_title_row` |  |  | Three boxes, Turn on and Turn off fill the row under the title; Refresh is the symbol at the right end of the title row, not a pill. |
 | `test_windows.py` | `test_mangohud_config_made_and_logging_set` |  |  | Mangohud config made and logging set. |
 | `test_windows.py` | `test_mangohud_deletes_only_old_logs` |  |  | Mangohud deletes only old logs. |
 | `test_windows.py` | `test_game_memory_map` |  |  | Game memory map. |
@@ -2109,7 +2111,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## core
 
-191 tests in 26 files, 3.5 s in a local run.
+193 tests in 27 files, 3.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2142,6 +2144,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_builds.py` | `test_the_version_manager` |  |  | The version manager. |
 | `test_builds.py` | `test_the_version_manager_says_what_went_wrong` |  |  | The version manager says what went wrong. |
 | `test_builds.py` | `test_a_custom_build_in_the_version_manager` |  |  | A custom build in the version manager. |
+| `test_card.py` | `test_card_has_the_symbols_in_the_title_row_and_no_pill_there` |  |  | Card has the symbols in the title row and no pill there. |
+| `test_card.py` | `test_card_rows_hold_five_even_places_and_give_the_width` |  |  | Card rows hold five even places and give the width. |
 | `test_covers.py` | `test_the_key_for_the_whole_suite` |  |  | The key for the whole suite. |
 | `test_covers.py` | `test_the_key_dialog` |  |  | The key dialog. |
 | `test_covers.py` | `test_names_and_titles` |  |  | Names and titles. |

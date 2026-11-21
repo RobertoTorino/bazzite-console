@@ -22,7 +22,7 @@ takes a name off the list; the device itself stays paired. Once the service is i
 **Save**, which asks for your password once.
 
 The header shows whether Bluetooth is on, whether the service pairs after boot, the controller batteries and what
-Plasma does with Bluetooth at login. The small round **i** beside them says the same in short.
+Plasma does with Bluetooth at login. The small round **i** beside the state says the same in short.
 
 ## Pair after boot
 

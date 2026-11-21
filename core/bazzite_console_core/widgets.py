@@ -202,7 +202,8 @@ def same_width(boxes: list[MetricBox]) -> None:
 
 
 def _even(boxes: list[MetricBox]) -> None:
-    width = max([MetricBox.MIN_WIDTH, *(box.sizeHint().width() for box in boxes)])
+    # floor: a width the row's places have at least, set by a card whose page needs more than five places do
+    width = max([getattr(boxes[0], "floor", MetricBox.MIN_WIDTH), *(box.sizeHint().width() for box in boxes)])
     for box in boxes:
         box.setMinimumWidth(width)
 
@@ -286,6 +287,7 @@ class AppHeader(QHBoxLayout):
         self.second_row.setSpacing(8)
         right.addLayout(self.title_row)
         right.addLayout(self.second_row)
+        self.right = right
         self.addLayout(right, 1)
 
     def add_state(self, widget: QWidget) -> None:
@@ -303,6 +305,16 @@ class AppHeader(QHBoxLayout):
             self.second_row.addWidget(item, stretch)
         else:
             self.second_row.addLayout(item, stretch)
+
+    def add_row(self) -> QHBoxLayout:
+        """One more row under the second, for the boxes and pills that do not fit on it (owner, 21-11-2026: five on
+        a row at most, the rest on a row below, and no pill alone in the title row). The icon then stays at the
+        top."""
+        row = QHBoxLayout()
+        row.setSpacing(self.second_row.spacing())
+        self.right.addLayout(row)
+        self.setAlignment(self.logo, Qt.AlignmentFlag.AlignTop)
+        return row
 
 
 def page_header(title: str) -> tuple[QHBoxLayout, QLabel]:
@@ -349,7 +361,8 @@ def hint_label(text: str, follow_height: bool = False) -> QLabel:
 
 
 class InfoButton(QToolButton):
-    """A small round "i" that shows an explanation when clicked, where a line of hint text would take the room
+    """A small round "i", always filled (owner, 21-11-2026), that shows an explanation when clicked: what the app
+    does, or a text that a window has no room for, where a line of hint text would take the room
     (owner, 01-11-2026: where space is limited, an info symbol that opens the text, instead of long lines of text
     in the window). The text is rich text, as hint_label()'s, with its links clickable; it opens below the button
     in the tooltip's style and stays until a click anywhere, so it can be read at leisure."""
@@ -372,9 +385,9 @@ class InfoButton(QToolButton):
     def restyle(self) -> None:
         """The button in the theme the widgets draw with now: again after a change of theme (app.switch_theme)."""
         self.setStyleSheet(
-            f"QToolButton {{ border:1px solid {accent()}; border-radius:{self.SIZE // 2}px; color:{accent()}; "
-            "background:transparent; font-weight:800; font-family:Georgia, serif; font-style:italic; padding:0; }"
-            f"QToolButton:hover, QToolButton:focus {{ background:{accent()}; color:white; }}")
+            f"QToolButton {{ border:1px solid {accent()}; border-radius:{self.SIZE // 2}px; color:white; "
+            f"background:{accent()}; font-weight:800; font-family:Georgia, serif; font-style:italic; padding:0; }}"
+            "QToolButton:hover, QToolButton:focus { border-color:white; }")
 
     def set_text(self, text: str) -> None:
         self.text_ = text
@@ -404,6 +417,29 @@ class InfoButton(QToolButton):
         self.popup.adjustSize()
         self.popup.move(RoundedToolTip._place(self.mapToGlobal(QPoint(-12, self.height() - 12)), self.popup.size()))
         self.popup.show()
+
+
+class RefreshButton(QToolButton):
+    """A small round refresh symbol, of the InfoButton's size and look, for the right end of the title row (owner,
+    21-11-2026: a card has no Refresh pill, and no pill stands alone in the title row)."""
+
+    SIZE = InfoButton.SIZE
+
+    def __init__(self, tooltip: str = "Read again", parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setText("↻")
+        self.setToolTip(tooltip)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedSize(self.SIZE, self.SIZE)
+        self.restyle()
+
+    def restyle(self) -> None:
+        """The button in the theme the widgets draw with now: again after a change of theme (app.switch_theme)."""
+        self.setStyleSheet(
+            f"QToolButton {{ border:1px solid {accent()}; border-radius:{self.SIZE // 2}px; color:white; "
+            f"background:{accent()}; font-weight:800; padding:0 0 2px 0; }}"
+            "QToolButton:hover, QToolButton:focus { border-color:white; }"
+            f"QToolButton:disabled {{ background:{muted(_theme)}; border-color:{muted(_theme)}; }}")
 
 
 def set_button_active(button: QPushButton, active: bool) -> None:

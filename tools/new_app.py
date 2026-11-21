@@ -5,7 +5,7 @@
     python3 tools/new_app.py <name> "<App Name>" [--id APP_ID] [--package PACKAGE] [--category CATEGORY]
                              [--summary TEXT] [--no-check]
 
-It writes apps/<name>/ (the package with __main__.py and a window on AppHeader, images/, tests/, install.sh,
+It writes apps/<name>/ (the package with __main__.py and a window on core's card, images/, tests/, install.sh,
 the requirements, VERSION 0.1.0, CHANGELOG, LICENSE, .gitignore and README.md), the installer test
 tools/installer-tests/<name>.sh and the wiki chapter docs/apps/<name>.md, and lists the app wherever
 the suite lists its apps: portal/apps.toml, icons/categories.toml (with the
@@ -184,43 +184,30 @@ if __name__ == "__main__":
 '''
 
 WINDOW_PY = '''# SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: the suite's header (the icon at 96 px, the name with the version, the state beside it, Refresh at the
-right end, a status box on the second row) and the page below it."""
+"""The window, a card (core's card.py): the icon at 96 px, the name with the version, the state and the info symbol
+beside it, the refresh symbol at the right end, the boxes and pills on the row under the title (five on a row at
+most) and the page below it."""
 
 from __future__ import annotations
 
-from PyQt6.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget
-
+from @CORE@.card import CardWindow
 from @CORE@.theme import GREY
-from @CORE@.widgets import AppHeader, MetricBox, StatusText, hint_label
+from @CORE@.widgets import MetricBox, hint_label
 
 from . import APP_NAME, LOGO_PATH, __version__
 
 
-class MainWindow(QMainWindow):
+class MainWindow(CardWindow):
     def __init__(self) -> None:
-        super().__init__()
-        self.setWindowTitle(APP_NAME)
-        self.resize(900, 600)
-        header = AppHeader(LOGO_PATH, APP_NAME, __version__)
-        self.state = StatusText()
-        header.add_state(self.state)
-        self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.setToolTip("Read again")
-        self.refresh_button.clicked.connect(self.refresh)
-        header.add_action(self.refresh_button)
+        super().__init__(LOGO_PATH, APP_NAME, __version__, "@SUMMARY@")
         self.status_box = MetricBox("Status")
-        header.add_second(self.status_box)
-        contents = QWidget()
-        layout = QVBoxLayout(contents)
-        layout.addLayout(header)
-        layout.addWidget(hint_label("@SUMMARY@"))
-        layout.addStretch(1)
-        self.setCentralWidget(contents)
+        self.set_rows([self.status_box])        # a second list is a second row
+        self.page.addWidget(hint_label("@SUMMARY@"))
+        self.page.addStretch(1)
         self.refresh()
 
     def refresh(self) -> None:
-        """Reads what the window shows; the state and the status box follow it."""
+        """Reads what the window shows; the state and the status box follow it. The refresh symbol calls it."""
         self.state.set_status("Ready", "ok")
         self.status_box.set_value("\\u2014", "Nothing to show yet.")
         self.status_box.set_colour(GREY)
@@ -282,7 +269,8 @@ def test_window_opens_with_the_suites_header(qapp):
     assert window.windowTitle() == APP_NAME
     assert window.state.text() == "Ready" and window.state.kind == "ok"
     assert window.status_box.caption.text() == "Status"
-    window.refresh()
+    window.refresh_button.click()               # the refresh symbol in the title row
+    assert window.width() == window.card_width(window.status_box.minimumWidth())
     window.close()
 '''
 

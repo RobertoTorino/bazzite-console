@@ -112,10 +112,25 @@ def plain(text: str) -> str:
     return html.unescape(text.replace("<code>", "").replace("</code>", ""))
 
 
+# Settings, by chapter: the title and the keys under it. Every setting is in one chapter.
+CHAPTERS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("Starting the system", ("root", "rw", "rootwait")),
+    ("Boot messages and splash", ("console", "plymouth.enable", "rd.plymouth")),
+    ("Screen and HDMI", ("video", "hdmi.frl_4k120", "hdmi.hdcp_mode")),
+    ("Processor", ("mitigations", "idle", "preempt")),
+    ("SSD", ("nvme.max_host_mem_size_mb", "nvme_core.default_ps_max_latency_us")),
+    ("Memory and GPU", ("amd_iommu", "ttm.pages_limit")),
+)
+
+
 def info_list() -> str:
-    """Every argument and its values, as the info symbol's HTML."""
-    rows = []
-    for s in SETTINGS:
-        values = "".join(f"<br>&nbsp;&nbsp;<code>{s.key}={v}</code>: {meaning}." for v, meaning in s.values.items())
-        rows.append(f"<b><code>{s.key}</code></b>: {s.what}{values}")
-    return "<br>".join(rows)
+    """Every argument and its values, as HTML: a chapter with its heading, then each argument's name on a line of
+    its own, what it does under it, and its values as a list."""
+    parts = []
+    for title, keys in CHAPTERS:
+        parts.append(f"<h3>{title}</h3>")
+        for key in keys:
+            s = BY_KEY[key]
+            values = "".join(f"<li><code>{s.key}={v}</code>: {meaning}.</li>" for v, meaning in s.values.items())
+            parts.append(f"<p><b><code>{s.key}</code></b><br>{s.what}</p>" + (f"<ul>{values}</ul>" if values else ""))
+    return "".join(parts)

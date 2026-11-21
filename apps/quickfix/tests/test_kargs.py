@@ -31,3 +31,11 @@ def test_the_add_menu_and_the_list():
     assert all(kargs.describe(e) for e in examples) and "root" not in {s.key for s in kargs.SETTINGS if s.example}
     listed = kargs.info_list()
     assert all(f"<code>{s.key}</code>" in listed for s in kargs.SETTINGS) and "hdmi.hdcp_mode=-1" in listed
+
+
+def test_settings_are_listed_by_chapter_each_once():
+    keys = [key for _title, chapter in kargs.CHAPTERS for key in chapter]
+    assert sorted(keys) == sorted(kargs.BY_KEY) and len(keys) == len(set(keys))
+    listed = kargs.info_list()
+    assert listed.startswith("<h3>Starting the system</h3><p><b><code>root</code></b><br>")
+    assert listed.count("<h3>") == len(kargs.CHAPTERS) and "<li><code>console=tty0</code>: the screen.</li>" in listed

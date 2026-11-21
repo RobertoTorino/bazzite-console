@@ -1,3 +1,11 @@
+Changelog: 21-11-2026 11:59:41
+
+Release 4.7.0.
+
+Changelog: 21-11-2026 11:51:00
+
+Fixed. Boot Command Line's "Changes the board" text names the pill as the window does: Save, which was Save changes.
+
 Changelog: 20-11-2026 22:17:39
 
 Release 4.6.0.

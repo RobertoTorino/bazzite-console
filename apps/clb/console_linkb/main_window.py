@@ -18,7 +18,7 @@ from bazzite_console_core import SUITE_REPO_URL, window_title
 from bazzite_console_core import __version__ as CORE_VERSION
 from bazzite_console_core.settings import SettingsStore
 from bazzite_console_core.updates import UpdateChecker
-from bazzite_console_core.widgets import AppHeader, MetricBox, StatusText, Terminal, hint_label
+from bazzite_console_core.widgets import AppHeader, MetricBox, RefreshButton, StatusText, Terminal, hint_label
 
 from . import APP_NAME, INFO, LOGO_PATH, __version__, auth, privacy, style, xbox
 from .auth import Account, AuthError, DeviceCode, SignedOut
@@ -65,9 +65,8 @@ class MainWindow(QMainWindow):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         self.pill = StatusText()
         header.add_state(self.pill)
-        self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.setToolTip("Ask XBOX Live again for the consoles and the cloud games")
-        self.refresh_button.clicked.connect(self.refresh)
+        self.refresh_button = RefreshButton("Ask XBOX Live again for the consoles and the cloud games")
+        self.refresh_button.clicked.connect(lambda: self.refresh())
         header.add_action(self.refresh_button)
         self.account_box = MetricBox("Account", style.BLUE)
         self.consoles_box = MetricBox("Consoles", style.BLUE)
