@@ -291,7 +291,17 @@ summary = "Turn the TV on and off with the PS5, switch its input and use its rem
 tag = "ps5-cec-v2.6.0"
 sha256 = "d0ec76d4d17752a27aa83999a77123fa15ea8e4257c4d007db665da47a3db701"
 required = false
-changes_board = false
+changes_board = true
+board_change = """
+Power button, once you check it and give your password, installs a system service with its script:
+/etc/systemd/system/ps5-cec-manager-standby.service and /etc/ps5-cec-manager/standby. Around every sleep the script
+makes the light bar breathe orange, turns the CPU boost off and picks a power-saving profile. At the wake it puts all
+three back. It also writes /etc/systemd/logind.conf.d/90-ps5-cec-manager-power-key.conf, so a press at the login
+screen no longer powers the board off. It adds your user to the input group and sets the desktop's power button to
+do nothing. These stay across reboots and power offs. Nothing is written to the board's firmware or the kernel's
+arguments. Unchecking it removes the three files and puts the desktop's button action back. The input group stays.
+The rest of the app only sends CEC messages and changes nothing on the board.
+"""
 category = "utilities"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -313,7 +323,7 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 
 [apps.quickfix]
 name = "PS5 Quickfix"
-summary = "Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal and the boot command line. Always installed."
+summary = "Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal, Ethernet First and the boot command line. Always installed."
 tag = "ps5-quickfix-v0.5.0"
 sha256 = "b4ced2f56f2dc30042afdb7224a0576eb6fb9151ff69ee968b0ad77655b02832"
 required = true
@@ -360,6 +370,21 @@ Turn on makes the folder /var/log/journal, with systemd-tmpfiles, and moves the 
 the system's logs on the disk, within its own size limits, instead of in memory only. The folder stays across reboots
 and power offs. Nothing is written to the board's firmware. Turn off works only on a folder this quickfix made: it
 moves the journal back to memory and removes the folder, with the logs in it.
+"""
+
+[[apps.quickfix.quickfixes]]
+key = "ethernet"
+name = "Ethernet First"
+summary = "Turn the Wi-Fi off while a network cable is connected, and on again when the cable is gone."
+launch = "~/.local/bin/ps5-quickfix ethernet"
+changes_board = true
+board_change = """
+Turn on writes a NetworkManager hook, /etc/NetworkManager/dispatcher.d/90-ps5-quickfix-ethernet-first, and a timer,
+ps5-quickfix-ethernet-first.timer, that runs it 45 seconds after boot. The hook turns the Wi-Fi off while a network
+port of the board has a cable with a link. It turns the Wi-Fi on again when the cable is gone, but only when it turned
+it off itself.
+The files stay across reboots and power offs. Nothing is written to the board's firmware or the kernel's arguments.
+Turn off removes the hook and the timer, and turns on the Wi-Fi the hook turned off.
 """
 
 [[apps.quickfix.quickfixes]]

@@ -4,12 +4,22 @@
 
 # PS5 CEC Manager
 
+!!! warning "Changes the board"
+    Power button, once you check it and give your password, installs a system service with its script:
+    /etc/systemd/system/ps5-cec-manager-standby.service and /etc/ps5-cec-manager/standby. Around every sleep the
+    script makes the light bar breathe orange, turns the CPU boost off and picks a power-saving profile. At the wake
+    it puts all three back. It also writes /etc/systemd/logind.conf.d/90-ps5-cec-manager-power-key.conf, so a press
+    at the login screen no longer powers the board off. It adds your user to the input group and sets the desktop's
+    power button to do nothing. These stay across reboots and power offs. Nothing is written to the board's firmware
+    or the kernel's arguments. Unchecking it removes the three files and puts the desktop's button action back. The
+    input group stays. The rest of the app only sends CEC messages and changes nothing on the board.
+
 HDMI-CEC lets the board and the TV talk over the HDMI cable. With it you can turn the TV on and off from a
 **PlayStation 5** running **Bazzite**, switch the TV to the PS5's input, set the volume, and use the TV remote on
 the PS5.
 
-The app does not change how the board runs. It sends CEC messages to the TV when you press a button. While
-**Pause videos and music** is on, it asks the TV every 5 seconds whether it is on.
+The app sends CEC messages to the TV when you press a button. While **Pause videos and music** is on, it asks the TV
+every 5 seconds whether it is on. Only **Power button** changes how the board runs, and only once you check it.
 
 ## What it does
 
@@ -17,6 +27,7 @@ The app does not change how the board runs. It sends CEC messages to the TV when
 - Sets the volume.
 - Shows what the TV tells about itself.
 - Pauses videos and music while the TV is off.
+- Lets the board's power button put the TV in standby and the board to sleep, and wake both together.
 - Lets Valve's CEC daemon (cecd, which Bazzite ships) wake and suspend the TV with the PS5, and turn the TV remote
   into key presses.
 
@@ -79,10 +90,40 @@ It uses a small background service that starts with your desktop session and ask
 it is on. One missed answer does not count as "off": only three in a row do, for example when the TV is unplugged.
 So a hiccup on the HDMI bus pauses nothing.
 
+## Power button
+
+**Power button: put the TV in standby and the board to sleep, and wake both together** makes the board's power button
+work like a console's. A press puts the TV in standby and the board to sleep. The next press wakes the board, turns
+the TV on and switches it to the board.
+
+Checking it asks for your password once. It then installs the board's standby look, a system service that runs
+around every sleep:
+
+- the light bar breathes orange
+- the CPU boost is off
+- a power-saving profile is on
+
+At the wake all three are back as they were. Whatever the board lacks is left out, for example the boost tool.
+
+The app's background service reads the button. It needs the input group, which checking the option gives your user.
+That takes effect from your next login. The desktop's own power button action is set to do nothing, so the two do
+not both react. A press at the login screen does nothing either. Valve's CEC daemon has two automatic switches that
+turn the TV on and off with sleep. They are off while this option is on, so the TV gets each message once.
+
+Presses in the first 10 seconds after a wake are ignored, so the press that wakes the board does not send it back
+to sleep. When the board cannot sleep, the app turns the TV on again.
+
+Without sleep in the kernel, the button works in soft mode. The desktop turns the screen off on a press, and the
+app then puts the TV in standby. When the screen comes back on, the TV comes on and switches to the board.
+
+Unchecking it removes the system service and the login screen's setting, and puts the desktop's button action back.
+Your user stays in the input group. The background service writes a line to the journal for each thing it does:
+`journalctl --user -u ps5-cec-manager-watch`.
+
 ## At boot
 
 The PS5's kernel turns the TV on and switches it to the PS5 by itself at boot (`hdmi.one_touch_play`). The app adds
-nothing there and installs no system service.
+nothing there.
 
 ## Automatic: Valve's CEC daemon
 
@@ -128,6 +169,9 @@ list keeps the last 12. The TV sends the keys only while it shows the PS5's inpu
 - `~/.config/systemd/user/ps5-cec-manager-watch.service`: the background service of **Pause videos and music**, only
   while it is on. Uninstalling removes it. It writes a line to the journal each time it pauses or continues:
   `journalctl --user -u ps5-cec-manager-watch`.
+- `/etc/systemd/system/ps5-cec-manager-standby.service`, `/etc/ps5-cec-manager/standby` and
+  `/etc/systemd/logind.conf.d/90-ps5-cec-manager-power-key.conf`: **Power button**, while it is on. Uninstalling the
+  app leaves them, so uncheck **Power button** first.
 
 ## Install and remove
 

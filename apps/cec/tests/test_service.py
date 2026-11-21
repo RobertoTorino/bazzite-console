@@ -43,3 +43,10 @@ def test_enable_and_disable(tmp_path):
     run.calls.clear()
     service.disable(run, tmp_path)                       # nothing installed: nothing to do
     assert run.calls == []
+
+
+def test_both_jobs_in_one_unit(tmp_path):
+    run = Systemctl()
+    service.set_jobs(run, tmp_path, "/venv/bin/python", Path("/app"), {service.POWER, service.PAUSE})
+    assert "cec_manager.watcher --pause-media --power-button" in service.unit_path(tmp_path).read_text()
+    assert service.jobs(run, tmp_path) == {service.PAUSE, service.POWER}

@@ -15,7 +15,9 @@
 #    Qt; nothing is layered). It is removed with the last suite app that uses it.
 #  * ~/.config/cecd/config.d/99-ps5-cec-manager.toml: the CEC daemon settings, once you change one in the app.
 #  * ~/.config/systemd/user/ps5-cec-manager-watch.service: the background part of "Pause videos and music while the
-#    TV is off", only while that is chosen in the app. It starts the app's own files, so uninstalling removes it.
+#    TV is off" and "Power button", only while one is chosen in the app. It starts the app's own files, so
+#    uninstalling removes it. Power button's system part in /etc needs a password: unchecking it in the app removes
+#    it, and uninstalling only says that it is still there.
 #  * ~/.local/bin/ps5-cec-manager to start it from a terminal, plus an app menu entry and a Desktop icon.
 set -euo pipefail
 
@@ -84,6 +86,12 @@ if $UNINSTALL; then
         systemctl --user disable --now "$WATCH_UNIT" >/dev/null 2>&1 || true
         rm -f "$WATCH_FILE"
         systemctl --user daemon-reload >/dev/null 2>&1 || true
+    fi
+    if [ -f /etc/systemd/system/ps5-cec-manager-standby.service ]; then
+        info "Power button's system part stays (it needs your password). To remove it:"
+        info "  sudo systemctl disable ps5-cec-manager-standby.service"
+        info "  sudo rm -r /etc/systemd/system/ps5-cec-manager-standby.service /etc/ps5-cec-manager \\"
+        info "    /etc/systemd/logind.conf.d/90-ps5-cec-manager-power-key.conf"
     fi
     info "Removing the launcher, the menu entry and the app"
     rm -f "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON"

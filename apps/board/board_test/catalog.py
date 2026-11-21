@@ -83,7 +83,7 @@ CATEGORIES: list[Category] = [
         TestDef("18", "GPU Governor",
                 "The kernel's ps5-gpufreq (devfreq) sets the GPU clock: its governor and the temperature limit. Warns when a GPU governor made for other hardware is installed."),
         TestDef("19", "GPU Frequency Scaling",
-                "The ps5-gpufreq clock steps (500-2230 MHz), the allowed range and the clock changes since boot."),
+                "The ps5-gpufreq clock steps (500-2230 MHz), the allowed range and the clock changes since boot. Warns when the GPU runs a higher clock at idle than ps5-gpufreq says."),
         TestDef("20", "Vulkan / Mesa", "Confirms RADV reports GFX1013 and not the llvmpipe software fallback."),
         TestDef("21", "Compute Unit Count",
                 "Active CUs from the kernel (36 on a PS5, 60 on a Pro), and RADV's view when vulkaninfo is there."),

@@ -1,3 +1,16 @@
+Changelog: 21-11-2026 20:49:10
+
+Release 4.9.0.
+
+Changelog: 21-11-2026 20:09:22
+
+Added. PS5 CEC Manager changes the board: its new Power button option installs a system service, so the portal asks
+before it opens the app and its tile says what it changes.
+
+Changelog: 21-11-2026 19:51:41
+
+Added. The Utilities tab lists PS5 Quickfix's new Ethernet First tile, with what it changes on the board.
+
 Changelog: 21-11-2026 14:51:22
 
 Release 4.8.0.

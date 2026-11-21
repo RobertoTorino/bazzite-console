@@ -4,6 +4,7 @@ in isolated mode (-I), one change per call, and it needs only the standard libra
 
     system.py mapcount on | off                 vm.max_map_count in /etc/sysctl.d (MAPCOUNT_CONF)
     system.py journal on | off                  the journal kept on the disk, in /var/log/journal
+    system.py ethernet on | off                 the Wi-Fi off while a network cable is connected (ETHERNET_HOOK)
     system.py cmdline show [--file NAME]        prints /boot/efi/cmdline.txt (or NAME, one of CMDLINES), when your
                                                 user may not read it
     system.py cmdline save --text FILE [--file NAME]   writes FILE's line to it, after a dated backup of it beside it
@@ -26,6 +27,9 @@ MAPCOUNT_CONF = "sysctl.d/90-ps5-quickfix-max-map-count.conf"      # in /etc
 MAPCOUNT = 2147483642                                             # what SteamOS and Bazzite set
 JOURNAL_DIR = "log/journal"                                       # in /var
 JOURNAL_MARK = ".ps5-quickfix"                                     # in it: the quickfix made the folder
+ETHERNET_HOOK = "NetworkManager/dispatcher.d/90-ps5-quickfix-ethernet-first"   # in /etc
+ETHERNET_UNIT = "ps5-quickfix-ethernet-first"                       # .service and .timer, in /etc/systemd/system
+ETHERNET_MARK = "lib/ps5-quickfix/wifi-off-by-ethernet-first"                 # in /var: the hook turned the Wi-Fi off
 CMDLINE_DIR = "efi"                                               # in /boot: the PS5 loader's partition
 CMDLINES = ("cmdline.txt", "cmdline.txt.m2", "cmdline.txt.usb")   # the line it starts Linux with; the fallback lines
 CMDLINE = f"{CMDLINE_DIR}/{CMDLINES[0]}"
@@ -55,11 +59,11 @@ def run(argv: list[str]) -> int:
         return 127
 
 
-def write(path: Path, text: str) -> None:
+def write(path: Path, text: str, mode: int = 0o644) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(text, encoding="utf-8")
-    os.chmod(tmp, 0o644)
+    os.chmod(tmp, mode)
     tmp.replace(path)
     print(f"Wrote {path}")
 
@@ -90,6 +94,77 @@ def journal(var: Path, on: bool) -> int:
     shutil.rmtree(folder)
     print(f"Removed {folder}: the journal is kept in memory until the next boot again.")
     return 0
+
+
+# ------------------------------------------------------------------------------------------------ Ethernet First
+# NetworkManager runs the hook as root with the interface and the action; the timer's service runs it with "check".
+ETHERNET_SCRIPT = f"""#!/bin/sh
+# Written by PS5 Quickfix (Ethernet First): the Wi-Fi off while a network cable is connected, back on when the
+# cable is gone. NetworkManager runs it on every up, down and connectivity change, {ETHERNET_UNIT}.timer once
+# after boot. It turns the Wi-Fi back on only when it turned it off itself, so a Wi-Fi you turned off stays off.
+case "$2" in up|down|connectivity-change|check) ;; *) exit 0 ;; esac
+MARK=/var/{ETHERNET_MARK}
+cable=no
+for dev in $(nmcli -t -f DEVICE,TYPE,STATE device 2>/dev/null \\
+        | awk -F: '$2 == "ethernet" && $3 == "connected" {{print $1}}'); do
+    [ -e "/sys/class/net/$dev/device" ] && cable=yes      # a port of the board, not a bridge or a container's
+done
+if [ "$cable" = yes ]; then
+    if [ "$(nmcli radio wifi 2>/dev/null)" = enabled ]; then
+        mkdir -p "${{MARK%/*}}" && touch "$MARK"
+        nmcli radio wifi off && logger -t ps5-quickfix "Ethernet First: a cable is connected, the Wi-Fi is off"
+    fi
+elif [ -e "$MARK" ]; then
+    nmcli radio wifi on && rm -f "$MARK" && logger -t ps5-quickfix "Ethernet First: no cable, the Wi-Fi is on again"
+fi
+exit 0
+"""
+
+ETHERNET_SERVICE = f"""# Written by PS5 Quickfix (Ethernet First): checks the cable once after boot.
+[Unit]
+Description=PS5 Quickfix Ethernet First: the Wi-Fi off while a network cable is connected
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/{ETHERNET_HOOK} - check
+"""
+
+# Late enough for the cable's DHCP; turns the Wi-Fi on again after a boot without the cable it was left off for.
+ETHERNET_TIMER = """# Written by PS5 Quickfix (Ethernet First).
+[Unit]
+Description=PS5 Quickfix Ethernet First: check the cable after boot
+
+[Timer]
+OnBootSec=45s
+
+[Install]
+WantedBy=timers.target
+"""
+
+
+def ethernet(etc: Path, var: Path, on: bool) -> int:
+    hook = etc / ETHERNET_HOOK
+    units = etc / "systemd" / "system"
+    if on:
+        write(hook, ETHERNET_SCRIPT, 0o755)
+        write(units / f"{ETHERNET_UNIT}.service", ETHERNET_SERVICE)
+        write(units / f"{ETHERNET_UNIT}.timer", ETHERNET_TIMER)
+        code = run(["systemctl", "daemon-reload"]) or run(["systemctl", "enable", f"{ETHERNET_UNIT}.timer"])
+        return code or run([str(hook), "-", "check"])           # now, not only at the next change
+    run(["systemctl", "disable", "--now", f"{ETHERNET_UNIT}.timer"])
+    for path in (hook, units / f"{ETHERNET_UNIT}.service", units / f"{ETHERNET_UNIT}.timer"):
+        path.unlink(missing_ok=True)
+        print(f"Removed {path}")
+    run(["systemctl", "daemon-reload"])
+    mark = var / ETHERNET_MARK
+    if not mark.is_file():
+        return 0
+    code = run(["nmcli", "radio", "wifi", "on"])        # the Wi-Fi this quickfix turned off
+    if not code:
+        mark.unlink()
+        print("The Wi-Fi this quickfix turned off is on again.")
+    return code
 
 
 # ------------------------------------------------------------------------------------------- Boot Command Line
@@ -145,7 +220,7 @@ def cmdline_save(boot: Path, source: Path, name: str = CMDLINES[0]) -> int:
 def main(argv: list[str] | None = None, etc: Path = Path("/etc"), var: Path = Path("/var"),
          boot: Path = Path("/boot")) -> int:
     parser = argparse.ArgumentParser(prog="system.py", description="PS5 Quickfix, the part that runs as root")
-    parser.add_argument("change", choices=("mapcount", "journal", "cmdline"))
+    parser.add_argument("change", choices=("mapcount", "journal", "ethernet", "cmdline"))
     parser.add_argument("state", choices=("on", "off", "show", "save"))
     parser.add_argument("--text", type=Path, help="cmdline save: the file with the new line")
     parser.add_argument("--file", choices=CMDLINES, default=CMDLINES[0], help="cmdline: which command line")
@@ -157,6 +232,8 @@ def main(argv: list[str] | None = None, etc: Path = Path("/etc"), var: Path = Pa
     on = args.state == "on"
     if args.change == "mapcount":
         return mapcount(etc, on)
+    if args.change == "ethernet":
+        return ethernet(etc, var, on)
     return journal(var, on)
 
 

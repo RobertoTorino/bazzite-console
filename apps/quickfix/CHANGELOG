@@ -1,3 +1,9 @@
+Changelog: 21-11-2026 19:51:41
+
+Added. Ethernet First, a new quickfix: it turns the Wi-Fi off while a network cable is connected, and on again when
+the cable is gone. Turn on installs a NetworkManager hook and a timer that checks the cable 45 seconds after boot.
+The hook turns on only a Wi-Fi it turned off itself. Turn off removes both and turns that Wi-Fi on again.
+
 Changelog: 21-11-2026 12:04:44
 
 Release 0.5.0.

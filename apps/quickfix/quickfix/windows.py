@@ -2,8 +2,9 @@
 """The quickfixes' windows. Each is the suite's window: the icon at 96 px, the quickfix's name with the version, its
 state, the info symbol with what it contains and does, and the refresh symbol at the right end; its status boxes
 and pills on the rows under the title, five on a row at most (core's card.py: the card).
-Game Memory Map and Persistent Journal are switches (SwitchWindow): Turn on when it is off, Turn off when the quickfix
-turned it on, one password each (pkexec, system.py); what is on already cannot be turned on again. Boot Command Line
+Game Memory Map, Persistent Journal and Ethernet First are switches (SwitchWindow): Turn on when it is off, Turn off
+when the quickfix turned it on, one password each (pkexec, system.py); what is on already cannot be turned on again.
+Boot Command Line
 edits the PS5 loader's cmdline.txt one argument per row (kargs.py says what each does), and its Save asks
 Yes, No or Cancel first."""
 
@@ -285,7 +286,7 @@ class SwitchWindow(QuickfixWindow):
     """A quickfix that turns one thing on or off: its status boxes, Turn on and Turn off. A subclass reads its state
     in read() and returns what the window shows."""
 
-    CHANGE = ""                         # system.py's change: mapcount, journal
+    CHANGE = ""                         # system.py's change: mapcount, journal, ethernet
 
     def __init__(self, quickfix: Quickfix, info: str, boxes: tuple[str, ...], **kwargs) -> None:
         super().__init__(quickfix, info, **kwargs)
@@ -375,6 +376,36 @@ class JournalWindow(SwitchWindow):
         if QMessageBox.question(self, window_title("Turn off"), "Remove /var/log/journal, with the logs of every "
                                 "earlier boot in it?") == QMessageBox.StandardButton.Yes:
             super().turn_off()
+
+
+# ------------------------------------------------------------------------------------------------ Ethernet First
+ETHERNET_INFO = ("<b>Ethernet First</b> turns the Wi-Fi off while a network cable is connected, and on again when "
+                 "the cable is gone. With both connected, the board can send its traffic over the slower Wi-Fi, "
+                 "for example when the cable gets no working IPv6 and the Wi-Fi does.<br><br>Turn on "
+                 f"installs a NetworkManager hook, <code>/etc/{system.ETHERNET_HOOK}</code>, and a timer that "
+                 "checks the cable 45 seconds after boot. The hook turns the Wi-Fi on again only when it turned it "
+                 "off itself, so a Wi-Fi you turned off stays off. Turn off removes both, and turns on the Wi-Fi "
+                 "the hook turned off.")
+
+
+class EthernetWindow(SwitchWindow):
+    CHANGE = "ethernet"
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(BY_KEY["ethernet"], ETHERNET_INFO, ("Ethernet First", "Cable", "Wi-Fi"), **kwargs)
+        self.refresh()
+
+    def refresh(self) -> None:
+        e = state.ethernet(self.root)
+        self.show_box("Ethernet First", "On" if e.on else "Off", f"/etc/{system.ETHERNET_HOOK}", e.on or None)
+        self.show_box("Cable", "Connected" if e.cable else "None", "A network port of the board with a link",
+                      True if e.cable else None)
+        self.show_box("Wi-Fi", "Off for the cable" if e.wifi_off else "As you set it",
+                      "Turned off by this quickfix; on again when the cable is gone" if e.wifi_off
+                      else "This quickfix has not turned it off", None)
+        self.on_button.setEnabled(not e.on)
+        self.off_button.setEnabled(e.on)
+        self.state.set_status("On" if e.on else "Off", "ok" if e.on else "info")
 
 
 # ------------------------------------------------------------------------------------------- Boot Command Line
@@ -665,5 +696,5 @@ class CmdlineWindow(QuickfixWindow):
 
 WINDOWS: dict[str, Callable[..., QuickfixWindow]] = {
     "tools": ToolsWindow, "mangohud": MangoHudWindow, "mapcount": MapCountWindow, "journal": JournalWindow,
-    "cmdline": CmdlineWindow,
+    "ethernet": EthernetWindow, "cmdline": CmdlineWindow,
 }

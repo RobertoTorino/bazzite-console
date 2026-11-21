@@ -353,3 +353,33 @@ def test_the_four_boxes_have_four_colours(make):
     boxes = (w.adapter_box, w.address_box, w.display_box, w.power_box)
     colours = [box.styleSheet().split("border-left:4px solid ")[1].split(";")[0] for box in boxes]
     assert colours == [main_window.DARK_BLUE, main_window.ORANGE, main_window.DARK_BLUE, main_window.PURPLE]
+
+
+def test_the_power_button_option(make, sys_root, monkeypatch):
+    monkeypatch.setattr(main_window.getpass, "getuser", lambda: "player")
+    (sys_root / "power").mkdir(exist_ok=True)
+    (sys_root / "power" / "state").write_text("freeze\n")              # a kernel with sleep
+
+    class Desktop(FakeBoard):
+        def __call__(self, argv):
+            if argv[0] == "kreadconfig6":
+                self.calls.append(argv)
+                return Result(0, "64\n")                                # the desktop's own action before
+            return super().__call__(argv)
+
+    board = Desktop(native=True)
+    w = make(board)
+    w.refresh()
+    assert not w.button_box.isChecked() and w.button_box.isEnabled()
+    w.button_box.setChecked(True)
+    root = [c for c in board.calls if c[0] == "pkexec"]
+    assert root[-1][-3:] == ["power-button", "on", "player"]
+    assert board.calls[[c[0] for c in board.calls].index("kwriteconfig6")][-1] == "0"   # nothing: the watcher sleeps
+    unit = (w.config_dir / "systemd/user/ps5-cec-manager-watch.service").read_text()
+    assert "--power-button" in unit and w.button_box.isChecked()
+    assert not w.boxes["suspend_tv"].isEnabled() and not w.boxes["wake_tv"].isEnabled()
+    assert w.boxes["uinput"].isEnabled()
+    w.button_box.setChecked(False)
+    assert [c for c in board.calls if c[0] == "pkexec"][-1][-2:] == ["power-button", "off"]
+    assert [c for c in board.calls if c[0] == "kwriteconfig6"][-1][-1] == "64"        # the action from before
+    assert not (w.config_dir / "systemd/user/ps5-cec-manager-watch.service").exists()

@@ -1,3 +1,9 @@
+Changelog: 21-11-2026 20:42:07
+
+Fixed. tools/record-tour.sh and tools/record-app-tour.sh use Qt's PulseAudio backend where no PipeWire runs. Qt's
+default PipeWire backend crashed the recording there, for example on WSL, as soon as the portal made its first sound
+effect. A QT_AUDIO_BACKEND you set yourself is kept.
+
 Changelog: 21-11-2026 13:40:52
 
 Fixed. tools/new_app.py escapes a quote mark and a backslash in a new app's summary where it stands between double

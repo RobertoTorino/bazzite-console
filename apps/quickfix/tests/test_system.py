@@ -34,6 +34,30 @@ def test_journal_on_and_off_only_its_own(tmp_path, ran):
     assert system.main(["journal", "off"], var=tmp_path) == 1 and folder.is_dir()
 
 
+def test_ethernet_on_and_off(tmp_path, ran):
+    etc, var = tmp_path / "etc", tmp_path / "var"
+    hook, units = etc / system.ETHERNET_HOOK, etc / "systemd" / "system"
+    timer = f"{system.ETHERNET_UNIT}.timer"
+    assert system.main(["ethernet", "on"], etc=etc, var=var) == 0
+    assert hook.stat().st_mode & 0o777 == 0o755 and "nmcli radio wifi off" in hook.read_text()
+    assert f"ExecStart=/etc/{system.ETHERNET_HOOK} - check" in (units / f"{system.ETHERNET_UNIT}.service").read_text()
+    assert "OnBootSec=45s" in (units / timer).read_text()
+    assert ran == [["systemctl", "daemon-reload"], ["systemctl", "enable", timer], [str(hook), "-", "check"]]
+    ran.clear()
+    mark = var / system.ETHERNET_MARK                           # the hook keeps the Wi-Fi off for the cable
+    mark.parent.mkdir(parents=True)
+    mark.touch()
+    assert system.main(["ethernet", "off"], etc=etc, var=var) == 0
+    assert not hook.exists() and not list(units.iterdir()) and not mark.exists()
+    assert ran == [["systemctl", "disable", "--now", timer], ["systemctl", "daemon-reload"],
+                   ["nmcli", "radio", "wifi", "on"]]
+
+
+def test_ethernet_off_leaves_a_wifi_it_did_not_turn_off(tmp_path, ran):
+    assert system.main(["ethernet", "off"], etc=tmp_path / "etc", var=tmp_path / "var") == 0
+    assert ["nmcli", "radio", "wifi", "on"] not in ran
+
+
 def test_the_command_and_its_answer(tmp_path):
     argv = system.command(["mapcount", "on"], own=tmp_path / "system.py")
     assert argv[0] == "pkexec" and argv[2] == "-I" and argv[-3:] == [str(tmp_path / "system.py"), "mapcount", "on"]
@@ -102,7 +126,7 @@ def test_cmdline_without_the_loaders_partition(tmp_path, capsys):
     assert system.main(["cmdline", "show"], boot=tmp_path / "boot") == 1
 
 
-@pytest.mark.parametrize("argv", [["cmdline", "on"], ["mapcount", "show"], ["cmdline", "save"]])
+@pytest.mark.parametrize("argv", [["cmdline", "on"], ["mapcount", "show"], ["ethernet", "show"], ["cmdline", "save"]])
 def test_the_changes_take_only_their_own_states(argv):
     with pytest.raises(SystemExit):
         system.main(argv)

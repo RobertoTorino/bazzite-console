@@ -49,6 +49,28 @@ def test_mapcount_and_journal(tmp_path):
     assert state.journal(tmp_path) == state.Journal(True, True)
 
 
+def port(root, name: str, carrier: str = "1", kind: str = "1", device: bool = True, wireless: bool = False) -> None:
+    put(root, f"sys/class/net/{name}/type", kind + "\n")
+    put(root, f"sys/class/net/{name}/carrier", carrier + "\n")
+    if device:
+        (root / f"sys/class/net/{name}/device").mkdir()
+    if wireless:
+        (root / f"sys/class/net/{name}/wireless").mkdir()
+
+
+def test_ethernet(tmp_path):
+    assert state.ethernet(tmp_path) == state.Ethernet(False, False, False)
+    port(tmp_path, "docker0", device=False)                     # a bridge: no device behind it
+    port(tmp_path, "wlan0", wireless=True)
+    port(tmp_path, "lo", kind="772", device=False)
+    port(tmp_path, "enp1s0", carrier="0")
+    assert not state.cable(tmp_path)
+    put(tmp_path, "sys/class/net/enp1s0/carrier", "1\n")
+    put(tmp_path, f"etc/{system.ETHERNET_HOOK}")
+    put(tmp_path, f"var/{system.ETHERNET_MARK}")
+    assert state.ethernet(tmp_path) == state.Ethernet(True, True, True)
+
+
 def test_cmdline(tmp_path):
     c = state.cmdline(tmp_path)
     assert (c.text, c.exists, c.backups) == ("", False, 0)

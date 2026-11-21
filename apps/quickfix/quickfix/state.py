@@ -181,6 +181,38 @@ def journal(root: Path = ROOT) -> Journal:
     return Journal(folder.is_dir(), (folder / system.JOURNAL_MARK).is_file())
 
 
+# ------------------------------------------------------------------------------------------------ Ethernet First
+@dataclass(frozen=True)
+class Ethernet:
+    on: bool                    # the quickfix's NetworkManager hook is there
+    cable: bool                 # a network port of the board has a link
+    wifi_off: bool              # the hook turned the Wi-Fi off, and will turn it on again
+
+
+def cable(root: Path = ROOT) -> bool:
+    """A wired network port of the board with a link: a device behind it (not a bridge, a VPN or a container's), not
+    a wireless one, an Ethernet type (1) and a carrier."""
+    try:
+        ports = list((root / "sys" / "class" / "net").iterdir())
+    except OSError:
+        return False
+    for port in ports:
+        try:
+            if (not (port / "device").exists() or (port / "wireless").exists() or (port / "phy80211").exists()
+                    or (port / "type").read_text().strip() != "1"):
+                continue
+            if (port / "carrier").read_text().strip() == "1":
+                return True
+        except OSError:                 # carrier cannot be read while the port is down
+            continue
+    return False
+
+
+def ethernet(root: Path = ROOT) -> Ethernet:
+    return Ethernet((root / "etc" / system.ETHERNET_HOOK).is_file(), cable(root),
+                    (root / "var" / system.ETHERNET_MARK).is_file())
+
+
 # ------------------------------------------------------------------------------------------- Boot Command Line
 @dataclass(frozen=True)
 class Cmdline:

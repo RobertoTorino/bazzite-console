@@ -36,6 +36,11 @@ if ! command -v ffmpeg >/dev/null; then
     echo "ffmpeg is needed (on Bazzite: brew install ffmpeg)." >&2
     exit 1
 fi
+# Qt's audio uses PipeWire by default and crashes where PipeWire's library is there but no PipeWire runs (WSL has
+# only PulseAudio). There PulseAudio is used; a QT_AUDIO_BACKEND you set is kept.
+if [[ -z "${QT_AUDIO_BACKEND:-}" ]] && ! pgrep -x pipewire >/dev/null 2>&1; then
+    export QT_AUDIO_BACKEND=pulseaudio
+fi
 
 size=""                                          # the --size in the arguments, when not the default
 for ((i = 1; i <= $#; i++)); do

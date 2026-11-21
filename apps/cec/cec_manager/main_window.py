@@ -12,6 +12,7 @@ and switches it at boot (hdmi.one_touch_play)."""
 
 from __future__ import annotations
 
+import getpass
 import sys
 import time
 from html import escape
@@ -33,7 +34,7 @@ from bazzite_console_core.theme import ORANGE, PURPLE
 from bazzite_console_core.widgets import AppHeader, MetricBox, StatusText, TextDialog, hint_label
 
 from . import APP_NAME, INFO, LOGO_PATH, ROOT, __version__
-from . import bazzite, cec, keys, runner, service, tvinfo
+from . import bazzite, button, cec, keys, runner, service, system, tvinfo
 from .remote import RemoteListener
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/cec/"
@@ -47,12 +48,16 @@ AUTOMATIC = (
     ("uinput", "Use the TV remote as a keyboard (arrows, OK, back, play/pause)"),
     ("allow_standby", "Put the PS5 to sleep when the TV goes to standby"),
 )
+# The desktop's power button action (KDE's powerdevilrc): 0 does nothing (the watcher sleeps), 128 turns the screen
+# off and on (soft mode, without sleep).
+POWERDEVIL = ["--file", "powerdevilrc", "--group", "AC", "--group", "SuspendAndShutdown", "--key", "PowerButtonAction"]
+CECD_WITH_SLEEP = ("wake_tv", "suspend_tv")      # cecd's own TV on and off with sleep: the power button job does them
 # The four boxes at the top, left to right, each its own color: the info blue, orange, black, purple.
 DARK_BLUE = "#1565c0"
 
 
 class CecSettings(SettingsStore):
-    DEFAULTS = {}
+    DEFAULTS = {"power/button_action": ""}         # the desktop's button action before the power button job
 
 
 class TableDialog(QDialog):
@@ -200,8 +205,16 @@ class MainWindow(QMainWindow):
         self.pause_box.setToolTip("Media players (browsers, mpv, VLC, Spotify, …), through a small background "
                                   "service that asks the TV every 5 seconds whether it is on; games keep running")
         self.pause_box.toggled.connect(self.choose_pause)
+        self.button_box = QCheckBox("Power button: put the TV in standby and the board to sleep, and wake both "
+                                    "together")
+        self.button_box.setToolTip("The board's power button puts the TV in standby over CEC and the board to sleep; "
+                                   "the next press wakes both and switches the TV to the board")
+        self.button_box.toggled.connect(self.choose_power_button)
         lay_media = QVBoxLayout(media_group)
         lay_media.addWidget(self.pause_box)
+        lay_media.addWidget(self.button_box)
+        lay_media.addWidget(hint_label("Asks for your password once, to install its sleep step. Without sleep in the "
+                                       "kernel, the button turns the TV off with the screen instead."))
         lay_media.addWidget(hint_label("At boot the PS5's kernel turns the TV on and switches it to the PS5 by "
                                        "itself (hdmi.one_touch_play)."))
 
@@ -321,10 +334,12 @@ class MainWindow(QMainWindow):
         return bazzite.read_fragment(self.config_dir).get("osd_name") or cec.OSD_NAME
 
     def refresh_picture(self) -> None:
-        self.pause_box.blockSignals(True)
-        self.pause_box.setChecked(service.PAUSE in service.jobs(self.run, self.config_dir))
-        self.pause_box.blockSignals(False)
-        self.pause_box.setEnabled(self.adapter is not None)
+        jobs = service.jobs(self.run, self.config_dir)
+        for box, job in ((self.pause_box, service.PAUSE), (self.button_box, service.POWER)):
+            box.blockSignals(True)
+            box.setChecked(job in jobs)
+            box.blockSignals(False)
+            box.setEnabled(self.adapter is not None)
 
     def refresh_mode(self) -> None:
         mode = bazzite.read_mode(self.run, self.usr_root)
@@ -342,11 +357,14 @@ class MainWindow(QMainWindow):
         self.native_button.setVisible(mode.cecd_installed and not native)
         self.remote_button.setEnabled(mode.cecd_installed and keys.available())
         current = bazzite.read_settings(self.config_dir, self.etc_root, self.usr_root)
+        power_button = service.POWER in service.jobs(self.run, self.config_dir)
         for key, box in self.boxes.items():
             box.blockSignals(True)
             box.setChecked(current[key])
             box.blockSignals(False)
-            box.setEnabled(native)
+            box.setEnabled(native and not (power_button and key in CECD_WITH_SLEEP))
+            box.setToolTip("Off while the power button option above turns the TV off and on"
+                           if power_button and key in CECD_WITH_SLEEP else "")
         self.automatic_note.setText("" if native else "The switches show cecd's settings; they take effect in native "
                                                       "mode.")
         self.automatic_note.setVisible(bool(self.automatic_note.text()))
@@ -481,6 +499,46 @@ class MainWindow(QMainWindow):
         jobs = service.jobs(self.run, self.config_dir) - {service.PAUSE}
         self.set_jobs(jobs | ({service.PAUSE} if on else set()))
         self.refresh_picture()
+
+    # --- The power button -------------------------------------------------------------------------------------
+
+    def choose_power_button(self, on: bool) -> None:
+        """On: the system part as root (one password), the desktop's button action, cecd's own TV on and off with
+        sleep turned off, and the watcher's job. Off: the reverse, with the button action that was there before."""
+        args = ["power-button", "on", getpass.getuser()] if on else ["power-button", "off"]
+        result = self.run(system.command(args))
+        problem = system.answer(result.code, result.out)
+        if problem:
+            QMessageBox.warning(self, window_title("Power button"), problem)
+            self.refresh_picture()
+            return
+        self.set_button_action(on)
+        if on:
+            current = bazzite.read_settings(self.config_dir, self.etc_root, self.usr_root)
+            if any(current[key] for key in CECD_WITH_SLEEP):
+                bazzite.write_settings(self.config_dir, {**{k: current[k] for k in self.boxes},
+                                                         **dict.fromkeys(CECD_WITH_SLEEP, False)})
+                bazzite.reload_cecd(self.run)
+        jobs = service.jobs(self.run, self.config_dir) - {service.POWER}
+        self.set_jobs(jobs | ({service.POWER} if on else set()))
+        self.refresh_picture()
+        self.refresh_mode()
+
+    def set_button_action(self, on: bool) -> None:
+        """The desktop's power button: nothing (sleep) or the screen off and on (soft mode) while the job is on; the
+        earlier action again when it goes off."""
+        if on:
+            before = self.run(["kreadconfig6", *POWERDEVIL])
+            if not self.settings.get("power/button_action"):
+                self.settings.set("power/button_action", before.out.strip() if before.ok else "")
+            action = "0" if button.sleep_available(self.run, self.sys_root) else "128"
+            self.run(["kwriteconfig6", *POWERDEVIL, action])
+        else:
+            before = self.settings.get("power/button_action")
+            self.run(["kwriteconfig6", *POWERDEVIL, before] if before else ["kwriteconfig6", *POWERDEVIL, "--delete"])
+            self.settings.set("power/button_action", "")
+        self.run(["qdbus6", "org.kde.Solid.PowerManagement", "/org/kde/Solid/PowerManagement",
+                  "org.kde.Solid.PowerManagement.reparseConfiguration"])
 
     def set_jobs(self, jobs: set[str]) -> None:
         result = service.set_jobs(self.run, self.config_dir, sys.executable, ROOT, jobs)

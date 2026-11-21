@@ -1,3 +1,13 @@
+Changelog: 21-11-2026 20:09:22
+
+Added. Power button, under When the TV turns off and on: the board's power button puts the TV in standby and the
+board to sleep, and the next press wakes both and switches the TV to the board. Checking it asks for your password
+once. It installs a system service that makes the light bar breathe orange, turns the CPU boost off and picks a
+power-saving profile around every sleep, and stops the login screen from powering the board off on a press. The
+app's background service reads the button, so your user joins the input group. While it is on, cecd's own TV on and
+off with sleep is off. Without sleep in the kernel, the button turns the TV off with the screen. The app now changes
+the board, so the portal asks before it opens.
+
 Changelog: 21-11-2026 12:04:43
 
 Release 2.6.0.

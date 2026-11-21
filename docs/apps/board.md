@@ -420,7 +420,7 @@ number of lines it covers.
 |----|-----------------------|----------------------------------------------------------------------------|
 | 17 | amdgpu Driver         | Confirms `amdgpu` is bound to the PS5's APU.                               |
 | 18 | GPU Governor          | The kernel's `ps5-gpufreq` (devfreq) sets the GPU clock, no governor service is needed: its governor (`simple_ondemand` follows the load) and its temperature limit. Warns when a GPU governor service made for other hardware is active. |
-| 19 | GPU Frequency Scaling | The `ps5-gpufreq` clock steps, the allowed range, the clock now and the clock changes since boot. |
+| 19 | GPU Frequency Scaling | The `ps5-gpufreq` clock steps, the allowed range, the clock now and the clock changes since boot. It compares the clock amdgpu reads from the GPU with the one `ps5-gpufreq` asked for. At idle a higher clock costs power and heat, and the test warns. Two writes to `min_freq` bring it down, as its hint shows. |
 | 20 | Vulkan / Mesa         | Confirms RADV reports GFX1013 and not the llvmpipe software fallback.      |
 | 21 | Compute Unit Count    | Active CUs from the kernel (36 on a PS5, 60 on a Pro), and RADV's view when `vulkaninfo` is there. |
 | 47 | Vulkan Futureproof Matrix | Vulkan API level and the feature set modern games need: ray tracing, mesh shaders, VRS, pipeline libraries and the VRAM carveout against today's 8 GiB recommendation. Hard evidence of which current and upcoming titles can run at all. |

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The user service that runs the watcher with the desktop session: ps5-cec-manager-watch.service in
-~/.config/systemd/user. Its options are the watcher's jobs (PAUSE; a RESTART job, a DP-to-HDMI
+~/.config/systemd/user. Its options are the watcher's jobs (PAUSE, POWER; a RESTART job, a DP-to-HDMI
 converter workaround, is not needed on the PS5); the app writes the unit with the jobs that are on, enables and (re)starts it, and stops and removes it when none is. install.sh --uninstall removes it too,
 since it starts the app's own files. The unit is the only record of the jobs: jobs() reads them back from it."""
 
@@ -13,7 +13,8 @@ from .runner import Result
 
 UNIT = "ps5-cec-manager-watch.service"
 PAUSE = "--pause-media"
-JOBS = (PAUSE,)
+POWER = "--power-button"
+JOBS = (PAUSE, POWER)
 
 Runner = Callable[[list[str]], Result]
 

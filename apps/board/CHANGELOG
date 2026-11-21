@@ -1,3 +1,9 @@
+Changelog: 21-11-2026 19:53:10
+
+Added. Test 19 compares the clock amdgpu reads from the GPU with the one ps5-gpufreq asked for. When the GPU runs
+more than 100 MHz above it at idle, the test warns and its hint gives two min_freq writes that bring the clock down.
+After a wake or a boot the GPU can stay at a high clock this way, at about 70 W more at the wall.
+
 Changelog: 21-11-2026 12:04:43
 
 Release 0.9.0.

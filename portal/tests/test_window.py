@@ -965,15 +965,15 @@ def test_no_question_without_app_icons(qapp, home, settings_dir, tmp_path, launc
 def test_an_install_with_icons_off_removes_the_new_icon(qapp, home, settings_dir, tmp_path, launched, desktop,
                                                         monkeypatch):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.No)
-    w = icons_window(tmp_path, desktop)
+    w = icons_window(tmp_path, desktop, names=("ps5-controller.desktop", "ps5-fan-controller.desktop"))
     w.settle_icons()
-    entry = next(e for e in w.entries if e.key == "cec")
+    entry = next(e for e in w.entries if e.key == "controller")         # an app that does not change the board
     w.install(entry)
     assert wait_for(lambda: launched)
-    (desktop / "ps5-cec-manager.desktop").write_text("[Desktop Entry]\n")                   # the installer's icon
+    (desktop / "ps5-controller.desktop").write_text("[Desktop Entry]\n")                    # the installer's icon
     launched[0][1].write_text("0\n")
     w._check_pending()
-    assert not (desktop / "ps5-cec-manager.desktop").exists() and (desktop / "bazzite-console-suite.desktop").exists()
+    assert not (desktop / "ps5-controller.desktop").exists() and (desktop / "bazzite-console-suite.desktop").exists()
     w.close()
 
 

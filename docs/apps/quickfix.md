@@ -21,6 +21,7 @@ turns on only what is off, and turns off only what it turned on itself.
 | [MangoHud Config](#mangohud-config) | Open or create MangoHud's config, edit and save it; turn on the FPS log Board Test reads. | No |
 | [Game Memory Map](#game-memory-map) | Raise vm.max_map_count, the number of memory areas a game may map. | Yes |
 | [Persistent Journal](#persistent-journal) | Keep the system journal on the disk, so the logs of a boot that crashed can be read after it. | Yes |
+| [Ethernet First](#ethernet-first) | Turn the Wi-Fi off while a network cable is connected, and on again when the cable is gone. | Yes |
 | [Boot Command Line](#boot-command-line) | Edit cmdline.txt, the kernel command line the PS5 loader starts Linux with. | Yes |
 
 ## Quickfix
@@ -100,6 +101,31 @@ froze are gone after it: Board Test's test 34 cannot read the previous boot's lo
 is kept and who made the folder. **Turn on** is offered only when the folder is not there; **Turn off** asks first,
 as it removes the logs of every earlier boot.
 
+## Ethernet First
+
+!!! warning "Changes the board"
+    Turn on writes a NetworkManager hook, /etc/NetworkManager/dispatcher.d/90-ps5-quickfix-ethernet-first, and a
+    timer, ps5-quickfix-ethernet-first.timer, that runs it 45 seconds after boot. The hook turns the Wi-Fi off while
+    a network port of the board has a cable with a link. It turns the Wi-Fi on again when the cable is gone, but
+    only when it turned it off itself. The files stay across reboots and power offs. Nothing is written to the
+    board's firmware or the kernel's arguments. Turn off removes the hook and the timer, and turns on the Wi-Fi the
+    hook turned off.
+
+Ethernet First keeps your traffic on the network cable. With a cable and the Wi-Fi both connected, the board can send
+its traffic over the slower Wi-Fi. That happens, for example, when the cable gets no working IPv6 and the Wi-Fi does. With Ethernet
+First on, the Wi-Fi is off while a cable is connected.
+
+The boxes show three things:
+
+- **Ethernet First**: whether the hook is installed
+- **Cable**: whether a network port of the board has a link
+- **Wi-Fi**: whether the hook turned the Wi-Fi off for the cable
+
+A Wi-Fi you turned off yourself stays off. The hook turns on only what it turned off. Docker bridges, VPNs and other
+virtual network devices do not count as a cable. NetworkManager runs the hook whenever a connection comes up or goes
+down. The timer checks once more after boot, so the Wi-Fi comes back after a boot without the cable. **Turn on**
+checks the cable at once.
+
 ## Boot Command Line
 
 !!! warning "Changes the board"
@@ -156,7 +182,7 @@ apps/quickfix/install.sh --uninstall             # remove it; --purge removes it
 ```
 
 The launcher is `~/.local/bin/ps5-quickfix`: without an argument it opens the list, with a quickfix's key the quickfix's
-own window (`ps5-quickfix tools`, `mangohud`, `mapcount`, `journal`, `cmdline`). The app runs on the
+own window (`ps5-quickfix tools`, `mangohud`, `mapcount`, `journal`, `ethernet`, `cmdline`). The app runs on the
 suite's shared Python environment.
 
 ## Files
@@ -164,6 +190,9 @@ suite's shared Python environment.
 - `~/.config/MangoHud/MangoHud.conf` and `~/mangohud-logs/`: MangoHud's own settings file and its log folder.
 - `/etc/sysctl.d/90-ps5-quickfix-max-map-count.conf` and `/var/log/journal/.ps5-quickfix`: what Game Memory Map and
   Persistent Journal turned on, while it is on.
+- `/etc/NetworkManager/dispatcher.d/90-ps5-quickfix-ethernet-first`, `/etc/systemd/system/ps5-quickfix-ethernet-first.service`
+  and `.timer`: Ethernet First, while it is on. `/var/lib/ps5-quickfix/wifi-off-by-ethernet-first` is there while the
+  hook keeps the Wi-Fi off for the cable.
 - `/boot/efi/cmdline.txt`, the fallback lines `cmdline.txt.m2` and `cmdline.txt.usb`, and their `.bak-*` backups: the
   kernel command lines Boot Command Line saved, and the files it replaced.
 

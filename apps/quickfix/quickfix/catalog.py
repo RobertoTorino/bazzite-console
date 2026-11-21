@@ -26,6 +26,9 @@ QUICKFIXES: tuple[Quickfix, ...] = (
     Quickfix("journal", "Persistent Journal",
            "Keep the system journal on the disk, so the logs of a boot that crashed can be read after it.",
            changes_board=True),
+    Quickfix("ethernet", "Ethernet First",
+           "Turn the Wi-Fi off while a network cable is connected, and on again when the cable is gone.",
+           changes_board=True),
     Quickfix("cmdline", "Boot Command Line",
            "Edit cmdline.txt, the kernel command line the PS5 loader starts Linux with.", changes_board=True),
 )

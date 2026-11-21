@@ -133,6 +133,21 @@ def test_persistent_journal_asks_before_it_removes(qapp, root, asked, monkeypatc
     assert change(asked) == [["journal", "off"]]
 
 
+def test_ethernet_first_turns_on_what_is_off(qapp, root, asked):
+    window = windows.EthernetWindow(root=root, run_root=asked)
+    assert window.boxes["Ethernet First"].value.text() == "Off" and window.boxes["Cable"].value.text() == "None"
+    assert window.on_button.isEnabled() and not window.off_button.isEnabled()
+    window.on_button.click()
+    assert change(asked) == [["ethernet", "on"]]
+    put(root, f"etc/{system.ETHERNET_HOOK}")
+    put(root, f"var/{system.ETHERNET_MARK}")
+    window.refresh()
+    assert window.boxes["Wi-Fi"].value.text() == "Off for the cable"
+    assert not window.on_button.isEnabled() and window.off_button.isEnabled()
+    window.off_button.click()
+    assert change(asked)[-1] == ["ethernet", "off"]
+
+
 # A PS5's own cmdline.txt, and a fallback line with a made-up UUID.
 LINE = ("root=LABEL=bazzite rw rootwait console=ttyTitania0 console=tty0 video=DP-1:1920x1080@60 mitigations=off "
         "idle=halt preempt=full hdmi.hdcp_mode=2 hdmi.frl_4k120=0\n")

@@ -1138,6 +1138,26 @@ if [ -d "$GPU_FREQ" ]; then
     AMD_HW=$(hwmon_by_name amdgpu)
     if [ -n "$AMD_HW" ] && [ -r "$AMD_HW/freq1_input" ]; then
         log_result "INFO: amdgpu reports the GPU clock as $(( $(read_num_g "$AMD_HW/freq1_input") / 1000000 )) MHz (ps5_sensors, kernel 7.3.1 on)."
+        # amdgpu's clock asks the SMU, cur_freq is the clock ps5-gpufreq last asked for. After a wake or a boot the
+        # SMU can run its own, higher clock while cur_freq says the lowest step, and the governor then asks nothing
+        # at idle. Read twice, 1 s apart, so a clock change under load is not taken for it.
+        GF_BUSY=$(cat "$GPU_DEV/gpu_busy_percent" 2>/dev/null)
+        GF_SMU=0
+        for _ in 1 2; do
+            GF_CUR=$(mhz "$GPU_FREQ/cur_freq"); SMU_NOW=$(( $(read_num_g "$AMD_HW/freq1_input") / 1000000 ))
+            [ $(( SMU_NOW - GF_CUR )) -gt 100 ] && GF_SMU=$SMU_NOW || GF_SMU=0
+            [ "$GF_SMU" -eq 0 ] && break
+            sleep 1
+        done
+        if [ "$GF_SMU" -gt 0 ] && [ -n "$GF_BUSY" ] && [ "$GF_BUSY" -lt 5 ]; then
+            log_result "WARNING: The GPU runs ${GF_SMU} MHz at idle (busy ${GF_BUSY} %), while ps5-gpufreq says ${GF_CUR} MHz: it is not at its lowest clock."
+            log_result "HINT: This costs power and heat at idle. Any new clock request brings it down, for example two writes:"
+            log_result "HINT: echo 625000000 | sudo tee $GPU_FREQ/min_freq; echo ${GF_MIN}000000 | sudo tee $GPU_FREQ/min_freq"
+        elif [ "$GF_SMU" -eq 0 ]; then
+            log_result "SUCCESS: amdgpu's clock and ps5-gpufreq's agree."
+        else
+            log_result "INFO: The two clocks differ while the GPU is busy (${GF_BUSY:-?} %): normal while ps5-gpufreq follows the load."
+        fi
     fi
 else
     log_result "ERROR: No ps5-gpufreq devfreq device: the GPU stays at its boot clock."

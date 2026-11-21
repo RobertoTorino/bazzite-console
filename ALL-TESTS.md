@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3042 test functions (3430 cases counting the parametrized ones) in 35 test folders, and 36 installer tests.
+3060 test functions (3448 cases counting the parametrized ones) in 35 test folders, and 36 installer tests.
 
 ## Summary
 
@@ -10,7 +10,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 |---|---|---|---|
 | [apps/bluetooth](#appsbluetooth) | 3 | 34 | 0.4 s |
 | [apps/board](#appsboard) | 3 | 28 | 1.8 s |
-| [apps/cec](#appscec) | 6 | 54 | 0.7 s |
+| [apps/cec](#appscec) | 8 | 68 | 0.7 s |
 | [apps/clb](#appsclb) | 13 | 90 | 2.8 s |
 | [apps/compute](#appscompute) | 5 | 31 |  |
 | [apps/controller](#appscontroller) | 13 | 164 | 5.8 s |
@@ -21,7 +21,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
 | [apps/pcsx2](#appspcsx2) | 14 | 147 | 19.0 s |
 | [apps/ppsspp](#appsppsspp) | 11 | 96 | 4.5 s |
-| [apps/quickfix](#appsquickfix) | 6 | 41 |  |
+| [apps/quickfix](#appsquickfix) | 6 | 45 |  |
 | [apps/remoteplay](#appsremoteplay) | 26 | 242 | 9.6 s |
 | [apps/rpcs3](#appsrpcs3) | 12 | 119 | 5.6 s |
 | [apps/sftp](#appssftp) | 11 | 86 | 5.6 s |
@@ -43,7 +43,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 220 | 30.2 s |
 | [tools](#tools) | 38 | 226 | 10.2 s |
-| **All** | | **3042** | **153 s** |
+| **All** | | **3060** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -168,7 +168,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/cec
 
-54 tests in 6 files, 0.7 s in a local run.
+68 tests in 8 files, 0.7 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -178,6 +178,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_bazzite.py` | `test_written_fragment` |  |  | Written fragment. |
 | `test_bazzite.py` | `test_a_broken_file_is_skipped` |  |  | A broken file is skipped. |
 | `test_bazzite.py` | `test_reload_sends_hup` |  |  | Reload sends hup. |
+| `test_button.py` | `test_the_power_key_in_a_capabilities_bitmap` |  |  | The power key in a capabilities bitmap. |
+| `test_button.py` | `test_power_buttons_are_the_devices_with_the_power_key` |  |  | Power buttons are the devices with the power key. |
+| `test_button.py` | `test_sleep_needs_the_kernel_and_an_unmasked_suspend_target` |  |  | Sleep needs the kernel and an unmasked suspend target. |
+| `test_button.py` | `test_suspends_and_the_screen` |  |  | Suspends and the screen. |
+| `test_button.py` | `test_a_press_sleeps_and_the_wake_turns_the_tv_on` |  |  | A press sleeps and the wake turns the tv on. |
+| `test_button.py` | `test_a_failed_sleep_turns_the_tv_on_again` |  |  | A failed sleep turns the tv on again. |
+| `test_button.py` | `test_without_cec_the_board_still_sleeps` |  |  | Without cec the board still sleeps. |
+| `test_button.py` | `test_soft_mode_follows_the_screen` |  |  | Soft mode follows the screen. |
 | `test_cec.py` | `test_parse_info_of_the_ps5` |  |  | Parse info of the ps5. |
 | `test_cec.py` | `test_unconfigured_and_without_display` |  |  | Unconfigured and without display. |
 | `test_cec.py` | `test_devices_in_number_order` |  |  | Devices in number order. |
@@ -214,8 +222,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_no_horizontal_scrollbar` |  |  | The window's lines fit its width, also with a larger font than KDE's default (Noto Sans 10). |
 | `test_main_window.py` | `test_buttons_keep_the_desktops_look` |  |  | Plain buttons in the desktop's own gray; Turn TV on has no outline of its own. |
 | `test_main_window.py` | `test_the_four_boxes_have_four_colours` |  |  | Left to right: dark blue, orange, dark blue, purple, as each box's left edge on the theme's surface. |
+| `test_main_window.py` | `test_the_power_button_option` |  |  | The power button option. |
 | `test_service.py` | `test_unit` |  |  | Unit. |
 | `test_service.py` | `test_enable_and_disable` |  |  | Enable and disable. |
+| `test_service.py` | `test_both_jobs_in_one_unit` |  |  | Both jobs in one unit. |
+| `test_system.py` | `test_on_and_off` |  |  | On and off. |
+| `test_system.py` | `test_a_user_in_the_input_group_stays_as_it_is` |  |  | A user in the input group stays as it is. |
+| `test_system.py` | `test_on_needs_an_existing_user` |  |  | On needs an existing user. |
+| `test_system.py` | `test_the_command_and_its_answer` |  |  | The command and its answer. |
 | `test_tvinfo.py` | `test_a_cec_1_4_tv` |  |  | A cec 1 4 tv. |
 | `test_tvinfo.py` | `test_a_cec_2_0_tv_shows_what_it_reports` |  |  | A cec 2 0 tv shows what it reports. |
 | `test_tvinfo.py` | `test_unknown_volume_and_flags_on_one_line` |  |  | Unknown volume and flags on one line. |
@@ -972,7 +986,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/quickfix
 
-41 tests in 6 files.
+45 tests in 6 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -990,11 +1004,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_state.py` | `test_mangohud_logging_lines` |  |  | Mangohud logging lines. |
 | `test_state.py` | `test_log_files` |  |  | Log files. |
 | `test_state.py` | `test_mapcount_and_journal` |  |  | Mapcount and journal. |
+| `test_state.py` | `test_ethernet` |  |  | Ethernet. |
 | `test_state.py` | `test_cmdline` |  |  | Cmdline. |
 | `test_state.py` | `test_find_tool_where_the_tests_look` |  |  | Find tool where the tests look. |
 | `test_state.py` | `test_board_tests_installer` |  |  | Board tests installer. |
 | `test_system.py` | `test_mapcount_on_and_off` |  |  | Mapcount on and off. |
 | `test_system.py` | `test_journal_on_and_off_only_its_own` |  |  | Journal on and off only its own. |
+| `test_system.py` | `test_ethernet_on_and_off` |  |  | Ethernet on and off. |
+| `test_system.py` | `test_ethernet_off_leaves_a_wifi_it_did_not_turn_off` |  |  | Ethernet off leaves a wifi it did not turn off. |
 | `test_system.py` | `test_the_command_and_its_answer` |  |  | The command and its answer. |
 | `test_system.py` | `test_cmdline_save_keeps_a_backup` |  |  | Cmdline save keeps a backup. |
 | `test_system.py` | `test_cmdline_refuses_a_line_that_would_not_boot` |  |  | Cmdline refuses a line that would not boot. |
@@ -1007,6 +1024,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_windows.py` | `test_mangohud_deletes_only_old_logs` |  |  | Mangohud deletes only old logs. |
 | `test_windows.py` | `test_game_memory_map` |  |  | Game memory map. |
 | `test_windows.py` | `test_persistent_journal_asks_before_it_removes` |  |  | Persistent journal asks before it removes. |
+| `test_windows.py` | `test_ethernet_first_turns_on_what_is_off` |  |  | Ethernet first turns on what is off. |
 | `test_windows.py` | `test_boot_command_line_shows_every_argument_with_what_it_does` |  |  | Boot command line shows every argument with what it does. |
 | `test_windows.py` | `test_boot_command_line_edits_adds_moves_and_removes_rows` |  |  | Boot command line edits adds moves and removes rows. |
 | `test_windows.py` | `test_boot_command_line_opens_the_fallback_lines` |  |  | Boot command line opens the fallback lines. |
