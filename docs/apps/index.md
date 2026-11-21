@@ -54,6 +54,7 @@ says, by default Escape for B.
 | ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Use a compatible PlayStation camera as a webcam. |
 | ![](../assets/apps/quickfix.webp){ .app-icon } [PS5 Quickfix](quickfix.md) | Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal and the boot command line. Always installed. |
 | ![](../assets/apps/password.webp){ .app-icon } [PS5 Password Generator](password.md) | Makes a random password of 8 or 15 characters with a capital letter, a small letter, a number and a special character, and keeps it nowhere. |
+| ![](../assets/apps/turing.webp){ .app-icon } [PS5 Turing Screen](turing.md) | CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5"). |
 
 The tools for working on the suite run from a checkout of the repository. They are not in the portal.
 [Nexus Dashboard](../development/dashboard.md) opens them all.

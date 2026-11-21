@@ -44,6 +44,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/bluetooth.webp" width="20" height="20" alt=""/> **[PS5 Bluetooth](apps/bluetooth)**: Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed.
 - <img src="portal/images/apps/quickfix.webp" width="20" height="20" alt=""/> **[PS5 Quickfix](apps/quickfix)**: Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal and the boot command line. Always installed.
 - <img src="portal/images/apps/password.webp" width="20" height="20" alt=""/> **[PS5 Password Generator](apps/password)**: Makes a random password of 8 or 15 characters with a capital letter, a small letter, a number and a special character, and keeps it nowhere.
+- <img src="portal/images/apps/turing.webp" width="20" height="20" alt=""/> **[PS5 Turing Screen](apps/turing)**: CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5").
 
 The tools for working on the suite run from a checkout of the repository. They are not in the portal.
 **[Nexus Dashboard](dev/dash)** opens them all.

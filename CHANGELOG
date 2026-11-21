@@ -1,3 +1,14 @@
+Changelog: 21-11-2026 13:40:52
+
+Fixed. tools/new_app.py escapes a quote mark and a backslash in a new app's summary where it stands between double
+quotes: apps.toml and the app's Python files. A summary with a quote mark left portal/apps.toml unreadable.
+
+Changelog: 21-11-2026 13:33:33
+
+Added. PS5 Turing Screen (apps/turing), a new app in Utilities: CPU, GPU, memory, fan and temperatures on a Turzx USB IPS
+screen. It came from its twin as it is there. It is listed in the wiki, the README, the bug report's App list and the
+Dependency catalog.
+
 Changelog: 21-11-2026 10:50:50
 
 Added. tools/new_app.py writes a new app's window on core's card (CardWindow): the refresh symbol in the title row

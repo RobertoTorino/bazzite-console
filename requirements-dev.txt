@@ -24,6 +24,7 @@
 -r apps/sftp/requirements-dev.txt       # paramiko: its tests import it
 -r apps/shadps4/requirements-dev.txt
 -r apps/ssd/requirements-dev.txt
+-r apps/turing/requirements-dev.txt
 -r apps/upscaler/requirements-dev.txt
 -r apps/vita3k/requirements-dev.txt
 -r apps/webcam/requirements-dev.txt

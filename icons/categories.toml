@@ -116,3 +116,8 @@ tile = "portal/images/apps/quickfix.webp"
 category = "utilities"
 icons = ["apps/password/images/ps5-password"]
 tile = "portal/images/apps/password.webp"
+
+[turing]
+category = "utilities"
+icons = ["apps/turing/images/ps5-turing-screen"]
+tile = "portal/images/apps/turing.webp"

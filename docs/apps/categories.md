@@ -58,3 +58,4 @@ Every app with its icon and its category.
 | ![](../assets/apps/webcam.webp){ .app-icon } [PS5 Webcam](webcam.md) | Utilities |
 | ![](../assets/apps/quickfix.webp){ .app-icon } [PS5 Quickfix](quickfix.md) | Utilities |
 | ![](../assets/apps/password.webp){ .app-icon } [PS5 Password Generator](password.md) | Utilities |
+| ![](../assets/apps/turing.webp){ .app-icon } [PS5 Turing Screen](turing.md) | Utilities |

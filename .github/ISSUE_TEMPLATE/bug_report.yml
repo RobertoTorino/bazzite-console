@@ -32,6 +32,7 @@ body:
         - bluetooth
         - quickfix
         - password
+        - turing
     validations:
       required: true
   - type: textarea

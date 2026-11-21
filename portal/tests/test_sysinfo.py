@@ -116,7 +116,8 @@ def owners_board(root: Path) -> tuple[Path, Path, Path, tuple[Path, ...], Path]:
             ("hwmon1", f"ps_controller_battery_{MAC_ADDRESS}", {"temp1_input": "30000"}),
             ("hwmon2", "nct6686", {"temp1_input": "42000", "temp1_label": "CPU", "temp4_input": "0",
                                    "temp4_label": "PCH", "fan1_input": "0", "fan2_input": "1151",
-                                   "fan2_label": "Pump Fan"}),
+                                   "fan2_label": "Pump Fan", "in2_input": "3424", "in2_label": "+3.3V",
+                                   "in0_input": "0", "in0_label": "+12V", "curr1_input": "1600"}),
             ("hwmon3", "amdgpu", {"temp1_input": "44000", "temp1_label": "edge", "power1_average": "43914000",
                                   "power1_label": "PPT"}),
             ("hwmon10", "k10temp", {"temp1_input": "43356", "temp1_label": "Tctl"})):
@@ -187,6 +188,7 @@ def test_the_owners_board(tmp_path, monkeypatch):
                                  ("Dell Keybd KB740 Keyboard", "Bluetooth"), ("Microsoft X-Box 360 pad 0", "virtual")]
     assert sections["Sensors"] == [
         ("nvme Composite", "39.9 °C"), ("nct6686 CPU", "42.0 °C"), ("nct6686 Pump Fan", "1151 RPM"),
+        ("nct6686 +3.3V", "3.42 V"), ("nct6686 curr1", "1.6 A"),          # a voltage and a current; 0 V left out
         ("amdgpu edge", "44.0 °C"), ("amdgpu PPT", "43.9 W"), ("k10temp Tctl", "43.4 °C")]    # hwmon10 after hwmon3
     text = sysinfo.as_text(found)
     assert SERIAL not in text and MAC_ADDRESS not in text                         # nothing personal

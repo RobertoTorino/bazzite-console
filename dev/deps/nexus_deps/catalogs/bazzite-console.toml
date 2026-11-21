@@ -93,6 +93,10 @@ launchers = ["~/.local/bin/ps5-upscaler"]
 name = "PS5 Bluetooth"
 launchers = ["~/.local/bin/ps5-bluetooth"]
 
+[app.turing]
+name = "PS5 Turing Screen"
+launchers = ["~/.local/bin/ps5-turing-screen"]
+
 [[tool]]
 name = "umr"
 rpm = "umr"
@@ -367,6 +371,9 @@ specifier = ">=6.11,<7"
 owner = "cores"
 specifier = ">=6.5,<7"
 
+[[dependency.source]]
+owner = "turing"
+specifier = ">=6.11,<7"
 
 [[dependency]]
 name = "PyQt6-Charts"

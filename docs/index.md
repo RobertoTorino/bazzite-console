@@ -72,6 +72,8 @@ between computers, [PS5 Webcam](apps/webcam.md) makes a PlayStation camera a web
 [PS5 Controller](apps/controller.md) manages DualSense controllers and updates their firmware,
 [PS5 Bluetooth](apps/bluetooth.md) pairs your keyboard, mouse and controllers at boot, and
 [PS5 Password Generator](apps/password.md) makes a random password and keeps it nowhere.
+
+[PS5 Turing Screen](apps/turing.md): CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5").
 </div>
 </div>
 

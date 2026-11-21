@@ -371,3 +371,16 @@ def test_a_nav_by_category_gets_the_app_under_its_category_by_name():
     # A category without a header in the nav: as before, the last of the Apps.
     assert "apps/ssd.md\n      - Mesh: apps/mesh.md\n  - Development:" in na.insert_nav(
         nav, "Graphics", "Mesh", "mesh", "mkdocs.yml")
+
+
+def test_a_quote_mark_in_the_summary_is_escaped_between_quotes():
+    """A summary with a quote mark (3.5") left apps.toml unreadable; in the wiki's text it stays as written."""
+    import tomllib
+    app = na.NewApp("screen2", "PS5 Screen Two", "ps5-screen2", "screen2", "utilities",
+                    'A 3.5" screen, and a back\\slash.')
+    suite = na.read_suite(ROOT)
+    entry = tomllib.loads(na.fill(na.MANIFEST_ENTRY, app, suite))
+    assert entry["apps"]["screen2"]["summary"] == 'A 3.5" screen, and a back\\slash.'
+    compile(na.fill(na.WINDOW_PY, app, suite), "main_window.py", "exec")
+    compile(na.fill(na.INIT_PY, app, suite), "__init__.py", "exec")
+    assert 'A 3.5" screen' in na.fill(na.CHAPTER_MD, app, suite)

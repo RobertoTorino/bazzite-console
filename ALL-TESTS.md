@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-2966 test functions (3354 cases counting the parametrized ones) in 34 test folders, and 35 installer tests.
+3042 test functions (3430 cases counting the parametrized ones) in 35 test folders, and 36 installer tests.
 
 ## Summary
 
@@ -27,6 +27,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/sftp](#appssftp) | 11 | 86 | 5.6 s |
 | [apps/shadps4](#appsshadps4) | 17 | 151 | 7.7 s |
 | [apps/ssd](#appsssd) | 4 | 50 | 0.8 s |
+| [apps/turing](#appsturing) | 9 | 75 |  |
 | [apps/upscaler](#appsupscaler) | 11 | 119 | 1.6 s |
 | [apps/vita3k](#appsvita3k) | 9 | 78 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
@@ -41,8 +42,8 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 17 | 220 | 30.2 s |
-| [tools](#tools) | 38 | 225 | 10.2 s |
-| **All** | | **2966** | **153 s** |
+| [tools](#tools) | 38 | 226 | 10.2 s |
+| **All** | | **3042** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -83,6 +84,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `ssd.sh` | Exercise apps/ssd/install.sh. |
 | `studio.sh` | Exercise dev/studio/install.sh, Nexus Remix Studio's installer. |
 | `text.sh` | Exercise dev/text/install.sh, Nexus TTS's installer. |
+| `turing.sh` | Exercise apps/turing/install.sh. |
 | `upscaler.sh` | Exercise apps/upscaler/install.sh. |
 | `vita3k.sh` | Exercise apps/vita3k/install.sh. |
 | `webcam.sh` | Exercise apps/webcam/install.sh. |
@@ -1699,6 +1701,88 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_speedtest.py` | `test_a_slow_drive_stops_at_the_limit` |  |  | A slow drive stops at the limit. |
 | `test_speedtest.py` | `test_not_enough_space_or_no_folder` |  |  | Not enough space or no folder. |
 
+## apps/turing
+
+75 tests in 9 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_access.py` | `test_rule_names_the_screen_only` |  |  | Rule names the screen only. |
+| `test_access.py` | `test_install_and_uninstall` |  |  | Install and uninstall. |
+| `test_access.py` | `test_main_in_another_root` |  |  | Main in another root. |
+| `test_access.py` | `test_a_missing_command_does_not_stop_the_change` |  |  | A missing command does not stop the change. |
+| `test_access.py` | `test_command_runs_this_file_through_pkexec` |  |  | Command runs this file through pkexec. |
+| `test_access.py` | `test_answer` |  |  | Answer. |
+| `test_autostart.py` | `test_on_and_off` |  |  | On and off. |
+| `test_frames.py` | `test_everything_without_a_previous_frame` |  |  | Everything without a previous frame. |
+| `test_frames.py` | `test_nothing_when_equal` |  |  | Nothing when equal. |
+| `test_frames.py` | `test_one_pixel` |  |  | One pixel. |
+| `test_frames.py` | `test_near_rows_share_a_rectangle` |  |  | Near rows share a rectangle. |
+| `test_frames.py` | `test_far_rows_get_their_own` |  |  | Far rows get their own. |
+| `test_frames.py` | `test_the_rectangles_cover_every_change` |  |  | The rectangles cover every change. |
+| `test_link.py` | `test_resets_then_connects_and_sends_only_changes` |  |  | Resets then connects and sends only changes. |
+| `test_link.py` | `test_stop_without_switching_off` |  |  | Stop without switching off. |
+| `test_link.py` | `test_no_screen` |  |  | No screen. |
+| `test_link.py` | `test_no_access` |  |  | No access. |
+| `test_link.py` | `test_unplugged_screen_is_reset_and_drawn_again` |  |  | Unplugged screen is reset and drawn again. |
+| `test_main_window.py` | `test_starts_the_link_and_sends_a_frame` |  |  | Starts the link and sends a frame. |
+| `test_main_window.py` | `test_states` |  |  | States. |
+| `test_main_window.py` | `test_the_frame_is_the_picture_as_drawn` |  |  | The frame is the picture as drawn. |
+| `test_main_window.py` | `test_a_larger_screen_gets_frames_of_its_size` |  |  | A larger screen gets frames of its size. |
+| `test_main_window.py` | `test_landscape_is_turned_for_the_screen` |  |  | Landscape is turned for the screen. |
+| `test_main_window.py` | `test_last_update_in_the_states_tooltip` |  |  | Last update in the states tooltip. |
+| `test_main_window.py` | `test_a_large_screen_is_previewed_smaller` |  |  | A large screen is previewed smaller. |
+| `test_main_window.py` | `test_settings_go_to_the_link_and_are_kept` |  |  | Settings go to the link and are kept. |
+| `test_main_window.py` | `test_autostart_and_quit` |  |  | Autostart and quit. |
+| `test_main_window.py` | `test_allow_access_runs_the_helper_as_root` |  |  | Allow access runs the helper as root. |
+| `test_main_window.py` | `test_look` |  |  | Look. |
+| `test_main_window.py` | `test_a_file_that_is_no_picture_is_refused` |  |  | A file that is no picture is refused. |
+| `test_main_window.py` | `test_network_interface` |  |  | Network interface. |
+| `test_main_window.py` | `test_no_weather_and_nothing_sent_without_a_place` |  |  | No weather and nothing sent without a place. |
+| `test_main_window.py` | `test_the_weather_says_when_open_meteo_is_unavailable` |  |  | Open-Meteo busy or down (02-11-2026, the Windows Portable Suite's Smart Screen: 503): the tab says so and that it asks again in 30 minutes; the screen says unavailable now without weather, keeps the last otherwise. |
+| `test_main_window.py` | `test_weather_search_choose_and_show` |  |  | Weather search choose and show. |
+| `test_main_window.py` | `test_weather_tile_off_sends_nothing` |  |  | Weather tile off sends nothing. |
+| `test_main_window.py` | `test_weather_failure_keeps_the_last` |  |  | Weather failure keeps the last. |
+| `test_main_window.py` | `test_a_chosen_interface_that_is_gone_is_kept` |  |  | A chosen interface that is gone is kept. |
+| `test_main_window.py` | `test_a_theme_is_tried_in_the_preview_only` |  |  | A theme is tried in the preview only. |
+| `test_main_window.py` | `test_own_colours` |  |  | Own colours. |
+| `test_main_window.py` | `test_clock` |  |  | Clock. |
+| `test_main_window.py` | `test_save_picture_and_report` |  |  | Save picture and report. |
+| `test_network.py` | `test_kinds` |  |  | Kinds. |
+| `test_render.py` | `test_tiles_in_the_screens_order` |  |  | Tiles in the screens order. |
+| `test_render.py` | `test_every_tile_with_missing_values` |  |  | Every tile with missing values. |
+| `test_render.py` | `test_memory_and_fan` |  |  | Memory and fan. |
+| `test_render.py` | `test_draw_and_turn` |  |  | Draw and turn. |
+| `test_render.py` | `test_rgb565_little_endian` |  |  | Rgb565 little endian. |
+| `test_render.py` | `test_rgb565_of_an_odd_width_has_no_padding` |  |  | Rgb565 of an odd width has no padding. |
+| `test_render.py` | `test_temperature_tiles` |  |  | Temperature tiles. |
+| `test_render.py` | `test_weather_tile` |  |  | Weather tile. |
+| `test_render.py` | `test_a_long_place_name_gives_way_to_the_detail` |  |  | The caption is cut short with an ellipsis where it would run into the detail beside it (02-11-2026, the Windows Portable Suite's Smart Screen): the detail stays whole, so the two never overlap. |
+| `test_render.py` | `test_every_weather_icon_is_drawn` |  |  | Every weather icon is drawn. |
+| `test_render.py` | `test_clock_follows_summer_and_winter_time` |  |  | Clock follows summer and winter time. |
+| `test_render.py` | `test_clock_in_12_hours_and_the_date` |  |  | Clock in 12 hours and the date. |
+| `test_render.py` | `test_offsets_with_minutes` |  |  | Offsets with minutes. |
+| `test_render.py` | `test_the_date_goes_under_the_time` |  |  | The date goes under the time. |
+| `test_render.py` | `test_own_colours` |  |  | Own colours. |
+| `test_render.py` | `test_report_has_every_value` |  |  | Report has every value. |
+| `test_render.py` | `test_every_theme_and_a_picture` |  |  | Every theme and a picture. |
+| `test_render.py` | `test_a_long_header_text_leaves_room_for_the_time` |  |  | A long header text leaves room for the time. |
+| `test_screen.py` | `test_command_packs_four_10_bit_values` |  |  | Command packs four 10 bit values. |
+| `test_screen.py` | `test_brightness_runs_from_255_darkest_to_0_brightest` |  |  | Brightness runs from 255 darkest to 0 brightest. |
+| `test_screen.py` | `test_orientation_command_names_the_screen_size` |  |  | Orientation command names the screen size. |
+| `test_screen.py` | `test_hello_tells_the_model` |  |  | Hello tells the model. |
+| `test_screen.py` | `test_start_sets_portrait_and_switches_on` |  |  | Start sets portrait and switches on. |
+| `test_screen.py` | `test_draw_sends_the_rectangle_row_by_row` |  |  | Draw sends the rectangle row by row. |
+| `test_screen.py` | `test_find_by_usb_id` |  |  | Find by usb id. |
+| `test_screen.py` | `test_find_nothing` |  |  | Find nothing. |
+| `test_screen.py` | `test_usable_is_read_and_write_access` |  |  | Usable is read and write access. |
+| `test_screen.py` | `test_reset_floods_the_command_byte` |  |  | Reset floods the command byte. |
+| `test_weather.py` | `test_search` |  |  | Search. |
+| `test_weather.py` | `test_current` |  |  | Current. |
+| `test_weather.py` | `test_icons` |  |  | Icons. |
+| `test_weather.py` | `test_place_round_trip` |  |  | Place round trip. |
+| `test_weather.py` | `test_fetch_failures_say_what_happened` |  |  | Fetch failures say what happened. |
+
 ## apps/upscaler
 
 119 tests in 11 files, 1.6 s in a local run.
@@ -3062,7 +3146,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-225 tests in 38 files, 10.2 s in a local run.
+226 tests in 38 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3221,6 +3305,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_new_app.py` | `test_a_folder_without_a_portal_is_refused` |  |  | A folder without a portal is refused. |
 | `test_new_app.py` | `test_the_help_names_the_steps` |  | 0.1 s | The help names the steps. |
 | `test_new_app.py` | `test_a_nav_by_category_gets_the_app_under_its_category_by_name` |  |  | The wiki lists the apps by category, by name in each: a new app's line goes where its name belongs. |
+| `test_new_app.py` | `test_a_quote_mark_in_the_summary_is_escaped_between_quotes` |  |  | A summary with a quote mark (3.5") left apps.toml unreadable; in the wiki's text it stays as written. |
 | `test_pin_app.py` | `test_pin_changes_only_that_app` |  |  | Pin changes only that app. |
 | `test_pin_app.py` | `test_pin_last_table_and_missing_app` |  |  | Pin last table and missing app. |
 | `test_pin_app.py` | `test_pin_adds_the_sha256_line_a_new_app_lacks` |  |  | A new app is listed with its first tag and no sha256 line until that release exists (apps.toml allows it): the pin adds the line after the tag, in its place, and leaves the rest alone. |

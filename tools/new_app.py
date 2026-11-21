@@ -130,7 +130,7 @@ def amsterdam_now() -> str:
 # Each file as the architecture chapter describes it; @WORD@ is replaced (fill()).
 
 INIT_PY = '''# SPDX-License-Identifier: GPL-3.0-or-later
-"""@SUMMARY@"""
+"""@SUMMARY_QUOTED@"""
 
 APP_NAME = "@APP_NAME@"
 APP_ID = "@APP_ID@"
@@ -199,10 +199,10 @@ from . import APP_NAME, LOGO_PATH, __version__
 
 class MainWindow(CardWindow):
     def __init__(self) -> None:
-        super().__init__(LOGO_PATH, APP_NAME, __version__, "@SUMMARY@")
+        super().__init__(LOGO_PATH, APP_NAME, __version__, "@SUMMARY_QUOTED@")
         self.status_box = MetricBox("Status")
         self.set_rows([self.status_box])        # a second list is a second row
-        self.page.addWidget(hint_label("@SUMMARY@"))
+        self.page.addWidget(hint_label("@SUMMARY_QUOTED@"))
         self.page.addStretch(1)
         self.refresh()
 
@@ -573,7 +573,7 @@ REQUIREMENTS_DEV = "# SPDX-License-Identifier: GPL-3.0-or-later\n-r requirements
 
 MANIFEST_ENTRY = '''[apps.@NAME@]
 name = "@APP_NAME@"
-summary = "@SUMMARY@"
+summary = "@SUMMARY_QUOTED@"
 tag = "@TAG@-v0.1.0"
 sha256 = ""
 required = false
@@ -612,6 +612,8 @@ README_ROW = ('- <img src="portal/images/apps/@NAME@.webp" width="20" height="20
 def fill(template: str, app: NewApp, suite: Suite) -> str:
     words = {"NAME": app.name, "APP_NAME": app.app_name, "APP_ID": app.app_id, "PACKAGE": app.package,
              "CATEGORY": app.category, "CATEGORY_TITLE": app.category_title, "SUMMARY": app.summary,
+             # between double quotes (Python source, apps.toml): a backslash and a quote mark escaped
+             "SUMMARY_QUOTED": app.summary.replace("\\", "\\\\").replace('"', '\\"'),
              "SUITE": suite.folder.name, "SUITE_NAME": suite.name, "VENV_ID": suite.app_id, "WIKI": suite.wiki,
              "CORE": suite.core, "DESKTOP_CATEGORIES": DESKTOP_CATEGORIES.get(app.category, "Utility;"),
              "TAG": f"{suite.tag_prefix}{app.name}"}

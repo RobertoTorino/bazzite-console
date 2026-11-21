@@ -1,0 +1,8 @@
+Changelog: 21-11-2026 13:33:25
+
+Added. PS5 Turing Screen came from its twin, BC-250 Turing Screen, as it is there (owner, 21-11-2026: "we use the same
+app we have built here, refactor will be done on the console developer board"). It shows CPU, GPU, memory, fan and
+temperatures on a Turzx USB IPS screen. Three tiles follow what this board reports instead of the twin's: the GPU tile
+has no power, the Fan tile shows the duty in percent with the fan's mode (the board reports no RPM), and SoC temp
+stands where the twin has VRM temp. Not tried on a board yet: the screen itself, and reading the fan driver's values
+every second for hours.

@@ -301,7 +301,7 @@ def inputs(sys_root: Path) -> Section:
 
 
 def sensors(sys_root: Path) -> Section:
-    """Temperatures, fan speeds and power of every hwmon chip, as they read now; a sensor that reads 0 (a fan header
+    """Temperatures, fan speeds, power, voltages and currents of every hwmon chip, as they read now; a sensor that reads 0 (a fan header
     or probe with nothing on it) is left out, so is a chip named after a device's MAC address."""
     rows: list[tuple[str, str]] = []
     chips = sorted((sys_root / "class" / "hwmon").glob("hwmon*"), key=lambda p: int(p.name[5:] or 0)
@@ -310,7 +310,8 @@ def sensors(sys_root: Path) -> Section:
         name = _read(chip / "name")
         if not name or MAC.search(name):
             continue
-        for kind, unit, scale in (("temp", "°C", 1000), ("fan", "RPM", 1), ("power", "W", 1_000_000)):
+        for kind, unit, scale in (("temp", "°C", 1000), ("fan", "RPM", 1), ("power", "W", 1_000_000), ("in", "V", 1000),
+                                  ("curr", "A", 1000)):
             inputs = sorted(chip.glob(f"{kind}*_input"), key=lambda p: int(p.name[len(kind):-6] or 0)
                             if p.name[len(kind):-6].isdigit() else 0)
             if kind == "power" and not inputs:
@@ -321,7 +322,9 @@ def sensors(sys_root: Path) -> Section:
                     continue
                 label = _read(sensor.with_name(sensor.name.split("_")[0] + "_label")) or sensor.name.split("_")[0]
                 number = int(value) / scale
-                rows.append((f"{name} {label}", f"{number:.0f} {unit}" if unit == "RPM" else f"{number:.1f} {unit}"))
+                digits = {"RPM": 0, "V": 2}.get(unit, 1)
+                text = f"{number:.{digits}f} {unit}"
+                rows.append((f"{name} {label}", text))
     return "Sensors", rows
 
 

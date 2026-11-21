@@ -39,3 +39,20 @@ a line says otherwise.
 - **DESIGN.md** describes active red `#8b0000` as a toggle button while its state is on.
 - **A fact that was wrong** is corrected and named in the CHANGELOG entry. Nothing else about what an app does
   changes in a rewrite.
+
+## Decided during the rewrite (owner, 21-11-2026)
+
+- **A dialog that leads to a password prompt** ends with "You will be asked for your password.", also where the old
+  dialog had no such line. Where the app skips the prompt while sudo still has the password, the line says so.
+- **The installers' shared messages stay as they are** in an app's rewrite: "Run this as your own user, not with
+  sudo: ...", "Keeping the suite venv: ...", "... is missing: run install.sh from ...", "Python 3.10 or newer is
+  needed.", "Installing PyQt6 into the venv (...)", "PyQt6 does not load from the venv ..." and the launcher's "... is
+  not installed in ...; run install.sh again." They are reworded once, in every installer and `tools/new_app.py`
+  together. An installer's own messages are rewritten with its app.
+- **Code is left out of the rewrite.** A command keeps its words (`sudo reboot`, `systemctl reboot`), also where the
+  sentence around it now says "restart".
+- **An introduction that is too long for a hint stays where it is.** Shorten its sentences. Moving it behind the info
+  symbol is a design change, collected for later.
+- **"Not authorized: the password dialog was canceled or refused."** keeps this wording in every app.
+- **A group title or label stays as it is**, also with text in parentheses. A text written to a log or a file may
+  be reworded when nothing reads it.

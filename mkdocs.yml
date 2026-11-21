@@ -91,6 +91,7 @@ nav:
           - PS5 Quickfix: apps/quickfix.md
           - PS5 SFTP Tools: apps/sftp.md
           - PS5 SSD Check: apps/ssd.md
+          - PS5 Turing Screen: apps/turing.md
           - PS5 Webcam: apps/webcam.md
   - Development:
       - development/index.md

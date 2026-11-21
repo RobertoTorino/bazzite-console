@@ -103,3 +103,22 @@
 101. Windows suite checks, from PowerShell at the root of the Nexus checkout: `.venv-windows\Scripts\python.exe tools\check_versions.py --suite windows-portable`, `.venv-windows\Scripts\python.exe windows-portable\tools\check_manifest.py --base origin/main`, every `windows-portable\tools\installer-tests\*.ps1`, and `.venv-windows\Scripts\mkdocs.exe build --strict -f windows-portable\mkdocs.yml`, then remove `windows-portable\site`. `./test.sh` in Git Bash runs every test suite of this system.
 102. A window's layout is checked at 1280 x 720 offscreen, with its minimum height at most 720. The owner looks at it on the Ally.
 103. A Windows app works on any Windows handheld and says where something doesn't apply (no AMD driver, no Wi-Fi, no back buttons).
+104. Rules and states are added to `CLAUDE.md` after the owner's review, and nowhere else.
+105. Before a change to a window's design, show a screenshot of the proposal and wait.
+106. What other projects report is a lead with its conditions, not a fact. We test it ourselves. Never conclude "cannot be done" or "out of scope" from a write-up.
+107. Work that is not suite work becomes a derived project with its own rules.
+108. No pill or button stands alone in a window's title row. Refresh is the round symbol at the right end.
+109. A row holds five boxes and pills at most, all as wide as the widest. A card is as wide as a full row.
+110. The info symbol is always filled. It says what the app does, and holds text only where the window has no room.
+111. The analyses are kept in one file, `ANALYSIS.md`, in the workspace root.
+112. A finished or declined row is removed from `ACTION-LIST.md`, and the rows are renumbered from 1. A row is done when the work is done, even if the owner's own try or release is still open.
+113. When the owner asks for a list or a table, give the items word for word, numbered, with no extra columns, notes or advice.
+114. `CLAUDE.md` has five identical copies: the `Projects` root, `bc250-bazzite`, `bazzite-console`, `Nexus` and `Nexus/windows-portable`. A change goes into all five. Ask before editing it.
+115. bazzite-console runs on the owner's own image, not the community image. Its repository is private, so nothing from it is quoted in public files.
+116. An unverified outside claim is never written into the wiki or an app as fact, and is not put on the action list.
+117. Don't start heavy test runs while the owner's own local CI run is going.
+118. The exception to rule 62: DatStation's quiz keeps its questions that name Nintendo as console history, and old CHANGELOG entries keep their words.
+119. bazzite-console's existing text was never rewritten to the writing standard, so only new lines must be clean there. The full text rewrite is not started unasked.
+120. Nexus TTS (`dev/text`) and Nexus Remix Studio (`dev/studio`) exist in both Bazzite suites. A change to one goes into both.
+121. Nexus TTS offers English female voices only and takes English text only. It has its own environment, because its engine has no build for the development venv's Python.
+122. A new app goes to both Bazzite suites. If an app seems not to be compatible with bazzite-console, we explore, analyze and then build alternatives.
