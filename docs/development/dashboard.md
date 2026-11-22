@@ -49,6 +49,7 @@ of its own that keeps running when the dashboard closes.
 | **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the board checks ([Releases](releases.md)). |
 | **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)). |
 | **Nexus Deps** | The suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). |
+| **Nexus Garbage Remover** | The garbage on this machine, with its size, and Delete for it ([below](#garbage-remover)). |
 | **Nexus Installer Tests** | The suite's installer tests, one at a time ([below](#installer-tests)). |
 | **Nexus Remix Studio** | Mixes a voice with a synthesized background and saves the result ([below](#remix-studio)). |
 | **Nexus Sound Lab** | Short sound effects for the suite's windows, made from sliders ([below](#sound-lab)). |
@@ -97,10 +98,10 @@ shows below, and when one fails the ones after it stay open. It needs the GitHub
 
 The tours are recorded from the checkout as it is now, from the real windows, offscreen: nothing shows on the
 screen while they record. They go to your Videos folder, with music under them that fades out over the last two
-seconds (untick **Music** for a video without sound). **Size** is 1080p (1920 × 1080) by default, the wiki's;
-choose 2160p (4K, 3840 × 2160) for a video for YouTube, which shows a 4K upload far sharper than a 1080p one: the
-same tour, drawn at twice the scale so the text stays crisp, about four times the time, and `-2160p` before `.mp4`
-in its name (1440p is the step between). A recording runs in the background; its output shows in the dialog,
+seconds (untick **Music under the video, faded out over the last two seconds** for a video without sound).
+**Size** is 1080p (1920 × 1080) by default, the wiki's; choose 2160p (4K, 3840 × 2160) for a video for YouTube,
+which shows a 4K upload far sharper than a 1080p one: the same tour, drawn at twice the scale so the text stays
+crisp, about four times the time, and `-2160p` before `.mp4` in its name (1440p is the step between). A recording runs in the background; its output shows in the dialog,
 **Stop** ends it, and **Play** opens the video in your video player.
 
 - **Portal video tour** records the portal's tour, about two minutes: `ps5-portal-tour-v<portal version>.mp4`.
@@ -181,8 +182,9 @@ sound with the sliders: the pitch at the start and the end of a tone (a sweep wh
 tone, the attack (the rise to full volume) and the decay (how fast it dies away, per second), the number of tones
 and the interval between them in semitones (two tones a fifth apart make a blip), the noise over the tone and its
 own decay, the silence before the sound, and the volume (its peak). The sound is drawn beside the sliders and plays
-each time a slider is let go, with **Play**, or when the focus moves between the buttons of **Try it** (Tab, the
-arrow keys or a controller's d-pad; A plays it again), the way a window plays it while you navigate. Once a slider
+each time a slider is let go, with **Play**, or when the focus moves between the buttons of **Try it: move
+between the buttons** (Tab, the arrow keys or a controller's d-pad; A plays it again), the way a window plays it
+while you navigate. Once a slider
 has left the preset the box says Custom. **Save as WAV…** writes the sound as 16-bit mono at 44.1 kHz, for the
 portal's sounds folder (`portal/bazzite_console_portal/sounds/`, where it plays a sound by its file name). The last
 sound, the preset and the save folder are remembered.
@@ -452,3 +454,35 @@ Each card has one status, the most urgent that applies. The boxes at the top cou
 | **Check failed** | package | PyPI could not be reached (no network). |
 
 The check sends the names and versions of the Python packages to PyPI and OSV.dev, nothing else.
+
+## Garbage Remover
+
+**Nexus Garbage Remover** (`dev/garbage/`) shows the garbage on this machine and deletes what you check. Garbage is
+files nobody needs again, which fill up a disk over time. Our tools' own leftovers are not in it:
+`tools/clean_caches.py` removes those before every local CI run.
+
+The table lists each place that holds 1 MB of garbage or more, the largest first:
+
+| What | Where | Removed with |
+|---|---|---|
+| **Crash dumps** | `/var/lib/systemd/coredump` | `sudo find /var/lib/systemd/coredump -mindepth 1 -delete` |
+| **Steam's crash reports** | `config/htmlcache/BrowserMetrics` in Steam's folder | `find <that folder> -mindepth 1 -delete` |
+| **Trash** | `~/.local/share/Trash` | `find ~/.local/share/Trash -mindepth 2 -delete` |
+| **Picture previews** | `~/.cache/thumbnails` | `find ~/.cache/thumbnails -mindepth 1 -delete` |
+| **pip's download cache** | `~/.cache/pip` | `find ~/.cache/pip -mindepth 1 -delete` |
+| **Homebrew's downloads** | `~/.cache/Homebrew` | `brew cleanup --prune=all` |
+
+The size of Homebrew's row leaves out the folders `api`, `bootsnap` and `tool-selection`. `brew cleanup` keeps
+them, because Homebrew needs them to run.
+
+Each row shows its size, and its tooltip says what the files are. Every row is checked at first. Uncheck a row to
+keep that place. **Can be removed** shows the total, and **Checked** shows what **Delete** would remove. **Delete**
+asks first and lists each place with its size. The crash dumps belong to the system, so for them the app asks for
+your password once. The folders themselves stay, only their content goes. The round symbol at the right of the
+title looks again.
+
+Every hour, or at the next login when the machine was off, the app measures the garbage without a window. From
+1 GB on, a desktop notification says how much there is, with the largest places. It says so once a day, or sooner
+when the garbage grew by another GB. **Open** opens the window. The notification deletes nothing. It is a systemd
+user timer, `nexus-garbage-remover-reminder.timer`, that `install.sh` adds and `--uninstall` removes.
+`systemctl --user disable --now nexus-garbage-remover-reminder.timer` switches it off.

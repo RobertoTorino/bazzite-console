@@ -5,6 +5,7 @@ log-active-shaders: false
 log-uniforms: false
 log-compat-warn: false
 validation-layer: true
+disable-mask-bit: false
 pstv-mode: false
 show-mode: false
 demo-mode: false
@@ -31,6 +32,7 @@ export-textures: false
 export-as-png: true
 memory-mapping: double-buffer
 boot-apps-full-screen: false
+enable-cheats: true
 show-live-area-screen: false
 audio-backend: SDL
 audio-volume: 100
@@ -88,6 +90,7 @@ keyboard-take-screenshot: Unbound
 keyboard-pinch-modifier: Unbound
 keyboard-alternate-pinch-in: Unbound
 keyboard-alternate-pinch-out: Unbound
+keyboard-gui-exit: Unbound
 keyboard-button-select-alt: Unbound
 keyboard-button-start-alt: Unbound
 keyboard-button-up-alt: Unbound
@@ -120,6 +123,7 @@ keyboard-take-screenshot-alt: Unbound
 keyboard-pinch-modifier-alt: Unbound
 keyboard-alternate-pinch-in-alt: Unbound
 keyboard-alternate-pinch-out-alt: Unbound
+keyboard-gui-exit-alt: Unbound
 user-id: ""
 user-auto-connect: false
 user-lang: ""

@@ -70,7 +70,7 @@ apps/<name>/
   release without it), and `install.sh` installs that wheel, so users need no compiler.
 
 Checked by `tools/tests/test_layout.py` (packages and `images/` at the app root, no wrapper folder) and by CI's
-layout job (`VERSION`, `CHANGELOG`, `LICENSE` and `.gitignore` in every folder, LF line endings, executable `.sh`
+shell job (`VERSION`, `CHANGELOG`, `LICENSE` and `.gitignore` in every folder, LF line endings, executable `.sh`
 files).
 
 ## The package
@@ -205,12 +205,12 @@ silver on gunmetal and warm, a darker silver on the light silver theme. A `style
 fills and edges that are always there, and uses `OUTLINE` for those borders too.
 
 Escape and a controller's B close an app's window when its `__main__.py` calls `exit_keys.install(app)` right
-after the application is made (core's `exit_keys`; an app not on core carries a copy, as of `theme.py`). The
-emulator managers, DatStation, Bluetooth, the Upscaler Manager and both Remote Play apps do. A key the window or
-one of its widgets takes for itself comes first, so an app's own Escape (back from a page) keeps working, and the
-window closes through its `closeEvent`, which still asks what it asks. An app in which the controller belongs to
-something else installs it with `controller=False` (Remote Play, XBOX Remote Play); a window that must keep every
-key (a stream) sets the class attribute `exit_keys = False`.
+after the application is made (core's `exit_keys`; an app not on core carries a copy, as of `theme.py`). Every
+app but PS5 Password Generator does. A key the window or one of its widgets takes for itself comes first, so an
+app's own Escape (back from a page) keeps working, and the window closes through its `closeEvent`, which still asks
+what it asks. An app in which the controller belongs to something else installs it with `controller=False` (Remote
+Play, XBOX Remote Play, PS5 Controller, PS5 System Overlay); a window that must keep every key (a stream) sets the
+class attribute `exit_keys = False`.
 
 An app may have its own color, taken from its icon, in a `style.py` beside its window (the shadPS4 Manager's is
 the pattern): the main buttons, the table headers, the selection and the links take it, over the theme. White text
@@ -278,9 +278,9 @@ Where the pictures come from depends on what the app has:
 | PPSSPP Manager | The game's own pictures (`ICON0.PNG`, `PIC1.PNG`), its icon as the logo |
 | Vita3K Manager | The game's own pictures (`icon0.png`, `pic0.png`), its icon as the logo |
 
-The emulator managers start a game through Steam too: their last tab, **Start game**, is core's `ActionTab` (a tab
-that acts on a click and leaves the open page open), which looks up the chosen game's shortcut in Steam's file
-(`steam.shortcut_number()`) and opens `steam.play_url()` for it.
+The emulator managers start a game through Steam too: their tab beside **Your games**, **Start game**, is core's
+`ActionTab` (a tab that acts on a click and leaves the open page open), which looks up the chosen game's shortcut
+in Steam's file (`steam.shortcut_number()`) and opens `steam.play_url()` for it.
 
 `steam_art.draw_icon_art()` is for an app with no pictures of its own: the background is near black in the icon's
 own color with a glow of it, the portrait and the wide picture show the icon with a title and a line under it, the
@@ -373,8 +373,8 @@ an extracted release, and needs no network except for pip.
   is read from the folders with `tests/` (`tools/ci_matrix.py`), so the app is in it at once.
 - **The installer test:** `tools/installer-tests/<name>.sh` installs from the checkout and from a staged release,
   with and without the Desktop icon, and uninstalls. It runs without root or network: `shims.sh` turns sudo into
-  fakeroot and pip into a stub. CI runs each installer test in its own step. [Nexus Installer
-  Tests](dashboard.md#installer-tests) lists the scripts in that folder by itself.
+  fakeroot and pip into a stub. CI runs the installer tests side by side, each in a group of its own in the log.
+  [Nexus Installer Tests](dashboard.md#installer-tests) lists the scripts in that folder by itself.
 - **`./test.sh`** runs every test folder in the repository: core, tools, `dev/`, the portal and the apps.
 
 `tools/tests/test_installer_tests.py` fails when an app or a portal entry has no installer test, or when CI does
@@ -462,7 +462,7 @@ for a package or tool beyond PyQt6, and the portal bump the new entry asks for.
 | Packages and `images/` at the app root, no wrapper folder | `tools/tests/test_layout.py` |
 | `install.sh` at the app root, with the standard options, refusing root | `tools/tests/test_layout.py` |
 | Every app has `tests/` and `requirements-dev.txt`, and CI runs them | `tools/tests/test_layout.py` |
-| `VERSION`, `CHANGELOG`, `LICENSE`, `.gitignore` in every folder; LF; executable scripts | CI layout job |
+| `VERSION`, `CHANGELOG`, `LICENSE`, `.gitignore` in every folder; LF; executable scripts | CI shell job |
 | Version copies equal `VERSION` | `tools/check_versions.py` |
 | Every app and portal entry has an installer test, and CI runs it | `tools/tests/test_installer_tests.py` |
 | Copies of `instance.py`, `theme.py`, `exit_keys.py` and `upstream.py` equal core's | `tools/tests/test_instance_copies.py` |

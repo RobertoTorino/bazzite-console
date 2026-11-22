@@ -49,8 +49,8 @@ stay. The games in Steam then no longer start: take them out first by unticking 
 
 The header has four pills: the **shadPS4 version**, **shadPS4 Install**, **shadPS4 Uninstall** and **Refresh**, which reads everything again.
 
-Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
-warning and red is a problem. Hold the pointer over a state to read it in full.
+Beside the title is a row of states. Each shows its name and a dot. The dot is green when all is well,
+and red when not. Hold the pointer over a state to read it in full.
 
 - **Installed**: the app's own state, such as **Not installed**
 - **shadNet**: the state of shadPS4's online service, see [shadNet](#shadnet)
@@ -182,9 +182,9 @@ A PS4 game has no cover in the shape Steam's library uses, so the app draws one:
 dark background. **Steam artwork…** takes a SteamGridDB API key, one for the whole suite. With it, **Update Steam**
 takes a cover from SteamGridDB for each game instead; the wide picture, the banner and the logo stay the game's own.
 
-**Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
-**shadPS4 settings** beside it opens shadPS4's own window (Big Picture) for what the app does not set: the
-controller's buttons, a game's own settings and shadPS4's game list.
+**Steam** in the text of the info symbol under the table is a link: it opens Steam's library (Steam starts when it
+does not run). **shadPS4 settings** under the table opens shadPS4's own window (Big Picture) for what the app does
+not set: the controller's buttons, a game's own settings and shadPS4's game list.
 
 #### A game in Steam more than once
 
@@ -197,8 +197,8 @@ says how many double shortcuts go.
 
 The tab beside Your games, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
 as its shortcut in Steam starts it. When Steam does not run, the app starts Steam first and waits until it is up,
-which takes a while, and then starts the game. The line under the tabs says **Starting…** until shadPS4 runs, and
-says so when Steam did not start the game. While shadPS4 runs already, no second game is started. The tab you were
+which takes a while, and then starts the game. The line under the tabs says that the game is starting until
+shadPS4 runs, and says so when Steam did not start the game. While shadPS4 runs already, no second game is started. The tab you were
 on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
@@ -318,7 +318,7 @@ Beside the title, **shadNet** has a dot that shows its state. Its tooltip says t
   so shadPS4 can sign in when one starts. The app asks the server without signing in.
 - **shadNet Offline** has a red dot. The server does not answer, or shadPS4's sign-in was refused or dropped. The
   tooltip says why.
-- **shadNet Off** has a plain dot. No account is set up, or **Sign in to shadNet when a game starts** is off.
+- **shadNet Off** has a red dot. No account is set up, or **Sign in to shadNet when a game starts** is off.
 
 While shadPS4 runs, the app reads shadPS4's log every few seconds to see whether it signed in.
 

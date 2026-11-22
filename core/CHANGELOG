@@ -1,3 +1,19 @@
+Changelog: 22-11-2026 18:07:36
+
+Fixed. widgets.py.orig, an old copy of widgets.py that nothing used, is gone.
+
+Changelog: 22-11-2026 15:19:54
+
+Fixed. StatusText with a name now shows its dot and name in two colors: green for an ok state, red for any other (owner,
+22-11-2026). test_widgets.py checks it.
+
+Changelog: 22-11-2026 15:19:00
+
+Fixed. gamepad.py gave SDL its dummy video and sound drivers and left them in the environment, so a program the app
+started got them. Steam started that way crashed on every window. Now they are there only while SDL starts, as in
+exit_keys. Both also take out the window class pygame sets. Steam is now always started without these values
+(steam_environment()). test_gamepad.py and test_steam.py check it.
+
 Changelog: 22-11-2026 12:25:09
 
 Version 4.7.0.

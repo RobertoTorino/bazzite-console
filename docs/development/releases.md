@@ -55,7 +55,8 @@ explanation.
 
 1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.
 2. **Commit your changes:** the message field holds *see changelog*; keep it or type what the changes do, then
-   **Commit**. It stages every change and new file and commits them after the version and manifest checks. When
+   **Commit**. It stages every change and new file and commits them after the version and manifest checks. First, the
+   **Commands** tab lists the wiki's sections to read again (`tools/check_wiki.py`): the list never stops the commit. When
    `apps.toml` changed since the last portal release (an app added, removed or withdrawn, a pin moved), that check
    needs a portal bump: the step asks first, with the version the release would suggest (the portal's CHANGELOG entries
    count: a Breaking entry makes it major), or the least the check accepts, whichever is higher, and writes it with
@@ -109,8 +110,8 @@ explanation.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and it becomes GitHub's
    **Latest** release; the installed portals offer it from then on. The new tag is fetched in the same command, so
    the step shows ✓ as soon as it ends: press Publish once. A portal that was open during the device test says its
-   newest release as it was when it looked; **Y Check again** on its Settings page (or its hourly look) shows the
-   release just published. **Not OK** leaves the draft unpublished: the Device test step turns red and says what
+   newest release as it was when it started, as it looks once, at its start; start it again to see the release just
+   published. **Not OK** leaves the draft unpublished: the Device test step turns red and says what
    comes next. Fix what the test showed; the steps start again from **Commit your changes**, then **Push them**,
    **CI passes** and **Start new release**, which builds the portal anew (a portal that was never published keeps
    its version; the apps already out are skipped). Until the fix is committed, **Device test** and **Publish**
@@ -293,9 +294,13 @@ and the release waits for CI on the release commit itself, as does a commit whos
 commit may fix what failed there, such as a version CI wanted bumped, so its own CI decides. CI still runs on the
 release commit; nothing waits for it.
 
+The portal's part downloads the checksums of the app releases the run just made. GitHub can miss a release
+for a short while after it was made. The run then tries again every 10 seconds for a minute. After that it
+stops and names the release it did not find.
+
 GitHub's **Latest** release is the newest portal. The app releases are published with `--latest=false`, so they
 are never Latest, and the portal becomes Latest when it is published (by **Publish** for a draft, or by
 `release.yml` for a portal tag pushed by hand). `/releases/latest`, which the READMEs and this wiki link to for the
 download, therefore always opens the newest portal. Installed portals and apps do not use it: they find their
-releases by their tag prefix (`portal-v`, `<app>-v`), reading GitHub's release list page by page, newest first,
+releases by their tag prefix (`ps5-portal-v`, `ps5-<app>-v`), reading GitHub's release list page by page, newest first,
 until a page holds the prefix.

@@ -179,10 +179,28 @@ def play(url: str, open_url: Callable[[str], bool], started: Callable[[], bool],
     raise SteamError("Steam did not start it: look in Steam, which may be asking something.")
 
 
+# What a controller reader of ours gives SDL while it starts. Steam started with them opened no window: its web
+# helper crashed on every one (the owner's machine, 22-11-2026, Steam started from an app the portal had opened).
+SDL_OURS = {"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy", "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS": "1",
+            "PYGAME_HIDE_SUPPORT_PROMPT": "1"}
+
+
+def steam_environment(env: dict[str, str] | None = None) -> dict[str, str]:
+    """The environment Steam starts with: ours without what our controller readers give SDL, and without the window
+    class pygame sets. A value the user set differently stays."""
+    env = dict(os.environ if env is None else env)
+    for name, value in SDL_OURS.items():
+        if env.get(name) == value:
+            del env[name]
+    env.pop("SDL_VIDEO_X11_WMCLASS", None)
+    return env
+
+
 def _run(command: list[str]) -> None:
-    """Starts a Steam command in the background; a thread collects it when it ends, so it leaves no zombie."""
+    """Starts a Steam command in the background, with steam_environment(); a thread collects it when it ends, so it
+    leaves no zombie."""
     process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL, start_new_session=True)
+                               stderr=subprocess.DEVNULL, start_new_session=True, env=steam_environment())
     threading.Thread(target=process.wait, name="steam-command", daemon=True).start()
 
 

@@ -106,3 +106,20 @@ def test_pygame_ces_touch_events_are_read_with_their_finger_id(qapp):
     source.touches = {6: "down", 7: "motion", 8: "up"}
     assert source.events() == [("touch", "down", (0, 0.6, 0.9)), ("touch", "motion", (1, 0.5, 0.5)),
                                ("button", "touchpad", True)]
+
+
+def test_the_portal_leaves_no_sdl_variables_for_the_apps_it_starts(monkeypatch):
+    """An app the portal opens, and Steam that app starts, must not get SDL's dummy drivers: Steam started with them
+    crashed on every window (the owner's machine, 22-11-2026)."""
+    import os
+    import pytest
+    pytest.importorskip("pygame")
+    from bazzite_console_portal import gamepad
+    names = (*gamepad.SDL_VARIABLES, *gamepad.SDL_SET_BY_PYGAME)
+    for name in names:
+        monkeypatch.delenv(name, raising=False)
+    source = gamepad.PygameSource()
+    try:
+        assert not [name for name in names if name in os.environ]
+    finally:
+        source.close()

@@ -149,3 +149,19 @@ def test_without_pygame_or_a_controller(qapp):
     assert not gamepad.start() and gamepad.names() == []
     gamepad.poll()                                              # nothing happens
     gamepad.stop()
+
+
+def test_the_gamepad_leaves_no_sdl_variables_behind(monkeypatch):
+    """What the app starts later must not get SDL's dummy drivers (the owner's machine, 22-11-2026)."""
+    import os
+    import pytest
+    pytest.importorskip("pygame")
+    from bazzite_console_core import gamepad
+    names = (*gamepad.SDL_VARIABLES, *gamepad.SDL_SET_BY_PYGAME)
+    for name in names:
+        monkeypatch.delenv(name, raising=False)
+    source = gamepad.PygameSource()
+    try:
+        assert not [name for name in names if name in os.environ]
+    finally:
+        source.close()

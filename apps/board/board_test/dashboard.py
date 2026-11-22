@@ -115,7 +115,7 @@ class StatsBar(QWidget):
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         self.tests = StatBox("Tests", GREY, "Number of tests available")
-        self.ran = StatBox("Finished", GREY, "Tests with a result in this session")
+        self.ran = StatBox("Finished", GREY, "Tests with a result: the latest of each test over all runs")
         self.passed = StatBox("Passed", GREEN, "Tests that passed without warnings")
         self.warnings = StatBox("Warnings", ORANGE, "Tests that raised at least one warning",
                                 clickable=True)

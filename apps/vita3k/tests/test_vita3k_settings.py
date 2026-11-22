@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Settings window's model (vita3k_settings.py; owner, 03-11-2026): Vita3K's defaults without a config.yml, a
-line written into the file build 4186 wrote with the rest kept, the keys and defaults as that build spells them, and
+line written into the file build 4377 wrote with the rest kept, the keys and defaults as that build spells them, and
 a float as yaml-cpp writes it."""
 
 from __future__ import annotations
 
-from conftest import CONFIG_4186, write_vita3k_files
+from conftest import CONFIG_4377, write_vita3k_files
 
 from vita3k_manager import userdata, vita3k_settings
 from vita3k_manager.vita3k_settings import SETTINGS, read_setting, read_settings, write_setting
@@ -21,9 +21,9 @@ def test_the_defaults_without_a_file(tmp_path):
     assert not userdata.config_path(tmp_path).exists()                            # reading made no file
 
 
-def test_every_default_is_what_build_4186_writes():
-    """config-4186.yml is the file Vita3K wrote on its first start: each setting's default is the value there."""
-    written = userdata.read_map(CONFIG_4186)
+def test_every_default_is_what_build_4377_writes():
+    """config-4377.yml is the file Vita3K wrote on its first start: each setting's default is the value there."""
+    written = userdata.read_map(CONFIG_4377)
     for setting in SETTINGS:
         assert setting.name in written, setting.name
         assert setting.canonical(written[setting.name]) == setting.default, setting.key

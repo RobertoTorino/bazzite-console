@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
 # Claude rules
 
 1. A suite is standalone: all it needs is in its repository, and nothing is taken from Nexus or another suite at run, test or release time. Its tooling is its own; change it there.
@@ -7,7 +9,7 @@
 5. `bazzite-console-image` is a different project: read it with `gh api`, never clone or edit it. Rows about it stay for the owner.
 6. Releases are the owner's. Never bump a `VERSION` (or its copies, or `portal/VERSION`), tag, build or publish release assets, pin a release in `portal/apps.toml` or write release entries in the CHANGELOGs, and don't offer to. The handover says which app needs a release and why. Claude may change the release tools and their tests.
 7. NRT works out versions from the CHANGELOG kinds since the last tag. `dev/` apps are never released.
-8. READMEs, docs and the wiki hold no status, plans, step numbers or decision notes, and no placeholder folders for future work. CHANGELOG entries are history and may mention steps. Plans go in MIGRATION.md; items marked "on hold" there are the backlog.
+8. READMEs, docs and the wiki hold no status, plans, step numbers or decision notes, and no placeholder folders for future work. CHANGELOG entries are history and may mention steps. Plans go in `ACTION-LIST.md` in the workspace root for the Bazzite suites, and in `MIGRATION.md` in Nexus. What either marks "on hold" is the backlog.
 9. Keep the wiki current: new information, ways of working or logic go into its chapter in the same change as the code, written for the person using it. The handover names the chapters changed. Nexus's tooling is documented on the Nexus page (`nexus/docs/`); the Bazzite suites document their own copies in their own wikis.
 10. Every change gets a CHANGELOG entry: the root one for suite-wide changes, otherwise the app's, core's, portal's or dev app's. Format: a `Changelog: DD-MM-YYYY HH:MM:SS` line, a blank line, then plain sentences, newest first. Use Europe/Amsterdam time: `python3 -c "import datetime, zoneinfo; print(datetime.datetime.now(zoneinfo.ZoneInfo('Europe/Amsterdam')).strftime('%d-%m-%Y %H:%M:%S'))"` (on Windows with `.venv-windows/Scripts/python.exe`; never `TZ=Europe/Amsterdam date`).
 11. Every CHANGELOG entry starts with its kind: `Breaking.` (major), `Added.` (minor) or `Fixed.` (patch), 0.x apps too.
@@ -37,7 +39,7 @@
 35. Keep path and link case exact: Linux and GitHub are case-sensitive.
 36. The development tools run on Linux only; the Windows suite's tests and builds run on Windows. `./test.sh` runs core, tools and `dev/` everywhere, and only the suites whose `SYSTEM` matches (`NEXUS_SYSTEM=bazzite` or `windows` picks by hand).
 37. Test only the relevant changed code. Never run the full CI (`tools/ci-local.sh`) or the whole `./test.sh`. Run only one FFmpeg build at a time.
-38. Install missing tooling right away and go on (`brew install` on Bazzite, or a distrobox); never ask first and never work around it. A tool needed more than once is installed for good and listed in `nexus/docs/machine.md`. Delete scratch files as soon as they are not needed. Put anything large under `/var/tmp` and remove it when done; never leave large files under `/tmp/claude-<uid>`.
+38. Install missing tooling right away and go on (`brew install` on Bazzite, or a distrobox); never ask first and never work around it. A tool needed more than once is installed for good and listed under The development machine in the Development chapter (`docs/development/index.md`) in each Bazzite suite, and in `nexus/docs/machine.md` in Nexus. Delete scratch files as soon as they are not needed. Put anything large under `/var/tmp` and remove it when done; never leave large files under `/tmp/claude-<uid>`.
 39. Releases are tagged with `tools/tag-release.sh <prefix><app>-v<x.y.z>`, which tags only a pushed commit that passed CI. `tools/check_upstream.py` says when an upstream an app pins moved past the pin.
 40. Code reads like the code around it: the same comment density, naming and idiom. Docs are plain, short sentences for the person using the tool, as `.claude/writing.md` describes. Run `python3 tools/text_check.py --details FILE` on new text in both twins.
 41. American English in everything written: color, gray, center, canceled, license, catalog, labeled, behavior, authorized, afterward, toward, anymore; **check** and **uncheck** a box; **ID**. Identifiers, settings keys, file names and recorded data keep their spelling.
@@ -81,7 +83,7 @@
 79. Core is bundled per app at release time. The suite's shared venv holds only PyQt6 and pygame-ce. `dev/` apps carry `.checkout-only`, import core directly and are in no portal.
 80. Data an app's package reads sits in the package or beside it in the app folder. `docs/development/architecture.md` has the steps for a new app.
 81. System-wide packages' updates and security fixes are the system's. Our own code and the Python packages in our apps' environments are ours. An rpm-ostree change is active after a restart, which Nexus Deps advises and never does.
-82. Checks before handing work over: `python3 tools/check_versions.py`, `python3 tools/check_manifest.py --base origin/main`, `python3 tools/sync_icons.py --check`, `shellcheck -x -S warning tools/*.sh apps/*/install.sh portal/install.sh`, every installer test in `tools/installer-tests/` except `shims.sh`, and `mkdocs build --strict`. `tools/pre-push.sh` runs CI's quick checks against `origin/main`.
+82. Checks before handing work over: `python3 tools/check_versions.py`, `python3 tools/check_manifest.py --base origin/main`, `python3 tools/sync_icons.py --check`, `shellcheck -x -S warning tools/*.sh apps/*/install.sh portal/install.sh`, every installer test in `tools/installer-tests/` except `shims.sh`, `mkdocs build --strict`, and `python3 tools/check_wiki.py --base origin/main`, whose every listed section is read against the change.
 83. GitHub's Latest release is the newest portal. The Windows suite's `release.yml` never makes it, and Nexus's `docs.yml` publishes its wiki.
 84. `.claude/text-decisions.md` holds the owner's decisions on the text. The `/rewrite-text` command rewrites text with its workflow.
 85. The Windows suite is worked on inside a Nexus checkout, as two separate git checkouts. A change to both is two commits.
@@ -122,3 +124,11 @@
 120. Nexus TTS (`dev/text`) and Nexus Remix Studio (`dev/studio`) exist in both Bazzite suites. A change to one goes into both.
 121. Nexus TTS offers English female voices only and takes English text only. It has its own environment, because its engine has no build for the development venv's Python.
 122. A new app goes to both Bazzite suites. If an app seems not to be compatible with bazzite-console, we explore, analyze and then build alternatives.
+123. Nexus Garbage Remover (`dev/garbage`, in both Bazzite suites) handles the garbage on the machine. It lists crash dumps, Steam's crash reports, the Trash and caches with their size and command, deletes what is checked after it asks, and notifies from 1 GB on.
+124. Our tools' own leftovers stay with `tools/clean_caches.py` before a local CI run. No garbage check goes into CI or a test run.
+125. When I see garbage on the machine, I name it with its size and the command, and point to Nexus Garbage Remover.
+126. A controller reader gives SDL its dummy drivers only while SDL starts. A program our apps start never inherits them, and core starts Steam without them.
+127. The managers' title row shows names only: **Installed**, **shadNet** or **RPCN**, **Controller** and **Steam**. The dot is green when all is well and red otherwise, and the tooltip holds the full state.
+128. Every text file opens with its `SPDX-License-Identifier` line, in the comment of its format: GPL-3.0-or-later, or the app's own license where it has another. `tools/tests/test_spdx.py` checks it and lists each file that would break with it, with the reason. A generated file gets the line from its generator.
+129. When code changes, search the whole wiki for the changed files and the names they define, and correct every mention, not only the app's own chapter. `tools/check_wiki.py` lists the sections that name a changed file, and `tools/tests/test_wiki_names.py` fails on a name the wiki gives that is gone.
+130. When I assume something, I first ask the owner whether the assumption is right, and only then act on it. I say what I assume and what I would do with it. Wrong assumptions have too often meant doing the work again.

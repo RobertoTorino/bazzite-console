@@ -216,8 +216,13 @@ jobs:
             echo "Start the release again from Nexus Release Tool on the new main." >&2
             exit 1
           fi
+          # A release made a moment ago can be missing from GitHub's lookup for a while: try again, then name the tag
           for tag in "${tags[@]}"; do
-            gh release download "$tag" --pattern SHA256SUMS --dir "sums/$tag"
+            for try in 1 2 3 4 5 6; do
+              gh release download "$tag" --pattern SHA256SUMS --dir "sums/$tag" --clobber && break
+              [ "$try" -lt 6 ] || { echo "$tag: GitHub has no release of it" >&2; exit 1; }
+              sleep 10
+            done
           done
           python tools/suite_release.py pin sums "${tags[@]}"
           rm -rf sums
@@ -247,7 +252,12 @@ jobs:
           # Board Test and PS5 Quickfix: each release in a folder of its own, its SHA256SUMS beside it.
           for required in $(python -c 'import tomllib; apps = tomllib.load(open("portal/apps.toml", "rb"))["apps"]; print(" ".join(a["tag"] for a in apps.values() if a.get("required")))'); do
             mkdir -p "bundle/$required"
-            gh release download "$required" --pattern "$required.tar.gz" --pattern SHA256SUMS --dir "bundle/$required"
+            for try in 1 2 3 4 5 6; do          # as with the pins: a new release can be missing for a while
+              gh release download "$required" --pattern "$required.tar.gz" --pattern SHA256SUMS \
+                --dir "bundle/$required" --clobber && break
+              [ "$try" -lt 6 ] || { echo "$required: GitHub has no release of it" >&2; exit 1; }
+              sleep 10
+            done
           done
 
       - name: Build

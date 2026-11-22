@@ -325,3 +325,10 @@ def test_a_game_in_steam_more_than_once_is_counted_and_one_is_left(tmp_path):
     after = list(steam.read_vdf(path.read_bytes())["shortcuts"].values())
     assert [i["AppName"] for i in after] == ["RetroArch", "Game", "Other"] and after[1]["LastPlayTime"] == 77
     assert steam.doubles(folder, key) == {}
+
+
+def test_steam_starts_without_our_sdl_variables():
+    """Steam started with SDL's dummy video driver crashed on every window (the owner's machine, 22-11-2026)."""
+    env = {"PATH": "/usr/bin", "SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "pipewire", "SDL_VIDEO_X11_WMCLASS": "-c",
+           "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS": "1", "PYGAME_HIDE_SUPPORT_PROMPT": "1"}
+    assert steam.steam_environment(env) == {"PATH": "/usr/bin", "SDL_AUDIODRIVER": "pipewire"}   # the user's stays

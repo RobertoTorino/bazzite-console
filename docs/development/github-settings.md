@@ -145,10 +145,11 @@ GitHub's API answers a limited number of requests an hour: **60 without signing 
 (everything on your network that asks GitHub without signing in shares them), and **5,000 when signed in**.
 Answers that did not change since the last look ("304 Not Modified") do not count.
 
-Nexus Release Tool asks the API whether the newest push built: every 15 seconds while a build runs, every 5
-minutes otherwise. A running build with a busy hour of other requests can use up the 60. The window shows how many
-are left, beside its GitHub button (*GitHub API: 4,894 of 5,000 left until 04:16, signed in*); when none are left
-the button says *GitHub: limit reached, back at …* and waits until then.
+Nexus Release Tool asks the API whether the newest push built: every 15 seconds while a build runs, every 10
+seconds while a new push has no run yet, every 5 minutes otherwise. A running build with a busy hour of other
+requests can use up the 60. The **GitHub API left** box beside its **GitHub build** pill shows how many are left,
+and its tooltip says until when (*GitHub API: 4,894 of 5,000 left until 04:16, signed in*). When none are left the
+pill says **Limited**, its tooltip says *GitHub's limit is reached, back at …*, and it waits until then.
 
 **Nothing is broken when the limit is reached**, and there is nothing to fix: GitHub answers again after the time
 shown. To get the 5,000, sign in once with the GitHub CLI:

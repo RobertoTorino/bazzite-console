@@ -47,7 +47,7 @@ class TestCurve:
 
 def test_the_list_is_written_from_the_tests(tmp_path):
     text = at.write(suite(tmp_path))
-    assert text.startswith("# All tests (Some Suite)\n")
+    assert text.startswith("<!-- SPDX-License-Identifier: GPL-3.0-or-later -->\n\n# All tests (Some Suite)\n")
     assert "3 test functions (3 cases counting the parametrized ones) in 1 test folders, and 1 installer tests." in text
     assert "| `test_guard.py` | `test_it_stops_at_the_limit` |  |  | The guard stops the board at the limit. |" in text
     assert "| `test_guard.py` | `test_every_speed` |  |  | Every speed. |" in text

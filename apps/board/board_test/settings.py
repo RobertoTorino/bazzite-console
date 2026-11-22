@@ -278,7 +278,7 @@ class LogsPage(QWidget):
         layout.addWidget(_text(
             "Every run leaves a log, and the stress, disk and speed tests also write CSV and JSON files. "
             "Clean them up to prevent clutter:<ul>"
-            "<li><b>Older than N days</b> (default 30): removes old run logs and their history entries.</li>"
+            "<li><b>Older than N days</b> (default 30): removes old run logs. Their results stay in the history.</li>"
             "<li><b>Everything</b>: removes all logs and the whole test history, to start fresh.</li></ul>"
             "The dialog lists what will be removed before anything happens. Always kept: "
             "<code>bench-baseline.json</code> and the benchmark and speed test history CSVs. The full "

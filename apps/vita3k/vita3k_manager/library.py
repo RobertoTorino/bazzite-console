@@ -68,15 +68,6 @@ def _is_dir(place: Path) -> bool:
         return False
 
 
-def _in_own_folder(folder: Path, chosen: list[Path], title: str) -> str:
-    """Why a folder is never deleted by the app: a drive's root, or one of the app's game folders itself."""
-    if folder.parent == folder:
-        return f"{title} is at the top of {folder}: delete its files by hand."
-    for place in chosen:
-        if place == folder or folder in place.parents:
-            return f"{title} is in {folder.name}, one of the app's game folders itself: delete its files by hand."
-    return ""
-
 PARTS = {"app": "The game", "patch": "Its update", "addcont": "Its extra content"}
 
 

@@ -50,8 +50,8 @@ your games stay. The games in Steam then no longer start: take them out first by
 
 The header has four pills: the **RPCS3 version**, **RPCS3 Install**, **RPCS3 Uninstall** and **Refresh**, which reads everything again.
 
-Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
-warning and red is a problem. Hold the pointer over a state to read it in full.
+Beside the title is a row of states. Each shows its name and a dot. The dot is green when all is well,
+and red when not. Hold the pointer over a state to read it in full.
 
 - **Installed**: the app's own state, such as **Not installed**
 - **RPCN**: the state of RPCS3's online service, see [RPCN](#rpcn)
@@ -66,9 +66,9 @@ before you start a game.
 Under the links to **RPCS3's release notes** and to this wiki, a second row of five pills follows, each with what it is for on top and what it does under it: **Games Install** and **Games Uninstall**, **Available in Steam** (how many of your games are in Steam), **RPCN Account** (see [RPCN](#rpcn)) and **Play time**: the time spent in all your games together, as RPCS3 counts it, with each game's time in the tooltip. Your disc games and the firmware go into the app's own folder (see [Where your games
 go](#where-your-games-go)); nothing is chosen or browsed to for them. Below the pills are two columns. The first says in five lines where each stands (**RPCS3:**, **Firmware:**, **Disc games:**, **PKG games:**, **RPCN:**), short, with more in their tooltips. The second shows the **Installed version:** of RPCS3. Then comes a row of six tabs: **Your games**, **Start game**, **Memory cards**, **Settings**, **View logs** and **Clear logs**. Start game and Clear logs are buttons.
 
-- **RPCS3**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
-  shows the version installed. The tooltip says which build is installed, or what Install takes, and when a newer
-  RPCS3 is out. When another build than the one pinned for this version of the app is in use, or RPCS3 updated
+- **RPCS3**: **Not installed.** or **Installed.**, with the button to use after it, on one line; the version box in
+  the header shows the version installed. The tooltip says which build is installed, or what Install takes, and when
+  a newer RPCS3 is out. When another build than the one pinned for this version of the app is in use, or RPCS3 updated
   itself in its own window, the tooltip says so, and **Install** puts the pinned build back. Another build and a
   newer RPCS3 also go to the log, once. **Install** downloads RPCS3 from GitHub (about 80 MB): the pinned build,
   checked against its checksum before it is installed. **Uninstall** takes it out again; RPCS3's own folder, with
@@ -193,7 +193,8 @@ a dark background. **Steam artwork…** takes a SteamGridDB API key, one for the
 Steam** takes a cover from SteamGridDB for each game instead; the wide picture, the banner and the logo stay the
 game's own.
 
-**Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
+**Steam** in the info symbol's text under the table is a link: it opens Steam's library (Steam starts when it does
+not run).
 
 #### A game in Steam more than once
 
@@ -300,7 +301,7 @@ dot that shows its state. Its tooltip says the state in full:
 
 - **RPCN Online**, with a green dot
 - **RPCN Offline**, with a red dot
-- **RPCN Off**, with a plain dot
+- **RPCN Off**, with a red dot
 
 While RPCS3 runs, it shows whether RPCS3 signed in, as its log says. Otherwise, it shows whether the server answers.
 

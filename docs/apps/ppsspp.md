@@ -48,8 +48,8 @@ log go too.
 
 The header has four pills: the **PPSSPP version**, **PPSSPP Install**, **PPSSPP Uninstall** and **Refresh**, which reads everything again.
 
-Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
-warning and red is a problem. Hold the pointer over a state to read it in full.
+Beside the title is a row of states. Each shows its name and a dot. The dot is green when all is well,
+and red when not. Hold the pointer over a state to read it in full.
 
 - **Installed**: the app's own state, one of **Not installed**, **No games** or **Ready**
 - **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds
@@ -151,7 +151,8 @@ stay the game's own. The key is free with a SteamGridDB account, and it is one k
 in `~/.config/bazzite-console/steamgriddb-key`. Leave the field empty to look nothing up: the covers already found
 stay in use.
 
-**Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
+**Steam** in the info symbol's text under the table is a link: it opens Steam's library (Steam starts when it does
+not run).
 
 #### A game in Steam more than once
 

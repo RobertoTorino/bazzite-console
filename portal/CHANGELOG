@@ -1,3 +1,11 @@
+Changelog: 22-11-2026 15:19:00
+
+Fixed. The portal reads the controller through pygame, and gave SDL its dummy video and sound drivers for that. They
+stayed in the portal's environment, so every app it opened got them, and so did Steam when such an app started it.
+Steam's web helper then crashed on every window, every 10 seconds, and Steam never signed in. Now the variables are
+there only while SDL starts, as in core's exit_keys. The window class pygame sets goes too. test_touchpad_and_raise.py
+checks that none stays.
+
 Changelog: 22-11-2026 12:25:09
 
 Release 4.10.0. Pins ps5-board-v0.11.0, ps5-quickfix-v0.7.0, ps5-upscaler-v0.8.0, ps5-rpcs3-v1.7.0, ps5-remoteplay-v1.7.0, ps5-clb-v1.7.0, ps5-shadps4-v1.7.0, ps5-datstation-v1.7.0, ps5-ppsspp-v1.7.0, ps5-pcsx2-v1.7.0, ps5-vita3k-v1.8.0, ps5-xenia-v1.8.0, ps5-sftp-v1.8.0, ps5-webcam-v1.8.0, ps5-controller-v1.8.0, ps5-ssd-v1.8.0, ps5-overlay-v1.7.0, ps5-fan-v2.7.0, ps5-cec-v2.8.0, ps5-bluetooth-v0.8.0, ps5-password-v0.6.0, ps5-turing-v0.2.0.

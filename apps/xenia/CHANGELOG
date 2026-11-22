@@ -1,3 +1,12 @@
+Changelog: 22-11-2026 15:55:10
+
+Fixed. The app's files that had no license line have one now, the arrow of its lists among them.
+
+Changelog: 22-11-2026 15:19:54
+
+Fixed. The states beside the title now use two colors: green when all is well, red when not. A warning and an off state,
+such as Not installed or shadNet Off, are red now. The wiki says so.
+
 Changelog: 22-11-2026 12:25:09
 
 Release 1.8.0.

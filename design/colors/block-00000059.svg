@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="24" viewBox="0 0 64 24">
   <defs><pattern id="c" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#ffffff"/><rect width="4" height="4" fill="#c4c8cd"/><rect x="4" y="4" width="4" height="4" fill="#c4c8cd"/></pattern></defs>
   <rect width="64" height="24" fill="url(#c)"/>

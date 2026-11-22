@@ -1,3 +1,8 @@
+Changelog: 22-11-2026 16:58:55
+
+Fixed. The checkbox reads Keep the audio link awake, and its tooltip says that it plays a silent loop while the window
+is open, as CLAUDE.md asks. The label held that text before.
+
 Changelog: 15-11-2026 10:17:45
 
 Breaking. No VERSION (owner, 15-11-2026): a development app is never released, so its header names the checkout's

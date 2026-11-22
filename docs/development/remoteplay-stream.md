@@ -38,8 +38,6 @@ They work on their own data and touch no Python object meanwhile. Measured with 
 per second (Lumines Remastered, from the Steam shortcut, full screen, network cable): the stutter in
 sound and picture was gone and the controller felt more responsive.
 
-Test results are from a BC250 board.
-
 The rule for the native core: every call that can take more than a fraction of a millisecond (decoding, copying a
 picture, waiting for a packet, a network handshake) lets go of the GIL. `next_event` and `connect` already did.
 
@@ -75,7 +73,7 @@ for:
 | `sound buffer / gaps` | buffer 10 to 40 ms, gaps 0 | Gaps: the sound output was not fed in time (see the window). |
 | `controller … longest gap` | about 4 to 6 ms | The controller thread is blocked. |
 | `cpu … busiest core / threads` | the busiest core well below 100% | One thread at its limit; more cores do not help a single thread. |
-| `disk wait / swapped` | 0 | The console is short of memory and swaps: a slow drive makes it worse. |
+| `disk wait / swapped` | 0 | The board is short of memory and swaps: a slow drive makes it worse. |
 
 On other hardware the same holds. A device with a hardware video decoder (VA-API) decodes cheaply, but copying the
 picture out remains. A larger picture costs more everywhere. Compare a file from each device: the fields above show

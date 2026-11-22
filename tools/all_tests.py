@@ -165,7 +165,9 @@ def write(root: Path = ROOT, values: Kept | None = None, times: dict[str, float]
                         + "\n".join(rows) + "\n")
     installers = "\n".join(f"| `{name}` | {installer_sentence(root / ci_matrix.INSTALLER_TESTS / name)} |"
                            for name in sorted(scripts))
-    return f"""# All tests ({suite_name(root)})
+    return f"""<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
+# All tests ({suite_name(root)})
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 

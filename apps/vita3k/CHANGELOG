@@ -1,3 +1,22 @@
+Changelog: 22-11-2026 17:41:13
+
+Fixed. library._in_own_folder(), which nothing called, is gone. Nothing the app does has changed.
+
+Changelog: 22-11-2026 16:59:54
+
+Fixed. The tests hold the config.yml that the pinned build 4377 writes on its first start, as
+tests/fixtures/config-4377.yml. They held build 4186's until now, although the pin had moved. Build 4377 adds four
+settings: disable-mask-bit, enable-cheats and the two keyboard bindings for leaving a game's GUI.
+
+Changelog: 22-11-2026 15:55:10
+
+Fixed. The app's files that had no license line have one now, the arrow of its lists among them.
+
+Changelog: 22-11-2026 15:19:54
+
+Fixed. The states beside the title now use two colors: green when all is well, red when not. A warning and an off state,
+such as Not installed or shadNet Off, are red now. The wiki says so.
+
 Changelog: 22-11-2026 12:25:09
 
 Release 1.8.0.

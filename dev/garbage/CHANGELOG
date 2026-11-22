@@ -1,0 +1,15 @@
+Changelog: 22-11-2026 18:33:23
+
+Fixed. The two boxes and the Delete pill now stand side by side with the row's spacing. They were spread over the width
+of the window. Homebrew's row measured all of ~/.cache/Homebrew, so it came back after every Delete. brew cleanup keeps
+the folders api, bootsnap and tool-selection, and the row now leaves them out. The wiki says so. .checkout-only and
+.gitignore open with their license line. tools/installer-tests/garbage.sh tests install.sh, and test_garbage.py tests
+Homebrew's row.
+
+Changelog: 22-11-2026 15:43:13
+
+Added. Nexus Garbage Remover, a development app. It lists the garbage on this machine: crash dumps, Steam's crash
+reports, the Trash, picture previews, pip's download cache and Homebrew's downloads, each with its size and the
+command that empties it. Delete empties the checked places after it asks, the crash dumps through pkexec. An hourly
+timer sends a notification from 1 GB on, once a day or sooner when it grew by 1 GB. Our tools' own leftovers stay
+with tools/clean_caches.py.

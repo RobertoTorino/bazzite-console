@@ -41,8 +41,9 @@ shows where the suite's dependencies stand on a board:
   whether it needs root. Their versions are not looked up, because they come with Bazzite or from their makers,
   and OSV.dev has no reliable record of those builds.
 
-Its check changes nothing. It sends the names and versions of the Python packages to PyPI and OSV.dev, and
-nothing else. Its **Fix** changes only what it lists and you confirm.
+Its check changes nothing. It sends the names and versions of the Python packages to PyPI and OSV.dev. It also
+asks GitHub for the emulators' latest releases and Sony for its firmware lists. Its **Fix** changes only what it
+lists and you confirm.
 
 When a package of an app has a known vulnerability, the card names the version with the fix. The fix reaches the
 app through an app release that requires that version. If no release does yet, report it as described above.
@@ -53,5 +54,5 @@ app through an app release that requires that version. If no release does yet, r
   for your password, through sudo in a terminal or pkexec in a desktop dialog.
 - Board Test runs its tests as root, because they read the kernel log and the drives' health data. Its test files
   are installed root-owned under `/opt`, so a normal user cannot change code that sudo runs.
-- The portal asks before it installs or opens an app that changes the board (Fan Controller's thermal guard, Webcam's
-  camera rule, the SSH server of SFTP Tools). All of them are software-only and can be undone.
+- The portal asks before it installs or opens an app that changes the board (for example Fan Controller's thermal guard,
+  Webcam's camera rule, the SSH server of SFTP Tools). All of them are software-only and can be undone.

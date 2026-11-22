@@ -1,3 +1,24 @@
+Changelog: 22-11-2026 18:11:59
+
+Added. Help is a readable page now. The chapter's text stands in a column of about 90 characters, in larger type with
+room between the lines, under the app's icon instead of the large picture. Its sections are listed on the left, and a
+click jumps to one. Find in the help searches the page. Back and Wiki are pills: Wiki opens the page in the browser, and
+Open in editor is gone. The chapter says so, and tests/test_smoke.py checks it.
+
+Changelog: 22-11-2026 18:05:41
+
+Fixed. The app's chapter was checked against the code, and its texts with it. Test 15 reads the current boot's journal
+errors, not only the kernel's, and test 16 reads warnings and errors. Test 31 lists /var/log and checks that it exists,
+and does not check that it is writable. Test 18 warns when a governor for other hardware is active or enabled. The
+Settings page said that Older than N days also removes the runs' history entries: their results stay in the history. The
+chapter now says that only a report's result lines carry a tag, and names the Steam Machine among the GPU comparison's
+systems.
+
+Changelog: 22-11-2026 16:58:55
+
+Fixed. The Finished box's tooltip said it counts the tests with a result in this session. It counts the latest result of
+each test over all runs, and the tooltip says so now.
+
 Changelog: 22-11-2026 12:25:09
 
 Release 0.11.0.

@@ -27,9 +27,9 @@ with one click. The many other downloads on GitHub are those apps; you never nee
     ./{{ portal_tag }}/install.sh
     ```
 
-    It downloads the portal, checks that the download is intact, unpacks it and installs it, together with Bazzite
-    Test, the suite's first app. This takes a minute or two. It ends with **Installed.** Once installed,
-    `install.sh` removes the downloaded archive and `SHA256SUMS`; the unpacked folder stays.
+    It downloads the portal, checks that the download is intact, unpacks it and installs it, together with Board
+    Test and Quickfix, which the suite always includes. This takes a minute or two. It ends with **Done.** Once
+    installed, `install.sh` removes the downloaded archive and `SHA256SUMS`; the unpacked folder stays.
 
 3. Start **Bazzite Console Suite** from the app menu or from its icon on the Desktop.
 

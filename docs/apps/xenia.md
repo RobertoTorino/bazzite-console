@@ -21,7 +21,7 @@ and performance vary by title and are not guaranteed on PlayStation 5 hardware r
 - **Steam**, started at least once, for Game Mode.
 - **fusermount** (FUSE), which Bazzite has. Xenia comes as an AppImage, which mounts itself with it. Without it, it
   unpacks itself to a temporary folder on every start, which takes longer.
-- About 18 MB for Xenia itself. Its settings, saves and installed content go in `~/.local/share/Xenia`.
+- About 16 MB for Xenia itself. Its settings, saves and installed content go in `~/.local/share/Xenia`.
 - No BIOS or firmware: Xenia does not need the console's.
 
 ## Install
@@ -47,8 +47,8 @@ and the log go too.
 
 The header has four pills: the **Xenia version**, **Xenia Install**, **Xenia Uninstall** and **Refresh**, which reads everything again.
 
-Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
-warning and red is a problem. Hold the pointer over a state to read it in full.
+Beside the title is a row of states. Each shows its name and a dot. The dot is green when all is well,
+and red when not. Hold the pointer over a state to read it in full.
 
 - **Installed**: the app's own state, one of **Not installed**, **No games** or **Ready**
 - **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds
@@ -61,7 +61,7 @@ Under the links to **Xenia's release notes** and to this wiki, a second row of t
 
 - **Xenia**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which build
   is installed, or what Install takes, and when a newer build is out. **Install** asks first, then downloads Xenia
-  from GitHub (about 18 MB) and checks it against the checksum pinned in this version of the app before installing
+  from GitHub (about 16 MB) and checks it against the checksum pinned in this version of the app before installing
   it; a file that differs is not installed. When another build is in use, the tooltip and the log say so, and
   **Install** puts the pinned one back in use. **Uninstall** takes it out again; Xenia's own folder, with its settings,
   saves and installed content, stays.
@@ -148,7 +148,8 @@ SteamGridDB account, and it is one key for every app of the suite, kept in
 `~/.config/bazzite-console/steamgriddb-key`. Leave the field empty to look nothing up: the pictures already found
 stay in use.
 
-**Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
+**Steam** in the info symbol's text under the table is a link: it opens Steam's library (Steam starts when it does
+not run).
 
 #### A game in Steam more than once
 

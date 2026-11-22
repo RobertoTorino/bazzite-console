@@ -105,7 +105,9 @@ read it before you post it. Security problems: see [Security](../SECURITY.md).
 ## The window in detail
 
 **The left pane:** the Overview, one page per test category, History, Game details, Help (this chapter) and
-Settings.
+Settings. Help shows this chapter. Its sections are listed on the left, and a click jumps to one. **Find in the help**
+searches the page, and Enter goes to the next place. **Back** returns to the page before, after you followed a
+link. **Wiki** opens the page in your browser.
 
 **The boxes at the top** count the latest result of every test over all runs, also after a restart: *Tests*
 available, *Finished* (tests with a result in the history), *Passed*, *Warnings*, *Failures* and *Info / hints*.
@@ -320,8 +322,8 @@ each CSV is a small `.json` with what is only measured once per session: the VRA
 ran. The game's screenshot is `ps5-game-<game>.png` in the same folder; the per-game settings and playtime are in
 `~/.config/ps5-board-test/games.ini`.
 
-Every line of a report is tagged `SUCCESS`, `INFO`, `NOTE`, `WARNING` or `ERROR`, and a `[SUMMARY]` block at the
-end reports the overall verdict. In the app these become the button colors, the counters and the hints panel.
+Every result line of a report is tagged `SUCCESS`, `INFO`, `NOTE`, `WARNING` or `ERROR`, and a `[SUMMARY]` block at
+the end reports the overall verdict. In the app these become the button colors, the counters and the hints panel.
 
 ---
 
@@ -337,7 +339,7 @@ end reports the overall verdict. In the app these become the button colors, the 
 | 03 | System Uptime                | Reports uptime and load average.                                                |
 | 11 | Resource Consumption         | Top CPU and memory consumers.                                                   |
 | 12 | Boot Time                    | `systemd-analyze` breakdown, warns on units taking over a minute.               |
-| 31 | File and Directory Integrity | Verifies `/var/log` exists and is writable.                                     |
+| 31 | File and Directory Integrity | Verifies `/var/log` exists and lists what is in it.                             |
 
 ### Network
 
@@ -408,8 +410,8 @@ end reports the overall verdict. In the app these become the button colors, the 
 
 | #  | Test           | Checks                                                                           |
 |----|----------------|----------------------------------------------------------------------------------|
-| 15 | Boot Logs      | Current-boot kernel errors, with known-benign PS5 and Bazzite noise filtered out. |
-| 16 | System Journal | Journal errors from the last 7 days, same filtering.                             |
+| 15 | Boot Logs      | Current-boot journal errors, with known-benign PS5 and Bazzite noise filtered out. |
+| 16 | System Journal | Journal warnings and errors from the last 7 days, same filtering.                |
 
 The log tests follow the log lines with a hint per kind of line: what it means and what to do about it, with the
 number of lines it covers.
@@ -419,7 +421,7 @@ number of lines it covers.
 | #  | Test                  | Checks                                                                     |
 |----|-----------------------|----------------------------------------------------------------------------|
 | 17 | amdgpu Driver         | Confirms `amdgpu` is bound to the PS5's APU.                               |
-| 18 | GPU Governor          | The kernel's `ps5-gpufreq` (devfreq) sets the GPU clock, no governor service is needed: its governor (`simple_ondemand` follows the load) and its temperature limit. Warns when a GPU governor service made for other hardware is active. |
+| 18 | GPU Governor          | The kernel's `ps5-gpufreq` (devfreq) sets the GPU clock, no governor service is needed: its governor (`simple_ondemand` follows the load) and its temperature limit. Warns when a GPU governor service made for other hardware is active or enabled. |
 | 19 | GPU Frequency Scaling | The `ps5-gpufreq` clock steps, the allowed range, the clock now and the clock changes since boot. It compares the clock amdgpu reads from the GPU with the one `ps5-gpufreq` asked for. At idle a higher clock costs power and heat, and the test warns. Two writes to `min_freq` bring it down, as its hint shows. |
 | 20 | Vulkan / Mesa         | Confirms RADV reports GFX1013 and not the llvmpipe software fallback.      |
 | 21 | Compute Unit Count    | Active CUs from the kernel (36 on a PS5, 60 on a Pro), and RADV's view when `vulkaninfo` is there. |
@@ -530,9 +532,9 @@ Once a baseline exists, *Save as baseline* is off: delete `bench-baseline.json` 
 baseline there are no scores; the raw results are still saved.
 
 The log ends with a **comparison ladder**: the measured FP32 figure as a percentage of the published theoretical
-peaks of known systems (a Steam Deck, an XBOX Series S, the PS5's own figure from Sony, desktop graphics cards).
-It ranks raw shader compute only, not FPS: memory bandwidth, drivers, the Vulkan feature set (test 47) and the
-CPU decide how games run.
+peaks of known systems (a Steam Deck, an XBOX Series S, a Steam Machine, the PS5's own figure from Sony, desktop
+graphics cards). It ranks raw shader compute only, not FPS: memory bandwidth, drivers, the Vulkan feature set
+(test 47) and the CPU decide how games run.
 
 It needs `stress-ng` for the CPU score and `vkpeak` for the GPU score
 ([releases](https://github.com/nihui/vkpeak/releases), put the binary in `~/.local/bin`); without one of them

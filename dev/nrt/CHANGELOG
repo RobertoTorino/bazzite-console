@@ -1,3 +1,8 @@
+Changelog: 22-11-2026 16:47:44
+
+Added. The Commit step lists the wiki's sections to read again first (tools/check_wiki.py), on the Commands tab, before
+the version and manifest checks. The list never stops the commit.
+
 Changelog: 20-11-2026 17:19:51
 
 Fixed. The last two steps changed places (owner, 20-11-2026: git pull could be pressed while jobs still ran, and the tool said finished while git pull was still to press). Step 9 is All runs finished: it waits until GitHub runs nothing more, and git pull stays off until then. Step 10 is Bring in the pin commit, the last thing to press. The line "The release is out and pulled in: ready." (it was "All runs finished, ready.") comes only after that pull.

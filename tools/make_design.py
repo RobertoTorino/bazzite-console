@@ -18,9 +18,12 @@ import sys
 import textwrap
 from pathlib import Path
 
+import design_icons                    # DESIGN.md's Icons, read from the repository
+
 S = ("The Bazzite Console Suite: tools for the PlayStation 5 running Bazzite, each one a tile in the portal, built "
      "the same way, in the same colors, and released together.")
 ROOT = Path(__file__).resolve().parent.parent
+SPDX = "<!-- SPDX-License-Identifier: GPL-3.0-or-later -->\n"   # every file opens with it (tools/tests/test_spdx.py)
 COLORS = "design/colors"                # beside DESIGN.md (owner, 28-10-2026)
 DARK, LIGHT = "#22262a", "#eceef0"      # the backdrops: Gunmetal's and Silver's fields
 FILES: dict[str, str] = {}              # what build() writes: path in the checkout -> text
@@ -50,7 +53,7 @@ def text_svg(hex_):
     width, height = 600, 16 + 20 * len(lines)
     spans = "".join(f'<tspan x="12" dy="{20 if i else 0}">{line}</tspan>' for i, line in enumerate(lines))
     return write(f"text-{hex_[1:]}.svg",
-                 f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+                 SPDX + f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
                  f'viewBox="0 0 {width} {height}">\n'
                  f'  <rect width="{width}" height="{height}" rx="6" fill="{backdrop}"/>\n'
                  f'  <text x="12" y="25" fill="{hex_}" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" '
@@ -69,7 +72,7 @@ def block_svg(hex_):
                    '  <rect width="64" height="24" fill="url(#c)"/>\n')
         fill = f'<rect width="64" height="24" fill="{colour}" fill-opacity="{alpha:.3f}"/>'
     return write(f"block-{hex_[1:]}.svg",
-                 '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="24" viewBox="0 0 64 24">\n'
+                 SPDX + '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="24" viewBox="0 0 64 24">\n'
                  f'{checker}  {fill}\n'
                  '  <rect x="0.5" y="0.5" width="63" height="23" fill="none" stroke="#808080" stroke-opacity="0.5"/>\n'
                  '</svg>\n')
@@ -466,7 +469,8 @@ def section(title, intro, text_rows, block_rows):
 def build() -> dict[str, str]:
     """DESIGN.md and its samples: each path in the checkout with its text."""
     FILES.clear()
-    out = ["""# Design
+    out = [SPDX + """
+# Design
 
 The colors of the suite, where they are defined and what they are for. Text colors show a sample sentence in that
 color; background colors (surfaces, fills, borders and lines) show a block. The samples are SVG files in
@@ -502,6 +506,7 @@ apps that are not on core yet carry a copy). The theme is one choice for every a
     out.append(section("Portal screenshots", "`tools/portal_screenshot.py` paints the portal in a fixed dark palette "
                        "(Breeze Dark, as Bazzite's desktop shows the portal), so screenshots look the same on every "
                        "machine.", SCREENSHOT_TEXT, SCREENSHOT_BLOCKS))
+    out.append(design_icons.section(ROOT))
     FILES["DESIGN.md"] = "\n".join(out).rstrip("\n") + "\n"
     return dict(FILES)
 
@@ -549,7 +554,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     files = build()
     changed, stale = differences(files)
-    disagree = unlisted()
+    disagree = unlisted() + [f"{name} is missing (the Icons listing names it)" for name in design_icons.missing(ROOT)]
     if args.check:
         for name in changed:
             print(f"out of date: {name}")

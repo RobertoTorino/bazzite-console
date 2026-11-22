@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Auto-resume ps5-cu-bisect.sh after every reboot (used with the --auto flag).
 #
 # Install (as your normal user, not root):

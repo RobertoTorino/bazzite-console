@@ -1,3 +1,7 @@
+Changelog: 22-11-2026 18:33:23
+
+Fixed. tests/test_main_window.py expects the tile of Nexus Garbage Remover, after Nexus Deps.
+
 Changelog: 20-11-2026 20:48:17
 
 Fixed. The tile, the info text and the README say Nexus TTS, the new name of Text to Speech (owner, 20-11-2026).

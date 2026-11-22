@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
 # Design
 
 The colors of the suite, where they are defined and what they are for. Text colors show a sample sentence in that
@@ -616,3 +618,116 @@ Background colors:
 | ![#33373b](design/colors/block-33373b.svg) | `#33373b` | Midlight. |
 | ![#101113](design/colors/block-101113.svg) | `#101113` | Dark. |
 | ![#3d4146](design/colors/block-3d4146.svg) | `#3d4146` | Light. |
+
+## Icons
+
+Every icon of the suite and where it is used. `tools/design_icons.py` reads most of this from the repository, so it stays current.
+
+### The suite's icon
+
+| Icon | File | Used for |
+| --- | --- | --- |
+| <img src="portal/images/bazzite-console-suite.webp" width="48" alt=""> | `portal/images/bazzite-console-suite.webp` | The portal's header (a click opens the wiki), its window icon and its tray icon. |
+| <img src="portal/images/bazzite-console-suite-1024.webp" width="48" alt=""> | `portal/images/bazzite-console-suite-1024.webp` | The portal's intro. |
+| <img src="portal/images/bazzite-console-suite-128.png" width="48" alt=""> | `portal/images/bazzite-console-suite-128.png` | The portal's menu entry and Desktop icon. |
+| <img src="portal/images/apps/portal.webp" width="48" alt=""> | `portal/images/apps/portal.webp` | The portal's own tile. |
+| <img src="docs/images/wiki-icon.webp" width="48" alt=""> | `docs/images/wiki-icon.webp` | The wiki's header logo, its home page's footer and its favicon (with the .png). |
+| <img src="dev/nrt/images/nexus-release-tool.webp" width="48" alt=""> | `dev/nrt/images/nexus-release-tool.webp` | Every development app's icon in dev/<name>/images/: the Nexus drawing, as Nexus's apps have it. |
+
+### The category icons
+
+Every app has the icon of its category. `icons/categories.toml` assigns them, and `tools/sync_icons.py` copies each category's icon from `icons/<category>/` to the app's `images/`, the portal's `images/apps/` and `images/categories/`, and the wiki. The wiki's App categories page shows each app with its icon.
+
+| Icon | Category | Apps |
+| --- | --- | --- |
+| <img src="icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | PCSX2 Manager (`pcsx2`)<br>PPSSPP Manager (`ppsspp`)<br>PS5 DatStation (`datstation`)<br>RPCS3 Manager (`rpcs3`)<br>Remote Play (`remoteplay`)<br>Vita3K Manager (`vita3k`)<br>XBOX Remote Play (`clb`)<br>Xenia Manager (`xenia`)<br>shadPS4 Manager (`shadps4`) |
+| <img src="icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | PS5 Upscaler Manager (`upscaler`) |
+| <img src="icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | PS5 Board Test (`board`)<br>PS5 CPU Tools (`cores`)<br>PS5 CU Tools (`compute`)<br>PS5 Fan Controller (`fan`)<br>PS5 System Overlay (`overlay`) |
+| <img src="icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | PS5 Bluetooth (`bluetooth`)<br>PS5 CEC Manager (`cec`)<br>PS5 Controller (`controller`)<br>PS5 Password Generator (`password`)<br>PS5 Quickfix (`quickfix`)<br>PS5 SFTP Tools (`sftp`)<br>PS5 SSD Check (`ssd`)<br>PS5 Turing Screen (`turing`)<br>PS5 Webcam (`webcam`) |
+
+### The portal's symbols
+
+Drawn with QPainter in the portal's `glyphs.py`, in the theme's text color. Each function draws one.
+
+| Name | What it shows |
+| --- | --- |
+| `install` | An arrow down into a tray. |
+| `reinstall` | A circular arrow. |
+| `uninstall` | A waste bin. |
+| `refresh` | Two arrows that chase each other around a circle. |
+| `chip` | A processor: a square with pins on every side. |
+| `install_apps` | Three apps of a grid of four, an arrow down in the place of the fourth. |
+| `install_updates` | A circular arrow around an arrow down. |
+| `menu` | ☰: three bars. |
+| `close` | A cross: the portal's exit. |
+| `steam` | Steam: a disc with a piston's rod cut out of it, a large ring at its head and a small one at its foot. |
+| `folder` | A folder: the file manager. |
+| `youtube` | A screen with a play triangle. |
+| `github` | GitHub: a disc with a cat cut out of it, its head with two ears, its body and its tail. |
+| `bluetooth` | The Bluetooth rune. |
+| `network` | Three arcs over a dot: the network. |
+| `volume` | A loudspeaker with two waves of sound: the volume. |
+| `screen` | A screen on its foot: the display. |
+
+### The desktop style's icons
+
+Icons the apps take from the desktop's style or icon theme, so they look different on every desktop. The name is Qt's standard pixmap or the icon theme's name.
+
+| Name | Used by |
+| --- | --- |
+| `SP_BrowserReload` | Nexus Deps |
+| `SP_MessageBoxInformation` | PS5 Board Test, Nexus Deps |
+| `SP_MessageBoxWarning` | PS5 Board Test |
+| `view-refresh` | Nexus Deps |
+
+### Material Design icons in the wiki
+
+Drawn by MkDocs Material in the wiki's colors.
+
+| Icon | Name | Pages |
+| --- | --- | --- |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/chip.svg" width="24" alt=""> | `material-chip` | What is the PlayStation 5? |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/code-braces.svg" width="24" alt=""> | `material-code-braces` | Development |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/download.svg" width="24" alt=""> | `material-download` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/expansion-card.svg" width="24" alt=""> | `material-expansion-card` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/eye-off-outline.svg" width="24" alt=""> | `material-eye-off-outline` | Privacy |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/fan.svg" width="24" alt=""> | `material-fan` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/gamepad-variant.svg" width="24" alt=""> | `material-gamepad-variant` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/github.svg" width="24" alt=""> | `material-github` | GitHub settings |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/harddisk.svg" width="24" alt=""> | `material-harddisk` | PS5 Linux boot partition |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/image-multiple-outline.svg" width="24" alt=""> | `material-image-multiple-outline` | Covers from SteamGridDB |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/linux.svg" width="24" alt=""> | `material-linux` | What is Bazzite? |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/lock-open-variant.svg" width="24" alt=""> | `material-lock-open-variant` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/play-circle-outline.svg" width="24" alt=""> | `material-play-circle-outline` | Portal Tour |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/shape-outline.svg" width="24" alt=""> | `material-shape-outline` | App categories |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/shield-lock-outline.svg" width="24" alt=""> | `material-shield-lock-outline` | Security |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/sitemap-outline.svg" width="24" alt=""> | `material-sitemap-outline` | Architecture and consistency |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/stethoscope.svg" width="24" alt=""> | `material-stethoscope` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/tag-outline.svg" width="24" alt=""> | `material-tag-outline` | Releases |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/television.svg" width="24" alt=""> | `material-television` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/television-play.svg" width="24" alt=""> | `material-television-play` | Bazzite Console Suite { .home-hero__lead } |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/tray-arrow-down.svg" width="24" alt=""> | `material-tray-arrow-down` | Install |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/video-wireless-outline.svg" width="24" alt=""> | `material-video-wireless-outline` | Remote Play: the stream's threads |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/view-dashboard-outline.svg" width="24" alt=""> | `material-view-dashboard-outline` | Dashboard |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/view-grid-outline.svg" width="24" alt=""> | `material-view-grid-outline` | Apps |
+
+### Characters as icons
+
+Characters of the font that the apps use as icons in labels and buttons.
+
+| App | Characters |
+| --- | --- |
+| Portal | ● ☰ |
+| Every app on core | ✓ ● ↻ |
+| Nexus Deps | ✓ ✗ |
+| Nexus Installer Tests | ✓ ✗ |
+| Nexus Release Tool | ✓ ▶ ● ↓ ↑ |
+| PS5 Board Test | ✔ ✖ ✕ ⚠ ▶ ■ ↓ ↑ › 💡 🎮 |
+| PS5 Controller | ✓ ✕ › △ ○ □ |
+| PS5 DatStation | ← △ ○ □ ◇ ◆ ★ |
+| PS5 Quickfix | ● ○ |
+| PS5 SFTP Tools | ✓ ✗ ⚠ ↓ ↑ ← |
+| PS5 System Overlay | ↓ ↑ |
+| PS5 Turing Screen | ↓ ↑ |
+| PS5 Webcam | ✓ ● |
+| Remote Play | ✓ ✗ |

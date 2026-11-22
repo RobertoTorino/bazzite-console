@@ -1,17 +1,19 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
 # All tests (Bazzite Console Suite)
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3070 test functions (3458 cases counting the parametrized ones) in 35 test folders, and 36 installer tests.
+3100 test functions (3488 cases counting the parametrized ones) in 36 test folders, and 37 installer tests.
 
 ## Summary
 
 | Test folder | Files | Tests | Time |
 |---|---|---|---|
 | [apps/bluetooth](#appsbluetooth) | 3 | 34 | 0.4 s |
-| [apps/board](#appsboard) | 3 | 28 | 1.8 s |
+| [apps/board](#appsboard) | 3 | 30 | 1.8 s |
 | [apps/cec](#appscec) | 8 | 68 | 0.7 s |
-| [apps/clb](#appsclb) | 13 | 90 | 2.8 s |
+| [apps/clb](#appsclb) | 13 | 91 | 2.8 s |
 | [apps/compute](#appscompute) | 5 | 31 |  |
 | [apps/controller](#appscontroller) | 13 | 164 | 5.8 s |
 | [apps/cores](#appscores) | 4 | 29 |  |
@@ -32,18 +34,19 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/vita3k](#appsvita3k) | 9 | 79 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
 | [apps/xenia](#appsxenia) | 8 | 73 | 4.2 s |
-| [core](#core) | 27 | 195 | 3.5 s |
+| [core](#core) | 27 | 197 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 105 | 2.1 s |
+| [dev/garbage](#devgarbage) | 1 | 7 |  |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
 | [dev/nrt](#devnrt) | 4 | 135 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
-| [portal](#portal) | 17 | 221 | 30.2 s |
-| [tools](#tools) | 38 | 226 | 10.2 s |
-| **All** | | **3070** | **153 s** |
+| [portal](#portal) | 17 | 222 | 30.2 s |
+| [tools](#tools) | 43 | 243 | 10.2 s |
+| **All** | | **3100** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -65,6 +68,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `demo.sh` | Exercise dev/demo/install.sh, Nexus Demo Recorder's installer. |
 | `deps.sh` | Exercise dev/deps/install.sh, Nexus Deps' installer. |
 | `fan.sh` | Exercise apps/fan/install.sh. |
+| `garbage.sh` | Exercise dev/garbage/install.sh, Nexus Garbage Remover's installer. |
 | `itests.sh` | Exercise dev/itests/install.sh, Nexus Installer Tests's installer. |
 | `not-installed.sh` | Every app's installer and the portal's, with --uninstall and with --uninstall --purge, on a computer where nothing of them is installed. |
 | `nrt.sh` | Exercise dev/nrt/install.sh (and tools/nrt.sh, which forwards to it). |
@@ -133,7 +137,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/board
 
-28 tests in 3 files, 1.8 s in a local run.
+30 tests in 3 files, 1.8 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -150,6 +154,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_smoke.py` | `test_manual_markdown_for_qt` |  |  | Manual markdown for qt. |
 | `test_smoke.py` | `test_other_chapters_open_online` |  |  | Other chapters open online. |
 | `test_smoke.py` | `test_manual_view_shows_the_chapter` |  |  | Manual view shows the chapter. |
+| `test_smoke.py` | `test_help_is_a_readable_page` |  |  | Help (owner, 22-11-2026): the chapter in a column, its sections on the left, a search field, Back and Wiki. |
+| `test_smoke.py` | `test_the_contents_skip_code_blocks` |  |  | The contents skip code blocks. |
 | `test_smoke.py` | `test_results_preview_shows_image_and_emits_open_paths` |  |  | Results preview shows image and emits open paths. |
 | `test_smoke.py` | `test_print_results_opens_saved_png_and_shows_preview` |  | 0.5 s | Print results opens saved png and shows preview. |
 | `test_smoke.py` | `test_the_results_card_preview_copies_and_shares` |  | 0.1 s | Print results shows the card first (owner, 04-11-2026), with Save…, Copy and Share; Share is a menu (owner, 05-11-2026): each phone KDE Connect reaches, Email… and Show in file manager, the card written to the results folder first. |
@@ -243,7 +249,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/clb
 
-90 tests in 13 files, 2.8 s in a local run.
+91 tests in 13 files, 2.8 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -297,6 +303,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_pads.py` | `test_the_first_pad_as_the_xbox_pad` |  |  | The first pad as the xbox pad. |
 | `test_pads.py` | `test_pads_connected_later_and_taken_out` |  |  | Pads connected later and taken out. |
 | `test_pads.py` | `test_rumble_goes_to_the_pad` |  |  | Rumble goes to the pad. |
+| `test_pads.py` | `test_the_pads_leave_no_sdl_variables_behind` |  |  | What the app starts later must not get SDL's dummy drivers (the owner's machine, 22-11-2026). |
 | `test_peer.py` | `test_codec_order_h264_main_first` |  |  | Codec order h264 main first. |
 | `test_peer.py` | `test_stereo_sound` |  |  | Stereo sound. |
 | `test_peer.py` | `test_a_whole_connection_with_a_stand_in_service` |  | 0.8 s | A whole connection with a stand in service. |
@@ -2006,14 +2013,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_shortcuts.py` | `test_artwork_sizes_with_and_without_the_games_pictures` |  | 0.7 s | Artwork sizes with and without the games pictures. |
 | `test_shortcuts.py` | `test_pictures_from_steamgriddb_in_place_of_the_drawn_ones` |  | 0.6 s | Pictures from steamgriddb in place of the drawn ones. |
 | `test_userdata.py` | `test_vita3ks_folders_follow_xdg` |  |  | Vita3ks folders follow xdg. |
-| `test_userdata.py` | `test_the_config_yml_of_build_4186` |  |  | The config yml of build 4186. |
+| `test_userdata.py` | `test_the_config_yml_of_build_4377` |  |  | The config yml of build 4377. |
 | `test_userdata.py` | `test_the_storage_where_vita3k_keeps_it` |  |  | The storage where vita3k keeps it. |
 | `test_userdata.py` | `test_the_firmware_parts` |  |  | The firmware parts. |
 | `test_userdata.py` | `test_what_one_install_wrote` |  |  | What one install wrote. |
-| `test_userdata.py` | `test_the_lines_the_app_owns_are_set_in_place` |  |  | The welcome window and the update check off (owner, 03-11-2026): the lines set where build 4186 wrote them, every other line kept; a second run changes nothing; a missing key goes before the end, a missing file is made. |
+| `test_userdata.py` | `test_the_lines_the_app_owns_are_set_in_place` |  |  | The welcome window and the update check off (owner, 03-11-2026): the lines set where build 4377 wrote them, every other line kept; a second run changes nothing; a missing key goes before the end, a missing file is made. |
 | `test_userdata.py` | `test_vita3k_running_sees_the_appimages_process` |  |  | Vita3k running sees the appimages process. |
 | `test_vita3k_settings.py` | `test_the_defaults_without_a_file` |  |  | The defaults without a file. |
-| `test_vita3k_settings.py` | `test_every_default_is_what_build_4186_writes` |  |  | config-4186.yml is the file Vita3K wrote on its first start: each setting's default is the value there. |
+| `test_vita3k_settings.py` | `test_every_default_is_what_build_4377_writes` |  |  | config-4377.yml is the file Vita3K wrote on its first start: each setting's default is the value there. |
 | `test_vita3k_settings.py` | `test_a_line_written_and_the_rest_kept` |  |  | A line written and the rest kept. |
 | `test_vita3k_settings.py` | `test_every_setting_is_one_of_vita3ks` |  |  | A CHOICE's default is one of its choices; the keys are unique; the boxes in order. |
 | `test_vita3k_settings.py` | `test_the_forms_of_a_value` |  |  | The forms of a value. |
@@ -2220,7 +2227,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## core
 
-195 tests in 27 files, 3.5 s in a local run.
+197 tests in 27 files, 3.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2292,6 +2299,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_gamepad.py` | `test_an_unplugged_pad_stops_a_held_direction` |  |  | An unplugged pad stops a held direction. |
 | `test_gamepad.py` | `test_stick_direction` |  |  | Stick direction. |
 | `test_gamepad.py` | `test_without_pygame_or_a_controller` |  |  | Without pygame or a controller. |
+| `test_gamepad.py` | `test_the_gamepad_leaves_no_sdl_variables_behind` |  |  | What the app starts later must not get SDL's dummy drivers (the owner's machine, 22-11-2026). |
 | `test_gone.py` | `test_the_desktop_message_names_the_file_and_what_to_do` |  |  | The desktop message names the file and what to do. |
 | `test_instance.py` | `test_server_name_is_per_app_and_user` |  |  | Server name is per app and user. |
 | `test_instance.py` | `test_nobody_running` |  |  | Nobody running. |
@@ -2360,6 +2368,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_steam.py` | `test_play_starts_steam_first_and_waits_for_the_game` |  |  | Start game with Steam closed (owner's board, 20-11-2026: Steam came up and the game never started): Steam is started and waited for, then the game's address is given, again while the game does not run. |
 | `test_steam.py` | `test_play_says_what_went_wrong` |  |  | Play says what went wrong. |
 | `test_steam.py` | `test_a_game_in_steam_more_than_once_is_counted_and_one_is_left` |  |  | Owner, 20-11-2026 ("multiple entries for the same game in Steam"): doubles() says how many shortcuts a game has too many, and writing the game again leaves one, with the latest play time; the others' shortcuts stay. |
+| `test_steam.py` | `test_steam_starts_without_our_sdl_variables` |  |  | Steam started with SDL's dummy video driver crashed on every window (the owner's machine, 22-11-2026). |
 | `test_steam_art.py` | `test_steams_sizes_and_the_icon_as_logo` |  | 0.3 s | Steams sizes and the icon as logo. |
 | `test_steam_art.py` | `test_a_webp_icon_is_the_logo_as_png` |  | 0.3 s | Steam's grid files are PNG: an app's WebP icon goes in as PNG, the same picture. |
 | `test_steam_art.py` | `test_the_background_takes_the_icons_colour` |  | 0.6 s | The background takes the icons colour. |
@@ -2627,6 +2636,20 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_the_question_has_a_checkbox_per_package` |  |  | Only what stays checked is updated (owner, 19-11-2026: "no checkmark, no update/install"). |
 | `test_window.py` | `test_the_question_for_dnf_names_pkexec_and_the_kernels_restart` |  |  | The question for dnf names pkexec and the kernels restart. |
 | `test_window.py` | `test_a_dnf_card_updates_the_checked_packages_alone` |  |  | A dnf card updates the checked packages alone. |
+
+## dev/garbage
+
+7 tests in 1 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_garbage.py` | `test_it_finds_the_full_places_largest_first` |  |  | It finds the full places largest first. |
+| `test_garbage.py` | `test_the_crash_dumps_take_root` |  |  | The crash dumps take root. |
+| `test_garbage.py` | `test_homebrew_only_where_it_is_installed` |  |  | Homebrew only where it is installed. |
+| `test_garbage.py` | `test_homebrews_own_cache_is_not_garbage` |  |  | Homebrews own cache is not garbage. |
+| `test_garbage.py` | `test_it_tells_from_a_gigabyte_once_a_day` |  |  | It tells from a gigabyte once a day. |
+| `test_garbage.py` | `test_the_users_places_go_alone_and_the_systems_with_one_password` |  |  | The users places go alone and the systems with one password. |
+| `test_garbage.py` | `test_the_window_lists_the_places_checked` |  |  | The window lists the places checked. |
 
 ## dev/itests
 
@@ -2946,7 +2969,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## portal
 
-221 tests in 17 files, 30.2 s in a local run.
+222 tests in 17 files, 30.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3083,6 +3106,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_touchpad_and_raise.py` | `test_kwin_is_asked_to_bring_the_apps_window_forward` |  |  | Kwin is asked to bring the apps window forward. |
 | `test_touchpad_and_raise.py` | `test_without_kwin_nothing_happens` |  |  | Without kwin nothing happens. |
 | `test_touchpad_and_raise.py` | `test_pygame_ces_touch_events_are_read_with_their_finger_id` |  |  | pygame-ce names the finger finger_id (a DualShock 4 on the owner's board, 05-11-2026: 'finger' crashed the reader at the first touch); the touchpad's press is SDL's button 20. |
+| `test_touchpad_and_raise.py` | `test_the_portal_leaves_no_sdl_variables_for_the_apps_it_starts` |  |  | An app the portal opens, and Steam that app starts, must not get SDL's dummy drivers: Steam started with them crashed on every window (the owner's machine, 22-11-2026). |
 | `test_tour.py` | `test_a_tour_that_cannot_be_played_says_so_once_and_closes` |  |  | A tour that cannot be played says so once and closes. |
 | `test_tour.py` | `test_space_pauses_and_plays_on_and_does_not_close` |  |  | Space pauses and plays on and does not close. |
 | `test_wallpaper.py` | `test_the_example_is_shipped_and_meets_the_rules` |  |  | The example is shipped and meets the rules. |
@@ -3174,7 +3198,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-226 tests in 38 files, 10.2 s in a local run.
+243 tests in 43 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3246,6 +3270,10 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_check_versions.py` | `test_the_suite_passes` |  | 0.3 s | The suite passes. |
 | `test_check_versions.py` | `test_core_the_portal_and_the_apps_not_dev` |  | 0.2 s | The released folders have a VERSION; the development apps in dev/ have none and are not checked. |
 | `test_check_versions.py` | `test_venvs_caches_and_tests_hold_no_copies` |  |  | Venvs caches and tests hold no copies. |
+| `test_check_wiki.py` | `test_a_section_that_names_a_changed_file_is_listed` |  |  | A section that names a changed file is listed. |
+| `test_check_wiki.py` | `test_a_section_that_changed_with_the_code_is_left_out` |  |  | A section that changed with the code is left out. |
+| `test_check_wiki.py` | `test_a_test_or_a_changelog_is_no_reason` |  |  | A test or a changelog is no reason. |
+| `test_check_wiki.py` | `test_a_comment_in_a_code_block_is_no_heading` |  |  | A comment in a code block is no heading. |
 | `test_ci_local.py` | `test_every_job_of_ci_yml_and_every_matrix_entry` |  | 0.1 s | Every job of ci yml and every matrix entry. |
 | `test_ci_local.py` | `test_the_free_memory_limits_the_jobs_at_a_time` |  |  | Half the cores, fewer when the memory is short, never under two; a system that names no memory gets half. |
 | `test_ci_local.py` | `test_a_job_that_compiles_runs_alone` |  |  | The native job starts a compiler per core; beside five other jobs one of them crashed for lack of memory. |
@@ -3276,6 +3304,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_clean_caches.py` | `test_a_scratch_folder_goes_when_nothing_in_it_changed_for_six_hours` |  |  | A session that still runs wrote to its folder lately: one new file keeps the whole folder. |
 | `test_clean_caches.py` | `test_a_link_is_never_followed_or_removed` |  |  | A link is never followed or removed. |
 | `test_clean_caches.py` | `test_the_run_removes_what_it_found_and_a_dry_run_nothing` |  |  | The run removes what it found and a dry run nothing. |
+| `test_design_icons.py` | `test_every_file_the_listing_names_is_there` |  |  | Every file the listing names is there. |
+| `test_design_icons.py` | `test_the_parts_come_from_the_repository` |  |  | The parts come from the repository. |
+| `test_design_icons.py` | `test_a_symbol_and_a_style_icon_are_found_in_the_code` |  |  | A symbol and a style icon are found in the code. |
 | `test_design_panel.py` | `test_only_while_serving` |  |  | Only while serving. |
 | `test_design_panel.py` | `test_the_panel_names_the_files_of_each_wiki` |  |  | Copy CSS goes to the wiki's own stylesheet: the panel says which, as a path in the checkout. |
 | `test_design_panel.py` | `test_the_address_is_relative_to_the_page` |  |  | The address is relative to the page. |
@@ -3358,6 +3389,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_script_help.py` | `test_help_is_the_header_comment` |  |  | Help is the header comment. (Skipped here.) |
 | `test_script_help.py` | `test_the_tools_scripts_print_their_header_as_help` | 5 |  | tools/*.sh with --help print the comment under the SPDX line, and do nothing else. |
 | `test_script_help.py` | `test_the_release_and_tour_scripts_have_help` |  |  | The release and tour scripts have help. |
+| `test_spdx.py` | `test_every_text_file_opens_with_its_license_line` |  |  | Every text file opens with its license line. |
+| `test_spdx.py` | `test_the_line_may_follow_a_shebang_or_front_matter` |  |  | The line may follow a shebang or front matter. |
 | `test_stage.py` | `test_readme_and_wiki_follow_the_portal_stage` |  |  | Readme and wiki follow the portal stage. |
 | `test_stage_app.py` | `test_stage_keeps_sources_and_drops_build_output` |  |  | Stage keeps sources and drops build output. |
 | `test_stage_app.py` | `test_uses_core_stays_out_of_the_skipped_folders` |  |  | cargo's target is not walked: its folders come and go during a build, and one that was gone failed the walk. |
@@ -3393,6 +3426,12 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_tag_release.py` | `test_tags_only_a_commit_ci_passed` |  | 0.6 s | Tags only a commit ci passed. |
 | `test_tag_release.py` | `test_a_portal_tag_waits_for_the_app_releases_it_pins` |  | 0.6 s | The portal release that failed: tagged with an app release that was not tagged yet, pinned without sha256. |
 | `test_tag_release.py` | `test_help_and_a_tag_without_the_prefix` |  | 0.1 s | Help and a tag without the prefix. |
+| `test_tour_frames.py` | `test_the_video_size_is_the_layout_times_its_multiple` |  |  | The video size is the layout times its multiple. |
+| `test_tour_frames.py` | `test_the_home_is_a_temp_folder_with_one_screen_of_the_videos_size` |  |  | The home is a temp folder with one screen of the videos size. |
+| `test_tour_frames.py` | `test_the_window_fills_the_video` |  |  | The window fills the video. |
+| `test_tour_frames.py` | `test_the_music_loops_under_the_picture_and_fades_out` |  |  | The music loops under the picture and fades out. |
+| `test_tour_frames.py` | `test_a_frame_goes_to_ffmpeg_without_the_rows_padding` |  |  | A frame goes to ffmpeg without the rows padding. |
+| `test_tour_frames.py` | `test_a_crashed_ffmpeg_ends_the_recording_with_a_message` |  |  | A crashed ffmpeg ends the recording with a message. |
 | `test_wiki_apps.py` | `test_every_app_has_a_chapter_and_no_chapter_is_left_over` |  |  | Every app has a chapter and no chapter is left over. |
 | `test_wiki_apps.py` | `test_the_overviews_list_exactly_the_apps` |  |  | The app overviews by each app's name; the home page links every app, by a name of its own. |
 | `test_wiki_apps.py` | `test_the_navigation_and_the_readme_name_every_app` |  |  | The navigation and the readme name every app. |
@@ -3404,3 +3443,5 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_wiki_designs.py` | `test_every_variable_is_labelled` |  |  | Every variable is labelled. |
 | `test_wiki_designs.py` | `test_every_colour_is_a_variable` |  |  | A color written anywhere but in a variable could not be changed in the design panel. |
 | `test_wiki_designs.py` | `test_the_header_has_variables_of_its_own` |  |  | The header's background and text are what the panel changes for the header, in each wiki: the text is the name beside the icon (the wiki) or the links alone (the Nexus page, whose icon carries the name). |
+| `test_wiki_names.py` | `test_everything_the_wiki_names_is_there` |  |  | Everything the wiki names is there. |
+| `test_wiki_names.py` | `test_a_gone_name_is_found` |  |  | A gone name is found. |

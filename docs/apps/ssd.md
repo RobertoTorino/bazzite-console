@@ -20,9 +20,8 @@ installs no firmware, and it needs no root.
 The app lists udisks NVMe controllers, SMART-capable ATA drives, and USB drives with a medium. It depends on
 systemd's `busctl`, udisks and the interfaces and data they expose. A USB bridge may hide SMART data; other storage,
 including devices not exposed as these udisks drive types, is not listed. Encrypted or layered storage and mount
-mapping can also prevent the speed test from finding a writable filesystem. **PS5 internal storage and attached-drive
-visibility have not been verified on hardware**: no drive found does not mean there is no storage, and a missing value
-is not evidence of a healthy drive. Check important data and backups independently.
+mapping can also prevent the speed test from finding a writable filesystem. No drive found does not mean there is
+no storage, and a missing value is not evidence of a healthy drive. Check important data and backups independently.
 
 ## Using it
 
@@ -38,9 +37,9 @@ is not evidence of a healthy drive. Check important data and backups independent
 - **Drive:** with more than one drive, choose it by its number (Drive 1, Drive 2) in the list under the top row.
   Under the list are the drive's model and size, and a line with its bus and when udisks last read it.
 - **Screenshot**, beside the list: saves the window with the values it shows now as a PNG in your Pictures folder,
-  in a folder named SSD Check (`~/Pictures/SSD Check/SSD Check <date> <time>.png`). The line beside the button
-  names the file; hover it for the folder. The serial stays hidden in the picture, even while its small window is
-  open.
+  in a folder named PS5 SSD Check (`~/Pictures/PS5 SSD Check/PS5 SSD Check <date> <time>.png`). The line beside
+  the button names the file; hover it for the folder. The serial stays hidden in the picture, even while its small
+  window is open.
 - The specs, a pill each:
 
   | Pill | What it shows |

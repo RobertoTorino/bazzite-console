@@ -40,7 +40,7 @@ CATEGORIES: list[Category] = [
         TestDef("03", "System Uptime", "Reports uptime and load average."),
         TestDef("11", "Resource Consumption", "Top CPU and memory consumers."),
         TestDef("12", "Boot Time", "systemd-analyze breakdown, warns on units taking over a minute."),
-        TestDef("31", "File and Directory Integrity", "Verifies /var/log exists and is writable."),
+        TestDef("31", "File and Directory Integrity", "Lists /var/log and verifies that it exists."),
     ]),
     Category("network", "Network", [
         TestDef("04", "Network Connectivity", "Pings an external host."),
@@ -74,14 +74,14 @@ CATEGORIES: list[Category] = [
     ]),
     Category("logs", "System logs", [
         TestDef("15", "Boot Logs",
-                "Current-boot kernel errors, with known-benign PS5 and Bazzite noise filtered out."),
-        TestDef("16", "System Journal", "Journal errors from the last 7 days, same filtering."),
+                "Current-boot journal errors, with known-benign PS5 and Bazzite noise filtered out."),
+        TestDef("16", "System Journal", "Journal warnings and errors from the last 7 days, same filtering."),
     ]),
     Category("gpu", "GPU and graphics", [
         TestDef("17", "amdgpu Driver",
                 "Confirms amdgpu is bound to the PS5 APU (Oberon, Cyan Skillfish family)."),
         TestDef("18", "GPU Governor",
-                "The kernel's ps5-gpufreq (devfreq) sets the GPU clock: its governor and the temperature limit. Warns when a GPU governor made for other hardware is installed."),
+                "The kernel's ps5-gpufreq (devfreq) sets the GPU clock: its governor and the temperature limit. Warns when a GPU governor made for other hardware is active or enabled."),
         TestDef("19", "GPU Frequency Scaling",
                 "The ps5-gpufreq clock steps (500-2230 MHz), the allowed range and the clock changes since boot. Warns when the GPU runs a higher clock at idle than ps5-gpufreq says."),
         TestDef("20", "Vulkan / Mesa", "Confirms RADV reports GFX1013 and not the llvmpipe software fallback."),

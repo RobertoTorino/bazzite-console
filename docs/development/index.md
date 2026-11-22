@@ -26,7 +26,8 @@ tools/                        release and CI (build_release, stage_app, check_ve
 dev/<name>/                   the development apps, run from the checkout and never released: dev/dash/ is Nexus
                               Dashboard (the door to the others), dev/nrt/ Nexus Release Tool, dev/demo/ Nexus
                               Demo Recorder, dev/itests/ Nexus Installer Tests, dev/sounds/ Nexus Sound Lab,
-                              dev/deps/ Nexus Deps, dev/text/ Nexus TTS, dev/studio/ Nexus Remix Studio
+                              dev/deps/ Nexus Deps, dev/text/ Nexus TTS, dev/studio/ Nexus Remix Studio,
+                              dev/garbage/ Nexus Garbage Remover
 docs/ mkdocs.yml              this wiki (MkDocs Material)
 icons/                        the category icons
 DESIGN.md design/colors/      every color of the suite and its samples (tools/make_design.py writes them)
@@ -39,6 +40,8 @@ TAG_PREFIX                    the prefix of every release tag: ps5-
 ```
 
 ## Set up and test
+
+The tools the machine needs are in [The development machine](#the-development-machine).
 
 ```bash
 python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirements-dev.txt
@@ -55,8 +58,9 @@ The suite is worked on and tested on Bazzite.
 To try the portal and the apps as they are in the repository, not as they were released, run `./install.sh` in the
 repository's root on a PlayStation 5 running Bazzite, as your own user. It copies the portal into your home folder,
 as a release does; the installed portal names the checkout and installs the apps from it, so keep the checkout where
-it is. `tools/check-release.sh local` does the same and starts the portal; `release` and `draft` install a published
-portal release or the draft of one (`release` takes the draft while the release is not published).
+it is. `tools/check-release.sh local` does the same and starts the portal, with the apps from the pinned GitHub
+releases (`--source release`); `release` and `draft` install a published portal release or the draft of one
+(`release` takes the draft while the release is not published).
 
 A test cleans up after itself. On a board without the suite, what the test installs is marked as a test's and
 removed again when the portal closes: the apps installed during the test, the portal and Board Test. A board that
@@ -140,6 +144,31 @@ what stays there takes memory from the tests. `python3 tools/clean_caches.py --d
 reports the system's crash dumps once they pass 1 GB, with the command that removes them (it takes sudo).
 `./test.sh` keeps no files of a test that passed.
 
+### Keeping the wiki accurate
+
+Two checks keep the wiki in step with the code. The first fails on a name the wiki gives that is gone. The second
+tells you which sections to read again after a change.
+
+`tools/tests/test_wiki_names.py` runs with the other tests. It fails when a page names something that is not there:
+
+- a path of the repository, in code style
+- a constant or a function, in code style
+- an option of one of the suite's scripts
+- a window label that an app's chapter tells you to use
+
+A name of something outside the suite goes in `OUTSIDE` in `tools/wiki_names.py`, with the reason.
+
+`tools/check_wiki.py` lists each section that names a changed file but did not change itself. A section names a
+file through its path, its file name, its module name or a name the file defines. An app's chapter names its whole
+app folder. Read each listed section against the change, and correct what is no longer true:
+
+```bash
+python3 tools/check_wiki.py --base origin/main                 # what changed since origin/main, with the work tree
+python3 tools/check_wiki.py --base <commit> --head <commit>    # between two commits
+```
+
+The list never fails a run. Nexus Release Tool's **Commit your changes** step shows it first on the **Commands** tab.
+
 ### Line endings and file names
 
 - **Line endings:** `.gitattributes` makes every text file LF in the repository and in the working tree. Scripts,
@@ -149,13 +178,120 @@ reports the system's crash dumps once they pass 1 GB, with the command that remo
 - **Venv:** one venv in the checkout, `.venv-linux/`, ignored by git.
 - **File names:** Linux and GitHub are case-sensitive. Keep links and asset names in exactly the case of the file.
 
+## The development machine
+
+This part says what a Bazzite machine needs to work on the suite, and how it stays up to date. The checks before a
+push are in [CI on your own machine](#ci-on-your-own-machine).
+
+### Tools
+
+A tool the work needs more than once is installed for good. It is not run once in a container. The prerequisites
+belong on every development machine. The optional tools belong on the machine that does that work.
+
+#### Prerequisites
+
+`./test.sh` and `tools/ci-local.sh` need these:
+
+| Tool | What uses it | How to get it |
+|---|---|---|
+| Git | everything | comes with Bazzite |
+| Python 3.11 or newer | the venv and every tool in `tools/` | comes with Bazzite as `python3`, without PyQt6 |
+| The development venv | `./test.sh`, `mkdocs` and the tools, with pytest, PyQt6, MkDocs Material and Pillow | `.venv-linux/`, see [Set up and test](#set-up-and-test) |
+| Homebrew | installs the tools below | comes with Bazzite |
+| podman | `tools/ci-local.sh` runs CI's jobs in a container, and the text check runs LanguageTool in one | comes with Bazzite |
+| shellcheck | the shell checks of CI | `brew install shellcheck` |
+| fakeroot | the installer tests in `tools/installer-tests/` | `brew install fakeroot` |
+| zip, tar, sha256sum | `tools/build_release.py` | come with Bazzite |
+
+#### Optional
+
+Each one serves one tool or one kind of work. Without it, that tool does not run, or its test skips.
+
+| Tool | What uses it | How to get it |
+|---|---|---|
+| Vale | the text check, `tools/text_check.py`, for style and readability | `brew install vale` |
+| Node.js | the design panel's test, `tools/tests/test_design_panel.py` | `brew install node` |
+| GitHub CLI (`gh`) | runs and releases from a terminal, and Nexus Release Tool's sign-in | `brew install gh` |
+| actionlint | a changed workflow in `.github/workflows/`, checked before the push with `actionlint` at the root | `brew install actionlint` |
+| ffmpeg | the video tours, `tools/record-tour.sh` and `tools/record-app-tour.sh` | comes with Bazzite |
+| Rust, maturin, nasm and the libva headers | Remote Play's native core, for `cargo test` or `maturin build` on the machine itself | rustup from [rustup.rs](https://rustup.rs), `brew install nasm`, and maturin with pip in the venv |
+| OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | the Flatpak `com.obsproject.Studio` |
+| notify-send | the hourly notifications of Nexus Deps and Nexus Garbage Remover | comes with Bazzite |
+| setools (`sesearch`, `seinfo`) | reading the SELinux policy on the board, such as which label a file needs | in a distrobox, see below |
+
+The container of `tools/ci-local.sh` has Rust, maturin, nasm and the libva headers, so a CI run needs none of
+them on the machine.
+
+`setools-console` is a Fedora package that Homebrew does not have. A distrobox keeps it off the image, without
+`rpm-ostree install` or a restart. It puts the two commands in `~/.local/bin`:
+
+```bash
+distrobox create --name nexus-tools --image registry.fedoraproject.org/fedora-toolbox:44 --yes
+distrobox enter nexus-tools -- sudo dnf -y install setools-console
+distrobox enter nexus-tools -- distrobox-export --bin /usr/bin/sesearch --export-path ~/.local/bin
+distrobox enter nexus-tools -- distrobox-export --bin /usr/bin/seinfo --export-path ~/.local/bin
+```
+
+Inside the distrobox, the board's own files are under `/run/host`, so give the policy by that path:
+`sesearch -A -s unconfined_service_t -c system -p module_load /run/host/etc/selinux/targeted/policy/policy.35`.
+`distrobox rm nexus-tools` removes it again.
+
+Homebrew installs to `/home/linuxbrew/.linuxbrew/bin`. A shell that is not interactive, such as a timer or an IDE's
+terminal, may need it on `PATH`.
+
+### Staying up to date
+
+Bazzite keeps itself current. Its updater, `uupd.timer`, runs every day at 04:00, or at the next boot when the
+machine was off. It updates the image, the Flatpaks and Homebrew's packages. `ujust update` runs the same now. A new
+image is used after a restart. The venv is pip's and the Rust toolchain is rustup's, so nothing updates those for
+you.
+
+[Nexus Deps](dashboard.md#deps) shows every source with a newer version at once: Bazzite's image, the Flatpaks,
+Homebrew's packages, the Rust toolchain and the packages of `.venv-linux`. **Update** on a card installs that
+source's updates after it shows the command and asks. Its hourly notification says when something is newer.
+
+The venv's packages are upgraded within what `requirements-dev.txt` allows. The venv's `python` links to Bazzite's
+`/usr/bin/python3`, so a Bazzite image with a newer Python leaves the venv without its packages. Nexus Deps says so,
+and **Update** installs `requirements-dev.txt` for the new Python.
+
+### Keeping it clean
+
+[Nexus Garbage Remover](dashboard.md#garbage-remover) shows what can go from the machine. That is crash dumps, Steam's
+crash reports, the Trash and caches that fill up. It deletes what you check, after it asks. Its hourly notification says
+when there is 1 GB or more. Our tools' own leftovers go by themselves: `tools/clean_caches.py` removes them before
+every local CI run.
+
+### Git identity and signing
+
+Git takes your name and email from its global settings. Without them, it makes some up from the user and host name,
+and warns at every commit. GitHub links a commit to an account by its email. So use the account's noreply address,
+which GitHub shows under **Settings**, **Emails**. Sign commits with the SSH key the account has as a signing key,
+under **Settings**, **SSH and GPG keys**:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "<id>+<user>@users.noreply.github.com"
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+## so that git log --show-signature can verify your own commits
+echo "$(git config --global user.email) $(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers
+git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
+```
+
+Leave tag signing off. The release tags are plain tags, made by `tools/tag-release.sh`. A signed tag needs a
+message, which breaks `git tag <name>` in the tools' tests. These settings are per machine and per user account, so
+a new system or a new home folder starts without them. Check them with `git config --global --list`. After a commit,
+`git log -3 --format='%an <%ae> %G?'` shows `G` for a good signature.
+
 ## Colors
 
 [DESIGN.md](https://github.com/RobertoTorino/bazzite-console/blob/main/DESIGN.md) lists every color of the suite: the
 rules that make its design recognizable, every tint of each hue and why it is there, and where each color is used
 (the apps' themes and state colors, the wiki, the development apps, the apps' own colors). Each color shows a sample
 from `design/colors/`. Both are written by `tools/make_design.py` from the listing in it: change the listing and run
-it, never DESIGN.md itself.
+it, never DESIGN.md itself. DESIGN.md also lists every icon of the suite and where it is used. `tools/design_icons.py`
+reads that part from the repository.
 
 ```bash
 python3 tools/make_design.py            # write DESIGN.md and its samples
@@ -228,8 +364,8 @@ app reads from the board is real, so watch the video before you publish it.
 - **Root-owned `/opt`:** Board Test (`board`), whose test engine runs as root: a normal user cannot change code that
   sudo runs.
 - **Your home folder:** the portal (`~/.local/share/bazzite-console-suite/portal`, what it remembers beside it in
-  `~/.local/share/bazzite-console-suite/state`), the shared venv `~/.local/share/bazzite-console-suite/venv` (PyQt6,
-  used by all suite GUIs and removed with the last of them), plus each app's settings, results and launchers.
+  `~/.local/share/bazzite-console-suite/state`), the shared venv `~/.local/share/bazzite-console-suite/venv` (PyQt6
+  and pygame-ce, used by all suite GUIs and removed with the last of them), plus each app's settings, results and launchers.
 - **`bazzite_console_core` per app:** each app's release carries the `bazzite_console_core` it was tested with, next
   to its own code. Apps with different release tags never share a core version they were not tested with.
 
@@ -266,11 +402,17 @@ gh issue close <number> --comment "PPSSPP pinned at 1.20."     # close one, sayi
 ```
 
 The run fails only when an upstream could not be checked. A moved pin means a new version of the app is due, with
-the new pin tried on the board first. It also moves Nexus Deps' list of the programs the apps use: run
+the new pin tried on the board first. Until then, users can choose the newer build themselves in the manager's
+version manager. It also moves Nexus Deps' list of the programs the apps use: run
 `dev/deps/run.sh --sync-upstreams` from the repository's root, else CI fails
 ([Nexus Deps](dashboard.md#deps)).
 
-The shadPS4 Manager installs one shadPS4 release, pinned in `apps/shadps4/shadps4_manager/emulator.py`
+Each emulator manager pins the build that version of the app was tried with. **Install** installs that build and puts
+it back in use. In the manager's version manager (core's `builds`), you can download
+any other build the emulator publishes on GitHub, a stable release or a nightly. The app checks it against the
+SHA-256 GitHub publishes. So the pin says which build was tried on the board, not which builds users may run.
+
+The shadPS4 Manager was tried with one shadPS4 release, pinned in `apps/shadps4/shadps4_manager/emulator.py`
 (`VERSION`, `TAG`, `ASSET`, `SHA256`). The tool checks it: a newer stable release, with the Linux zip and the
 SHA-256 GitHub publishes for it that a new pin needs, and the SHA-256 of the pinned zip. A new shadPS4 can change
 what the app relies on (its `config.json`, the shadNet protocol), so a new pin also needs a look at what changed.
@@ -288,7 +430,7 @@ a try on the board; then `KNOWN_VERSION` moves), a newer major version (users do
 to it), a fallback named in the latest release's notes that is not `FALLBACK_VERSION`, and a fallback release
 without its zip.
 
-The Vita3K Manager installs one Vita3K build, pinned in `apps/vita3k/vita3k_manager/emulator.py`
+The Vita3K Manager was tried with one Vita3K build, pinned in `apps/vita3k/vita3k_manager/emulator.py`
 (`BUILD`, `SEMVER`, `COMMIT`, `SHA256`, `SIZE`). Vita3K has no stable releases: every change is a build, kept as a
 release of `Vita3K/Vita3K-builds` tagged with its number, with `Vita3K-x86_64.AppImage` and the SHA-256 GitHub
 publishes for it. Builds come almost daily; the tool reports the newest build when it is past the pin (with how many
@@ -309,10 +451,10 @@ the new build:
   newest continuous build unless `DISABLE_AUTO_UPDATES=1`, which the run wrapper sets. `vita3k --version` on the new
   AppImage confirms the build and commit.
 
-The tests hold the `config.yml` a Vita3K build writes on its first start (`tests/fixtures/config-4186.yml`); a new
+The tests hold the `config.yml` a Vita3K build writes on its first start (`tests/fixtures/config-4377.yml`); a new
 pin replaces it with the new build's, renamed for it.
 
-The Xenia Manager installs one Xenia Canary build, pinned in `apps/xenia/xenia_manager/emulator.py` (`BUILD`,
+The Xenia Manager was tried with one Xenia Canary build, pinned in `apps/xenia/xenia_manager/emulator.py` (`BUILD`,
 `COMMIT`, `PUBLISHED`, `SHA256`, `SIZE`). Xenia has no stable releases either: every change is a release of
 `xenia-canary/xenia-canary`, tagged with its commit, with `xenia_canary_linux.AppImage` and the SHA-256 GitHub
 publishes for it. A tag is no number, so the app and the tool take a release published after `PUBLISHED` as a newer
@@ -355,10 +497,10 @@ Code shared by the suite's apps (`core/`). Nothing in it imports an app: each ap
 | `appinfo` | `AppInfo` (id, name, version, logo, tag prefix, settings names) |
 | `theme` | The suite's theme (`THEMES`, `theme_name()`, `save_theme_name()`, `apply_theme()`, `surface_style()`, `muted()`), `STATE_COLORS`, bundled Inter font, `header_font()`, `HOVER_STYLESHEET`; self-contained, so an app not on core carries a copy |
 | `text` | `fmt()` (`%1` placeholders), `fill()` (`{name}` placeholders), `plain_tooltip()`, `window_title()` |
-| `widgets` | `AppHeader` (the window header), `StatusPill`, `MetricBox`, `Pill` (a `MetricBox` that is a button), `same_width()`, `RefreshButton`, `ClickableLogo`, `Terminal`, `TextDialog`, `RoundedToolTip`, `show_tooltip()`, `page_header()`, `hint_label()`, `accent_button()`, `set_button_active()` |
+| `widgets` | `AppHeader` (the window header), `StatusPill`, `StatusText` (a state beside a title; with a name, the name alone, a green or red dot and the state in its tooltip), `MetricBox`, `Pill` (a `MetricBox` that is a button), `same_width()`, `RefreshButton`, `ClickableLogo`, `Terminal`, `TextDialog`, `RoundedToolTip`, `show_tooltip()`, `page_header()`, `hint_label()`, `accent_button()`, `set_button_active()` |
 | `app` | `create_app()` / `run_app()` / `exec_app()`: names, Fusion with the theme, tooltip, icon, SIGTERM |
-| `exit_keys` | `install(app)`: Escape and a controller's B close the app's window, after a key the window takes for itself and through its `closeEvent`; B, read with pygame-ce, is Escape for what has the focus, and only for the app that has had the focus for a moment; `install(app, controller=False)` for Escape alone, the class attribute `exit_keys = False` for a window that keeps every key. Self-contained, so an app not on core carries a copy |
-| `card` | `CardWindow`: the template of a small window, with the header's two symbols and rows of five even places | new |
+| `exit_keys` | `install(app)`: Escape and a controller's B close the app's window, after a key the window takes for itself and through its `closeEvent`; B, read with pygame-ce, is Escape for what has the focus, and only for the app that has had the focus for a moment; `install(app, controller=False)` for Escape alone, the class attribute `exit_keys = False` for a window that keeps every key. SDL's dummy drivers are in the environment only while SDL starts, so a program the app starts never gets them. Self-contained, so an app not on core carries a copy |
+| `card` | `CardWindow`: the template of a small window, with the header's two symbols and rows of five even places |
 | `action_tab` | `ActionTab`: the last tab of a `QTabWidget` as a button (Start game in the game managers): a click acts and the open page stays open |
 | `settings` | `open_settings(info)` at each app's existing file, geometry helpers, `SettingsStore` (typed defaults) |
 | `help` | `HelpView` (the content stays in the app) |
@@ -366,7 +508,7 @@ Code shared by the suite's apps (`core/`). Nothing in it imports an app: each ap
 | `builds` | Several builds of an emulator side by side (the game managers' version manager): each in a folder of its own with a `build.json`, `current` pointing to the one in use; `install()` (checked against its SHA-256, GitHub's digest or a pinned one), `use()`, `delete()`, `add_custom()`, `replaced()`, `github_builds()` and `github_latest()` (a repository's builds with GitHub's SHA-256) |
 | `builds_dialog` | `BuildsDialog`, the version manager's window (Installed: Use, Delete, Add; Download: Refresh, Download; the tested build marked Tested), and `fill_menu()`, the menu of a manager's version pill |
 | `platform` | XDG folders, `xdg_open()`, `launch_in_terminal()` (with an exit file the caller can watch), `show_in_folder()`; `private()`, a path or a text with the home folder as `~`, never the user's name, which `applog.setup(private=True)` applies to every line of a log |
-| `steam` | Steam's folders and users, `installed()`, `with_steam_closed()`, `shortcuts.vdf` and the shortcuts' artwork in `grid/`, `shortcut_number()` and `play_url()` (a shortcut's number in Steam's file, and the address that starts it) (standard library only) |
+| `steam` | Steam's folders and users, `installed()`, `with_steam_closed()`, `shortcuts.vdf` and the shortcuts' artwork in `grid/`, `shortcut_number()` and `play_url()` (a shortcut's number in Steam's file, and the address that starts it), `signed_in()` (whether Steam runs and is signed in, from its connection log), and `steam_environment()` (Steam started without the SDL values of our controller readers) (standard library only) |
 | `steam_art` | `draw_icon_art()`: a shortcut's four pictures drawn from an app's icon, in the icon's color |
 | `upstream` | `publish()` / `read_all()`: the updates outside the suite an app can install now, for the portal's notice (standard library only; HelixSR carries a copy) |
 | `sensors` | `Sensors.read()`: the board's live values from `/proc` and `/sys` without root (CPU, GPU, the GPU governor's temperature limit, VRAM, RAM, temperatures, network, disk, the fan), `Reading`, `Fan` |

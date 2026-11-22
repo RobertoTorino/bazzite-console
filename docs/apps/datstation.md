@@ -52,15 +52,16 @@ one per feature; the others say Coming Soon and are grayed out. A tile opens its
 tiles.
 
 The arrow keys move between the tiles, and Enter or Space opens the one in focus. Escape, or the controller's B
-button, closes the active window or dialog. The keys 1 to 4 answer a quiz question.
+button, goes back from a page to the tiles, and otherwise closes the active window or dialog. The keys 1 to 4 answer
+a quiz question.
 
 ### PlayStation Quiz
 
 Pick a category (ALL, TRUE/FALSE, PS1 to PS5, PSVITA, PSP, CONTROLLER, GENERAL, DIALOGUE, APPS; the tooltip says
-how many questions it has), or the **Quick Quiz**: 6 questions, nothing saved.
+how many questions it has), or the **QUICK QUIZ**: 6 questions, nothing saved.
 
 A round starts with 42 seconds on the clock. A right answer adds 5 seconds and the question's points (10); a
-wrong answer or **Skip** takes 5 seconds. The clock stops while an answer is shown and while the game is paused
+wrong answer or **Skip (-5s)** takes 5 seconds. The clock stops while an answer is shown and while the game is paused
 (**Pause**, then **Resume**). The right answer turns green, a wrong choice red, and for a wrong answer the right
 one is named, with an explanation where the question has one.
 

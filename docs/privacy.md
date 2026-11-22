@@ -15,7 +15,7 @@ it out of what they show and save where they can.
 
 ## What goes over the network
 
-Each request names the app and its version (for example `ps5-shadps4-manager/1.0.0`) and nothing about you.
+Each request names the app and its version (for example `ps5-shadps4-manager/1.0.0`) and nothing about you. A request for cover art names the suite only, as `bazzite-console`.
 The servers see your IP address, as any website you open does.
 
 **GitHub** (`github.com`, `api.github.com`, `raw.githubusercontent.com`), for releases:

@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="76" viewBox="0 0 600 76">
   <rect width="600" height="76" rx="6" fill="#22262a"/>
   <text x="12" y="25" fill="#d9dde2" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="14"><tspan x="12" dy="0">The Bazzite Console Suite: tools for the PlayStation 5 running Bazzite,</tspan><tspan x="12" dy="20">each one a tile in the portal, built the same way, in the same colors, and</tspan><tspan x="12" dy="20">released together.</tspan></text>

@@ -11,6 +11,13 @@ from collections.abc import Callable
 
 from .inputs import PadState, Vibration
 
+# What SDL reads when it starts, and what pygame sets itself: in the environment only while SDL starts, so a
+# program started from here (an app, Steam and its games) does not get the dummy drivers and opens its windows
+# (the owner's machine, 22-11-2026: Steam, started from an app the portal had opened, crashed on every window).
+SDL_VARIABLES = {"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy", "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS": "1",
+                 "PYGAME_HIDE_SUPPORT_PROMPT": "1"}
+SDL_SET_BY_PYGAME = ("SDL_VIDEO_X11_WMCLASS",)
+
 SDL_BUTTONS = {                             # pygame's CONTROLLER_BUTTON_* (lower case) to the report's names
     "a": "a", "b": "b", "x": "x", "y": "y", "back": "view", "start": "menu", "guide": "nexus",
     "leftstick": "left_thumb", "rightstick": "right_thumb", "leftshoulder": "left_shoulder",
@@ -33,15 +40,19 @@ class PygameSource:
 
     def __init__(self):
         # SDL needs no window or sound of its own: the dummy video driver gives it the event queue (as the portal)
-        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-        os.environ.setdefault("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1")
-        os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
-        import pygame
-        from pygame._sdl2 import controller
-        self.pygame, self.controller = pygame, controller
-        pygame.display.init()
-        controller.init()
+        saved = {name: os.environ.get(name) for name in (*SDL_VARIABLES, *SDL_SET_BY_PYGAME)}
+        try:
+            for name, value in SDL_VARIABLES.items():
+                os.environ.setdefault(name, value)
+            import pygame
+            from pygame._sdl2 import controller
+            self.pygame, self.controller = pygame, controller
+            pygame.display.init()
+            controller.init()
+        finally:
+            for name, value in saved.items():
+                if value is None:
+                    os.environ.pop(name, None)
         self.pads: dict[int, object] = {}               # SDL's instance id: the open controller, oldest first
         for index in range(controller.get_count()):
             self._open(index)

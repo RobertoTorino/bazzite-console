@@ -359,7 +359,7 @@ class MainWindow(QMainWindow):
             self.measure_pill.set_value(rw(*self.measured[drive.path]),
                                         "Measured on this board. Click to measure again.")
         else:
-            self.measure_pill.set_value("Test", "Click to measure: writes a test file of 1 GB to the drive, reads it "
+            self.measure_pill.set_value("Test", "Click to measure: writes a test file of about 1 GB to the drive, reads it "
                                                 "back and deletes it. A few seconds.")
 
     def measure(self) -> None:

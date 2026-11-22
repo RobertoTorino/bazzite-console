@@ -32,6 +32,7 @@
 -r dev/dash/requirements-dev.txt
 -r dev/demo/requirements-dev.txt        # obsws-python and dbus-fast: Nexus Demo Recorder and its tests
 -r dev/deps/requirements-dev.txt
+-r dev/garbage/requirements-dev.txt
 -r dev/itests/requirements-dev.txt
 -r dev/nrt/requirements-dev.txt
 -r dev/sounds/requirements-dev.txt

@@ -12,8 +12,8 @@ Makes a supported Sony USB camera a webcam on **Bazzite**: the **PS5 HD Camera (
 shows its picture, with picture settings, screenshots and recordings. After that, OBS, a browser, Discord or any
 other app can use the camera like any USB camera.
 
-It has not been validated on PS5 hardware. Recognition of these camera identifiers does not
-establish that every PS5 Bazzite system, USB port or adapter is compatible.
+Recognition of these camera identifiers does not establish that every PS5 Bazzite system, USB port or adapter is
+compatible.
 
 ## How the camera works
 
@@ -185,8 +185,8 @@ recording's time:
 | **Mode −**, **Mode +** (PageUp, PageDown) | The mode before or the next one; the picture starts again in it |
 | **Close** (Esc) | Back to the window; a recording stops and is kept |
 
-Screenshots and recordings show what you see: zoomed in and black and white too. Each goes in a **Webcam** folder,
-named with the date and the time (`Webcam 2026-11-01 21-04-09.png`); the line above the buttons says where the
+Screenshots and recordings show what you see: zoomed in and black and white too. Each goes in a **PS5 Webcam** folder,
+named with the date and the time (`PS5 Webcam 2026-11-01 21-04-09.png`); the line above the buttons says where the
 file was saved. A recording is an MP4 with at most 30 frames a second, written with the video encoder Qt brings.
 The mode does not change while it records: stop it first. If the camera stops sending, choose another mode with
 **Mode −** or **Mode +**. Closing the app while it records stops the recording and writes its file first.

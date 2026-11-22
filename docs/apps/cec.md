@@ -162,7 +162,8 @@ list keeps the last 12. The TV sends the keys only while it shows the PS5's inpu
 
 ## Files
 
-- `~/.config/ps5-cec-manager/ps5-cec-manager.ini`: the window size.
+- `~/.config/ps5-cec-manager/ps5-cec-manager.ini`: the window size, and the desktop's power button action from
+  before **Power button**, to put back when you uncheck it.
 - `~/.config/cecd/config.d/99-ps5-cec-manager.toml`: the daemon settings, the name on the TV and the remote's
   buttons, once you change one. Uninstalling keeps it, so the TV keeps behaving the same;
   `install.sh --uninstall --purge` removes it.

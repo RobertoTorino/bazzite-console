@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Vita3K's own folders (userdata.py): the config.yml build 4186 writes, its storage where pref-path moves it, and the
+"""Vita3K's own folders (userdata.py): the config.yml build 4377 writes, its storage where pref-path moves it, and the
 three parts of the firmware as Vita3K counts them."""
 
 from __future__ import annotations
 
 import os
 
-from conftest import CONFIG_4186, install_firmware, write_vita3k_files
+from conftest import CONFIG_4377, install_firmware, write_vita3k_files
 
 from vita3k_manager import userdata
 
@@ -16,8 +16,8 @@ def test_vita3ks_folders_follow_xdg(tmp_path):
     assert userdata.default_storage() == tmp_path / "data" / "Vita3K" / "Vita3K"
 
 
-def test_the_config_yml_of_build_4186():
-    config = userdata.read_map(CONFIG_4186)
+def test_the_config_yml_of_build_4377():
+    config = userdata.read_map(CONFIG_4377)
     assert config["backend-renderer"] == "Vulkan" and config["boot-apps-full-screen"] == "false"
     assert config["pref-path"] == "" and config["user-id"] == ""                  # "": Vita3K's default
     assert "controller-binds" not in config and not any(k.startswith(("-", ".")) for k in config)   # lists left out
@@ -65,7 +65,7 @@ def test_what_one_install_wrote(tmp_path):
 
 
 def test_the_lines_the_app_owns_are_set_in_place(tmp_path):
-    """The welcome window and the update check off (owner, 03-11-2026): the lines set where build 4186 wrote them,
+    """The welcome window and the update check off (owner, 03-11-2026): the lines set where build 4377 wrote them,
     every other line kept; a second run changes nothing; a missing key goes before the end, a missing file is made."""
     config = write_vita3k_files(tmp_path / "Vita3K")
     path = userdata.config_path(config)

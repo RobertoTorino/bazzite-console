@@ -1,3 +1,13 @@
+Changelog: 22-11-2026 18:33:23
+
+Fixed. The app's copy of core's exit_keys.py takes out the window class that pygame sets when it starts, as
+core/bazzite_console_core/exit_keys.py does. A program the app starts no longer inherits it.
+tools/tests/test_instance_copies.py checks that the copy matches core.
+
+Changelog: 22-11-2026 15:55:10
+
+Fixed. The app's files that had no license line have one now.
+
 Changelog: 20-11-2026 01:51:46
 
 Release 0.1.0.

@@ -48,6 +48,11 @@ def test_status_text_with_a_name_shows_the_name_alone(qapp):
     assert theme.RED in status.dot.styleSheet()
     status.set_status("shadNet Off", "neutral")
     assert status.shown() == "shadNet" and status.toolTip() == "shadNet Off"
+    assert theme.RED in status.dot.styleSheet() and status.kind == "neutral"      # two colors: anything not ok is red
+    status.set_status("Not installed", "warn")
+    assert theme.RED in status.dot.styleSheet() and theme.ORANGE not in status.label.styleSheet()
+    status.set_status("shadNet Online", "ok")
+    assert theme.GREEN in status.dot.styleSheet()
     assert StatusText("Ready").shown() == "Ready"                     # without a name: the state, as before
 
 

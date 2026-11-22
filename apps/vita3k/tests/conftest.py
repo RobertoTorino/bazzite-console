@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Shared fixtures: an offscreen QApplication, settings and XDG folders in a temp folder, PS Vita games made here (a
-param.sfo written in the PlayStation's layout, in ux0/app as Vita3K installs them) and Vita3K's folders as build 4186
-leaves them: fixtures/config-4186.yml is the config.yml it wrote on its first start."""
+param.sfo written in the PlayStation's layout, in ux0/app as Vita3K installs them) and Vita3K's folders as build 4377
+leaves them: fixtures/config-4377.yml is the config.yml it wrote on its first start."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 CORE = Path(__file__).resolve().parents[3] / "core"
 if str(CORE) not in sys.path:
     sys.path.insert(0, str(CORE))           # bazzite_console_core from the checkout, as the installer bundles it
-CONFIG_4186 = Path(__file__).resolve().parent / "fixtures" / "config-4186.yml"
+CONFIG_4377 = Path(__file__).resolve().parent / "fixtures" / "config-4377.yml"
 
 
 def make_sfo(fields: dict[str, str | int]) -> bytes:
@@ -58,9 +58,9 @@ def make_game(vita_fs: Path, title: str = "Game", title_id: str = "PCSB00001", v
 
 
 def write_vita3k_files(config: Path, pref_path: str = "") -> Path:
-    """Vita3K's settings folder with the config.yml build 4186 writes, its pref-path set to *pref_path*."""
+    """Vita3K's settings folder with the config.yml build 4377 writes, its pref-path set to *pref_path*."""
     config.mkdir(parents=True, exist_ok=True)
-    text = CONFIG_4186.read_text(encoding="utf-8")
+    text = CONFIG_4377.read_text(encoding="utf-8")
     if pref_path:
         text = text.replace('pref-path: ""', f"pref-path: {pref_path}")
     (config / "config.yml").write_text(text, encoding="utf-8")

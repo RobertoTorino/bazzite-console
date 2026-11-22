@@ -89,6 +89,26 @@ def test_manual_view_shows_the_chapter(qapp):
     view.close()
 
 
+def test_help_is_a_readable_page(qapp):
+    """Help (owner, 22-11-2026): the chapter in a column, its sections on the left, a search field, Back and Wiki."""
+    from board_test import readme
+    view = readme.ReadmeView()
+    titles = [view.contents.item(row).text() for row in range(view.contents.count())]
+    assert titles[0] == "PS5 Board Test" and view.contents.item(0).font().bold() and "Tests" in titles
+    assert not view.back.isEnabled() and view.wiki_url() == readme.SUITE_MANUAL_URL + "apps/board/"
+    assert "app-logo" not in view.browser.toHtml() and "<img" in view.browser.toHtml()        # the icon, not the picture
+    view.find.setText("stress-ng")
+    view.find_next()
+    assert view.browser.textCursor().selectedText() == "stress-ng"
+    view.close()
+
+
+def test_the_contents_skip_code_blocks():
+    from board_test import readme
+    text = "# Title\n\n## One\n\n```bash\n# a comment\n```\n\n## Two\n### Deeper\n"
+    assert readme.headings(text) == [(1, "Title"), (2, "One"), (2, "Two")]
+
+
 def test_results_preview_shows_image_and_emits_open_paths(qapp, tmp_path):
     from PyQt6.QtGui import QPixmap
 

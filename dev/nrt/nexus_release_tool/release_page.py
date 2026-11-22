@@ -42,7 +42,8 @@ MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("!", RED), "
 # read as "push again"): what runs, and that its output is on the Commands tab.
 RUNNING = {
     "pull": "git pull runs. Its output is on the Commands tab.",
-    "commit": "Committing: the version and manifest checks run first. Their output is on the Commands tab.",
+    "commit": "Committing: the version and manifest checks run first, after the list of wiki sections to read "
+              "again. Their output is on the Commands tab.",
     "ci": "Run CI again asks GitHub to start the failed jobs again. The output is on the Commands tab.",
     "push": ("Pushing: CI's jobs run here first (on Linux, a couple of minutes), then git push. The output is on the "
              "Commands tab; the step is done when it ends."),

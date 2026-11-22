@@ -1,3 +1,85 @@
+Changelog: 22-11-2026 18:49:28
+
+Fixed. The release workflow's portal job stopped with "release not found" right after the app releases were made,
+although every release was there a minute later. The download of their checksums now tries again every 10 seconds for a
+minute, then names the tag it did not find. The same goes for the required apps in the portal's bundle. The Releases
+page of the Development chapter says so.
+
+Changelog: 22-11-2026 18:33:23
+
+Fixed. tools/wiki_names.py skips the .cache folder, as CI has none. A local run found self.tr() in the wiki's mermaid
+copy there and passed, while CI failed. The wiki names self.tr() as Qt's function that the apps do not use, and the tool
+now knows it as such. DESIGN.md is made again with tools/make_design.py. tools/installer-tests/garbage.sh is new, for
+Nexus Garbage Remover.
+
+Changelog: 22-11-2026 17:03:46
+
+Fixed. The wiki sections that tools/check_wiki.py listed after today's changes were read against them. The Development
+chapter's table of core now names StatusText, steam.signed_in() and steam_environment(), and says that exit_keys gives
+SDL its dummy drivers only while SDL starts. Its Colors part says that DESIGN.md lists the icons too. The Releases page
+says that the Commit step lists the wiki's sections to read again first. Stray third cells in the table of core are
+gone.
+
+Changelog: 22-11-2026 17:00:04
+
+Fixed. The wiki holds no status notes: Controller, Webcam and SSD Check no longer say they were not validated or
+verified on the hardware, and CU Tools describes what --install does now, without the earlier versions. The Remote Play
+stream page no longer says which board its results came from. The Development chapter's table of core lost a stray third
+cell. The privacy page says a request for cover art names the suite only.
+
+Changelog: 22-11-2026 16:51:05
+
+Fixed. The wiki pages the text rewrite has not reached yet were checked against the code, and 54 wrong or outdated
+statements on 25 pages were corrected. Upscaler Manager: its category is Graphics, the release file's name, the menu
+entry's name, the button labels, the deploy modes and its files. The emulator managers: the Steam link is in the info
+symbol, RPCS3's line names its button, the start message, and Xenia's download is about 16 MB. The portal chapter:
+Install all apps and Install all updates as the window writes them, the categories, nine settings, which apps change the
+board and the time zone's first entry. The Development pages: the four files CI checks, which apps take the exit keys,
+the Start game tab, the installer tests in CI, the Layout block with Nexus Garbage Remover, the shared venv with PyQt6
+and pygame-ce, the tag prefixes and the release tool's refresh. DatStation: Escape and B, QUICK QUIZ and Skip (-5s). The
+apps' index, App categories, CEC Manager, CU Tools, CPU Tools, SSD Check and Webcam: the summaries, the settings file,
+the folder names and the paths. The FAQ, the install page, SECURITY.md and the Remote Play stream page: which apps
+change the board, what installs with the portal, what Nexus Deps sends and a stream value. tools/check_wiki.py and
+tools/tests/test_wiki_names.py are described in the Development chapter.
+
+Changelog: 22-11-2026 16:47:44
+
+Added. Two checks keep the wiki in step with the code. tools/tests/test_wiki_names.py fails on a name the wiki gives
+that is gone: a path, a constant or function in code style, an option of one of our scripts, or a window label an app's
+chapter tells you to use. tools/check_wiki.py --base origin/main lists the wiki's sections that name a changed file but
+did not change themselves, so each is read against the change. On the commit of 20-11-2026 that brought the version
+managers, it lists the Development chapter's part about pins, which said the old thing until today. Both share
+tools/wiki_names.py. The rewrite command runs them before its handover.
+
+Changelog: 22-11-2026 16:35:29
+
+Fixed. The Development chapter said each emulator manager installs one pinned release. Since the version managers came,
+the pin is the build that version of the app was tried with: Install installs it, and any other build can be downloaded
+beside it. The part about upstream pins says so now, and that users can choose a newer build before the pin moves.
+
+Changelog: 22-11-2026 16:23:31
+
+Added. DESIGN.md has an Icons part again, the listing ICONS.md was until the suite left Nexus. It names the suite's own
+icon files, the category icons with their apps, the portal's drawn symbols, the icons the apps take from the desktop's
+style, the wiki's Material icons and the characters the apps use as icons. tools/design_icons.py reads all but the
+suite's own icon files from the repository, tools/make_design.py writes it, and tools/tests/test_design_icons.py checks
+it.
+
+Changelog: 22-11-2026 16:10:31
+
+Added. The wiki's Development chapter has a part for the development machine: the tools the work needs, how
+the machine stays up to date and clean, and git's identity and signing. It was only on Nexus's page until now.
+tools/tests/test_tour_frames.py tests tools/tour_frames.py again: the video's size, the temporary home, the window's
+place, the music and a crashed ffmpeg. Its test had gone with the Windows code on 15-11-2026.
+
+Changelog: 22-11-2026 15:55:10
+
+Added. Every text file opens with its SPDX-License-Identifier line now, in the comment of its format.
+tools/tests/test_spdx.py checks it on every run and names each file that may go without, with the reason: license texts,
+files the tools read as one value, CHANGELOGs, JSON, other projects' files and recorded test data. An app under another
+license keeps its own line. tools/make_design.py writes the line into DESIGN.md and its color samples, and
+tools/all_tests.py into ALL-TESTS.md.
+
 Changelog: 21-11-2026 20:42:07
 
 Fixed. tools/record-tour.sh and tools/record-app-tour.sh use Qt's PulseAudio backend where no PipeWire runs. Qt's

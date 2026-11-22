@@ -42,6 +42,7 @@ CI_LOCAL = "tools/ci-local.sh"          # CI's jobs here, in a container: the pu
 VERSIONS_CHECK = "tools/check_versions.py"
 CHECK_SCRIPT = "tools/check-release.sh"     # the board checks of a portal release (local|release|draft|remove)
 MANIFEST_CHECK = "tools/check_manifest.py"
+WIKI_CHECK = "tools/check_wiki.py"          # the wiki's sections that name a changed file: a list, never a refusal
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 _VERSION = re.compile(r"^\d+\.\d+\.\d+$")
 
@@ -1349,9 +1350,11 @@ def add_command() -> str:
 
 
 def commit_command(message: str, base: str, amend: bool = False, python: str = "python3") -> str:
-    """The Commit step's git commit: the version check and the manifest check first (CI's quick ones), the commit
-    only when they pass. *amend*: the staged changes join HEAD, with its message."""
-    checks = f"{python} {VERSIONS_CHECK} && {python} {MANIFEST_CHECK} --base {shlex.quote(base)}"
+    """The Commit step's git commit: the wiki's sections to read again (owner, 22-11-2026: a list on the Commands
+    tab, it never stops the commit), then the version check and the manifest check (CI's quick ones), the commit only
+    when they pass. *amend*: the staged changes join HEAD, with its message."""
+    checks = (f"{python} {WIKI_CHECK} --base {shlex.quote(base)} && {python} {VERSIONS_CHECK} && "
+              f"{python} {MANIFEST_CHECK} --base {shlex.quote(base)}")
     commit = "git commit --amend --no-edit" if amend else f"git commit -m {shlex.quote(message)}"
     return f"{checks} && {commit}"
 

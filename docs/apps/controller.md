@@ -12,8 +12,7 @@ Linux's own `hid-playstation` driver drives the controller, so games and Steam s
 the controller beside the driver, through its hidraw node (`/dev/hidraw<n>`). It knows the controllers by their
 USB product IDs, `0x0CE6` (DualSense) and `0x0DF2` (DualSense Edge).
 
-It has not been validated on PS5 hardware. Controller detection and functions depend on the
-system's kernel driver and controller support.
+Controller detection and functions depend on the system's kernel driver and controller support.
 
 ## The window
 

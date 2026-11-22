@@ -458,13 +458,11 @@ Config and the systemd unit:
 A real hang is still a real hang: if a WGP you thought was GOOD turns out unstable under different
 conditions later, boot, run `sudo ./ps5-cu-unlock.sh --uninstall`, and reboot again to go back to stock.
 
-> **If the unlock doesn't survive a reboot: `--install` now fails loudly instead of lying.**
+> **If the unlock doesn't survive a reboot, `--install` says so.**
 > `systemctl enable` can fail (SELinux, a read-only `/etc/systemd/system` on some images, etc.) while
-> the unlock is still applied for the *current* boot only. Earlier versions printed "Installed and
-> enabled" regardless, so you'd only find out it never persisted after the next reboot. `--install` now
-> checks the actual result and exits with an error (`systemctl status ps5-cu-unlock.service`,
-> `journalctl -u ps5-cu-unlock.service`) instead of claiming success. If you're on an older copy of
-> the script, update it and re-run `--install` to see the real failure reason.
+> the unlock is still applied for the *current* boot only. `--install` checks the actual result and exits
+> with an error (`systemctl status ps5-cu-unlock.service`, `journalctl -u ps5-cu-unlock.service`) instead
+> of claiming success.
 >
 > **How to be 100% certain of the live CU count.** Several things can report a CU count, and they are
 > not all equally trustworthy:
@@ -543,7 +541,7 @@ Hover a field, its label or a pill to see what it does. The window remembers its
 Run it straight from a clone (any distro):
 
 ```bash
-cd ps5-bazzite/apps/compute
+cd bazzite-console/apps/compute
 python3 -m venv _python && _python/bin/pip install -r requirements.txt && _python/bin/python -m cu_bisect
 ```
 

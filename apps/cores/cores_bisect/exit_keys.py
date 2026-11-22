@@ -35,6 +35,7 @@ GRACE_S = 0.5                   # B counts once the app has had the focus this l
 # What SDL reads when it starts, gone from the environment again after (the names core's platform.py lists)
 SDL_VARIABLES = {"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy", "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS": "1",
                  "PYGAME_HIDE_SUPPORT_PROMPT": "1"}
+SDL_SET_BY_PYGAME = ("SDL_VIDEO_X11_WMCLASS",)   # what pygame sets itself when it starts: gone again too
 # Windows that are not an app's window: Qt closes a menu on Escape itself, and the others never have the keyboard
 NOT_WINDOWS = (Qt.WindowType.Popup, Qt.WindowType.ToolTip, Qt.WindowType.SplashScreen)
 
@@ -43,7 +44,7 @@ class BackButton:
     """The controllers' B: pressed() is how often it went down since the last call."""
 
     def __init__(self):
-        saved = {name: os.environ.get(name) for name in SDL_VARIABLES}
+        saved = {name: os.environ.get(name) for name in (*SDL_VARIABLES, *SDL_SET_BY_PYGAME)}
         try:
             for name, value in SDL_VARIABLES.items():
                 os.environ.setdefault(name, value)

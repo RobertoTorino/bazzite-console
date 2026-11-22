@@ -334,7 +334,7 @@ The switches are pills that say **On** or **Off**; a click turns one over:
 * **Rasdaemon** (`--rasdaemon`) and **Same boot** (`--same-boot`).
 * **Unattended** (`--auto`) turns on **Auto resume** with it. Auto resume writes and enables
   `~/.config/systemd/user/ps5-cores-bisect-auto.service`, which starts the run again after every reboot and
-  login: the same steps as the [`--auto` checklist](#running-truly-unattended---auto-checklist). The script removes
+  login: the same steps as the [`--auto` checklist](#running-truly-unattended---auto-checklist). The script disables
   it again once every item is done. It can only be on with Unattended.
 
 **Keeping the unlock.** The window reads the results that `ps5-cores-bisect.sh` left in

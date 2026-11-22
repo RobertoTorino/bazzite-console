@@ -16,8 +16,8 @@ to skip it. When the intro has played to its end, a short welcome sound follows.
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
 for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal. Under
 them, in a row, twelve big symbols. Four act on the apps: **Refresh** (two
-circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install All apps** (a grid of
-apps with an arrow down) and **Install All updates** (a circular arrow around an arrow down). Eight are shortcuts
+circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install all apps** (a grid of
+apps with an arrow down) and **Install all updates** (a circular arrow around an arrow down). Eight are shortcuts
 to what is outside the suite: **Files** (a folder), **Steam**, **YouTube** (a screen with a play triangle),
 **GitHub** (a cat in a disc),
 **Bluetooth**, **Network**, **Volume** (a loudspeaker) and **Screen** (a screen on its foot). Each is described
@@ -30,7 +30,7 @@ CPU's and the GPU's load and temperature (**CPU 12% 54°C | GPU 3% 61°C**), the
 do.
 
 **Board Test** and **Quickfix** are always installed with the portal; every other app is optional. Below the header is a strip
-with a name for each [category](apps/categories.md): Sustainable, Gaming and Utilities (Graphics joins them once it has an app), and beside it
+with a name for each [category](apps/categories.md): Sustainable, Graphics, Gaming and Utilities, and beside it
 the notice of updates. Each app is a large tile under its category, left to right in the order of `apps.toml`
 and as many to a row as the screen fits; Board Test is always the first tile on Sustainable. The tile with the
 focus is framed in silver; move it with the arrow keys, the d-pad or the stick, or point at a tile with the
@@ -144,8 +144,8 @@ checkout, or give it a menu entry with its `install.sh`.
   because installers may ask for the sudo password and print what they do. The portal watches for the result and
   refreshes. A terminal whose installer ended well closes by itself; one that failed stays open with what happened
   until you press Enter.
-- Apps that change how the board's system runs (Fan Controller's thermal guard, Webcam's camera rule, the SSH server
-  of SFTP Tools) are marked **changes the board**. The portal warns before installing or opening them,
+- Apps that change how the board's system runs (for example Fan Controller's thermal guard, Webcam's camera rule,
+  the SSH server of SFTP Tools) are marked **changes the board**. The portal warns before installing or opening them,
   and the tile's popup says what each one changes and how that is undone.
 - Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/bazzite-console/blob/main/portal/apps.toml). The portal downloads
   exactly those tarballs from the suite's GitHub releases and checks each against the SHA-256 pinned there, or
@@ -188,7 +188,7 @@ checkout, or give it a menu entry with its `install.sh`.
   place there are two lines. Nothing is read while the portal is minimized. The load is the share of the last two
   seconds.
   What the system does not report is left out of the line.
-- **Install All updates**, a symbol at the top, enabled when the notice names any app; a red badge on it says how
+- **Install all updates**, a symbol at the top, enabled when the notice names any app; a red badge on it says how
   many, and its tooltip what it does.
   Click it to install them all, updates and reinstalls, one after the other. The portal asks once, with the list, and warns when one of them changes
   the system. Each app's installer runs in its own terminal, as a single install does. When one asks for your
@@ -196,7 +196,7 @@ checkout, or give it a menu entry with its `install.sh`.
   one of how many it is at, for example **2/5**. An install that fails does not stop the others; at the end the portal
   names those that failed, and Install in their tiles' menus tries again. **Refresh**, while it waits for a
   terminal that was closed, can stop waiting, and then stops the rest too.
-- **Install All apps**, a symbol at the top, enabled when the open category has apps that are not installed yet
+- **Install all apps**, a symbol at the top, enabled when the open category has apps that are not installed yet
   (its tooltip says how many). Click it to install them, one after the other, the same way as **Install all updates**: one question with the
   list and the board warning, each installer in its own terminal, its badge showing which one of how many. It is
   disabled once every app of the category is installed. A portal installed for the first time fills a category with
@@ -216,7 +216,7 @@ checkout, or give it a menu entry with its `install.sh`.
 - **✕ Exit**, the symbol in the top right corner: closes the portal, as B and Escape do. See **Exiting** above.
 - **☰ Settings**, the symbol at the top right, or the ☰ button on the controller (Start, Options on a PlayStation
   controller): the Settings page, in place of the category strip and the tiles, under the same header. It holds
-  the seven settings below, each a pill with a short line beside it; on a small screen the page scrolls, following
+  the nine settings below, each a pill with a short line beside it; on a small screen the page scrolls, following
   the focus. Move between them with the arrow keys, the
   d-pad or the stick, and press A or Enter to change one. B, Escape or ☰ again goes back to the apps.
 - **Icons on Desktop**, on the Settings page (Yes or No; click it to switch): on, every installed app has an icon on the Desktop; off, only the
@@ -259,7 +259,7 @@ checkout, or give it a menu entry with its `install.sh`.
   use it again. The portal remembers only where each picture was (in `wallpapers.json` in the same folder), so one
   moved or deleted since shows as not found until it is back.
 - **Clock**, on the Settings page, showing **12 h** or **24 h**: how the time in the status reads. Click it for
-  its menu: **12-hour clock (AM/PM)** or **24-hour clock**, **Seconds** on or off, and the time zone: **the system's
+  its menu: **12-hour clock (AM/PM)** or **24-hour clock**, **Seconds** on or off, and the time zone: **The system's
   own** (the system's, as at first), **CET** (Central European Time, CEST in summer) or **UTC**. The date follows
   the zone too. The portal remembers the choice.
 - **Weather**, on the Settings page, showing the place or **None**: the weather in the status at the top, from

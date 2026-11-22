@@ -102,3 +102,13 @@ def test_rumble_goes_to_the_pad(fake_pygame):
     assert controller.made[0].rumbles == [(0.8, 0.3, 250), "stop"]
     source.close()
     source.rumble(Vibration(0, 1, 1, 0, 0, 10, 0, 0))   # no pad: nothing
+
+
+def test_the_pads_leave_no_sdl_variables_behind(fake_pygame, monkeypatch):
+    """What the app starts later must not get SDL's dummy drivers (the owner's machine, 22-11-2026)."""
+    import os
+    names = (*pads.SDL_VARIABLES, *pads.SDL_SET_BY_PYGAME)
+    for name in names:
+        monkeypatch.delenv(name, raising=False)
+    pads.PygameSource()
+    assert not [name for name in names if name in os.environ]

@@ -49,8 +49,8 @@ pressing **Update Steam**.
 
 The header has four pills: the **PCSX2 version**, **PCSX2 Install**, **PCSX2 Uninstall** and **Refresh**, which reads everything again.
 
-Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
-warning and red is a problem. Hold the pointer over a state to read it in full.
+Beside the title is a row of states. Each shows its name and a dot. The dot is green when all is well,
+and red when not. Hold the pointer over a state to read it in full.
 
 - **Installed**: the app's own state, such as **Not installed**
 - **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds

@@ -1,3 +1,22 @@
+Changelog: 22-11-2026 18:33:23
+
+Fixed. The app's copy of core's exit_keys.py takes out the window class that pygame sets when it starts, as
+core/bazzite_console_core/exit_keys.py does. A program the app starts no longer inherits it.
+tools/tests/test_instance_copies.py checks that the copy matches core.
+
+Changelog: 22-11-2026 18:07:29
+
+Fixed. upscaler/help.py.orig, an old copy of the Help page that nothing used, is gone.
+
+Changelog: 22-11-2026 18:06:12
+
+Fixed. The Help page is short now, as the owner decided. It says what the app does, links to the app's chapter in the
+wiki and shows where its files are. What only the Help page said moved into the wiki chapter, with a new table of the
+helixsr.ini keys and a new Good to know section. Two facts of the old Help page were wrong and are corrected in the
+chapter. The Help page said that Vulkan games are not supported. From HelixSR 3 on, HelixSR Scaler takes DirectX 11
+and Vulkan games. The Help page gave the release zip as 2 MB. A HelixSR 3 release is about 280 MB, as the chapter
+already said. The chapter's line about the Help page now says what the page shows. Nothing the app does has changed.
+
 Changelog: 22-11-2026 12:25:09
 
 Release 0.8.0.

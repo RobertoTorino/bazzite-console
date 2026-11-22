@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Words LanguageTool does not know but that are right in this suite: names, programs, file types and terms.
 # One per line, any case. tools/text_check.py reads it.
 Bazzite
@@ -219,3 +220,9 @@ Kokoro
 kokoro-onnx
 onnxruntime
 uv
+actionlint
+maturin
+nasm
+setools
+toolchain
+noreply
