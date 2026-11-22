@@ -1,3 +1,8 @@
+Changelog: 22-11-2026 23:14:52
+
+Added. The wiki's portal chapter says that the TV remote moves the focus in the portal over HDMI, with no setup.
+Its arrows work as the arrow keys do.
+
 Changelog: 22-11-2026 20:40:33
 
 Fixed. The rewrite-text workflow no longer runs the whole ./test.sh for core's unit. It runs core's own tests, and the
