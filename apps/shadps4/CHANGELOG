@@ -1,3 +1,7 @@
+Changelog: 22-11-2026 20:00:16
+
+Release 1.7.1.
+
 Changelog: 22-11-2026 18:07:36
 
 Fixed. tests/test_main_window.py.orig, an old copy of a test file that nothing used, is gone.

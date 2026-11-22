@@ -3,7 +3,7 @@
 
 APP_NAME = "PS5 Bluetooth"
 APP_ID = "ps5-bluetooth"
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 from pathlib import Path
 

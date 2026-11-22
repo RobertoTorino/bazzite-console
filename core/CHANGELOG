@@ -1,3 +1,7 @@
+Changelog: 22-11-2026 20:00:16
+
+Version 4.7.1.
+
 Changelog: 22-11-2026 18:07:36
 
 Fixed. widgets.py.orig, an old copy of widgets.py that nothing used, is gone.

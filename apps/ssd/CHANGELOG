@@ -1,3 +1,7 @@
+Changelog: 22-11-2026 20:00:16
+
+Release 1.8.1.
+
 Changelog: 22-11-2026 16:58:55
 
 Fixed. The Test pill's tooltip says the test file is about 1 GB: the speed test writes 1 GiB.

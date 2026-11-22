@@ -1,3 +1,7 @@
+Changelog: 22-11-2026 20:00:16
+
+Release 0.8.1.
+
 Changelog: 22-11-2026 18:33:23
 
 Fixed. The app's copy of core's exit_keys.py takes out the window class that pygame sets when it starts, as

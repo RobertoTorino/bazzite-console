@@ -6,7 +6,7 @@ It has not been validated on PS5 hardware.
 
 APP_NAME = "PS5 Webcam"
 APP_ID = "ps5-webcam"
-__version__ = "1.8.0"
+__version__ = "1.8.1"
 
 from pathlib import Path
 

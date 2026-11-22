@@ -1,3 +1,7 @@
+Changelog: 22-11-2026 20:00:16
+
+Release 1.7.1.
+
 Changelog: 22-11-2026 15:19:00
 
 Fixed. The controller reader gave SDL its dummy video and sound drivers and left them in the environment, so a program

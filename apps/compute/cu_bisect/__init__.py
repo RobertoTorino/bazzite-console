@@ -6,7 +6,7 @@ still happens in ps5-cu-bisect.sh itself, exactly as if typed by hand."""
 
 APP_NAME = "PS5 CU Tools"
 APP_ID = "ps5-cu-bisect-gui"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from pathlib import Path
 
