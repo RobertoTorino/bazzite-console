@@ -1169,7 +1169,7 @@ def test_the_header_is_an_apps_header_with_symbols(window):
         ("No", "Icons on Desktop"), (sound, "Sound"), (sound, "Music"), ("Built-in", "Music track"),
         ("Gunmetal", "Theme switcher"), ("Example", "Wallpaper"),
         ("12 h", "Clock"), ("None", "Weather"), ("100 %", "Touchpad")]
-    assert "verified by checksum" in window.source_text
+    assert "verified using checksums" in window.source_text
 
 
 def test_the_sys_info_symbol_opens_one_window_read_each_time(window, qapp, monkeypatch):
@@ -1177,7 +1177,7 @@ def test_the_sys_info_symbol_opens_one_window_read_each_time(window, qapp, monke
     Copy puts it on the clipboard as text."""
     reads = iter([[("Board", [("Mainboard", "Sony Interactive Entertainment")])],
                   [("Board", [("Mainboard", "Sony Interactive Entertainment")]), ("BIOS", [("Version", "1.00")])]])
-    monkeypatch.setattr(mw.sysinfo, "collect", lambda: next(reads))
+    monkeypatch.setattr(mw.sysinfo, "collect", lambda **_: next(reads))
     window.sysinfo_button.click()
     first = window.sysinfo_window
     assert first.isVisible() and [h for h, _ in first.sections] == ["Board"]

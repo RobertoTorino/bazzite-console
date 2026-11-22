@@ -228,6 +228,19 @@ def test_two_gpus_a_sata_drive_and_a_usb_stick(tmp_path):
     assert drives["sda"] == "WDC WD40EFRX, 4 TB HDD" and drives["sdb"] == "Flash Disk, 4 TB USB"
 
 
+def test_the_screens_in_use(tmp_path):
+    """The screens the desktop shows now get a row each under their output, with the mode in use (owner,
+    22-11-2026); a screen the desktop does not show, or a mode Qt does not know, gets none."""
+    sys = tmp_path / "sys"
+    for output, status in (("DP-1", "connected"), ("HDMI-A-1", "connected"), ("DP-2", "disconnected")):
+        write(sys / "class" / "drm" / f"card1-{output}" / "status", f"{status}\n")
+    in_use = {"DP-1": (3840, 2160, 59.94, 1.5), "HDMI-A-1": (1280, 720, 0.0, 1.0), "Virtual-1": (800, 600, 60.0, 1.0)}
+    assert sysinfo.displays(sys, in_use)[1] == [
+        ("DP-1", "connected"), ("DP-1 now", "3840 × 2160, 60 Hz, scale 150%"),
+        ("DP-2", "not connected"),
+        ("HDMI-A-1", "connected"), ("HDMI-A-1 now", "1280 × 720, scale 100%")]
+
+
 def test_a_system_that_reports_nothing(tmp_path, monkeypatch):
     """No sysfs, /proc or /etc (another OS, a container): only what Python itself knows."""
     monkeypatch.delenv("XDG_CURRENT_DESKTOP", raising=False)

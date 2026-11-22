@@ -48,11 +48,22 @@ your games stay. The games in Steam then no longer start: take them out first by
 
 ## Use it
 
-The header has four pills: the **RPCS3 version**, **RPCS3 Install**, **RPCS3 Uninstall** and **Refresh**, which reads everything again. Beside the title, next to the app's state, stands the controller's:
-**Controller connected**, or **No controller** when none is, looked at again every few seconds. A game started
-from Steam reads the controller that is connected when it starts, so switch yours on, or press its PS button to
-wake it, before starting a game. When Steam starts a game without one, the app also says so in a desktop
-notification. Under the links to **RPCS3's release notes** and to this wiki, a second row of five pills follows, each with what it is for on top and what it does under it: **Games Install** and **Games Uninstall**, **Available in Steam** (how many of your games are in Steam), **RPCN Account** (see [RPCN](#rpcn)) and **Play time**: the time spent in all your games together, as RPCS3 counts it, with each game's time in the tooltip. Your disc games and the firmware go into the app's own folder (see [Where your games
+The header has four pills: the **RPCS3 version**, **RPCS3 Install**, **RPCS3 Uninstall** and **Refresh**, which reads everything again.
+
+Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
+warning and red is a problem. Hold the pointer over a state to read it in full.
+
+- **Installed**: the app's own state, such as **Not installed**
+- **RPCN**: the state of RPCS3's online service, see [RPCN](#rpcn)
+- **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds
+- **Steam**: green while Steam runs and is signed in, red when it is not
+
+A game started from Steam reads the controller that is connected when it starts. So switch yours on before you
+start a game, or press its PS button to wake it. When Steam starts a game without a controller, the app also says
+so in a desktop notification. A game in Steam starts only while Steam is signed in. So start Steam and sign in
+before you start a game.
+
+Under the links to **RPCS3's release notes** and to this wiki, a second row of five pills follows, each with what it is for on top and what it does under it: **Games Install** and **Games Uninstall**, **Available in Steam** (how many of your games are in Steam), **RPCN Account** (see [RPCN](#rpcn)) and **Play time**: the time spent in all your games together, as RPCS3 counts it, with each game's time in the tooltip. Your disc games and the firmware go into the app's own folder (see [Where your games
 go](#where-your-games-go)); nothing is chosen or browsed to for them. Below the pills are two columns. The first says in five lines where each stands (**RPCS3:**, **Firmware:**, **Disc games:**, **PKG games:**, **RPCN:**), short, with more in their tooltips. The second shows the **Installed version:** of RPCS3. Then comes a row of six tabs: **Your games**, **Start game**, **Memory cards**, **Settings**, **View logs** and **Clear logs**. Start game and Clear logs are buttons.
 
 - **RPCS3**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
@@ -284,9 +295,14 @@ mail the token again, which it does once every 24 hours. **Save** keeps it all i
 RPCS3's own files, with **Sign in to RPCN when a game starts** ticked to use it, or unticked to stop. Close RPCS3
 before you save.
 
-The **RPCN** line under the pills names the account that signs in, or says **Off**. Beside the app's state in the
-header stands **RPCN Off**, **RPCN Online** or **RPCN Offline**: while RPCS3 runs, whether it signed in, as its log
-says; otherwise whether the server answers.
+The **RPCN** line under the pills names the account that signs in, or says **Off**. Beside the title, **RPCN** has a
+dot that shows its state. Its tooltip says the state in full:
+
+- **RPCN Online**, with a green dot
+- **RPCN Offline**, with a red dot
+- **RPCN Off**, with a plain dot
+
+While RPCS3 runs, it shows whether RPCS3 signed in, as its log says. Otherwise, it shows whether the server answers.
 
 The password is kept and sent as RPCS3 does it, scrambled, never as you typed it. The email address is sent to the
 server once and is not kept.

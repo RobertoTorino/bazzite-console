@@ -65,9 +65,11 @@ class StatusPill(QLabel):
 
 class StatusText(QWidget):
     """A state next to an app's title: a colored dot and the state in bold, in the color of its kind, the same
-    set_status() as StatusPill. Lighter than a pill in a header; neutral uses the normal text color."""
+    set_status() as StatusPill. Lighter than a pill in a header; neutral uses the normal text color. With a *name*
+    (owner, 22-11-2026: the dot shows the state) the window shows the name alone, such as Steam, and the state
+    opens the tooltip; text() is still the state."""
 
-    def __init__(self, text: str = "", parent: QWidget | None = None):
+    def __init__(self, text: str = "", parent: QWidget | None = None, name: str = ""):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(4, 0, 4, 0)
@@ -76,19 +78,23 @@ class StatusText(QWidget):
         self.label = QLabel()
         layout.addWidget(self.dot)
         layout.addWidget(self.label)
-        self.kind = ""
+        self.kind, self.name, self.state = "", name, ""
         self.set_status(text or "Unknown", "neutral")
 
     def set_status(self, text: str, kind: str, tooltip: str = "") -> None:
-        self.kind = kind
-        self.label.setText(text)
-        self.setToolTip(tooltip)
+        self.kind, self.state = kind, text
+        self.label.setText(self.name or text)
+        self.setToolTip("\n".join(t for t in (text, tooltip) if t) if self.name else tooltip)
         colour = STATE_COLORS.get(kind) if kind != "neutral" else None
         style = f"color:{colour};" if colour else "color:palette(window-text);"
         self.dot.setStyleSheet(style + "font-size:14px;")
         self.label.setStyleSheet(style + "font-weight:700; font-size:14px;")
 
     def text(self) -> str:
+        return self.state
+
+    def shown(self) -> str:
+        """What the window shows: the name, or the state when there is none."""
         return self.label.text()
 
 

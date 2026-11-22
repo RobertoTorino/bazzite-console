@@ -79,7 +79,7 @@ if $UNINSTALL; then
     if $PURGE; then
         info "Removing the settings and forgetting the account"
         rm -rf "${CONFIG_DIR:?}/$APP_ID"
-        info "$APP_NAME is uninstalled, and the account is forgotten on this PS5."
+        info "$APP_NAME is uninstalled. The account is forgotten on this board."
     else
         info "$APP_NAME is uninstalled. Its settings and the signed-in account are kept in $CONFIG_DIR/$APP_ID."
     fi

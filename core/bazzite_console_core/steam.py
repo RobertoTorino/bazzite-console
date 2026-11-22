@@ -17,6 +17,7 @@ are."""
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -86,6 +87,28 @@ def steam_running(proc: Path = Path("/proc")) -> bool:
         if state not in ("Z", "X"):
             return True
     return False
+
+
+CONNECTION_LOG = Path("logs") / "connection_log.txt"   # in Steam's folder: each line starts with its sign-in state
+LOG_TAIL = 65536                                        # bytes: the end of the log, where the newest lines are
+_LOG_STATE = re.compile(r"^\[[^\]]+\] \[([A-Za-z ]+), ")
+
+
+def signed_in(steam: Path | None, proc: Path = Path("/proc")) -> bool:
+    """Whether Steam runs and is signed in to an account: a game in Steam starts only then. Steam writes its sign-in
+    state at the start of every line of its connection log ("[date] [Logged On, 4, 7] ..."); its newest line counts
+    (owner's board, 22-11-2026: Logged On while signed in, Logged Off after it signed out and while it could not
+    sign in)."""
+    if steam is None or not steam_running(proc):
+        return False
+    try:
+        with (steam / CONNECTION_LOG).open("rb") as log:
+            log.seek(max(0, log.seek(0, os.SEEK_END) - LOG_TAIL))
+            lines = log.read().decode("utf-8", "replace").splitlines()
+    except OSError:
+        return False
+    states = [m.group(1) for m in map(_LOG_STATE.match, lines) if m]
+    return bool(states) and states[-1] == "Logged On"
 
 
 def game_mode() -> bool:

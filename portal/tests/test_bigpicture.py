@@ -264,7 +264,7 @@ def test_the_view_is_the_window_with_the_suites_name_and_a_big_icon(made):
     assert window.big.stage.text() == bazzite_console_portal.STAGE
     assert window.big.stage.toolTip() == bazzite_console_portal.STAGE_NOTE
     assert window.big.stage.isVisibleTo(window) == bool(bazzite_console_portal.STAGE)
-    assert "verified by checksum" in window.big.info.text_ and mw.CORE_VERSION in window.big.info.text_
+    assert "verified using checksums" in window.big.info.text_ and mw.CORE_VERSION in window.big.info.text_
 
 
 class FakeTour:

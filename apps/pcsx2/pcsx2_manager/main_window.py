@@ -57,6 +57,8 @@ MANUAL_URL = f"{SUITE_MANUAL_URL}apps/pcsx2/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
 CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
+STEAM_ON = "Steam runs and is signed in. The games in Steam can start."
+STEAM_OFF = "Steam does not run or is not signed in. Start Steam and sign in before you start a game."
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 KINDS = {"iso": "ISO", "chd": "CHD", "cso": "CSO", "zso": "ZSO", "gz": "GZ"}
 RUNNING = "PCSX2 is running: close it first, it would write its own settings over the change."
@@ -168,16 +170,21 @@ class MainWindow(QMainWindow):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         # The states on the right of the title row, ending at the middle of the last pill below them (owner,
         # 24-10-2026): a spacer of half that pill's width after them, set whenever the window's size changes.
-        self.pill = StatusText()
+        self.pill = StatusText(name="Installed")
         header.add_action(self.pill)
-        self.controller = StatusText()                  # beside it: whether a controller is connected
+        self.controller = StatusText(name="Controller")   # beside it: whether a controller is connected
         header.add_action(self.controller)
+        self.steam_state = StatusText(name="Steam")       # and whether Steam runs and is signed in (owner,
+        header.add_action(self.steam_state)               # 22-11-2026): a game in Steam starts only then
+        self._steam_on: bool | None = None
         self.states_spacer = QWidget()
         self.states_spacer.setFixedSize(0, 1)
         header.add_action(self.states_spacer)
         self.controller_timer = QTimer(self)
         self.controller_timer.setInterval(self.CONTROLLER_POLL)
         self.controller_timer.timeout.connect(self.show_controller)
+        self.controller_timer.timeout.connect(self.show_steam)
+        self.show_steam()
         self.controller_timer.start()
         self.refresh_pill = style.action_pill("Refresh", "Click to refresh", "Read the state again and look for games")
         self.refresh_pill.clicked.connect(self.refresh)
@@ -438,6 +445,15 @@ class MainWindow(QMainWindow):
         if off and not self._sound_said:
             self.say(text, ok=False)
         self._sound_said = off
+
+    def show_steam(self) -> None:
+        """Steam's state beside the title, green while it runs and is signed in, red otherwise."""
+        on = steam.signed_in(self.steam_dir)
+        if on == self._steam_on:
+            return
+        self._steam_on = on
+        self.steam_state.set_status("Steam signed in" if on else "Steam not signed in", "ok" if on else "bad",
+                                    STEAM_ON if on else STEAM_OFF)
 
     def show_controller(self) -> None:
         """The controller state beside the title: a game started from Steam reads the controller that is there

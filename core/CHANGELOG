@@ -1,3 +1,9 @@
+Changelog: 22-11-2026 11:44:56
+
+Added. steam.signed_in() says whether Steam runs and is signed in. It reads the newest sign-in state in Steam's
+connection log. StatusText takes an optional name: the window then shows the name alone with its colored dot, and the
+state opens the tooltip. text() still gives the state. test_steam.py and test_widgets.py test both.
+
 Changelog: 21-11-2026 12:04:44
 
 Version 4.6.0.

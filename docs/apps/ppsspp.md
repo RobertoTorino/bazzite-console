@@ -46,10 +46,19 @@ log go too.
 
 ## Use it
 
-The header has four pills: the **PPSSPP version**, **PPSSPP Install**, **PPSSPP Uninstall** and **Refresh**, which reads everything again. Beside the title, next to the app's state, stands the controller's:
-**Controller connected**, or **No controller** when none is, looked at again every few seconds. A game started
-from Steam reads the controller that is connected when it starts, so switch yours on first. Beside the title stands the app's state: **Not installed**, **No games** or
-**Ready**. Under the links to **PPSSPP's release notes** and to this wiki, a second row of four pills follows, each with what it is for on top and what it does under it: **Games Rename** and **Games Uninstall**, **Available in Steam** (how many of your games are in Steam) and **Play time**: the time spent in all your games together, as PPSSPP counts it, with each game's time in the tooltip. Below the pills are two columns. The first says in two lines where each stands (**PPSSPP:**, **Game folder:**), short, with more in their tooltips. The second shows the **Installed version:** of PPSSPP. Then comes a row of six tabs: **Your games**, **Start game**, **Memory cards**, **Settings**, **View logs** and **Clear logs**. Start game and Clear logs are buttons.
+The header has four pills: the **PPSSPP version**, **PPSSPP Install**, **PPSSPP Uninstall** and **Refresh**, which reads everything again.
+
+Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
+warning and red is a problem. Hold the pointer over a state to read it in full.
+
+- **Installed**: the app's own state, one of **Not installed**, **No games** or **Ready**
+- **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds
+- **Steam**: green while Steam runs and is signed in, red when it is not
+
+A game started from Steam reads the controller that is connected when it starts, so switch yours on first. A game
+in Steam starts only while Steam is signed in. So start Steam and sign in before you start a game.
+
+Under the links to **PPSSPP's release notes** and to this wiki, a second row of four pills follows, each with what it is for on top and what it does under it: **Games Rename** and **Games Uninstall**, **Available in Steam** (how many of your games are in Steam) and **Play time**: the time spent in all your games together, as PPSSPP counts it, with each game's time in the tooltip. Below the pills are two columns. The first says in two lines where each stands (**PPSSPP:**, **Game folder:**), short, with more in their tooltips. The second shows the **Installed version:** of PPSSPP. Then comes a row of six tabs: **Your games**, **Start game**, **Memory cards**, **Settings**, **View logs** and **Clear logs**. Start game and Clear logs are buttons.
 
 - **PPSSPP**: **Not installed.** or **Installed.**, with the button to use after it, on one line. The tooltip says
   which release is installed, or what Install takes, and when a newer PPSSPP is out. **Install** asks first, then

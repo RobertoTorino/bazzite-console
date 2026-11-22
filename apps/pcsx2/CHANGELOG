@@ -1,3 +1,11 @@
+Changelog: 22-11-2026 11:44:56
+
+Added. The row beside the title has a new state, Steam. Its dot is green while Steam runs and is signed in, and red when
+it is not, because a game in Steam starts only then. The app looks again every few seconds. The states now show their
+names alone, Installed, Controller and Steam, and the dot's color shows the state. Each tooltip opens with the state in
+full, such as Not installed or No controller. The wiki describes the row. test_main_window.py tests the Steam state and
+follows the new order.
+
 Changelog: 21-11-2026 12:04:44
 
 Release 1.6.0.

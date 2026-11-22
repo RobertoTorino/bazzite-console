@@ -705,3 +705,19 @@ def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp
     assert len(left) == 1 and window.doubles == {} and not window.steam_button.isEnabled()
     assert window.table.item(0, 0).toolTip() == "In Steam"
     window.close()
+
+
+def test_the_steam_state_follows_the_sign_in(qapp, folders, monkeypatch):
+    """Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one
+    otherwise, looked at again with the controller."""
+    import ppsspp_manager.main_window as module
+    signed = [False]
+    monkeypatch.setattr(module.steam, "signed_in", lambda folder: signed[0])
+    window = _window(folders)
+    assert window.steam_state.shown() == "Steam" and window.steam_state.kind == "bad"
+    assert window.steam_state.toolTip() == "Steam not signed in\n" + module.STEAM_OFF
+    assert window.pill.shown() == "Installed" and window.controller.shown() == "Controller"
+    signed[0] = True
+    window.show_steam()
+    assert window.steam_state.kind == "ok" and window.steam_state.toolTip() == "Steam signed in\n" + module.STEAM_ON
+    window.close()

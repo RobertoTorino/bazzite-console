@@ -51,6 +51,8 @@ MANUAL_URL = f"{SUITE_MANUAL_URL}apps/xenia/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
 CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
+STEAM_ON = "Steam runs and is signed in. The games in Steam can start."
+STEAM_OFF = "Steam does not run or is not signed in. Start Steam and sign in before you start a game."
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 KINDS = {"iso": "ISO", "xex": "XEX", "zar": "ZAR", "god": "Games on Demand", "xbla": "Arcade"}
 STEAM, GAME, SERIAL, KIND, FILE = range(5)                  # the table's columns
@@ -148,13 +150,18 @@ class MainWindow(QMainWindow):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         # The state on the right of the title row, ending at the middle of the last pill below it, as in RPCS3
         # Manager: a spacer of half that pill's width after it, set whenever the window's size changes.
-        self.pill = StatusText()
+        self.pill = StatusText(name="Installed")
         header.add_action(self.pill)
-        self.controller = StatusText()                  # beside it: whether a controller is connected (owner,
-        header.add_action(self.controller)              # 18-11-2026: as the other managers show it)
+        self.controller = StatusText(name="Controller")   # beside it: whether a controller is connected (owner,
+        header.add_action(self.controller)                # 18-11-2026: as the other managers show it)
+        self.steam_state = StatusText(name="Steam")       # and whether Steam runs and is signed in (owner,
+        header.add_action(self.steam_state)               # 22-11-2026): a game in Steam starts only then
+        self._steam_on: bool | None = None
         self.controller_timer = QTimer(self)
         self.controller_timer.setInterval(self.CONTROLLER_POLL)
         self.controller_timer.timeout.connect(self.show_controller)
+        self.controller_timer.timeout.connect(self.show_steam)
+        self.show_steam()
         self.controller_timer.start()
         self.states_spacer = QWidget()
         self.states_spacer.setFixedSize(0, 1)
@@ -389,6 +396,15 @@ class MainWindow(QMainWindow):
                      "Update Steam brings the shortcut in Steam up to date.")
         self.settings_page.load()
         self.saves_page.load()
+
+    def show_steam(self) -> None:
+        """Steam's state beside the title, green while it runs and is signed in, red otherwise."""
+        on = steam.signed_in(self.steam_dir)
+        if on == self._steam_on:
+            return
+        self._steam_on = on
+        self.steam_state.set_status("Steam signed in" if on else "Steam not signed in", "ok" if on else "bad",
+                                    STEAM_ON if on else STEAM_OFF)
 
     def show_controller(self) -> None:
         """The controller state beside the title: a game started from Steam reads the controller that is there

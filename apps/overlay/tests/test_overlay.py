@@ -19,13 +19,13 @@ def test_format_reading():
     rows = overlay.format_reading(Reading(
         cpu_load=12.4, cpu_mhz=3486, cpu_temp=72.1, soc_temp=81.0, board_temp=45.2, gpu_load=45.5, gpu_mhz=2000,
         gpu_temp=91.0, gpu_limit=85, vram=(300_000_000, 536_870_912), ram=(6_500_000_000, 16_200_000_000),
-        nvme_temp=40.0, net=(2_100_000.0, 80_000.0), disk=(150_000_000.0, 0.0), fan=Fan(22, "auto")), 60.0)
+        nvme_temp=40.0, net=(2_100_000.0, 80_000.0), disk=(150_000_000.0, 0.0), fan=Fan(22, "auto")), (3840, 2160, 60.0, 1.5))
     assert rows == {
         "cpu": ("12 % · 3486 MHz", ""),
         "gpu": ("46 % · 2000 MHz", ""),
         "vram": ("0.3 / 0.5 GB", ""),
         "ram": ("6.5 / 16.2 GB", ""),
-        "refresh": ("60 Hz", ""),
+        "refresh": ("3840 × 2160 · 150 % · 60 Hz", ""),             # the Screen row
         "fan": ("22 % · auto", ""),
         "cpu_temp": ("72 °C", ""),
         "soc_temp": ("81 °C", ORANGE),
@@ -43,6 +43,10 @@ def test_format_missing_values():
     rows = overlay.format_reading(Reading(cpu_mhz=2800), None)
     assert rows["cpu"] == ("2800 MHz", "")
     assert all(text == overlay.DASH for key, (text, _) in rows.items() if key != "cpu")
+
+
+def test_screen_without_a_refresh_rate():
+    assert overlay._screen((1280, 720, 0.0, 1.0)) == "1280 × 720 · 100 %"
 
 
 def test_warm_is_orange():

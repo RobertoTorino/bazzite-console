@@ -2,7 +2,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3060 test functions (3448 cases counting the parametrized ones) in 35 test folders, and 36 installer tests.
+3070 test functions (3458 cases counting the parametrized ones) in 35 test folders, and 36 installer tests.
 
 ## Summary
 
@@ -17,22 +17,22 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/cores](#appscores) | 4 | 29 |  |
 | [apps/datstation](#appsdatstation) | 7 | 39 | 2.1 s |
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
-| [apps/overlay](#appsoverlay) | 2 | 18 | 0.2 s |
+| [apps/overlay](#appsoverlay) | 2 | 19 | 0.2 s |
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
-| [apps/pcsx2](#appspcsx2) | 14 | 147 | 19.0 s |
-| [apps/ppsspp](#appsppsspp) | 11 | 96 | 4.5 s |
+| [apps/pcsx2](#appspcsx2) | 14 | 148 | 19.0 s |
+| [apps/ppsspp](#appsppsspp) | 11 | 97 | 4.5 s |
 | [apps/quickfix](#appsquickfix) | 6 | 45 |  |
 | [apps/remoteplay](#appsremoteplay) | 26 | 242 | 9.6 s |
-| [apps/rpcs3](#appsrpcs3) | 12 | 119 | 5.6 s |
+| [apps/rpcs3](#appsrpcs3) | 12 | 120 | 5.6 s |
 | [apps/sftp](#appssftp) | 11 | 86 | 5.6 s |
-| [apps/shadps4](#appsshadps4) | 17 | 151 | 7.7 s |
+| [apps/shadps4](#appsshadps4) | 17 | 152 | 7.7 s |
 | [apps/ssd](#appsssd) | 4 | 50 | 0.8 s |
 | [apps/turing](#appsturing) | 9 | 75 |  |
 | [apps/upscaler](#appsupscaler) | 11 | 119 | 1.6 s |
-| [apps/vita3k](#appsvita3k) | 9 | 78 | 4.9 s |
+| [apps/vita3k](#appsvita3k) | 9 | 79 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
-| [apps/xenia](#appsxenia) | 8 | 72 | 4.2 s |
-| [core](#core) | 27 | 193 | 3.5 s |
+| [apps/xenia](#appsxenia) | 8 | 73 | 4.2 s |
+| [core](#core) | 27 | 195 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 105 | 2.1 s |
@@ -41,9 +41,9 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
-| [portal](#portal) | 17 | 220 | 30.2 s |
+| [portal](#portal) | 17 | 221 | 30.2 s |
 | [tools](#tools) | 38 | 226 | 10.2 s |
-| **All** | | **3060** | **153 s** |
+| **All** | | **3070** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -675,12 +675,13 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/overlay
 
-18 tests in 2 files, 0.2 s in a local run.
+19 tests in 2 files, 0.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_overlay.py` | `test_format_reading` |  |  | Format reading. |
 | `test_overlay.py` | `test_format_missing_values` |  |  | Format missing values. |
+| `test_overlay.py` | `test_screen_without_a_refresh_rate` |  |  | Screen without a refresh rate. |
 | `test_overlay.py` | `test_warm_is_orange` |  |  | Warm is orange. |
 | `test_overlay.py` | `test_window_shows_the_ps5` |  |  | Window shows the ps5. |
 | `test_overlay.py` | `test_kernel_without_gpu_sensors` |  |  | Kernel without gpu sensors. |
@@ -729,7 +730,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/pcsx2
 
-147 tests in 14 files, 19.0 s in a local run.
+148 tests in 14 files, 19.0 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -799,6 +800,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
 | `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_memcard_icon.py` | `test_rez_as_mymcs_opengl_viewer_draws_it` |  | 0.8 s | Rez as mymcs opengl viewer draws it. |
 | `test_memcard_icon.py` | `test_vertex_colours_and_light` |  | 0.3 s | Vertex colours and light. |
 | `test_memcard_icon.py` | `test_back_faces_are_left_out` |  | 0.1 s | Back faces are left out. |
@@ -883,7 +885,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/ppsspp
 
-96 tests in 11 files, 4.5 s in a local run.
+97 tests in 11 files, 4.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -942,6 +944,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
 | `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_ppsspp_settings.py` | `test_the_values_as_ppsspp_writes_them` |  |  | The values as ppsspp writes them. |
 | `test_ppsspp_settings.py` | `test_the_defaults_without_a_file` |  |  | The defaults without a file. |
 | `test_ppsspp_settings.py` | `test_other_forms_of_a_value` |  |  | Other forms of a value. |
@@ -1287,7 +1290,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/rpcs3
 
-119 tests in 12 files, 5.6 s in a local run.
+120 tests in 12 files, 5.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1354,6 +1357,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
 | `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_rpcn.py` | `test_the_password_as_rpcs3_derives_it` |  |  | The password as rpcs3 derives it. |
 | `test_rpcn.py` | `test_create_an_account` |  |  | Create an account. |
 | `test_rpcn.py` | `test_the_server_refuses_an_account` |  |  | The server refuses an account. |
@@ -1506,7 +1510,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/shadps4
 
-151 tests in 17 files, 7.7 s in a local run.
+152 tests in 17 files, 7.7 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1611,6 +1615,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.2 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner's board, 20-11-2026: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
+| `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_pkg.py` | `test_sanitize_file_name` |  |  | Sanitize file name. |
 | `test_pkg.py` | `test_find_pfsc_offset_priorities` |  |  | Find pfsc offset priorities. |
 | `test_pkg.py` | `test_decompress_pfsc_roundtrip` |  |  | Decompress pfsc roundtrip. |
@@ -1929,7 +1934,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/vita3k
 
-78 tests in 9 files, 4.9 s in a local run.
+79 tests in 9 files, 4.9 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1981,6 +1986,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
 | `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
@@ -2134,7 +2140,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/xenia
 
-72 tests in 8 files, 4.2 s in a local run.
+73 tests in 8 files, 4.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2187,6 +2193,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
 | `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
 | `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
@@ -2213,7 +2220,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## core
 
-193 tests in 27 files, 3.5 s in a local run.
+195 tests in 27 files, 3.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2343,6 +2350,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_steam.py` | `test_closed_for_a_change_and_started_again` |  |  | Closed for a change and started again. |
 | `test_steam.py` | `test_steam_that_does_not_close_changes_nothing` |  |  | Steam that does not close changes nothing. |
 | `test_steam.py` | `test_steam_running_reads_process_names` |  |  | Steam running reads process names. |
+| `test_steam.py` | `test_signed_in_reads_the_newest_state_of_the_connection_log` |  |  | Steam's connection log as the owner's board wrote it (22-11-2026), with the account and addresses left out. |
 | `test_steam.py` | `test_game_mode` |  |  | Game mode. |
 | `test_steam.py` | `test_steam_closes_with_its_own_command` |  |  | Steam closes with its own command. |
 | `test_steam.py` | `test_installed_is_steams_program` |  |  | The portal's RT Steam shows only where Steam's program is (owner, 30-10-2026). |
@@ -2386,6 +2394,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_updates.py` | `test_checker_runs_job_off_thread` |  |  | Checker runs job off thread. |
 | `test_widgets.py` | `test_status_pill_colours` |  |  | The theme's surface; the state a colored left edge, the edge's color for neutral. |
 | `test_widgets.py` | `test_status_text_colours` |  |  | Status text colours. |
+| `test_widgets.py` | `test_status_text_with_a_name_shows_the_name_alone` |  |  | The dot shows the state (owner, 22-11-2026): the name stays, the state opens the tooltip. |
 | `test_widgets.py` | `test_metric_box` |  |  | Metric box. |
 | `test_widgets.py` | `test_pill_is_a_metric_box_that_clicks` |  |  | A click, Enter or Space emits clicked; the silver outline under the mouse or the keyboard focus. |
 | `test_widgets.py` | `test_a_pill_that_cannot_be_clicked_looks_muted` |  |  | Only a disabled pill's text is muted (a rule on the pill's own state would mute every pill: Qt ignores an ancestor's pseudo-state); enabled again, it is bright again. |
@@ -2937,7 +2946,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## portal
 
-220 tests in 17 files, 30.2 s in a local run.
+221 tests in 17 files, 30.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3066,6 +3075,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_status.py` | `test_the_loads_without_the_clock` |  |  | The window samples the loads every 2 s and draws the clock every second: loads() is the line's first part. |
 | `test_sysinfo.py` | `test_the_owners_board` |  |  | The owners board. |
 | `test_sysinfo.py` | `test_two_gpus_a_sata_drive_and_a_usb_stick` |  |  | Two gpus a sata drive and a usb stick. |
+| `test_sysinfo.py` | `test_the_screens_in_use` |  |  | The screens the desktop shows now get a row each under their output, with the mode in use (owner, 22-11-2026); a screen the desktop does not show, or a mode Qt does not know, gets none. |
 | `test_sysinfo.py` | `test_a_system_that_reports_nothing` |  |  | No sysfs, /proc or /etc (another OS, a container): only what Python itself knows. |
 | `test_sysinfo.py` | `test_as_text` |  |  | As text. |
 | `test_touchpad_and_raise.py` | `test_a_finger_moves_the_pointer_and_a_press_clicks` |  |  | A finger moves the pointer and a press clicks. |

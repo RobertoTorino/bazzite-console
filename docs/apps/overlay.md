@@ -13,7 +13,7 @@ A small window that stays on top of your desktop and shows the live system value
 | GPU | load and clock | `amdgpu` (`gpu_busy_percent`, its clock sensor) |
 | VRAM | used / total of the GPU's share of the memory | `amdgpu` |
 | RAM | used / total | `/proc/meminfo` |
-| Refresh | the refresh rate of the screen the window is on | Qt |
+| Screen | the resolution, scale and refresh rate of the screen the window is on | Qt |
 | Fan | the fan's duty (its share of full speed) and its mode: auto, manual or full speed | `ps5_fan` |
 | CPU temp | Tctl | `k10temp` |
 | SoC temp | the main SoC sensor | `ps5_fan` ("MainSoC") |

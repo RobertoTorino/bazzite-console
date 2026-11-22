@@ -139,8 +139,8 @@ def test_before_installing(qapp, folders):
     window.place_states()                               # the states end at the middle of the last pill (owner)
     window.centralWidget().layout().activate()
     centre = window.refresh_pill.mapTo(window, window.refresh_pill.rect().center()).x()
-    right = window.controller.mapTo(window, window.controller.rect().topRight()).x()
-    assert abs(right - centre) <= 8 and window.pill.x() < window.rpcn_pill.x() < window.controller.x()
+    right = window.steam_state.mapTo(window, window.steam_state.rect().topRight()).x()   # Steam last
+    assert abs(right - centre) <= 8 and window.pill.x() < window.rpcn_pill.x() < window.controller.x() < window.steam_state.x()
     assert "RPCS3's release notes" in window.intro.text() and emulator.RELEASE_PAGE in window.intro.text()
     assert ">Wiki</a>" in window.intro.text() and "Manual" not in window.intro.text()
     assert "Game Mode" not in window.intro.text()
@@ -1155,4 +1155,20 @@ def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp
     left = [i for i in steam.read_vdf(path.read_bytes())["shortcuts"].values() if shortcuts.ours(i)]
     assert len(left) == 1 and window.doubles == {} and not window.steam_button.isEnabled()
     assert window.table.item(0, 0).toolTip() == "In Steam"
+    window.close()
+
+
+def test_the_steam_state_follows_the_sign_in(qapp, folders, monkeypatch):
+    """Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one
+    otherwise, looked at again with the controller."""
+    import rpcs3_manager.main_window as module
+    signed = [False]
+    monkeypatch.setattr(module.steam, "signed_in", lambda folder: signed[0])
+    window = _window(folders)
+    assert window.steam_state.shown() == "Steam" and window.steam_state.kind == "bad"
+    assert window.steam_state.toolTip() == "Steam not signed in\n" + module.STEAM_OFF
+    assert window.pill.shown() == "Installed" and window.controller.shown() == "Controller"
+    signed[0] = True
+    window.show_steam()
+    assert window.steam_state.kind == "ok" and window.steam_state.toolTip() == "Steam signed in\n" + module.STEAM_ON
     window.close()

@@ -47,11 +47,22 @@ stay. The games in Steam then no longer start: take them out first by unticking 
 
 ## Use it
 
-The header has four pills: the **shadPS4 version**, **shadPS4 Install**, **shadPS4 Uninstall** and **Refresh**, which reads everything again. Beside the title, next to the app's state,
-stand shadNet's state (see [shadNet](#shadnet)) and the controller's: **Controller connected**, or **No
-controller** when none is, looked at again every few seconds. A game started from Steam reads the controller that
-is connected when it starts, so switch yours on, or press its PS button to wake it, before starting a game. When
-Steam starts a game without one, the app also says so in a desktop notification. Under the links to **shadPS4's release notes** and to this wiki, a second row of five pills follows, each with what it is
+The header has four pills: the **shadPS4 version**, **shadPS4 Install**, **shadPS4 Uninstall** and **Refresh**, which reads everything again.
+
+Beside the title is a row of states. Each shows its name and a colored dot. Green is good, orange is a
+warning and red is a problem. Hold the pointer over a state to read it in full.
+
+- **Installed**: the app's own state, such as **Not installed**
+- **shadNet**: the state of shadPS4's online service, see [shadNet](#shadnet)
+- **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds
+- **Steam**: green while Steam runs and is signed in, red when it is not
+
+A game started from Steam reads the controller that is connected when it starts. So switch yours on before you
+start a game, or press its PS button to wake it. When Steam starts a game without a controller, the app also says
+so in a desktop notification. A game in Steam starts only while Steam is signed in. So start Steam and sign in
+before you start a game.
+
+Under the links to **shadPS4's release notes** and to this wiki, a second row of five pills follows, each with what it is
 for on top and what it does under it: **Games Install** and **Games Uninstall**, **Available in Steam** (how many
 of your games are in Steam), **shadNet Account** and **Play time**: the time spent in all your games together, as
 shadPS4 counts it, with each game's time in the tooltip. Your games and the system modules go into the app's own folder (see [Where your games
@@ -301,13 +312,13 @@ once and out again, to check the name and password. **Save** keeps it all in sha
 shadNet when a game starts** ticked to use it, or unticked to stop. Close shadPS4 before you save: it writes its own
 settings back when it ends.
 
-The header shows the state of shadNet beside the app's own:
+Beside the title, **shadNet** has a dot that shows its state. Its tooltip says the state in full:
 
-- **shadNet Online**: while a game runs, shadPS4 is signed in. Without a game, the server answers, so shadPS4 can
-  sign in when one starts. The app asks the server without signing in.
-- **shadNet Offline**: the server does not answer, or shadPS4's sign-in was refused or dropped. Hold the pointer
-  over it to see why.
-- **shadNet Off**: no account is set up, or **Sign in to shadNet when a game starts** is off.
+- **shadNet Online** has a green dot. While a game runs, shadPS4 is signed in. Without a game, the server answers,
+  so shadPS4 can sign in when one starts. The app asks the server without signing in.
+- **shadNet Offline** has a red dot. The server does not answer, or shadPS4's sign-in was refused or dropped. The
+  tooltip says why.
+- **shadNet Off** has a plain dot. No account is set up, or **Sign in to shadNet when a game starts** is off.
 
 While shadPS4 runs, the app reads shadPS4's log every few seconds to see whether it signed in.
 

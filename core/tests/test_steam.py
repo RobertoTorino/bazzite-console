@@ -178,6 +178,30 @@ def test_steam_running_reads_process_names(tmp_path, monkeypatch):
     assert steam.steam_running(tmp_path)
 
 
+def test_signed_in_reads_the_newest_state_of_the_connection_log(tmp_path):
+    """Steam's connection log as the owner's board wrote it (22-11-2026), with the account and addresses left out."""
+    proc, folder = tmp_path / "proc", tmp_path / "Steam"
+    (proc / "20").mkdir(parents=True)
+    (proc / "20" / "comm").write_text("steam\n")
+    (proc / "20" / "stat").write_text("20 (steam) S 1 20 20 0 -1\n")
+    log = folder / steam.CONNECTION_LOG
+    log.parent.mkdir(parents=True)
+    assert not steam.signed_in(folder, proc)                        # no log yet
+    log.write_text("[2026-11-22 10:03:25] [Logging On, 4, 7] [U:1:1] RecvMsgClientLogOnResponse() : [U:1:1] 'OK'\n"
+                   "[2026-11-22 10:03:25] [Logged On, 4, 7] [U:1:1] RecvMsgClientLogOnResponse() : processing complete\n"
+                   "a line without a state\n")
+    assert steam.signed_in(folder, proc)
+    with log.open("a") as more:
+        more.write("[2026-11-22 10:05:46] [Logged On, 4, 7] [U:1:1] LogOff()\n"
+                   "[2026-11-22 10:05:46] [Logging Off, 4, 7] [U:1:1] AsyncDisconnect( bDontWaitOnTCPShutdown: false )\n"
+                   "[2026-11-22 10:05:47] [Logged Off, 0, 0] [U:1:1] Log session ended\n")
+    assert not steam.signed_in(folder, proc)                        # signed out
+    log.write_text("[2026-11-22 10:03:25] [Logged On, 4, 7] [U:1:1] RecvMsgClientLogOnResponse() : processing complete\n")
+    (proc / "20" / "comm").write_text("bash\n")
+    assert not steam.signed_in(folder, proc)                        # the log says so, but Steam does not run
+    assert not steam.signed_in(None, proc)                          # no Steam at all
+
+
 def test_game_mode(monkeypatch):
     monkeypatch.setenv("XDG_CURRENT_DESKTOP", "gamescope")
     assert steam.game_mode()

@@ -1,3 +1,15 @@
+Changelog: 22-11-2026 11:42:28
+
+Added. Sys info's Display section has a row for each screen the desktop uses, such as DP-1 now. It shows the
+screen's resolution, refresh rate and scale, as the desktop reports them. The preferred mode stays on the output's
+own row. The wiki's Sys info text names it. test_sysinfo.py has a test for it, and test_window.py passes the screens
+to its stand-in.
+
+Changelog: 22-11-2026 11:40:57
+
+Fixed. The line about where apps come from, in the info of the home page, now reads "Apps are installed from the
+releases pinned by this portal version and verified using checksums." The tests that read it changed with it.
+
 Changelog: 21-11-2026 20:53:56
 
 Release 4.9.0. Pins ps5-board-v0.10.0, ps5-quickfix-v0.6.0, ps5-cec-v2.7.0.

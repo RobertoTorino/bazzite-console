@@ -195,6 +195,16 @@ def shell_line(folder: PurePath, commands: tuple[str, ...]) -> str:
     return " && ".join([f"cd {shlex.quote(str(folder))}", *commands])
 
 
+def screens_in_use() -> dict[str, sysinfo.Mode]:
+    """The screens the desktop shows now, by output name, as Qt reports them: the resolution in pixels (its size
+    times the scale), the refresh rate and the scale."""
+    found = {}
+    for screen in QApplication.screens():
+        scale, size = screen.devicePixelRatio(), screen.geometry().size()
+        found[screen.name()] = (round(size.width() * scale), round(size.height() * scale), screen.refreshRate(), scale)
+    return found
+
+
 def short_name(name: str) -> str:
     """The name on a tile: the suite's name is understood in the portal."""
     return name.removeprefix("PS5 ")
@@ -561,7 +571,7 @@ class MainWindow(QMainWindow):
             self.big.set_banner(f"Local build: this portal comes from the checkout {local_build}, "
                                 "not from a published release.")
         source = ("Development: apps install from the local checkout " + str(sources.checkout) if sources.local
-                  else "Apps install from the releases this portal version pins, verified by checksum.")
+                  else "Apps are installed from the releases pinned by this portal version and verified using checksums.")
         self.source_text = source
         self.big.set_about(f"<p><b>{APP_NAME} {__version__}</b> · core {CORE_VERSION}"
                            + (f"<br>{escape(STAGE_NOTE)}" if STAGE else "") + f"</p><p>{escape(source)}</p>")
@@ -1245,7 +1255,7 @@ class MainWindow(QMainWindow):
         """The Sys info window, read again each time it opens; one at a time."""
         if self.sysinfo_window is None:
             self.sysinfo_window = SysInfoDialog(self)
-        self.sysinfo_window.fill(sysinfo.collect())
+        self.sysinfo_window.fill(sysinfo.collect(in_use=screens_in_use()))
         self.sysinfo_window.show()
         self.sysinfo_window.raise_()
         self.sysinfo_window.activateWindow()

@@ -39,6 +39,18 @@ def test_status_text_colours(qapp):
     assert "palette(window-text)" in status.label.styleSheet()
 
 
+def test_status_text_with_a_name_shows_the_name_alone(qapp):
+    """The dot shows the state (owner, 22-11-2026): the name stays, the state opens the tooltip."""
+    status = StatusText(name="shadNet")
+    status.set_status("shadNet Offline", "bad", "The server does not answer.")
+    assert status.shown() == "shadNet" and status.text() == "shadNet Offline" and status.kind == "bad"
+    assert status.toolTip() == "shadNet Offline\nThe server does not answer."
+    assert theme.RED in status.dot.styleSheet()
+    status.set_status("shadNet Off", "neutral")
+    assert status.shown() == "shadNet" and status.toolTip() == "shadNet Off"
+    assert StatusText("Ready").shown() == "Ready"                     # without a name: the state, as before
+
+
 def test_metric_box(qapp):
     box = MetricBox("GPU clock", theme.PURPLE)
     box.set_value("1800 MHz", "now")

@@ -1,3 +1,8 @@
+Changelog: 21-11-2026 19:47:47
+
+Fixed. The installer's message after --uninstall --purge says "on this board", which was "on this PS5", and is two
+sentences now, as its twin's is.
+
 Changelog: 21-11-2026 12:04:44
 
 Release 1.6.0.
