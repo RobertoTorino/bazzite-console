@@ -4,7 +4,7 @@ Bazzite host from another computer."""
 
 APP_NAME = "PS5 SFTP Tools"
 APP_ID = "ps5-sftp-tools"
-__version__ = "1.8.1"
+__version__ = "1.9.0"
 
 from pathlib import Path
 
