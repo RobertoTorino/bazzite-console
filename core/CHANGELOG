@@ -1,3 +1,7 @@
+Changelog: 22-11-2026 12:25:09
+
+Version 4.7.0.
+
 Changelog: 22-11-2026 11:44:56
 
 Added. steam.signed_in() says whether Steam runs and is signed in. It reads the newest sign-in state in Steam's
