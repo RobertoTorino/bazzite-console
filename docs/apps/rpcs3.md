@@ -213,6 +213,14 @@ on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
+#### Exit RPCS3
+
+**Exit RPCS3** ends RPCS3 at once, with everything it started. Use it when RPCS3 is stuck, or when you can't
+reach its own window. It is the first button under the table. It turns on only while RPCS3 runs.
+
+The app asks nothing first. A game that runs ends without saving, so save in the game before you click it. The line
+under the tabs then says **RPCS3 was ended.**
+
 ### Settings
 
 The tab scrolls when it is higher than the window.

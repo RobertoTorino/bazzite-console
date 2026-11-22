@@ -34,7 +34,7 @@ const unit = (name) => {
   if (name === 'portal') return { files: 'docs/portal.md, portal/README.md and the text in portal/ (its .py files and install.sh), but NOT portal/apps.toml',
     paths: 'docs/portal.md portal/README.md portal/bazzite_console_portal portal/install.sh', tests: `cd ${REPO}/portal && QT_QPA_PLATFORM=offscreen ${REPO}/.venv-linux/bin/python -m pytest -q tests`, changelog: 'portal/CHANGELOG' }
   if (name === 'core') return { files: 'core/README.md and the text in core/bazzite_console_core/*.py',
-    paths: 'core', tests: `cd ${REPO} && ./test.sh -q`, changelog: 'core/CHANGELOG' }
+    paths: 'core', tests: `cd ${REPO}/core && QT_QPA_PLATFORM=offscreen ${REPO}/.venv-linux/bin/python -m pytest -q tests, and the tests of each app, dev app or the portal that name a string you changed (find them with grep -rl in apps/*/tests dev/*/tests portal/tests); never the whole ./test.sh`, changelog: 'core/CHANGELOG' }
   if (name === 'design') return { files: 'DESIGN.md, whose text is in tools/make_design.py: change the text there, then regenerate with python3 tools/make_design.py (never hand-edit DESIGN.md)',
     paths: 'DESIGN.md', tests: `cd ${REPO} && python3 tools/make_design.py --check`, changelog: 'the root CHANGELOG' }
   if (name.startsWith('dev/')) return { files: `${name}/ (its README and the text in its .py files)`, paths: name,

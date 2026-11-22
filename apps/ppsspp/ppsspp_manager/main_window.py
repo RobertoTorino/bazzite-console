@@ -51,6 +51,7 @@ from .saves_page import SavesPage
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/ppsspp/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
+EXIT_TIP = "End PPSSPP at once, with no question. A game that is running ends without saving"
 CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
 STEAM_ON = "Steam runs and is signed in. The games in Steam can start."
 STEAM_OFF = "Steam does not run or is not signed in. Start Steam and sign in before you start a game."
@@ -98,7 +99,7 @@ class MainWindow(QMainWindow):
                  steam_closed=steam.with_steam_closed, steam_running=steam.steam_running,
                  newer_release=emulator.newer_release,
                  covers_home: Path | None = None, covers_get: covers.Get = covers._get,
-                 covers_key: Path | None = None, ppsspp_running=emulator.running,
+                 covers_key: Path | None = None, ppsspp_running=emulator.running, ppsspp_end=emulator.end,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
                  log_path: Path | None = None, open_url=xdg_open,
                  devices: Path = controllers.DEVICES,
@@ -126,6 +127,7 @@ class MainWindow(QMainWindow):
         self.steam_closed = steam_closed
         self.steam_running = steam_running
         self.ppsspp_running = ppsspp_running
+        self.ppsspp_end = ppsspp_end
         self.covers_home = covers_home or covers.covers_home(APP_ID)
         self.covers_get = covers_get
         self.covers_key = covers_key
@@ -166,6 +168,7 @@ class MainWindow(QMainWindow):
         self.controller_timer.setInterval(self.CONTROLLER_POLL)
         self.controller_timer.timeout.connect(self.show_controller)
         self.controller_timer.timeout.connect(self.show_steam)
+        self.controller_timer.timeout.connect(self.show_exit)
         self.show_steam()
         self.controller_timer.start()
         self.states_spacer = QWidget()
@@ -257,6 +260,11 @@ class MainWindow(QMainWindow):
         self.table.itemChanged.connect(lambda _item: self._update_buttons())
         self.table.itemSelectionChanged.connect(self._update_buttons)
 
+        # Exit PPSSPP (owner, 22-11-2026): the first button of the row, on while PPSSPP runs; a click ends it at once
+        self.exit_button = QPushButton("Exit PPSSPP")
+        self.exit_button.setToolTip(EXIT_TIP)
+        self.exit_button.clicked.connect(self.on_exit_ppsspp)
+        self.show_exit()
         self.ppsspp_button = QPushButton("PPSSPP settings")
         self.ppsspp_button.setToolTip("Open PPSSPP's own window for what the Settings tab does not set: its other "
                                       "settings, the controllers and its game list")
@@ -275,6 +283,7 @@ class MainWindow(QMainWindow):
         self.steam_info.opens = lambda _url: self.open_steam()      # the app opens Steam itself (open_steam)
         buttons.addWidget(self.steam_info)
         buttons.addStretch(1)
+        buttons.addWidget(self.exit_button)
         buttons.addWidget(self.ppsspp_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
@@ -666,6 +675,18 @@ class MainWindow(QMainWindow):
         """The installed PPSSPP through the run wrapper (from the app folder when it is not installed yet)."""
         run = self.run_path if self.run_path.is_file() else ROOT / shortcuts.RUN_NAME
         return [str(run), *args]
+
+    def show_exit(self) -> None:
+        """Exit PPSSPP is on while PPSSPP runs."""
+        self.exit_button.setEnabled(self.ppsspp_running())
+
+    def on_exit_ppsspp(self) -> None:
+        """Exit PPSSPP (owner, 22-11-2026): PPSSPP and everything it started end at once, with no question."""
+        if self.ppsspp_end():
+            self.say("PPSSPP was ended.")
+        else:
+            self.say("PPSSPP was not running.")
+        self.show_exit()
 
     def on_open_ppsspp(self) -> None:
         command = self.ppsspp_command()

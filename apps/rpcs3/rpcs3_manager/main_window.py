@@ -59,6 +59,7 @@ from .saves_page import SavesPage
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/rpcs3/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
+EXIT_TIP = "End RPCS3 at once, with no question. A game that is running ends without saving"
 RPCN_WATCH_MS = 5000
 CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
 STEAM_ON = "Steam runs and is signed in. The games in Steam can start."
@@ -152,7 +153,8 @@ class MainWindow(QMainWindow):
                  covers_home: Path | None = None,
                  covers_get: covers.Get = covers._get, covers_key: Path | None = None,
                  log_path: Path | None = None, devices: Path = controllers.DEVICES,
-                 rpcs3_running=userdata.rpcs3_running, sdl_names=controllers.sdl_names, open_url=xdg_open,
+                 rpcs3_running=userdata.rpcs3_running, rpcs3_end=userdata.end_rpcs3,
+                 sdl_names=controllers.sdl_names, open_url=xdg_open,
                  rpcs3_log: Path | None = None, sound_state: Path | None = None,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
                  steam_play=steam.play):
@@ -187,6 +189,7 @@ class MainWindow(QMainWindow):
         self.log_path = log_path or applog.log_file(APP_ID)
         self.devices = devices
         self.rpcs3_running = rpcs3_running
+        self.rpcs3_end = rpcs3_end
         self.sdl_names = sdl_names
         self.open_url = open_url
         self.steam_play = steam_play
@@ -244,6 +247,7 @@ class MainWindow(QMainWindow):
         self.controller_timer.setInterval(self.CONTROLLER_POLL)
         self.controller_timer.timeout.connect(self.show_controller)
         self.controller_timer.timeout.connect(self.show_steam)
+        self.controller_timer.timeout.connect(self.show_exit)
         self.show_steam()
         self.controller_timer.start()
         self.refresh_pill = style.action_pill("Refresh", "Click to refresh", "Read the state again and look for games")
@@ -348,6 +352,11 @@ class MainWindow(QMainWindow):
             head.setSectionResizeMode(column, mode)
         self.table.itemChanged.connect(lambda _item: self._update_buttons())
 
+        # Exit RPCS3 (owner, 22-11-2026): the first button of the row, on while RPCS3 runs; a click ends it at once
+        self.exit_button = QPushButton("Exit RPCS3")
+        self.exit_button.setToolTip(EXIT_TIP)
+        self.exit_button.clicked.connect(self.on_exit_rpcs3)
+        self.show_exit()
         self.rpcs3_button = QPushButton("RPCS3 settings")
         self.rpcs3_button.setToolTip("Open RPCS3's own window for what the app does not set yet: its settings, "
                                      "the controllers (Pads) and game updates (File > Install Packages)")
@@ -368,6 +377,7 @@ class MainWindow(QMainWindow):
         self.steam_info.opens = lambda _url: self.open_steam()      # the app opens Steam itself (open_steam)
         buttons.addWidget(self.steam_info)
         buttons.addStretch(1)
+        buttons.addWidget(self.exit_button)
         buttons.addWidget(self.rpcs3_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
@@ -1049,6 +1059,18 @@ class MainWindow(QMainWindow):
         if dialog.exec():
             self.refresh()
             self.say("RPCN settings saved in RPCS3's own files.")
+
+    def show_exit(self) -> None:
+        """Exit RPCS3 is on while RPCS3 runs."""
+        self.exit_button.setEnabled(self.rpcs3_running())
+
+    def on_exit_rpcs3(self) -> None:
+        """Exit RPCS3 (owner, 22-11-2026): RPCS3 and everything it started end at once, with no question."""
+        if self.rpcs3_end():
+            self.say("RPCS3 was ended.")
+        else:
+            self.say("RPCS3 was not running.")
+        self.show_exit()
 
     def on_open_rpcs3(self) -> None:
         self.prepare_rpcs3()                    # RPCS3's window opens: its welcome dialog off first

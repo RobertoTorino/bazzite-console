@@ -110,7 +110,7 @@
 106. What other projects report is a lead with its conditions, not a fact. We test it ourselves. Never conclude "cannot be done" or "out of scope" from a write-up.
 107. Work that is not suite work becomes a derived project with its own rules.
 108. No pill or button stands alone in a window's title row. Refresh is the round symbol at the right end.
-109. A row holds five boxes and pills at most, all as wide as the widest. A card is as wide as a full row.
+109. The row of pills under the title holds four at most, and each row below it five at most, all as wide as the widest. A card is as wide as a full row.
 110. The info symbol is always filled. It says what the app does, and holds text only where the window has no room.
 111. The analyses are kept in one file, `ANALYSIS.md`, in the workspace root.
 112. A finished or declined row is removed from `ACTION-LIST.md`, and the rows are renumbered from 1. A row is done when the work is done, even if the owner's own try or release is still open.

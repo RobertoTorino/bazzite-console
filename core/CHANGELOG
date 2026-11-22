@@ -1,3 +1,15 @@
+Changelog: 22-11-2026 21:31:05
+
+Added. The controller works every app that installs exit_keys, as it works the portal. The d-pad and the left stick move
+the focus to the nearest control, and through a list's rows or an open menu first. A presses what has the focus. LB and
+RB open the tab before or after, passing over a tab that acts. B still closes a menu, a dialog, then the window. The
+touchpad moves the mouse pointer through a uinput mouse of the app's own, at the speed of the portal's Touchpad setting.
+The controller still acts only in the app that has had the focus for a moment. The new module processes finds a
+program's processes in /proc by their name, with zombies left out, and ends them with SIGKILL together with every
+process they started, children first. The game managers' Exit button uses it. The Settings page's message while the
+emulator runs now reads "<emulator> is running. Close it first with Exit <emulator>, because it writes its own settings
+over the change when it closes."
+
 Changelog: 22-11-2026 20:00:16
 
 Version 4.7.1.

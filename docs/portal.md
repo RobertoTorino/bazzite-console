@@ -14,7 +14,10 @@ to skip it. When the intro has played to its end, a short welcome sound follows.
 
 **The header**: the suite's icon, as large as a tile's (click it to watch the [Portal Tour](portal-tour.md) over the whole screen: **A** or Space pauses it, **B** or Esc closes it, and without a connection it opens in the browser), its name (click it to open this wiki) with the version,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
-for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal. Under
+for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal.
+Left of **☰ Settings** is a battery for each connected device with one, such as a controller, a mouse, a keyboard
+or a headset. The level is under it, and the fill turns red at 20 % or less. A yellow bolt means the device is
+charging. Hover a battery to see the device's name. Without such a device, no battery shows. Under
 them, in a row, twelve big symbols. Four act on the apps: **Refresh** (two
 circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install all apps** (a grid of
 apps with an arrow down) and **Install all updates** (a circular arrow around an arrow down). Eight are shortcuts
@@ -108,7 +111,7 @@ controller, the keyboard and the mouse work as always.
 **The touchpad as the mouse.** On a DualShock 4, a DualSense or a DualSense Edge the touchpad moves the mouse
 pointer, as Steam does for the Steam Controller: slide a finger to move it, press the pad to click, and press it
 with two fingers on it for a right click. **Touchpad** on the Settings page sets how fast the pointer goes. Like the
-rest of the controller it works while the portal has the focus, in its menus and questions too. The portal makes a
+rest of the controller it works while the portal has the focus, in its menus and questions too. In an app the portal opened, the app's own touchpad mouse takes over, at the same speed. The portal makes a
 mouse of its own for it (Wayland lets no program move the pointer), which the desktop lists as **Bazzite Console Suite
 touchpad** while the portal runs; Bazzite gives you the access it needs. A controller Steam Input owns has the
 touchpad of Steam's desktop layout instead.

@@ -23,7 +23,7 @@ import urllib.request
 from collections.abc import Callable
 from pathlib import Path
 
-from bazzite_console_core import builds
+from bazzite_console_core import builds, processes
 from bazzite_console_core.builds import Build
 from bazzite_console_core.platform import data_home
 from bazzite_console_core.updates import Fetch, ReleaseInfo, github_fetch
@@ -156,17 +156,17 @@ def newer_release(fetch: Fetch | None = None) -> ReleaseInfo | None:
                        str(data.get("published_at", ""))[:10])
 
 
+def is_vita3k(comm: str, _folder: Path) -> bool:
+    """Whether a process is the installed Vita3K: the AppImage's own process, named after the file (comm holds the
+    first 15 characters: "vita3k.AppImage"), stays while the program it unpacked runs."""
+    return comm == MEMBER[:15]
+
+
 def running(proc: Path = Path("/proc")) -> bool:
-    """Whether the installed Vita3K runs: the AppImage's own process, named after the file (comm holds the first 15
-    characters: "vita3k.AppImage"), stays while the program it unpacked runs. A finished one not collected yet (a zombie)
-    does not count. Vita3K writes its settings back when it closes, so nothing in them is written while it runs."""
-    for folder in proc.glob("[0-9]*"):
-        try:
-            if (folder / "comm").read_text().strip() != MEMBER[:15]:
-                continue
-            state = (folder / "stat").read_text().rsplit(")", 1)[1].split()[0]
-        except (OSError, IndexError):
-            continue
-        if state not in ("Z", "X"):
-            return True
-    return False
+    """Whether the installed Vita3K runs. A finished one not collected yet (a zombie) does not count. Vita3K writes its settings back when it closes, so nothing in them is written while it runs."""
+    return bool(processes.find(is_vita3k, proc))
+
+
+def end(proc: Path = Path("/proc")) -> list[int]:
+    """Ends Vita3K at once, with everything it started (Exit Vita3K); the processes it was sent to."""
+    return processes.end(processes.find(is_vita3k, proc), proc)

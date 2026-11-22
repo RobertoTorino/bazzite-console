@@ -101,7 +101,7 @@ from bazzite_console_core.updates import ReleaseInfo, UpdateChecker, version_tup
 from bazzite_console_core.app import switch_theme
 from bazzite_console_core.widgets import Pill, current_theme
 
-from . import audio, desktop_icons, glyphs, keyboard, kwin, music, pointer, shortcuts, status, sysinfo, tour
+from . import audio, batteries, desktop_icons, glyphs, keyboard, kwin, music, pointer, shortcuts, status, sysinfo, tour
 from . import wallpaper, weather
 from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
 from .gamepad import TOUCH_SPEED, Gamepad
@@ -659,6 +659,12 @@ class MainWindow(QMainWindow):
         self.status_timer.timeout.connect(self.show_status)
         self.status_timer.start()
         self._show_clock()
+        # The devices' batteries left of ☰ (owner, 22-11-2026): read from UPower every BATTERY_MS (batteries.py)
+        self.battery_timer = QTimer(self)
+        self.battery_timer.setInterval(batteries.BATTERY_MS)
+        self.battery_timer.timeout.connect(self.show_batteries)
+        self.battery_timer.start()
+        self.show_batteries()
         self.weather_timer = QTimer(self)
         self.weather_timer.setInterval(weather.INTERVAL_S * 1000)
         self.weather_timer.timeout.connect(self.update_weather)
@@ -1133,6 +1139,11 @@ class MainWindow(QMainWindow):
         if now - self.loads_at >= STATUS_MS / 1000 - 0.1:
             self.loads, self.loads_at = self.status.loads(), now
         self.big.set_status(self.loads, status.clock_text(style=self.clock_style()))
+
+    def show_batteries(self) -> None:
+        """A battery left of ☰ for each connected device with one; none read while the portal is minimized."""
+        if not self.isMinimized():
+            self.big.set_batteries(batteries.read())
 
     def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.type() == QEvent.Type.WindowStateChange and not self.isMinimized() and self.weather_skipped:

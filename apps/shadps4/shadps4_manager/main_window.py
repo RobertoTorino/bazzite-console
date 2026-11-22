@@ -63,6 +63,7 @@ FOLDER_TIMEOUT = 60
 SHADNET_WATCH_MS = 5000
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
+EXIT_TIP = "End shadPS4 at once, with no question. A game that is running ends without saving"
 CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
 STEAM_ON = "Steam runs and is signed in. The games in Steam can start."
 STEAM_OFF = "Steam does not run or is not signed in. Start Steam and sign in before you start a game."
@@ -122,7 +123,7 @@ class MainWindow(QMainWindow):
                  run: Path | None = None, fetch: emulator.Download = emulator.download,
                  steam_closed=steam.with_steam_closed, steam_running=steam.steam_running,
                  newer_release=emulator.newer_release, shadnet_connect: shadnet.Connect = shadnet._connect,
-                 shad_running=userdata.shadps4_running, covers_home: Path | None = None,
+                 shad_running=userdata.shadps4_running, shad_end=userdata.end_shadps4, covers_home: Path | None = None,
                  covers_get: covers.Get = covers._get, covers_key: Path | None = None,
                  log_path: Path | None = None, devices: Path = controllers.DEVICES, open_url=xdg_open,
                  sound_state: Path | None = None, user_home: Path | None = None,
@@ -152,6 +153,7 @@ class MainWindow(QMainWindow):
         self.steam_running = steam_running
         self.shadnet_connect = shadnet_connect
         self.shad_running = shad_running
+        self.shad_end = shad_end
         self.covers_home = covers_home or covers.covers_home(APP_ID)
         self.covers_get = covers_get
         self.covers_key = covers_key
@@ -217,6 +219,7 @@ class MainWindow(QMainWindow):
         self.controller_timer.setInterval(self.CONTROLLER_POLL)
         self.controller_timer.timeout.connect(self.show_controller)
         self.controller_timer.timeout.connect(self.show_steam)
+        self.controller_timer.timeout.connect(self.show_exit)
         self.show_steam()
         self.controller_timer.start()
         self.refresh_pill = style.action_pill("Refresh", "Click to refresh", "Read the state again and look for games")
@@ -317,6 +320,11 @@ class MainWindow(QMainWindow):
             head.setSectionResizeMode(column, mode)
         self.table.itemChanged.connect(lambda _item: self._update_buttons())
 
+        # Exit shadPS4 (owner, 22-11-2026): the first button of the row, on while shadPS4 runs; a click ends it at once
+        self.exit_button = QPushButton("Exit shadPS4")
+        self.exit_button.setToolTip(EXIT_TIP)
+        self.exit_button.clicked.connect(self.on_exit_shadps4)
+        self.show_exit()
         self.shad_button = QPushButton("shadPS4 settings")
         self.shad_button.setToolTip("Open shadPS4's own window (Big Picture) for what the app does not set: the "
                                     "controller's buttons, a game's own settings, its game list")
@@ -343,6 +351,7 @@ class MainWindow(QMainWindow):
         self.unpack_all_button.clicked.connect(self.on_unpack_all)
         buttons.addWidget(self.steam_info)
         buttons.addStretch(1)
+        buttons.addWidget(self.exit_button)
         buttons.addWidget(self.unpack_button)
         buttons.addWidget(self.unpack_all_button)
         buttons.addWidget(self.shad_button)
@@ -953,6 +962,18 @@ class MainWindow(QMainWindow):
             self.note("Steam was opened.")
         else:
             self.say("Steam could not be opened: xdg-open is missing.", ok=False)
+
+    def show_exit(self) -> None:
+        """Exit shadPS4 is on while shadPS4 runs."""
+        self.exit_button.setEnabled(self.shad_running())
+
+    def on_exit_shadps4(self) -> None:
+        """Exit shadPS4 (owner, 22-11-2026): shadPS4 and everything it started end at once, with no question."""
+        if self.shad_end():
+            self.say("shadPS4 was ended.")
+        else:
+            self.say("shadPS4 was not running.")
+        self.show_exit()
 
     def on_open_shadps4(self) -> None:
         command = self.shadps4_command("-b")

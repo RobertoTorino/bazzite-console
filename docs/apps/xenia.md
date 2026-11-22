@@ -168,6 +168,14 @@ on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
+#### Exit Xenia
+
+**Exit Xenia** ends Xenia at once, with everything it started. Use it when Xenia is stuck, or when you can't
+reach its own window. It is the first button under the table. It turns on only while Xenia runs.
+
+The app asks nothing first. A game that runs ends without saving, so save in the game before you click it. The line
+under the tabs then says **Xenia was ended.**
+
 ### Settings
 
 The tab scrolls when it is higher than the window.

@@ -203,6 +203,14 @@ on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
+#### Exit shadPS4
+
+**Exit shadPS4** ends shadPS4 at once, with everything it started. Use it when shadPS4 is stuck, or when you can't
+reach its own window. It is the first button under the table. It turns on only while shadPS4 runs.
+
+The app asks nothing first. A game that runs ends without saving, so save in the game before you click it. The line
+under the tabs then says **shadPS4 was ended.**
+
 #### Quit a game
 
 shadPS4's quit window asks whether to quit: **Cross** or **Enter** quits, **Circle** or **Esc** goes back to the

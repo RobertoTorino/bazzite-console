@@ -1,3 +1,10 @@
+Changelog: 22-11-2026 21:24:16
+
+Added. The header shows a battery for each connected device that has one, left of the settings symbol. It
+covers controllers, mice, keyboards and headsets, as UPower reports them. The level is under each battery, the fill
+turns red at 20 % or less, and a yellow bolt shows while the device charges. The tooltip names the device. Without
+such a device, no battery shows. New: batteries.py and its tests.
+
 Changelog: 22-11-2026 20:00:16
 
 Release 4.11.0. Pins ps5-board-v0.12.0, ps5-quickfix-v0.7.1, ps5-upscaler-v0.8.1, ps5-rpcs3-v1.7.1, ps5-remoteplay-v1.7.1, ps5-clb-v1.7.1, ps5-shadps4-v1.7.1, ps5-datstation-v1.7.1, ps5-ppsspp-v1.7.1, ps5-pcsx2-v1.7.1, ps5-vita3k-v1.8.1, ps5-xenia-v1.8.1, ps5-sftp-v1.8.1, ps5-webcam-v1.8.1, ps5-controller-v1.8.1, ps5-ssd-v1.8.1, ps5-overlay-v1.7.1, ps5-fan-v2.7.1, ps5-compute-v0.1.1, ps5-cores-v0.1.2, ps5-cec-v2.8.1, ps5-bluetooth-v0.8.1, ps5-password-v0.6.1, ps5-turing-v0.2.1.

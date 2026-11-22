@@ -32,7 +32,8 @@ Write = Callable[[object, str], None]
 
 
 def running_text(emulator: str) -> str:
-    return f"{emulator} is running: close it first, it writes its own settings over the change when it closes."
+    return (f"{emulator} is running. Close it first with Exit {emulator}, because it writes its own settings over "
+            "the change when it closes.")
 
 
 class SettingsPage(QWidget):

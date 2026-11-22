@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import QLabel, QMessageBox
 
 from conftest import make_disc_game, make_hdd_game, write_rpcs3_files
 
-from bazzite_console_core import steam
+from bazzite_console_core import processes, steam
 from rpcs3_manager import library, LOGO_PATH, emulator, shortcuts, style, userdata
 from rpcs3_manager.games import Game
 from rpcs3_manager.main_window import RUNNING, RUNNING_INSTALL, STEAM_URL, MainWindow, install_message
@@ -1172,3 +1172,47 @@ def test_the_steam_state_follows_the_sign_in(qapp, folders, monkeypatch):
     window.show_steam()
     assert window.steam_state.kind == "ok" and window.steam_state.toolTip() == "Steam signed in\n" + module.STEAM_ON
     window.close()
+
+
+def test_exit_rpcs3_is_on_while_rpcs3_runs_and_ends_it_at_once(qapp, folders):
+    """Exit RPCS3 (owner, 22-11-2026): the first button of the row under Your games, on only while RPCS3 runs; a
+    click ends it with no question and the line under the tabs says so."""
+    runs = [True]
+    ended: list[int] = []
+
+    def end() -> list[int]:
+        ended.append(1)
+        runs[0] = False
+        return [10]
+
+    window = _window(folders, rpcs3_running=lambda: runs[0], rpcs3_end=end)
+    row = window.exit_button.parentWidget().layout()
+    buttons = next(row.itemAt(i).layout() for i in range(row.count())
+                   if row.itemAt(i).layout() is not None and row.itemAt(i).layout().indexOf(window.exit_button) >= 0)
+    assert buttons.indexOf(window.exit_button) + 1 == buttons.indexOf(window.rpcs3_button)
+    assert window.exit_button.text() == "Exit RPCS3"
+    assert "without saving" in window.exit_button.toolTip()
+    assert window.exit_button.isEnabled()
+    window.exit_button.click()
+    assert ended == [1]
+    assert window.running.text() == "RPCS3 was ended."
+    assert not window.exit_button.isEnabled()
+    window.rpcs3_end = lambda: []
+    window.on_exit_rpcs3()
+    assert window.running.text() == "RPCS3 was not running."
+    window.close()
+
+
+def test_rpcs3_running_and_end_read_proc(tmp_path):
+    """RPCS3's process is found by its name, and ending it ends what it started first."""
+    proc = tmp_path / "proc"
+    for pid, comm, state, parent in ((10, "rpcs3", "S", 1), (20, "child", "S", 10), (30, "bash", "S", 1)):
+        (proc / str(pid)).mkdir(parents=True)
+        (proc / str(pid) / "comm").write_text(comm + "\n")
+        (proc / str(pid) / "stat").write_text(f"{pid} ({comm}) {state} {parent} 0\n")
+    assert userdata.rpcs3_running(proc)
+    sent: list[int] = []
+    assert processes.end(processes.find(userdata.is_rpcs3, proc), proc, kill=lambda pid, sig: sent.append(pid))
+    assert sent == [20, 10]
+    (proc / "10" / "stat").write_text(f"10 ({"rpcs3"}) Z 1 0\n")
+    assert not userdata.rpcs3_running(proc)

@@ -204,8 +204,13 @@ page in a list) is silver: the theme's outline, `OUTLINE` in `theme.py` (`outlin
 silver on gunmetal and warm, a darker silver on the light silver theme. A `style.py` keeps its own color for
 fills and edges that are always there, and uses `OUTLINE` for those borders too.
 
-Escape and a controller's B close an app's window when its `__main__.py` calls `exit_keys.install(app)` right
-after the application is made (core's `exit_keys`; an app not on core carries a copy, as of `theme.py`). Every
+Escape and a controller's B close an app's window, and the controller works the app, when its `__main__.py`
+calls `exit_keys.install(app)` right after the application is made (core's `exit_keys`; an app not on core carries
+a copy, as of `theme.py`). The d-pad and the left stick move the focus to the nearest control in that direction
+(`ExitKeys.nearest()`), through a list's rows and an open menu first. A sends Space to what has the focus, or Enter
+to an open menu and to a list row without a box. LB and RB change the tab of the `QTabWidget` around the focus and
+pass over an `ActionTab`. The touchpad moves a uinput mouse of the app's own (`VirtualMouse`, as the portal's
+`pointer.py`) at the speed of the portal's **Touchpad** setting (`portal_touch_speed()`). Every
 app but PS5 Password Generator does. A key the window or one of its widgets takes for itself comes first, so an
 app's own Escape (back from a page) keeps working, and the window closes through its `closeEvent`, which still asks
 what it asks. An app in which the controller belongs to something else installs it with `controller=False` (Remote

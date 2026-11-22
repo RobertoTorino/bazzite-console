@@ -12,6 +12,21 @@ the controller belongs to something else: in the two Remote Play apps (a stream'
 among them), in PS5 Controller and in PS5 System Overlay. A controller Steam Input owns sends what its desktop layout
 says, by default Escape for B. PS5 Password Generator does not close on Escape or B.
 
+**The controller in an app.** You can work every app with a controller, as you work the portal:
+
+- The d-pad and the left stick move the focus to the nearest control in that direction. Hold a direction to repeat
+  it. In a list they move through its rows first, and in an open menu through its entries.
+- **A** presses what has the focus. It presses a button or a pill, checks a box, opens a list or picks the entry of
+  an open menu.
+- **LB** and **RB** open the tab before or after. They pass over a tab that acts at once, such as **Clear logs**.
+- **B** closes an open menu, then a question or a dialog, then the window.
+- The touchpad of a DualShock 4, a DualSense or a DualSense Edge moves the mouse pointer. Press the pad to click,
+  and press it with two fingers on it for a right click. **Touchpad** on the portal's Settings page sets the speed.
+
+The controller only works in the app that has the focus, and only after a moment. So the press that opened an app
+never acts in it. The same apps as above leave the controller to what they do, and PS5 Password Generator has none
+of it.
+
 **Sustainable**: system and device information, and what keeps the board cool.
 
 | App | What it does |

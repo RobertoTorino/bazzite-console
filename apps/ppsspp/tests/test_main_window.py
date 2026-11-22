@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import QLabel, QMessageBox
 
 from conftest import make_disc, make_memstick, make_pbp
 
-from bazzite_console_core import steam
+from bazzite_console_core import processes, steam
 from ppsspp_manager import LOGO_PATH, emulator, shortcuts, style
 from ppsspp_manager.games import Game, memstick_game
 from ppsspp_manager.main_window import MainWindow
@@ -721,3 +721,47 @@ def test_the_steam_state_follows_the_sign_in(qapp, folders, monkeypatch):
     window.show_steam()
     assert window.steam_state.kind == "ok" and window.steam_state.toolTip() == "Steam signed in\n" + module.STEAM_ON
     window.close()
+
+
+def test_exit_ppsspp_is_on_while_ppsspp_runs_and_ends_it_at_once(qapp, folders):
+    """Exit PPSSPP (owner, 22-11-2026): the first button of the row under Your games, on only while PPSSPP runs; a
+    click ends it with no question and the line under the tabs says so."""
+    runs = [True]
+    ended: list[int] = []
+
+    def end() -> list[int]:
+        ended.append(1)
+        runs[0] = False
+        return [10]
+
+    window = _window(folders, ppsspp_running=lambda: runs[0], ppsspp_end=end)
+    row = window.exit_button.parentWidget().layout()
+    buttons = next(row.itemAt(i).layout() for i in range(row.count())
+                   if row.itemAt(i).layout() is not None and row.itemAt(i).layout().indexOf(window.exit_button) >= 0)
+    assert buttons.indexOf(window.exit_button) + 1 == buttons.indexOf(window.ppsspp_button)
+    assert window.exit_button.text() == "Exit PPSSPP"
+    assert "without saving" in window.exit_button.toolTip()
+    assert window.exit_button.isEnabled()
+    window.exit_button.click()
+    assert ended == [1]
+    assert window.running.text() == "PPSSPP was ended."
+    assert not window.exit_button.isEnabled()
+    window.ppsspp_end = lambda: []
+    window.on_exit_ppsspp()
+    assert window.running.text() == "PPSSPP was not running."
+    window.close()
+
+
+def test_ppsspp_running_and_end_read_proc(tmp_path):
+    """PPSSPP's process is found by its name, and ending it ends what it started first."""
+    proc = tmp_path / "proc"
+    for pid, comm, state, parent in ((10, emulator.MEMBER[:15], "S", 1), (20, "child", "S", 10), (30, "bash", "S", 1)):
+        (proc / str(pid)).mkdir(parents=True)
+        (proc / str(pid) / "comm").write_text(comm + "\n")
+        (proc / str(pid) / "stat").write_text(f"{pid} ({comm}) {state} {parent} 0\n")
+    assert emulator.running(proc)
+    sent: list[int] = []
+    assert processes.end(processes.find(emulator.is_ppsspp, proc), proc, kill=lambda pid, sig: sent.append(pid))
+    assert sent == [20, 10]
+    (proc / "10" / "stat").write_text(f"10 ({emulator.MEMBER[:15]}) Z 1 0\n")
+    assert not emulator.running(proc)

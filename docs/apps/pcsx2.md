@@ -202,6 +202,14 @@ on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
+#### Exit PCSX2
+
+**Exit PCSX2** ends PCSX2 at once, with everything it started. Use it when PCSX2 is stuck, or when you can't
+reach its own window. It is the first button under the table. It turns on only while PCSX2 runs.
+
+The app asks nothing first. A game that runs ends without saving, so save in the game before you click it. The line
+under the tabs then says **PCSX2 was ended.**
+
 ### Settings
 
 The tab has two columns and scrolls when it is higher than the window.

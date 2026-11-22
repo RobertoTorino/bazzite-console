@@ -261,3 +261,226 @@ def test_install_gives_the_app_its_exit_keys(qapp):
     finally:
         qapp.removeEventFilter(made)
         made.deleteLater()
+
+
+# --- The whole controller (owner, 22-11-2026): the d-pad and the stick, A, LB and RB, the touchpad ---------------
+
+class Events:
+    """A reader whose events the test queues."""
+
+    def __init__(self):
+        self.queue: list[tuple[str, str, object]] = []
+        self.closed = False
+
+    def events(self):
+        out, self.queue = self.queue, []
+        return out
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class Mouse:
+    def __init__(self):
+        self.moves: list[tuple[float, float]] = []
+        self.presses: list[tuple[int, bool]] = []
+        self.closed = 0
+
+    def move(self, dx: float, dy: float) -> None:
+        self.moves.append((dx, dy))
+
+    def press(self, button: int, down: bool) -> None:
+        self.presses.append((button, down))
+
+    def close(self) -> None:
+        self.closed += 1
+
+
+@pytest.fixture
+def ctl(qapp, monkeypatch):
+    """ExitKeys with a whole controller, a mouse that records, a clock the test sets, the app active for a while."""
+    now = [100.0]
+    source, mouse = Events(), Mouse()
+    made = ExitKeys(qapp, source_factory=lambda: source, clock=lambda: now[0], mouse=mouse,
+                    touch_speed=lambda: 1000.0)
+    made.start()
+    made.timer.stop()                                   # the test polls
+    now[0] += GRACE_S
+    made.now, made.events, made.recorded = now, source, mouse
+
+    def send(*events):
+        source.queue.extend(events)
+        made.poll()
+
+    made.send = send
+    yield made
+    qapp.removeEventFilter(made)
+    made.stop()
+    made.deleteLater()
+
+
+class Grid(QWidget):
+    """Two rows of two buttons, a list of three rows and a box to check."""
+
+    def __init__(self):
+        super().__init__()
+        from PyQt6.QtWidgets import QCheckBox, QGridLayout, QListWidget, QPushButton
+        grid = QGridLayout(self)
+        self.pressed: list[str] = []
+        self.buttons = {}
+        for name, row, column in (("a", 0, 0), ("b", 0, 1), ("c", 1, 0), ("d", 1, 1)):
+            button = QPushButton(name)
+            button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            button.clicked.connect(lambda _checked=False, n=name: self.pressed.append(n))
+            grid.addWidget(button, row, column)
+            self.buttons[name] = button
+        self.box = QCheckBox("box")
+        grid.addWidget(self.box, 2, 0)
+        self.rows = QListWidget()
+        self.rows.addItems(["one", "two", "three"])
+        self.rows.setCurrentRow(0)
+        grid.addWidget(self.rows, 3, 0, 1, 2)
+        self.resize(300, 300)
+
+
+def _active(monkeypatch, ctl, window):
+    """*window* is the app's active window, as the desktop would make it (offscreen, the focus needs it), and has
+    been for a moment."""
+    window.activateWindow()
+    ctl.app.processEvents()
+    monkeypatch.setattr(ctl.app, "activeWindow", lambda: window)
+    ctl.now[0] += GRACE_S
+
+
+def test_the_dpad_moves_the_focus_to_the_nearest_control(ctl, monkeypatch):
+    grid = Grid()
+    grid.show()
+    _active(monkeypatch, ctl, grid)
+    grid.buttons["a"].setFocus()
+    ctl.send(("button", "dpad_right", True), ("button", "dpad_right", False))
+    assert QApplication.focusWidget() is grid.buttons["b"]
+    ctl.send(("button", "dpad_down", True), ("button", "dpad_down", False))
+    assert QApplication.focusWidget() is grid.buttons["d"]
+    ctl.send(("button", "dpad_left", True), ("button", "dpad_left", False))
+    assert QApplication.focusWidget() is grid.buttons["c"]
+    ctl.send(("button", "dpad_up", True), ("button", "dpad_up", False))
+    assert QApplication.focusWidget() is grid.buttons["a"]
+    grid.close()
+
+
+def test_a_held_direction_repeats_and_the_stick_moves_too(ctl, monkeypatch):
+    from bazzite_console_core.exit_keys import FIRST_REPEAT, REPEAT
+    grid = Grid()
+    grid.show()
+    _active(monkeypatch, ctl, grid)
+    grid.buttons["a"].setFocus()
+    ctl.send(("axis", "lefty", 1.0))                    # the stick down: at once
+    assert QApplication.focusWidget() is grid.buttons["c"]
+    ctl.now[0] += FIRST_REPEAT
+    ctl.send()                                          # held: again after a moment
+    assert QApplication.focusWidget() is grid.box
+    ctl.send(("axis", "lefty", 0.0))
+    ctl.now[0] += REPEAT * 5
+    ctl.send()                                          # let go: no more
+    assert QApplication.focusWidget() is grid.box
+    grid.close()
+
+
+def test_in_a_list_the_dpad_goes_through_the_rows_then_leaves_it(ctl, monkeypatch):
+    grid = Grid()
+    grid.show()
+    _active(monkeypatch, ctl, grid)
+    grid.rows.setFocus()
+    grid.rows.setCurrentRow(1)
+    ctl.send(("button", "dpad_down", True), ("button", "dpad_down", False))
+    assert grid.rows.currentRow() == 2 and QApplication.focusWidget() is grid.rows
+    ctl.send(("button", "dpad_up", True), ("button", "dpad_up", False))
+    ctl.send(("button", "dpad_up", True), ("button", "dpad_up", False))
+    assert grid.rows.currentRow() == 0
+    ctl.send(("button", "dpad_up", True), ("button", "dpad_up", False))     # at the top: up out of the list
+    assert QApplication.focusWidget() is grid.box
+    grid.close()
+
+
+def test_a_presses_a_button_and_checks_a_box(ctl, monkeypatch):
+    grid = Grid()
+    grid.show()
+    _active(monkeypatch, ctl, grid)
+    grid.buttons["d"].setFocus()
+    ctl.send(("button", "a", True), ("button", "a", False))
+    assert grid.pressed == ["d"]
+    grid.box.setFocus()
+    ctl.send(("button", "a", True), ("button", "a", False))
+    assert grid.box.isChecked()
+    grid.close()
+
+
+def test_lb_and_rb_change_the_tab_and_pass_over_a_tab_that_acts(ctl, monkeypatch):
+    from PyQt6.QtWidgets import QTabWidget
+
+    from bazzite_console_core.action_tab import ActionTab
+    window = QWidget()
+    tabs = QTabWidget(window)
+    for name in ("one", "two"):
+        tabs.addTab(QWidget(), name)
+    acted = []
+    ActionTab(tabs, "Clear logs", "", lambda: acted.append(1))
+    tabs.addTab(QWidget(), "three")
+    window.show()
+    _active(monkeypatch, ctl, window)
+    ctl.send(("button", "rightshoulder", True), ("button", "rightshoulder", False))
+    assert tabs.currentIndex() == 1
+    ctl.send(("button", "rightshoulder", True))
+    assert tabs.currentIndex() == 3 and not acted          # Clear logs is passed over, never pressed
+    ctl.send(("button", "rightshoulder", True))
+    assert tabs.currentIndex() == 0                         # round to the first
+    ctl.send(("button", "leftshoulder", True))
+    assert tabs.currentIndex() == 3
+    window.close()
+
+
+def test_the_touchpad_moves_the_pointer_and_clicks(ctl, monkeypatch):
+    from bazzite_console_core.exit_keys import BTN_LEFT, BTN_RIGHT, TOUCH_ASPECT
+    window = Window()
+    window.show()
+    _active(monkeypatch, ctl, window)
+    ctl.send(("touch", "down", (0, 0.5, 0.5)), ("touch", "motion", (0, 0.51, 0.52)))
+    dx, dy = ctl.recorded.moves[-1]
+    assert dx == pytest.approx(10.0) and dy == pytest.approx(20.0 * TOUCH_ASPECT)
+    ctl.send(("button", "touchpad", True), ("button", "touchpad", False))
+    assert ctl.recorded.presses == [(BTN_LEFT, True), (BTN_LEFT, False)]
+    ctl.send(("touch", "down", (1, 0.2, 0.2)), ("button", "touchpad", True))    # two fingers: a right click
+    assert ctl.recorded.presses[-1] == (BTN_RIGHT, True)
+    monkeypatch.setattr(ctl.app, "activeWindow", lambda: None)
+    ctl.send()                                              # the focus went: the button is let go
+    assert ctl.recorded.presses[-1] == (BTN_RIGHT, False)
+    window.close()
+
+
+def test_the_controller_does_nothing_without_the_focus_or_right_after_it_came(ctl, monkeypatch):
+    grid = Grid()
+    grid.show()
+    _active(monkeypatch, ctl, grid)
+    grid.buttons["a"].setFocus()
+    monkeypatch.setattr(ctl.app, "activeWindow", lambda: None)
+    ctl.send(("button", "a", True), ("button", "dpad_right", True), ("touch", "down", (0, 0.5, 0.5)),
+             ("touch", "motion", (0, 0.6, 0.6)))
+    assert grid.pressed == [] and ctl.recorded.moves == []
+    _active(monkeypatch, ctl, grid)
+    ctl._state_changed(Qt.ApplicationState.ApplicationActive)
+    ctl.send(("button", "a", True))                         # the press that opened the app
+    assert grid.pressed == []
+    ctl.now[0] += GRACE_S
+    ctl.send(("button", "a", True))
+    assert grid.pressed == ["a"]
+    grid.close()
+
+
+def test_the_portals_touchpad_speed_is_read_from_its_settings(tmp_path):
+    from bazzite_console_core.exit_keys import TOUCH_SPEED, portal_touch_speed
+    ini = tmp_path / "portal.ini"
+    assert portal_touch_speed(ini) == TOUCH_SPEED
+    ini.write_text("[portal]\ntouchpad_speed=150\n")
+    assert portal_touch_speed(ini) == TOUCH_SPEED * 1.5
+    ini.write_text("[portal]\ntouchpad_speed=37\n")        # not one of the Touchpad's steps
+    assert portal_touch_speed(ini) == TOUCH_SPEED

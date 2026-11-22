@@ -24,6 +24,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
+from bazzite_console_core import processes
+
 from . import userdata
 from .mymc import ps2iconsys, ps2mc
 from .mymc.ps2icon import Icon
@@ -226,19 +228,19 @@ def save_icon(path: Path, name: str) -> tuple[ps2iconsys.IconSys, Icon] | None:
 
 # --- PCSX2 and the backups ------------------------------------------------------------------------------------
 
+def is_pcsx2(comm: str, _folder: Path) -> bool:
+    """Whether a process is PCSX2: its process is pcsx2-qt, the AppImage's and the Flatpak's alike."""
+    return comm.lower().startswith("pcsx2")
+
+
 def pcsx2_running(proc: Path = Path("/proc")) -> bool:
-    """Whether PCSX2 runs (its process is pcsx2-qt, the AppImage's and the Flatpak's alike); a zombie does not
-    count, as in core's steam_running."""
-    for folder in proc.glob("[0-9]*"):
-        try:
-            if not (folder / "comm").read_text().strip().lower().startswith("pcsx2"):
-                continue
-            state = (folder / "stat").read_text().rsplit(")", 1)[1].split()[0]
-        except (OSError, IndexError):
-            continue
-        if state not in ("Z", "X"):
-            return True
-    return False
+    """Whether PCSX2 runs; a zombie does not count, as in core's steam_running."""
+    return bool(processes.find(is_pcsx2, proc))
+
+
+def end_pcsx2(proc: Path = Path("/proc")) -> list[int]:
+    """Ends PCSX2 at once, with everything it started (Exit PCSX2); the processes it was sent to."""
+    return processes.end(processes.find(is_pcsx2, proc), proc)
 
 
 def backups(card: Path) -> list[Path]:

@@ -19,6 +19,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
+from bazzite_console_core import processes
 from bazzite_console_core.platform import data_home
 
 from .shadnet import DEFAULT_SERVER
@@ -375,6 +376,16 @@ def shadps4_running(proc: Path = Path("/proc")) -> bool:
             name = (entry / "comm").read_text(encoding="utf-8").strip()
         except OSError:
             continue
-        if name == "shadps4" or name.startswith("Shadps4-sdl"):
+        if is_shadps4(name, entry):
             return True
     return False
+
+
+def is_shadps4(comm: str, _folder: Path) -> bool:
+    """Whether a process is shadPS4: its AppImage, or the program inside it."""
+    return comm == "shadps4" or comm.startswith("Shadps4-sdl")
+
+
+def end_shadps4(proc: Path = Path("/proc")) -> list[int]:
+    """Ends shadPS4 at once, with everything it started (Exit shadPS4); the processes it was sent to."""
+    return processes.end(processes.find(is_shadps4, proc), proc)

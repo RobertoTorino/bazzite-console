@@ -57,6 +57,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from bazzite_console_core import processes
 from bazzite_console_core.platform import config_home
 from bazzite_console_core.theme import THEME
 
@@ -262,20 +263,20 @@ def write_lines(path: Path, lines: list[str]) -> None:
     _write(path, "\n".join(lines) + "\n")
 
 
+def is_rpcs3(comm: str, folder: Path) -> bool:
+    """Whether a process is RPCS3: its AppImage starts usr/bin/rpcs3 through the link AppRun.wrapped, so the
+    process is called either, with rpcs3 as its program."""
+    return comm == "rpcs3" or (comm == "AppRun.wrapped" and os.readlink(folder / "exe").endswith("/rpcs3"))
+
+
 def rpcs3_running(proc: Path = Path("/proc")) -> bool:
-    """Whether RPCS3 runs: its AppImage starts usr/bin/rpcs3 through the link AppRun.wrapped, so the process is
-    called either, with rpcs3 as its program; a zombie does not count, as in core's steam_running."""
-    for folder in proc.glob("[0-9]*"):
-        try:
-            comm = (folder / "comm").read_text().strip()
-            if comm != "rpcs3" and not (comm == "AppRun.wrapped" and os.readlink(folder / "exe").endswith("/rpcs3")):
-                continue
-            state = (folder / "stat").read_text().rsplit(")", 1)[1].split()[0]
-        except (OSError, IndexError):
-            continue
-        if state not in ("Z", "X"):
-            return True
-    return False
+    """Whether RPCS3 runs; a zombie does not count, as in core's steam_running."""
+    return bool(processes.find(is_rpcs3, proc))
+
+
+def end_rpcs3(proc: Path = Path("/proc")) -> list[int]:
+    """Ends RPCS3 at once, with everything it started (Exit RPCS3); the processes it was sent to."""
+    return processes.end(processes.find(is_rpcs3, proc), proc)
 
 
 # --- RPCS3's GUI settings ---------------------------------------------------------------------------------------

@@ -183,6 +183,14 @@ on stays open. A
 game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
 first.
 
+#### Exit Vita3K
+
+**Exit Vita3K** ends Vita3K at once, with everything it started. Use it when Vita3K is stuck, or when you can't
+reach its own window. It is the first button under the table. It turns on only while Vita3K runs.
+
+The app asks nothing first. A game that runs ends without saving, so save in the game before you click it. The line
+under the tabs then says **Vita3K was ended.**
+
 ### Settings
 
 The tab scrolls when it is higher than the window.

@@ -56,6 +56,7 @@ from .settings_page import SettingsPage
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/pcsx2/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
+EXIT_TIP = "End PCSX2 at once, with no question. A game that is running ends without saving"
 CLEAR_TIP = "Empty the app's log file, with the older ones kept beside it, and the View logs tab"
 STEAM_ON = "Steam runs and is signed in. The games in Steam can start."
 STEAM_OFF = "Steam does not run or is not signed in. Start Steam and sign in before you start a game."
@@ -104,6 +105,7 @@ class MainWindow(QMainWindow):
                  run: Path | None = None, fetch: emulator.Download = emulator.download,
                  steam_closed=steam.with_steam_closed, steam_running=steam.steam_running,
                  newer_release=emulator.newer_release, pcsx2_running=memcards.pcsx2_running,
+                 pcsx2_end=memcards.end_pcsx2,
                  covers_home: Path | None = None, covers_get: covers.Get = covers._get,
                  covers_key: Path | None = None, log_path: Path | None = None,
                  devices: Path = controllers.DEVICES, sound_state: Path | None = None,
@@ -137,6 +139,7 @@ class MainWindow(QMainWindow):
         self.covers_get = covers_get
         self.covers_key = covers_key
         self.pcsx2_running = pcsx2_running
+        self.pcsx2_end = pcsx2_end
         self.user_home = user_home or Path.home()
         self.drives = drives
         self.log_path = log_path or applog.log_file(APP_ID)
@@ -184,6 +187,7 @@ class MainWindow(QMainWindow):
         self.controller_timer.setInterval(self.CONTROLLER_POLL)
         self.controller_timer.timeout.connect(self.show_controller)
         self.controller_timer.timeout.connect(self.show_steam)
+        self.controller_timer.timeout.connect(self.show_exit)
         self.show_steam()
         self.controller_timer.start()
         self.refresh_pill = style.action_pill("Refresh", "Click to refresh", "Read the state again and look for games")
@@ -279,6 +283,11 @@ class MainWindow(QMainWindow):
             head.setSectionResizeMode(column, mode)
         self.table.itemChanged.connect(lambda _item: self._update_buttons())
 
+        # Exit PCSX2 (owner, 22-11-2026): the first button of the row, on while PCSX2 runs; a click ends it at once
+        self.exit_button = QPushButton("Exit PCSX2")
+        self.exit_button.setToolTip(EXIT_TIP)
+        self.exit_button.clicked.connect(self.on_exit_pcsx2)
+        self.show_exit()
         self.pcsx2_button = QPushButton("PCSX2 settings")
         self.pcsx2_button.setToolTip("Open PCSX2's own window for what the Settings tab does not set: its other "
                                      "settings, the controllers and its game list")
@@ -298,6 +307,7 @@ class MainWindow(QMainWindow):
         self.steam_info.opens = lambda _url: self.open_steam()      # the app opens Steam itself (open_steam)
         buttons.addWidget(self.steam_info)
         buttons.addStretch(1)
+        buttons.addWidget(self.exit_button)
         buttons.addWidget(self.pcsx2_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
@@ -493,6 +503,18 @@ class MainWindow(QMainWindow):
         self.output.clear()
         self.running.setStyleSheet("font-weight:600;")
         self.running.setText("The log was cleared.")
+
+    def show_exit(self) -> None:
+        """Exit PCSX2 is on while PCSX2 runs."""
+        self.exit_button.setEnabled(self.pcsx2_running())
+
+    def on_exit_pcsx2(self) -> None:
+        """Exit PCSX2 (owner, 22-11-2026): PCSX2 and everything it started end at once, with no question."""
+        if self.pcsx2_end():
+            self.say("PCSX2 was ended.")
+        else:
+            self.say("PCSX2 was not running.")
+        self.show_exit()
 
     def on_open_pcsx2(self) -> None:
         """PCSX2 settings (owner, 18-11-2026, as PPSSPP Manager's): PCSX2's own window, through the run wrapper and

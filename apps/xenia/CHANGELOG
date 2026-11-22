@@ -1,3 +1,10 @@
+Changelog: 22-11-2026 21:22:28
+
+Added. Exit Xenia is the first button under the games table. It ends Xenia at once, with everything it started, and asks
+nothing first. It is on only while Xenia runs. A game that runs ends without saving, as its tooltip says. The line under
+the tabs then says "Xenia was ended." The app finds Xenia's processes with core's new processes module. The wiki chapter
+has a new section, Exit Xenia.
+
 Changelog: 22-11-2026 20:00:16
 
 Release 1.8.1.

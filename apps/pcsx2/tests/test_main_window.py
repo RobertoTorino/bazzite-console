@@ -17,8 +17,8 @@ from PyQt6.QtWidgets import QLabel, QMessageBox
 
 from conftest import make_bios, make_disc
 
-from bazzite_console_core import steam
-from pcsx2_manager import library, LOGO_PATH, catalogue, emulator, pcsx2_settings, shortcuts, style
+from bazzite_console_core import processes, steam
+from pcsx2_manager import library, LOGO_PATH, catalogue, emulator, memcards, pcsx2_settings, shortcuts, style
 from pcsx2_manager.games import Game
 from pcsx2_manager import main_window as window_module
 from pcsx2_manager.main_window import MainWindow
@@ -1045,3 +1045,47 @@ def test_the_steam_state_follows_the_sign_in(qapp, folders, monkeypatch):
     window.show_steam()
     assert window.steam_state.kind == "ok" and window.steam_state.toolTip() == "Steam signed in\n" + module.STEAM_ON
     window.close()
+
+
+def test_exit_pcsx2_is_on_while_pcsx2_runs_and_ends_it_at_once(qapp, folders):
+    """Exit PCSX2 (owner, 22-11-2026): the first button of the row under Your games, on only while PCSX2 runs; a
+    click ends it with no question and the line under the tabs says so."""
+    runs = [True]
+    ended: list[int] = []
+
+    def end() -> list[int]:
+        ended.append(1)
+        runs[0] = False
+        return [10]
+
+    window = _window(folders, pcsx2_running=lambda: runs[0], pcsx2_end=end)
+    row = window.exit_button.parentWidget().layout()
+    buttons = next(row.itemAt(i).layout() for i in range(row.count())
+                   if row.itemAt(i).layout() is not None and row.itemAt(i).layout().indexOf(window.exit_button) >= 0)
+    assert buttons.indexOf(window.exit_button) + 1 == buttons.indexOf(window.pcsx2_button)
+    assert window.exit_button.text() == "Exit PCSX2"
+    assert "without saving" in window.exit_button.toolTip()
+    assert window.exit_button.isEnabled()
+    window.exit_button.click()
+    assert ended == [1]
+    assert window.running.text() == "PCSX2 was ended."
+    assert not window.exit_button.isEnabled()
+    window.pcsx2_end = lambda: []
+    window.on_exit_pcsx2()
+    assert window.running.text() == "PCSX2 was not running."
+    window.close()
+
+
+def test_pcsx2_running_and_end_read_proc(tmp_path):
+    """PCSX2's process is found by its name, and ending it ends what it started first."""
+    proc = tmp_path / "proc"
+    for pid, comm, state, parent in ((10, "pcsx2-qt", "S", 1), (20, "child", "S", 10), (30, "bash", "S", 1)):
+        (proc / str(pid)).mkdir(parents=True)
+        (proc / str(pid) / "comm").write_text(comm + "\n")
+        (proc / str(pid) / "stat").write_text(f"{pid} ({comm}) {state} {parent} 0\n")
+    assert memcards.pcsx2_running(proc)
+    sent: list[int] = []
+    assert processes.end(processes.find(memcards.is_pcsx2, proc), proc, kill=lambda pid, sig: sent.append(pid))
+    assert sent == [20, 10]
+    (proc / "10" / "stat").write_text(f"10 ({"pcsx2-qt"}) Z 1 0\n")
+    assert not memcards.pcsx2_running(proc)

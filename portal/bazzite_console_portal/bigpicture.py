@@ -15,16 +15,19 @@ it."""
 from __future__ import annotations
 
 from PyQt6.QtCore import QEasingCurve, QEvent, QPointF, QRect, QRectF, QSize, Qt, QVariantAnimation, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QFontMetrics, QLinearGradient, QPainter, QPen, QPixmap, QRadialGradient
+from PyQt6.QtGui import (
+    QColor, QFont, QFontMetrics, QLinearGradient, QPainter, QPen, QPixmap, QPolygonF, QRadialGradient,
+)
 from PyQt6.QtWidgets import (
     QAbstractButton, QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QScroller, QStackedWidget, QTabBar,
     QSizePolicy, QToolButton, QVBoxLayout, QWidget,
 )
 
-from bazzite_console_core.theme import BLUE, ORANGE, RED, header_font, muted, outline
+from bazzite_console_core.theme import BLUE, GREEN, ORANGE, RED, YELLOW, header_font, muted, outline
 from bazzite_console_core.widgets import InfoButton, Pill, current_theme
 
 from . import APP_ICONS, APP_NAME, CATEGORY_ICONS, INTRO_LOGO, LOGO_PATH, glyphs
+from .batteries import LOW, Device
 from .looks import Backdrop, greyed
 
 TILE_W, TILE_H = 244, 316
@@ -36,6 +39,7 @@ PILL_RADIUS = 16
 PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse) shows the wallpaper through it
 SYMBOL_PX = 84                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
 GLYPH_PX = 56
+BATTERY_W, BATTERY_H = 58, 84    # a device's battery in the header (owner, 22-11-2026): upright, its level under it
 SYMBOL_SMALLEST = 0.5           # the row's symbols on a narrow screen: never smaller than this part of their size
 PLACE_W = 220                   # the weather's place name in the status: at most this wide, else it ends in …
 GAP = 20
@@ -411,6 +415,55 @@ class BigTile(QAbstractButton):
         painter.end()
 
 
+class BatteryMark(QWidget):
+    """A connected device's battery (owner, 22-11-2026): upright, filled to its level, green, or red from LOW %
+    down, a bolt while it charges, the level under it, the device in the tooltip. No action, so no focus."""
+
+    def __init__(self, device: Device):
+        super().__init__()
+        self.device = device
+        self.scale = 1.0
+        self.setToolTip(device.tooltip())
+        self.set_scale(1.0)
+
+    def set_scale(self, scale: float) -> None:
+        self.scale = scale
+        self.setFixedSize(round(BATTERY_W * scale), round(BATTERY_H * scale))
+        self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        s = self.scale
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        text = self.palette().windowText().color()
+        w, h = 24 * s, 44 * s
+        x, y = (self.width() - w) / 2, 8 * s
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(text)
+        painter.drawRoundedRect(QRectF(x + 7 * s, y - 4 * s, w - 14 * s, 5 * s), 1.5 * s, 1.5 * s)     # the pole
+        painter.setPen(QPen(text, 2.5 * s))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(QRectF(x, y, w, h), 4 * s, 4 * s)
+        level = (h - 8 * s) * self.device.percent / 100
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(RED if self.device.percent <= LOW else GREEN))
+        painter.drawRoundedRect(QRectF(x + 4 * s, y + h - 4 * s - level, w - 8 * s, level), 2 * s, 2 * s)
+        if self.device.charging:
+            cx, cy = x + w / 2, y + h / 2
+            bolt = [QPointF(cx + 3 * s, cy - 12 * s), QPointF(cx - 7 * s, cy + 2 * s), QPointF(cx - 1 * s, cy + 2 * s),
+                    QPointF(cx - 4 * s, cy + 12 * s), QPointF(cx + 7 * s, cy - 2 * s), QPointF(cx + 1 * s, cy - 2 * s)]
+            painter.setPen(QPen(QColor("black"), 1.2 * s))
+            painter.setBrush(QColor(YELLOW))
+            painter.drawPolygon(QPolygonF(bolt))
+        font = painter.font()
+        font.setPixelSize(max(10, round(17 * s)))
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(text)
+        painter.drawText(QRectF(0, y + h + 4 * s, self.width(), 26 * s), Qt.AlignmentFlag.AlignHCenter,
+                         f"{self.device.percent}%")
+
+
 class SymbolButton(QAbstractButton):
     """A big symbol in the header (owner, 05-11-2026: in place of the pills): the glyph alone on the wallpaper, what it
     does in its tooltip. With the focus or under the mouse it is framed as a tile with the focus is; disabled, the
@@ -605,6 +658,10 @@ class BigPicture(Backdrop):
         heading.addWidget(self.hint)
         heading.addStretch(1)
         upper.addLayout(heading, 1)
+        self.battery_row = QHBoxLayout()              # the devices' batteries, left of ☰ (owner, 22-11-2026)
+        self.battery_row.setSpacing(0)
+        upper.addLayout(self.battery_row)
+        self.batteries: list[BatteryMark] = []
         words.addLayout(upper)
         words.addStretch(1)
         self.symbol_row = QHBoxLayout()              # the symbols, then on the right the installed count over the
@@ -751,6 +808,18 @@ class BigPicture(Backdrop):
             self.add_control(symbol)
         self.symbols, self.corner = symbols, corner
         self.set_scale(self.scale)
+
+    def set_batteries(self, devices: list[Device]) -> None:
+        """One battery for each connected device with one, left of ☰; none without such a device."""
+        if [mark.device for mark in self.batteries] == devices:
+            return
+        for mark in self.batteries:
+            self.battery_row.removeWidget(mark)
+            mark.deleteLater()
+        self.batteries = [BatteryMark(one) for one in devices]
+        for mark in self.batteries:
+            mark.set_scale(self.scale)
+            self.battery_row.addWidget(mark, 0, Qt.AlignmentFlag.AlignTop)
 
     def set_installed(self, text: str, tooltip: str = "") -> None:
         """The small line over the status: how many apps are installed."""
@@ -915,6 +984,8 @@ class BigPicture(Backdrop):
             button.set_scale(s)
         for symbol in self.corner:
             symbol.set_scale(s)
+        for mark in self.batteries:
+            mark.set_scale(s)
         self.fit_symbols()
         for pill in self.setting_pills:
             pill.set_scale(s)

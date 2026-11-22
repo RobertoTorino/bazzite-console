@@ -74,6 +74,13 @@ def no_session_bus(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def no_upower(monkeypatch):
+    """The header's batteries are never read from the machine's UPower: no device, unless a test gives its own."""
+    from bazzite_console_portal import batteries
+    monkeypatch.setattr(batteries, "dbus_call", lambda *_args: [])
+
+
+@pytest.fixture(autouse=True)
 def no_kwin_no_uinput(monkeypatch, tmp_path):
     """No test brings a real window to the front through KWin, or adds a mouse to the machine through uinput: KWin's
     calls fail, and the virtual mouse finds no device. A test that wants them gives the window fakes."""
