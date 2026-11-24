@@ -290,8 +290,8 @@ launch = [["Open", "~/.local/bin/ps5-cores-bisect-gui"]]
 [apps.gpu]
 name = "PS5 GPU Manager"
 summary = "Manage the cyan-skillfish GPU governor, with tuning, safe points, profiles and backups."
-tag = "ps5-gpu-v0.1.0"
-sha256 = "a3d85fc2bd777512d4ad2b9fc78b573832c77113ffc5d34728d55964bd6b951d"
+tag = "ps5-gpu-v0.1.1"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
