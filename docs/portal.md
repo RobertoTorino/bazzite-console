@@ -273,6 +273,8 @@ checkout, or give it a menu entry with its `install.sh`.
   city or town (R3 brings the on-screen keyboard), **Search**, pick the right one from the list and **Use this
   place**. Its symbol (sun or moon, clouds, fog, rain, snow or thunder), its name, the temperature and the sky then
   show as the status' third line, under the date and the time; hover over it for the wind and the humidity too.
+  Click the line to open the forecast for the place at [wttr.in](https://wttr.in/), a page without ads, in Brave
+  Browser. Brave Browser must be installed as a Flatpak. Without it, the portal says so.
   The weather comes again every 30 minutes while the portal is not minimized, and **Update the weather now** asks at
   once. When Open-Meteo cannot be reached, the last weather stays and its tooltip says why. **No weather** removes
   it, and nothing goes to Open-Meteo any more. Until you choose a place nothing is sent; see

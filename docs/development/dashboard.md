@@ -104,7 +104,9 @@ which shows a 4K upload far sharper than a 1080p one: the same tour, drawn at tw
 crisp, about four times the time, and `-2160p` before `.mp4` in its name (1440p is the step between). A recording runs in the background; its output shows in the dialog,
 **Stop** ends it, and **Play** opens the video in your video player.
 
-- **Portal video tour** records the portal's tour, about two minutes: `ps5-portal-tour-v<portal version>.mp4`.
+- **Portal video tour** records the portal's tour, about three minutes: `ps5-portal-tour-v<portal version>.mp4`.
+  The dialog checks **A voice reads the captions out, with Nexus TTS's speech engine** at first. Uncheck it for a
+  tour without the voice.
   Tick **Also write the copy on the wiki's Portal Tour page** to write `docs/videos/portal-tour.mp4` and its poster
   in the checkout too, for you to review and commit.
 - **Apps video tour** lists every app of the suite. Tick the apps (**All**, **None**), set the **Length** (40
@@ -461,7 +463,8 @@ The check sends the names and versions of the Python packages to PyPI and OSV.de
 files nobody needs again, which fill up a disk over time. Our tools' own leftovers are not in it:
 `tools/clean_caches.py` removes those before every local CI run.
 
-The table lists each place that holds 1 MB of garbage or more, the largest first:
+The table lists each place that holds 1 MB of garbage or more, the largest first. The Trash shows whenever it holds
+a file, however small:
 
 | What | Where | Removed with |
 |---|---|---|

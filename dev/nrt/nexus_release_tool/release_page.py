@@ -104,8 +104,9 @@ class ReleasePage(QWidget):
         self.video_note.setWordWrap(True)
         self.video_note.setStyleSheet("color:#1b1b1b; font-weight:700; background:transparent;")
         self.record_button = QPushButton("Record new video now")
-        self.record_button.setToolTip(f"Record the wiki's Portal Tour from this checkout ({flow.RECORD_VIDEO}): about "
-                                      "a minute, the output on the Commands tab")
+        self.record_button.setToolTip(f"Record the wiki's Portal Tour from this checkout ({flow.RECORD_VIDEO}): a few "
+                                      "minutes with the voice of Nexus TTS's speech engine, the output on the Commands "
+                                      "tab")
         self.record_button.clicked.connect(self.record_video)
         banner.addWidget(self.video_note, 1)
         banner.addWidget(self.record_button)

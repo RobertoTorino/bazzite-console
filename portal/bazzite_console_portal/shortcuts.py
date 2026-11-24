@@ -5,7 +5,8 @@ suite. What to start is found here, from what the
 machine has: Steam's own launcher, the desktop's file manager on the home folder (xdg-open, whichever desktop),
 YouTube fullscreen in Brave Browser's kiosk mode (its Flatpak, which must be installed), GitHub in the desktop's
 own browser (xdg-open), and the settings of KDE
-Plasma (System Settings, else the module alone) or of GNOME. A shortcut whose program is missing raises Missing
+Plasma (System Settings, else the module alone) or of GNOME. A click on the weather opens the place's forecast at
+wttr.in in Brave Browser (owner, 24-11-2026: a page without ads). A shortcut whose program is missing raises Missing
 with the line the window shows."""
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from pathlib import Path
 BRAVE_ID, BRAVE_NAME = "com.brave.Browser", "Brave Browser"
 YOUTUBE_URL = "https://www.youtube.com/"
 GITHUB_URL = "https://github.com/"
+WEATHER_URL = "https://wttr.in/{latitude:.4f},{longitude:.4f}"      # the forecast of a place, by its coordinates
 # The settings page of each desktop, the first whose program is there: (program, its arguments, its window's id).
 SETTINGS = {
     "bluetooth": (("systemsettings", ("kcm_bluetooth",), "systemsettings"),
@@ -79,6 +81,14 @@ def youtube(run: Run | None = None) -> Start:
     if not flatpak_installed(BRAVE_ID, run):
         raise Missing(f"{BRAVE_NAME} is required. Install its Flatpak ({BRAVE_ID}) to open YouTube.")
     return Start(["flatpak", "run", BRAVE_ID, "--kiosk", YOUTUBE_URL], (BRAVE_ID, "brave-browser"))
+
+
+def weather(latitude: float, longitude: float, run: Run | None = None) -> Start:
+    """The forecast of the place at *latitude*, *longitude* at wttr.in, in a window of Brave Browser."""
+    if not flatpak_installed(BRAVE_ID, run):
+        raise Missing(f"{BRAVE_NAME} is required. Install its Flatpak ({BRAVE_ID}) to open the weather.")
+    return Start(["flatpak", "run", BRAVE_ID, WEATHER_URL.format(latitude=latitude, longitude=longitude)],
+                 (BRAVE_ID, "brave-browser"))
 
 
 def default_browser(run: Run | None = None) -> tuple[str, ...]:

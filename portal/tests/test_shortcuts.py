@@ -43,6 +43,16 @@ def test_youtube_needs_brave_browsers_flatpak():
         shortcuts.youtube(flatpak(error=subprocess.TimeoutExpired("flatpak", 5)))
 
 
+def test_the_weather_opens_its_forecast_in_brave():
+    """A click on the weather (owner, 24-11-2026): the place's forecast at wttr.in, a page without ads, by its
+    coordinates, in a window of Brave Browser."""
+    start = shortcuts.weather(52.37, 4.89, flatpak())
+    assert start.argv == ["flatpak", "run", "com.brave.Browser", "https://wttr.in/52.3700,4.8900"]
+    assert "com.brave.Browser" in start.app_ids
+    with pytest.raises(shortcuts.Missing, match="Brave Browser is required.*to open the weather"):
+        shortcuts.weather(52.37, 4.89, flatpak(1))
+
+
 def test_github_opens_in_the_desktops_own_browser():
     """github.com with xdg-open; the browser's window is the one KWin brings to the front, when it can be asked."""
     def browser(code=0, out="org.mozilla.firefox.desktop\n", error=None):

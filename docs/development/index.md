@@ -215,6 +215,7 @@ Each one serves one tool or one kind of work. Without it, that tool does not run
 | actionlint | a changed workflow in `.github/workflows/`, checked before the push with `actionlint` at the root | `brew install actionlint` |
 | mawk | Board Test's `tests/test_awk.py`, which runs each awk program under gawk and mawk, the awk of Debian and Ubuntu | `brew install mawk` |
 | ffmpeg | the video tours, `tools/record-tour.sh` and `tools/record-app-tour.sh` | comes with Bazzite |
+| Nexus TTS's speech engine | the voice of the Portal Tour, `tools/record-tour.sh` | **Set up the speech engine** in [Nexus TTS](dashboard.md#nexus-tts). It needs uv (`brew install uv`) or a Python from 3.10 to 3.13 |
 | Rust, maturin, nasm and the libva headers | Remote Play's native core, for `cargo test` or `maturin build` on the machine itself | rustup from [rustup.rs](https://rustup.rs), `brew install nasm`, and maturin with pip in the venv |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | the Flatpak `com.obsproject.Studio` |
 | notify-send | the hourly notifications of Nexus Deps and Nexus Garbage Remover | comes with Bazzite |
@@ -328,9 +329,23 @@ python tools/portal_screenshot.py          # from the venv; --out FILE to save i
 ```
 
 The video tours are made the same way, frame by frame from the real windows, offscreen, from a terminal as below
-or from [Nexus Dashboard for PS5](dashboard.md#video-tours). `tools/record-tour.sh`
-records the portal's tour, about two minutes, with music under it that fades out over the last two seconds
-(`tools/sounds/the_quiet_engine_remix.ogg`, made with generative AI tools; `--no-music` leaves it out).
+or from [Nexus Dashboard for PS5](dashboard.md#video-tours).
+
+`tools/record-tour.sh` records the portal's tour, about three minutes long. It opens as the portal does:
+
+1. The title card shows in silence.
+2. The intro plays with its own sound.
+3. The welcome plays after the intro.
+4. The music starts when the welcome has ended and fades out over the last two seconds.
+
+The music is `tools/sounds/the_quiet_engine_remix.ogg`, made with generative AI tools. `--no-music` leaves it out.
+
+A voice reads every caption out. Nexus TTS's speech engine makes it, in its default voice. Set the engine up once in
+[Nexus TTS](dashboard.md#nexus-tts) with **Set up the speech engine**. The music plays quietly under the voice. A
+caption stays on screen until the voice has spoken it. The tour spells a few words another way for the voice, so it
+says them right. The list is `SPOKEN` in `tools/tour_frames.py`. With `--no-voice` the tour has no voice. The music
+then plays at full volume. Without the voice, a caption stays until there was time to read it.
+
 `tools/record-tour.sh --wiki` also writes the copy on the [Portal Tour](../portal-tour.md) page,
 `docs/videos/portal-tour.mp4` (1280 × 720) and its poster, and a fingerprint of the portal it was recorded from
 (`tools/portal-tour.stamp`: the portal's code and pictures, its tiles in `portal/apps.toml` (their names,

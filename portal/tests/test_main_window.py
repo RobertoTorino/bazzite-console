@@ -202,7 +202,7 @@ def test_the_theme_pill_shows_the_next_theme_at_once_and_the_portal_stays_open(w
             assert window.big.palette().color(QPalette.ColorRole.WindowText).name() == now.text
             assert now.window in window.theme_pill.styleSheet()
             assert theme.outline(now) in window.big.bar.styleSheet()
-            assert theme.muted(now) in window.big.hint.styleSheet()
+            assert f"color:{now.text}; font-weight:700" in window.big.hint.styleSheet()   # owner, 24-11-2026
             assert now.accent in window.big.info.styleSheet()
     finally:
         from bazzite_console_core.app import switch_theme

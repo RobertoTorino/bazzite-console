@@ -112,9 +112,11 @@ def portal_video(checkout: Path, size: str = SIZES[0]) -> Path:
     return videos_dir() / f"{video_prefix(checkout)}portal-tour-v{version}{size_suffix(size)}.mp4"
 
 
-def portal_command(checkout: Path, out: Path, music: bool, wiki: bool, size: str = SIZES[0]) -> list[str]:
+def portal_command(checkout: Path, out: Path, music: bool, wiki: bool, size: str = SIZES[0],
+                   voice: bool = True) -> list[str]:
+    """The portal's tour with the voice unless *voice* is off (owner, 24-11-2026: --no-voice records without it)."""
     return ["bash", str(checkout / RECORD_TOUR), str(out), *([] if music else ["--no-music"]),
-            *(["--wiki"] if wiki else []), *size_options(size)]
+            *([] if voice else ["--no-voice"]), *(["--wiki"] if wiki else []), *size_options(size)]
 
 
 def app_command(checkout: Path, app: TourApp, out: Path, seconds: int, music: bool,
@@ -323,11 +325,16 @@ class PortalTourDialog(TourDialog):
                  parent: QWidget | None = None) -> None:
         super().__init__(
             "Portal video tour",
-            "Record the portal's video tour, about two minutes, from the checkout as it is now: the real portal "
-            "window, offscreen, so nothing shows on the screen while it records. It takes about a minute and goes to "
+            "Record the portal's video tour, about three minutes, from the checkout as it is now: the real portal "
+            "window, offscreen, so nothing shows on the screen while it records. It takes a few minutes and goes to "
             "your Videos folder.", checkout, play, parent)
+        self.voice = QCheckBox("A voice reads the captions out, with Nexus TTS's speech engine")
+        self.voice.setChecked(True)
+        self.voice.setToolTip("Set up the speech engine once in Nexus TTS. Without the voice the tour is shorter and "
+                              "the music plays at full volume.")
         self.wiki = QCheckBox("Also write the copy on the wiki's Portal Tour page (docs/videos/portal-tour.mp4)")
         self.options.addWidget(self.music)
+        self.options.addWidget(self.voice)
         self.options.addWidget(self.wiki)
         self.options.addLayout(self.size_row())
         self.set_checkout(checkout)
@@ -337,7 +344,8 @@ class PortalTourDialog(TourDialog):
             return []
         size = self.size.currentText()
         out = portal_video(self.checkout, size)
-        return [(portal_command(self.checkout, out, self.music.isChecked(), self.wiki.isChecked(), size), out)]
+        return [(portal_command(self.checkout, out, self.music.isChecked(), self.wiki.isChecked(), size,
+                                self.voice.isChecked()), out)]
 
     def finished_all(self) -> None:
         if self.made and self.wiki.isChecked():

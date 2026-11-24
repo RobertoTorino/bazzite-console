@@ -1,3 +1,8 @@
+Changelog: 24-11-2026 20:47:37
+
+Fixed. The tooltip of Record new video now says the recording takes a few minutes, with the voice of Nexus TTS's
+speech engine. It said about a minute.
+
 Changelog: 22-11-2026 16:47:44
 
 Added. The Commit step lists the wiki's sections to read again first (tools/check_wiki.py), on the Commands tab, before

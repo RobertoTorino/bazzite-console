@@ -73,7 +73,7 @@ explanation.
    again** starts the failed jobs again on the same commit. Once pressed, it stays off for those runs until GitHub
    shows them running again; a run that fails again can be started again.
 5. **Start new release:** while the wiki's Portal Tour is older than the portal (its window or its tiles), an orange
-   banner above the steps says so, with **Record new video now** (`tools/record-tour.sh --wiki`, about a minute, its
+   banner above the steps says so, with **Record new video now** (`tools/record-tour.sh --wiki`, a few minutes, its
    output on the Commands tab), and this step waits until the video is recorded. When CI passes on the commit
    while the tool's window is open and waited for it, the release starts by itself, without the pill and its
    question, so check the versions on the Contents tab before then. A window opened on a commit whose CI passed

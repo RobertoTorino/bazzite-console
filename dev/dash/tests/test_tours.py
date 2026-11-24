@@ -81,6 +81,7 @@ def test_the_commands_carry_the_options(tmp_path):
     assert tours.portal_command(root, out, music=True, wiki=False) == ["bash", str(root / "tools/record-tour.sh"),
                                                                        str(out)]
     assert tours.portal_command(root, out, music=False, wiki=True)[-2:] == ["--no-music", "--wiki"]
+    assert tours.portal_command(root, out, music=True, wiki=False, voice=False)[-1] == "--no-voice"
     assert tours.app_command(root, TourApp("compute", "CU", "cu_unlock"), out, 30, music=False) == [
         "bash", str(root / "tools/record-app-tour.sh"), "compute", str(out), "--package", "cu_unlock",
         "--seconds", "30", "--no-music"]
@@ -179,13 +180,15 @@ def test_the_portal_dialog_records_into_videos_with_the_wiki_copy_when_asked(qap
     played = []
     dialog = PortalTourDialog(checkout(tmp_path), played.append)
     dialog.music.setChecked(False)
+    assert dialog.voice.isChecked()                     # the tour has the voice unless you uncheck it
+    dialog.voice.setChecked(False)
     dialog.wiki.setChecked(True)
 
     dialog.record()
     wait(dialog)
 
     assert dialog.made == [videos / "ps5-portal-tour-v6.4.0.mp4"]
-    assert "--no-music --wiki" in dialog.output.toPlainText()
+    assert "--no-music --no-voice --wiki" in dialog.output.toPlainText()
     assert "wiki's copy is changed in the checkout" in dialog.output.toPlainText()
     dialog.play_button.click()
     assert played == [videos / "ps5-portal-tour-v6.4.0.mp4"]

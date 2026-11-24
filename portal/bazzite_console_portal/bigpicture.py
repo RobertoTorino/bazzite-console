@@ -118,7 +118,9 @@ class StatusLine(QWidget):
     broke in two where it was too narrow): the CPU's and the GPU's load and temperature, "CPU 12% 54°C | GPU 3%
     61°C"; the date and time, "Thursday 11/5/26 | 07:44 PM CEST"; and, with a place chosen, the weather: its symbol,
     the place's name (ending in … beyond PLACE_W), the temperature and the sky, muted until the first weather has
-    come, with the rest in its tooltip."""
+    come, with the rest in its tooltip. A click on the weather opens its forecast."""
+
+    weather_clicked = pyqtSignal()              # a click on the weather's line
 
     def __init__(self):
         super().__init__()
@@ -134,6 +136,8 @@ class StatusLine(QWidget):
         self.lines.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self.lines)
         self.weather = QWidget()                    # hidden without a place: two lines then
+        self.weather.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.weather.installEventFilter(self)
         row = self.weather_row = QHBoxLayout(self.weather)
         row.setContentsMargins(0, 0, 0, 0)
         row.addStretch(1)
@@ -144,6 +148,15 @@ class StatusLine(QWidget):
         layout.addWidget(self.weather)
         self.weather.hide()
         self.set_scale(1.0)
+
+    def eventFilter(self, obj, event) -> bool:  # noqa: N802 (Qt override)
+        """A click on the weather's line asks for its forecast (owner, 24-11-2026)."""
+        if (obj is self.weather and event.type() == QEvent.Type.MouseButtonRelease
+                and event.button() == Qt.MouseButton.LeftButton
+                and self.weather.rect().contains(event.position().toPoint())):
+            self.weather_clicked.emit()
+            return True
+        return super().eventFilter(obj, event)
 
     def set_parts(self, loads: str, clock: str) -> None:
         if (loads, clock) == self.parts:
@@ -179,10 +192,10 @@ class StatusLine(QWidget):
         self.sky.setStyleSheet(f"color:{colour};")
         side = self._metrics().height()
         if self.glyph is not None:
-            ratio = self.devicePixelRatioF()
-            pixmap = self.glyph(colour).pixmap(QSize(round(side * ratio), round(side * ratio)))
-            pixmap.setDevicePixelRatio(ratio)
-            self.symbol.setPixmap(pixmap)
+            # The size in the label's pixels, the screen's scale given apart: QIcon.pixmap(QSize) scales by the
+            # screen itself, so a size already scaled came out 1.5 or 2 times too large and was cut off (owner,
+            # 24-11-2026: a 3840 px wide screen at 150 %)
+            self.symbol.setPixmap(self.glyph(colour).pixmap(QSize(side, side), self.devicePixelRatioF()))
         self.symbol.setFixedSize(side, side)
         self.symbol.setVisible(self.glyph is not None)
 
@@ -611,6 +624,7 @@ class BigPicture(Backdrop):
     update_requested = pyqtSignal(object)       # an AppEntry: a right click on its tile
     wiki_requested = pyqtSignal()               # a click on the portal's name
     tour_requested = pyqtSignal()               # a click on the suite's icon
+    weather_requested = pyqtSignal()            # a click on the weather
 
     def __init__(self, entries, categories: dict[str, str], hints: dict[str, str], version: str = "",
                  stage: str = "", stage_note: str = ""):
@@ -673,6 +687,7 @@ class BigPicture(Backdrop):
         self.installed.setAlignment(Qt.AlignmentFlag.AlignRight)
         readout.addWidget(self.installed)
         self.status = StatusLine()
+        self.status.weather_clicked.connect(self.weather_requested)
         readout.addWidget(self.status)
         self.symbol_row.addLayout(readout)
         words.addLayout(self.symbol_row)
@@ -964,12 +979,15 @@ class BigPicture(Backdrop):
                                   f" font-size:{max(12, round(16 * s))}px;")
         self.title.setStyleSheet(header_font() + f"font-size:{round(44 * s)}px; font-weight:800;")
         theme = current_theme()
-        self.version.setStyleSheet(f"color:{muted(theme)}; font-size:{max(13, round(20 * s))}px; padding-bottom:"
+        # The version and the category's line bold in the theme's text, the stage orange (owner, 24-11-2026: muted
+        # gray was hardly readable)
+        self.version.setStyleSheet(f"color:{theme.text}; font-weight:700; font-size:{max(13, round(20 * s))}px; "
+                                   f"padding-bottom:"
                                    f"{round(6 * s)}px;")
-        self.stage.setStyleSheet(f"background:{theme.accent}; color:white; font-weight:700;"
+        self.stage.setStyleSheet(f"background:{ORANGE}; color:white; font-weight:700;"
                                  f" font-size:{max(11, round(14 * s))}px; border-radius:{round(6 * s)}px;"
                                  f" padding:{round(2 * s)}px {round(8 * s)}px;")
-        self.hint.setStyleSheet(f"color:{muted(theme)}; font-size:{max(13, round(18 * s))}px;")
+        self.hint.setStyleSheet(f"color:{theme.text}; font-weight:700; font-size:{max(13, round(18 * s))}px;")
         self.installed.setStyleSheet(f"color:{muted(theme)}; font-size:{max(12, round(16 * s))}px; font-weight:600;")
         self.status.set_scale(s)
         self.keys.setStyleSheet(f"color:{muted(theme)}; font-size:{max(16, round(24 * s))}px; font-weight:700;")

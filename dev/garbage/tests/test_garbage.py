@@ -25,6 +25,16 @@ def test_it_finds_the_full_places_largest_first(tmp_path):
     assert found[1].command == ["find", str(home / ".local" / "share" / "Trash"), "-mindepth", "2", "-delete"]
 
 
+def test_the_trash_shows_with_any_file_in_it(tmp_path):
+    """The Trash shows whatever it holds, a file of a few KB too (owner, 24-11-2026); an empty one does not."""
+    home = tmp_path / "home"
+    trash = home / ".local" / "share" / "Trash"
+    (trash / "files").mkdir(parents=True)
+    assert garbage.find(home, None, tmp_path / "dumps", which=lambda _name: None) == []
+    fill(trash / "files", 72 << 10)
+    assert [place.key for place in garbage.find(home, None, tmp_path / "dumps", which=lambda _name: None)] == ["trash"]
+
+
 def test_the_crash_dumps_take_root(tmp_path):
     dumps = garbage.places(tmp_path, tmp_path, tmp_path / "dumps", which=lambda _name: None)[0]
     assert dumps.key == "dumps" and dumps.root and dumps.command_text.startswith("sudo find ")

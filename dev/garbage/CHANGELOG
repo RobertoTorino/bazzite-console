@@ -1,3 +1,8 @@
+Changelog: 24-11-2026 21:28:26
+
+Fixed. The Trash shows whenever it holds a file, however small (owner, 24-11-2026). Like every place, it was left out
+under 1 MB, so a Trash of a few files could not be emptied here.
+
 Changelog: 24-11-2026 15:46:27
 
 Fixed. The texts name the dashboard Nexus Dashboard for PS5, its new name.

@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What the video tours share (tools/portal_tour.py, tools/app_tour.py): a temporary home for an offscreen Qt, and
 Recorder, which renders a window frame by frame into an MP4 (H.264, 1920 x 1080 by default, no sound) with a pointer,
-clicks, captions and title cards drawn in, and add_music(), which lays a track under a finished video.
+clicks, captions and title cards drawn in, and add_music(), which lays a track under a finished video. Speaker and
+mix() are the Portal Tour's sound: a spoken caption from Nexus TTS's engine, and the sounds, the voice and the music
+laid under the video, each at its time.
 
 The tours lay everything out in 1920 x 1080 (WIDTH, HEIGHT: the window is 1600 x 900 at 120 %). set_size() picks
 the size of the video itself: 1080p, or 1440p or 2160p for YouTube, which shows a 4K upload far sharper than a
@@ -12,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -70,6 +73,103 @@ def add_music(video: Path, music: Path, out: Path, seconds: float, fade: float =
          "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-af", f"afade=t=out:st={max(0.0, seconds - fade):.3f}:d={fade}",
          "-c:a", "aac", "-b:a", "192k", "-t", f"{seconds:.3f}", "-movflags", "+faststart", str(out)]).returncode
 
+
+# What the voice says in place of a word it says wrong (owner, 24-11-2026: tried in Nexus TTS). The caption keeps the
+# word as it is written.
+SPOKEN = {"async": "A-sync", "BC-250": "BC twofifty", "BC250": "BC twofifty"}
+VOICE = "af_heart"                                  # Nexus TTS's default voice and speed
+SPEED = 0.85
+
+
+
+def duration(path: Path) -> float:
+    """A sound file's length in seconds, as ffprobe reads it; 0.0 when it cannot."""
+    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                             str(path)], capture_output=True, text=True)
+    try:
+        return float(result.stdout)
+    except ValueError:
+        return 0.0
+
+
+def spoken(text: str) -> str:
+    for word, said in SPOKEN.items():
+        text = text.replace(word, said)
+    return text
+
+
+class Speaker:
+    """Nexus TTS's speech engine (dev/text), one sound file per caption. *command* starts the engine's serve, as
+    textspeech.engine_setup.serve_command() gives it."""
+
+    def __init__(self, command: list[str], folder: Path):
+        self.folder, self.count = folder, 0
+        self.process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.DEVNULL, text=True)
+        self.wait("ready")
+
+    def wait(self, kind: str) -> dict:
+        assert self.process.stdout is not None
+        while True:
+            line = self.process.stdout.readline()
+            if not line:
+                raise RuntimeError("The speech engine stopped.")
+            event = json.loads(line)
+            if event.get("event") == "error":
+                raise RuntimeError(event.get("message", "The speech engine failed."))
+            if event.get("event") == kind:
+                return event
+
+    def send(self, **command) -> None:
+        assert self.process.stdin is not None
+        self.process.stdin.write(json.dumps(command) + "\n")
+        self.process.stdin.flush()
+
+    def speak(self, text: str) -> tuple[Path, float]:
+        """*text* spoken into a WAV file of its own: the file and its length in seconds."""
+        self.count += 1
+        path = self.folder / f"caption-{self.count:02d}.wav"
+        self.send(cmd="speak", id=self.count, text=spoken(text), voice=VOICE, speed=SPEED)
+        seconds = float(self.wait("done")["seconds"])
+        self.send(cmd="save", id=self.count, path=str(path))
+        self.wait("saved")
+        return path, seconds
+
+    def close(self) -> None:
+        try:
+            self.send(cmd="quit")
+            self.process.wait(timeout=10)
+        except (OSError, subprocess.TimeoutExpired):
+            self.process.kill()
+
+
+def mix(video: Path, out: Path, seconds: float, cues: list[tuple[float, Path, float]], music: Path | None = None,
+        music_at: float = 0.0, music_volume: float = 1.0, fade: float = 2.0) -> int:
+    """*video* (*seconds* long) with sound into *out* (AAC): each cue (its second, a sound file, its volume) at its
+    time, and *music* from *music_at* on, looped and faded out over the last *fade* seconds. A limiter keeps the sum
+    clean. Without cues and music the video is only copied. ffmpeg's exit code."""
+    if not cues and music is None:
+        shutil.copyfile(video, out)
+        return 0
+    inputs, chains, labels = ["-i", str(video)], [], []
+    if music is not None:
+        inputs += ["-stream_loop", "-1", "-i", str(music)]
+        length = max(0.0, seconds - music_at)
+        chains.append(f"[1:a]aresample=48000,aformat=channel_layouts=stereo,atrim=0:{length:.3f},"
+                      f"volume={music_volume},afade=t=out:st={max(0.0, length - fade):.3f}:d={fade},"
+                      f"adelay={round(music_at * 1000)}:all=1[m]")
+        labels.append("[m]")
+    first = 2 if music is not None else 1
+    for n, (at, sound, volume) in enumerate(cues, start=first):
+        inputs += ["-i", str(sound)]
+        chains.append(f"[{n}:a]aresample=48000,aformat=channel_layouts=stereo,volume={volume},"
+                      f"adelay={round(at * 1000)}:all=1[c{n}]")
+        labels.append(f"[c{n}]")
+    chains.append(f"{''.join(labels)}amix=inputs={len(labels)}:normalize=0:duration=longest,alimiter=limit=0.95[a]")
+    return subprocess.run(
+        ["ffmpeg", "-loglevel", "error", "-y", *inputs, "-filter_complex", ";".join(chains), "-map", "0:v",
+         "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{seconds:.3f}",
+         "-movflags", "+faststart", str(out)]).returncode
 
 def place(window) -> None:
     """The window at the top left, the size of the video."""

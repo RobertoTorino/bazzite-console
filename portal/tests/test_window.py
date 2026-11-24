@@ -1133,7 +1133,9 @@ def test_one_theme_for_every_app(window, home):
             assert window.big.palette().color(QPalette.ColorRole.WindowText).name() == now.text
             assert now.window in pill.styleSheet()
             assert theme.outline(now) in window.big.bar.styleSheet()
-            assert theme.muted(now) in window.big.hint.styleSheet()
+            assert f"color:{now.text}; font-weight:700" in window.big.hint.styleSheet()   # owner, 24-11-2026
+            assert f"color:{now.text}; font-weight:700" in window.big.version.styleSheet()
+            assert f"background:{theme.ORANGE}" in window.big.stage.styleSheet()
             assert now.accent in window.big.info.styleSheet()
     finally:
         switch_theme(before)                    # the session's QApplication, as the other tests found it
@@ -1538,6 +1540,37 @@ def test_the_weather_shows_under_the_clock_once_a_place_is_chosen(qapp, home, se
     menu.deleteLater()
     assert line.weather.isHidden() and not w.weather_timer.isActive() and w.settings.value(mw.PLACE_KEY) == ""
     w.close()
+
+
+def test_a_click_on_the_weather_opens_its_forecast(window, monkeypatch):
+    """The place's forecast at wttr.in in Brave Browser (owner, 24-11-2026); without Brave the portal says so."""
+    from PyQt6.QtCore import QPointF, Qt
+    from PyQt6.QtGui import QMouseEvent
+    from PyQt6.QtWidgets import QApplication
+
+    from bazzite_console_portal import shortcuts
+    started, said = [], []
+    window.launch = lambda argv: (started.append(argv), True)[1]
+    monkeypatch.setattr(window.raiser, "bring_to_front", lambda ids, pids=(): None)
+    monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: said.append(a[2]))
+    installed = [0]
+    monkeypatch.setattr(shortcuts.subprocess, "run",
+                        lambda argv, **kw: shortcuts.subprocess.CompletedProcess(argv, installed[0], "", ""))
+    monkeypatch.setattr(window, "update_weather", lambda: None)            # nothing is asked of Open-Meteo
+    window.set_place(mw.weather.Place("Amsterdam", "North Holland", "Netherlands", 52.37, 4.89))
+    line = window.big.status.weather
+
+    def click():
+        for kind in (QMouseEvent.Type.MouseButtonPress, QMouseEvent.Type.MouseButtonRelease):
+            QApplication.sendEvent(line, QMouseEvent(kind, QPointF(5, 5), QPointF(5, 5), Qt.MouseButton.LeftButton,
+                                                     Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier))
+    click()
+    assert started == [["flatpak", "run", "com.brave.Browser", "https://wttr.in/52.3700,4.8900"]] and said == []
+    assert "Click for the forecast at wttr.in in Brave Browser" in line.toolTip()
+    installed[0] = 1                                                        # Brave Browser is not installed
+    click()
+    assert len(started) == 1 and "Brave Browser is required" in said[-1]
+    window.set_place(None)
 
 
 def test_a_long_place_name_ends_in_an_ellipsis_on_its_pill(window):

@@ -11,7 +11,7 @@ desktop's Bluetooth, Network, Volume (sound) and Screen (display) settings. On t
 how many apps are installed (installed / listed), and under it the status, a line each (owner, 12-11-2026): the
 CPU's and the GPU's load and temperature, the date and time (status.py: the loads every 2 s, the clock every
 second) and, with a place chosen, the weather (weather.py, from Open-Meteo every 30 minutes): its symbol, the
-place's name, the temperature and the sky. ☰ opens the Settings page (owner, 04-11-2026, as the earlier implementation's portal;
+place's name, the temperature and the sky; a click opens its forecast at wttr.in in Brave Browser. ☰ opens the Settings page (owner, 04-11-2026, as the earlier implementation's portal;
 the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the theme (a
 click goes to the next one), the wallpaper, the clock (12 or 24 hours, the seconds, the system's time zone, CET or
 UTC), the weather's place and the touchpad's speed, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
@@ -557,6 +557,7 @@ class MainWindow(QMainWindow):
         self.big.update_banner.clicked.connect(self.portal_update_action)
         self.big.wiki_requested.connect(self.open_wiki)
         self.big.tour_requested.connect(self.open_tour)
+        self.big.weather_requested.connect(self.open_weather)
         self.big.bar.currentChanged.connect(self._category_changed)
         self.big.notice.clicked.connect(self._notice_menu)
         self.big.outside.clicked.connect(self._outside_menu)
@@ -1476,7 +1477,8 @@ class MainWindow(QMainWindow):
         if self.weather_error:
             tip += f"\n\n{self.weather_error} Asked again in {weather.INTERVAL_S // 60} minutes."
         self.big.set_weather(name, detail, glyph, now is not None,
-                             tip + "\n\nThe Weather pill on the Settings page updates it or changes the place.")
+                             tip + "\n\nClick for the forecast at wttr.in in Brave Browser. The Weather pill on the "
+                             "Settings page updates it or changes the place.")
 
     # ------------------------------------------------------------------------------------------- the touchpad
     def touch_speed(self) -> int:
@@ -2071,6 +2073,20 @@ class MainWindow(QMainWindow):
             return
         if not self.launch(start.argv):
             QMessageBox.critical(self, APP_NAME, f"{name} could not be started ({shlex.join(start.argv)}).")
+            return
+        self.raiser.bring_to_front(start.app_ids)
+
+    def open_weather(self) -> None:
+        """A click on the weather: the place's forecast at wttr.in in Brave Browser, or what is needed for it."""
+        if self.place is None:
+            return
+        try:
+            start = shortcuts.weather(self.place.latitude, self.place.longitude)
+        except shortcuts.Missing as exc:
+            QMessageBox.information(self, APP_NAME, str(exc))
+            return
+        if not self.launch(start.argv):
+            QMessageBox.critical(self, APP_NAME, f"The weather could not be opened ({shlex.join(start.argv)}).")
             return
         self.raiser.bring_to_front(start.app_ids)
 

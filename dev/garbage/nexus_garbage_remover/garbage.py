@@ -25,6 +25,7 @@ DUMPS = Path("/var/lib/systemd/coredump")
 NOTIFY_FROM = 1 << 30                   # the hourly check says so from this much garbage on
 NOTIFY_AGAIN = 24 * 3600                # and again a day later, or sooner when it grew by NOTIFY_FROM
 SHOWN_FROM = 1 << 20                    # a place with less than this is left out of the list
+ALWAYS_SHOWN = ("trash",)               # but these show whenever they hold a file (owner, 24-11-2026: the Trash)
 
 
 @dataclass
@@ -107,7 +108,7 @@ def find(home: Path | None = None, steam: Path | None = None, dumps: Path = DUMP
     found = []
     for place in places(home, steam, dumps, which):
         place.size, place.files = measure(place.where, place.kept)
-        if place.size >= SHOWN_FROM:
+        if place.size >= SHOWN_FROM or (place.key in ALWAYS_SHOWN and place.files):
             found.append(place)
     return sorted(found, key=lambda place: place.size, reverse=True)
 

@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A video tour of the Bazzite Console portal, for the wiki and YouTube: the real portal view from this checkout, driven by a
-script and rendered frame by frame into an MP4 (H.264, 1920 x 1080, 30 fps), with music under it that fades out over
-the last two seconds (tools/sounds/the_quiet_engine_remix.ogg, the remix of the app tours' track, three minutes long
-so it does not loop within the tour; made with generative AI tools).
+script and rendered frame by frame into an MP4 (H.264, 1920 x 1080, 30 fps), with the portal's own intro sound and
+welcome, then music under it that fades out over the last two seconds (tools/sounds/the_quiet_engine_remix.ogg, the
+remix of the app tours' track, three minutes long so it does not loop within the tour; made with generative AI
+tools).
 
-    python3 tools/portal_tour.py [OUT.mp4] [--music FILE | --no-music] [--wiki] [--fps 30] [--size 1080p|1440p|2160p]
+    python3 tools/portal_tour.py [OUT.mp4] [--music FILE | --no-music] [--no-voice] [--wiki] [--fps 30]
+                                 [--size 1080p|1440p|2160p]
+
+The tour opens as the portal does (owner, 24-11-2026): the title card in silence, then the intro with its sound and
+the welcome after it. The music starts when the welcome has ended. A voice reads every caption out (Nexus TTS's
+engine, dev/text, with its default voice). The music under the voice is quiet (VOICE_MUSIC). A few words are spoken as
+tools/tour_frames.py's SPOKEN says, so the voice says them right. --no-voice records the tour without the voice, with
+the music at full volume. A caption stays until it is spoken, or read without the voice, before the view changes.
+The voice needs the speech engine: set it up once in Nexus TTS (Set up the speech engine).
 
 --size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a 4K upload far sharper than a 1080p one
-(about four times the time, around 35 MB); the wiki's copy is the same whatever the size.
+(about four times the time); the wiki's copy is the same whatever the size.
 
 --wiki also writes the copy on the wiki's Portal Tour page: docs/videos/portal-tour.mp4 (1280 x 720, smaller) and its
 poster, docs/images/portal/portal-tour-poster.webp (the title card).
@@ -21,8 +30,8 @@ without recording: look at the video first.
 
 It runs offscreen in a temporary home folder: a few apps "installed" (their detect paths and records), one of them
 behind its pinned release so the update notice shows, no network, and nothing from the machine it runs on (no user
-or host names, no checkout path), no sound from the portal and no controller. The pointer, the clicks and the
-captions are drawn into the frames. Needs PyQt6 (the dev venv) and ffmpeg with libx264.
+or host names, no checkout path), no sound from the portal while it records and no controller. The pointer, the
+clicks and the captions are drawn into the frames. Needs PyQt6 (the dev venv) and ffmpeg with libx264.
 The frames are drawn by tools/tour_frames.py, which tools/app_tour.py uses too."""
 
 from __future__ import annotations
@@ -48,6 +57,12 @@ INSTALLED = ("board", "rpcs3", "remoteplay", "shadps4", "datstation")
 BEHIND = "shadps4"
 MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine_remix.ogg"    # the portal tour's own: longer than the tour
 FADE = 2.0                                          # the music fades out over the video's last seconds
+VOICE_MUSIC = 0.12                                  # the music under the voice (owner, 24-11-2026: 35 % too loud)
+VOICE_VOLUME = 2.0                                  # the voice twice as loud as the engine makes it (owner)
+READ = 0.25                                         # seconds a caption stays per word before the view changes
+GAP = 0.4                                           # seconds of quiet after a spoken caption
+CLOSING = "Thank you and have fun using the Portal."   # over the end card (owner, 24-11-2026)
+TTS = SUITE / "dev" / "text"                        # Nexus TTS: its speech engine reads the captions
 WIKI_VIDEO = SUITE / "docs" / "videos" / "portal-tour.mp4"
 WIKI_POSTER = SUITE / "docs" / "images" / "portal" / "portal-tour-poster.webp"
 STAMP = SUITE / "tools" / "portal-tour.stamp"       # the fingerprint of the portal the wiki's video was recorded from
@@ -61,7 +76,7 @@ def prepare_home(home: Path) -> None:
 
 
 class Tour(Recorder):
-    def __init__(self, out: Path, fps: int, home: Path):
+    def __init__(self, out: Path, fps: int, home: Path, speaker: tour_frames.Speaker | None = None):
         from PyQt6.QtCore import QSettings
         from PyQt6.QtWidgets import QApplication
 
@@ -72,6 +87,10 @@ class Tour(Recorder):
         from bazzite_console_portal.sources import Records, Sources
 
         self.home = home
+        self.speaker = speaker
+        self.cues: list[tuple[float, Path, float]] = []     # the sounds under the video: second, file, volume
+        self.music_at = 0.0                                 # the music starts when the welcome has ended
+        self.until = 0                                      # the frame the caption is spoken or read by
         app = QApplication.instance() or create_app(INFO, [])
         for fmt in (QSettings.Format.NativeFormat, QSettings.Format.IniFormat):
             QSettings.setPath(fmt, QSettings.Scope.UserScope, str(home / ".config"))
@@ -250,11 +269,17 @@ class Tour(Recorder):
         end = self.card("Bazzite Console Suite", ["Everything about each app is in the wiki:",
                                                SUITE_MANUAL_URL.removeprefix("https://").rstrip("/")])
         self.fade(last, end, 0.8)
-        self.emit(end, round(5 * self.fps))
+        self.overlay = end
+        self.say(CLOSING)
+        self.hold(5)
+        self.wait()
 
     def intro(self, before) -> None:
         """The intro the portal opens with, frame by frame from the title card (the intro follows the video's
-        frames, not the clock), ending with the focus on the first tile."""
+        frames, not the clock), ending with the focus on the first tile. Its sound plays as the animation starts and
+        the welcome when it has ended, as in the portal, at the portal's volumes. The music starts after the
+        welcome."""
+        from bazzite_console_portal import audio
         from bazzite_console_portal.bigpicture import INTRO_MS
 
         w = self.window
@@ -266,6 +291,7 @@ class Tour(Recorder):
         intro._step(0.0)
         self.pump()
         self.fade(before, self.frame(), 0.8)
+        self.sound(audio.SOUNDS / f"{audio.INTRO}.wav", audio.VOLUMES.get(audio.INTRO, audio.VOLUME))
         frames = round(INTRO_MS / 1000 * self.fps)
         for i in range(1, frames + 1):
             intro._step(i / frames)
@@ -273,7 +299,13 @@ class Tour(Recorder):
             self.emit(self.frame())
         intro._done()
         self.pump()
-        self.hold(0.8)
+        welcome = audio.SOUNDS / f"{audio.WELCOME}.wav"
+        if welcome.is_file():                       # a suite without the file plays none, as the portal
+            self.sound(welcome, audio.VOLUMES.get(audio.WELCOME, audio.VOLUME))
+            self.hold(tour_frames.duration(welcome) + 0.3)
+        else:
+            self.hold(0.8)
+        self.music_at = self.frames / self.fps
         self.pointer = pointer
 
     def controller(self) -> None:
@@ -313,23 +345,58 @@ class Tour(Recorder):
         return next((t for t in shown[1:] if t.y() == shown[0].y() and w.states[t.key].installed == installed), None)
 
     def show_tip(self, widget) -> None:
-        """*widget*'s tooltip as the portal shows it under the mouse, at the pointer: Qt's own tooltip, drawn into
-        the frames as a menu is. It stays until hide_tip(), however slowly the frames are rendered."""
+        """*widget*'s tooltip as the portal shows it under the mouse, at the pointer: core's RoundedToolTip, with its
+        rounded border and padding, drawn into the frames as a menu is. It stays until hide_tip()."""
         from PyQt6.QtCore import QPoint
-        from PyQt6.QtWidgets import QApplication, QToolTip
+
+        from bazzite_console_core.widgets import RoundedToolTip, show_tooltip
         x, y = self.pointer
         y += 30                                     # below the drawn arrow, as under a real pointer
-        QToolTip.showText(self.window.mapToGlobal(QPoint(round(x / SCALE), round(y / SCALE))), widget.toolTip(),
-                          widget, widget.rect(), 3_600_000)
+        show_tooltip(self.window.mapToGlobal(QPoint(round(x / SCALE), round(y / SCALE))), widget.toolTip(), widget)
         self.pump()
-        self.popup = next((t for t in QApplication.topLevelWidgets()
-                           if t.objectName() == "qtooltip_label" and t.isVisible()), None)
+        self.popup = RoundedToolTip._instance.popup if RoundedToolTip._instance is not None else None
 
     def hide_tip(self) -> None:
-        from PyQt6.QtWidgets import QToolTip
-        QToolTip.hideText()
+        from bazzite_console_core.widgets import hide_tooltip
+        hide_tooltip()
         self.popup = None
         self.pump()
+
+    # --- the sound and the captions' time ------------------------------------------------------------------
+    def sound(self, path: Path, volume: float) -> None:
+        """*path* plays from the frame the video is at."""
+        self.cues.append((self.frames / self.fps, path, volume))
+
+    def wait(self, image=None) -> None:
+        """The picture stays until the caption is spoken (with the voice) or read (READ a word)."""
+        left = self.until - self.frames
+        if left > 0:
+            if image is None:
+                self.pump()
+                image = self.frame()
+            self.emit(image, left)
+
+    def say(self, text: str) -> None:
+        """A new caption, spoken with the voice. It waits for the caption before it, with the voice; "" (none) always
+        waits, so a caption is never cut short."""
+        if not text or self.speaker is not None:
+            self.wait()
+        super().say(text)
+        if not text:
+            return
+        self.until = self.frames + round(len(text.split()) * READ * self.fps)
+        if self.speaker is not None:
+            sound, seconds = self.speaker.speak(text)
+            self.sound(sound, VOICE_VOLUME)
+            self.until = max(self.until, self.frames + round((seconds + GAP) * self.fps))
+
+    def click(self, action=None) -> None:
+        self.wait()                                 # the view changes only after the caption
+        super().click(action)
+
+    def fade(self, first, second, seconds: float = 0.6) -> None:
+        self.wait(first)
+        super().fade(first, second, seconds)
 
     def open_menu(self) -> None:
         self.popup = self.window.wallpaper_menu()
@@ -392,6 +459,19 @@ def render_still(theme: str, out: Path) -> None:
         tour.frame().save(str(out))
 
 
+def speech_engine() -> list[str] | None:
+    """The command that starts Nexus TTS's speech engine (dev/text), None when it is not set up. Asked in a process
+    of its own, in the real home folder: the tour's home has no engine, and this one's Qt and theme stay unread."""
+    code = ("import json, sys; sys.path[:0] = sys.argv[1:]; from textspeech import engine_setup as s; "
+            "print(json.dumps(s.serve_command() if s.installed() else None))")
+    result = subprocess.run([sys.executable, "-c", code, str(SUITE / "core"), str(TTS)], capture_output=True,
+                            text=True)
+    try:
+        return json.loads(result.stdout) if result.returncode == 0 else None
+    except ValueError:
+        return None
+
+
 def tiles() -> list:
     """What the video shows of portal/apps.toml (owner, 15-11-2026: new tiles need a new video): each app's tiles in
     their order, with their names, categories and marks. Its tags and checksums are left out: a release changes
@@ -452,7 +532,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("out", nargs="?", default="portal-tour.mp4")
     parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the suite's)")
-    parser.add_argument("--no-music", action="store_true", help="a video without sound")
+    parser.add_argument("--no-music", action="store_true", help="a video without music")
+    parser.add_argument("--no-voice", action="store_true",
+                        help="no voice reading the captions out (it needs Nexus TTS's speech engine)")
     parser.add_argument("--wiki", action="store_true", help="also write the copy on the wiki's Portal Tour page")
     parser.add_argument("--check", action="store_true",
                         help="only say whether the portal changed since the wiki's video was recorded (exit 1)")
@@ -486,20 +568,29 @@ def main() -> int:
         return 1
     music = None if args.no_music else args.music.resolve()
     if music is not None and not music.is_file():
-        print(f"No music at {music} (--no-music for a video without sound)", file=sys.stderr)
+        print(f"No music at {music} (--no-music for a video without music)", file=sys.stderr)
+        return 1
+    engine = None if args.no_voice else speech_engine()
+    if not args.no_voice and engine is None:
+        print("The voice needs Nexus TTS's speech engine. Set it up once in Nexus TTS (dev/text/run.sh: Set up the "
+              "speech engine), or record with --no-voice.", file=sys.stderr)
         return 1
     out = Path(args.out).resolve()
     with tempfile.TemporaryDirectory(prefix="portal-tour-") as folder:
         home = Path(folder)
+        speaker = tour_frames.Speaker(engine, home) if engine else None     # before the home is the tour's own
         prepare_home(home)
-        silent = out if music is None else home / "silent.mp4"
-        tour = Tour(silent, args.fps, home)
+        silent = home / "silent.mp4"
+        tour = Tour(silent, args.fps, home, speaker)
         try:
             tour.run()
         finally:
             code = tour.finish()
-        if code == 0 and music is not None:
-            code = tour_frames.add_music(silent, music, out, tour.frames / tour.fps, FADE)
+            if speaker is not None:
+                speaker.close()
+        if code == 0:
+            code = tour_frames.mix(silent, out, tour.frames / tour.fps, tour.cues, music, tour.music_at,
+                                   VOICE_MUSIC if speaker is not None else 1.0, FADE)
     if code == 0 and args.wiki:
         code = wiki_copy(out)
         if code == 0:

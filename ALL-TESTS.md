@@ -4,7 +4,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3279 test functions (3667 cases counting the parametrized ones) in 37 test folders, and 38 installer tests.
+3286 test functions (3674 cases counting the parametrized ones) in 37 test folders, and 38 installer tests.
 
 ## Summary
 
@@ -39,15 +39,15 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 105 | 2.1 s |
-| [dev/garbage](#devgarbage) | 1 | 7 |  |
+| [dev/garbage](#devgarbage) | 1 | 8 |  |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
 | [dev/nrt](#devnrt) | 4 | 135 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
-| [portal](#portal) | 18 | 227 | 30.2 s |
-| [tools](#tools) | 43 | 243 | 10.2 s |
-| **All** | | **3279** | **153 s** |
+| [portal](#portal) | 18 | 230 | 30.2 s |
+| [tools](#tools) | 43 | 246 | 10.2 s |
+| **All** | | **3286** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -2822,11 +2822,12 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## dev/garbage
 
-7 tests in 1 files.
+8 tests in 1 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_garbage.py` | `test_it_finds_the_full_places_largest_first` |  |  | It finds the full places largest first. |
+| `test_garbage.py` | `test_the_trash_shows_with_any_file_in_it` |  |  | The Trash shows whatever it holds, a file of a few KB too (owner, 24-11-2026); an empty one does not. |
 | `test_garbage.py` | `test_the_crash_dumps_take_root` |  |  | The crash dumps take root. |
 | `test_garbage.py` | `test_homebrew_only_where_it_is_installed` |  |  | Homebrew only where it is installed. |
 | `test_garbage.py` | `test_homebrews_own_cache_is_not_garbage` |  |  | Homebrews own cache is not garbage. |
@@ -3152,7 +3153,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## portal
 
-227 tests in 18 files, 30.2 s in a local run.
+230 tests in 18 files, 30.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3203,6 +3204,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_bigpicture.py` | `test_the_legend_names_the_keys` |  | 0.2 s | The legend names the keys. |
 | `test_bigpicture.py` | `test_wallpaper_and_veil_reach_the_view` |  | 0.4 s | Wallpaper and veil reach the view. |
 | `test_bigpicture.py` | `test_the_view_scales_down_for_a_handheld_screen` | 3 | 0.6 s | The view scales down for a handheld screen. |
+| `test_bigpicture.py` | `test_the_weather_symbol_fits_its_place_at_every_screen_scale` |  |  | The symbol is as large as a line of text at every scale of the screen (owner, 24-11-2026: at 150 % on a 3840 px wide screen it was drawn 1.5 times too large and cut off). |
 | `test_bigpicture.py` | `test_each_category_keeps_its_own_columns` |  | 0.2 s | Each category keeps its own columns. |
 | `test_bigpicture.py` | `test_r3_toggles_the_on_screen_keyboard_in_a_dialog_too` |  | 0.2 s | R3 (owner, 05-11-2026): Bazzite's on-screen keyboard, also while a question or the file dialog is open, where text is typed; when the desktop has none, the window says what to do. |
 | `test_bigpicture.py` | `test_every_controller_action_plays_the_short_sound` |  | 0.2 s | blob.wav on every controller action (owner, 05-11-2026), not on the button that skips the intro, and not with the Sound setting off. |
@@ -3258,6 +3260,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_portal_update.py` | `test_check_reads_the_tarballs_sha256_and_the_running_build` |  |  | The newest release's SHA256SUMS tells a new build of this version (owner, 03-11-2026); build.sha256 beside the program is what this portal came from. |
 | `test_shortcuts.py` | `test_steam_and_the_file_manager` |  |  | Steam and the file manager. |
 | `test_shortcuts.py` | `test_youtube_needs_brave_browsers_flatpak` |  |  | Youtube needs brave browsers flatpak. |
+| `test_shortcuts.py` | `test_the_weather_opens_its_forecast_in_brave` |  |  | A click on the weather (owner, 24-11-2026): the place's forecast at wttr.in, a page without ads, by its coordinates, in a window of Brave Browser. |
 | `test_shortcuts.py` | `test_github_opens_in_the_desktops_own_browser` |  |  | github.com with xdg-open; the browser's window is the one KWin brings to the front, when it can be asked. |
 | `test_shortcuts.py` | `test_the_settings_of_the_desktop_that_is_there` | 4 |  | KDE Plasma's System Settings, else the module alone, else GNOME's Settings (not only the owner's desktop). |
 | `test_sources.py` | `test_expected_sha256` |  |  | Expected sha256. |
@@ -3380,13 +3383,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_the_clock_pill_sets_the_hours_the_seconds_and_the_zone` |  | 0.2 s | The clock pill sets the hours the seconds and the zone. |
 | `test_window.py` | `test_the_status_is_three_lines` |  |  | A line each (owner, 12-11-2026), whatever the room: the loads, the date and time, and the weather with a place chosen (its symbol, the place, the temperature and the sky); two lines without a place. |
 | `test_window.py` | `test_the_weather_shows_under_the_clock_once_a_place_is_chosen` |  | 0.2 s | No place: no weather, nothing asked. |
+| `test_window.py` | `test_a_click_on_the_weather_opens_its_forecast` |  |  | The place's forecast at wttr.in in Brave Browser (owner, 24-11-2026); without Brave the portal says so. |
 | `test_window.py` | `test_a_long_place_name_ends_in_an_ellipsis_on_its_pill` |  | 0.3 s | A long place name ends in an ellipsis on its pill. |
 | `test_window.py` | `test_the_touchpad_moves_the_pointer_only_while_the_portal_has_the_focus` |  | 0.2 s | The touchpad moves the pointer only while the portal has the focus. |
 | `test_window.py` | `test_the_touchpad_pill_steps_through_the_speeds` |  | 0.2 s | The Touchpad pill (owner, 05-11-2026): a click for the next speed, at once and kept, round to the slowest. |
 
 ## tools
 
-243 tests in 43 files, 10.2 s in a local run.
+246 tests in 43 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3618,6 +3622,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_tour_frames.py` | `test_the_home_is_a_temp_folder_with_one_screen_of_the_videos_size` |  |  | The home is a temp folder with one screen of the videos size. |
 | `test_tour_frames.py` | `test_the_window_fills_the_video` |  |  | The window fills the video. |
 | `test_tour_frames.py` | `test_the_music_loops_under_the_picture_and_fades_out` |  |  | The music loops under the picture and fades out. |
+| `test_tour_frames.py` | `test_the_sounds_the_voice_and_the_music_each_start_at_their_time` |  |  | The Portal Tour's sound: each cue at its second and volume, the music from the end of the welcome, quiet under the voice and faded out at the end, and a limiter over the sum. |
+| `test_tour_frames.py` | `test_without_sound_the_video_is_only_copied` |  |  | Without sound the video is only copied. |
+| `test_tour_frames.py` | `test_the_voice_says_a_few_words_as_written_for_it` |  |  | The voice says a few words as written for it. |
 | `test_tour_frames.py` | `test_a_frame_goes_to_ffmpeg_without_the_rows_padding` |  |  | A frame goes to ffmpeg without the rows padding. |
 | `test_tour_frames.py` | `test_a_crashed_ffmpeg_ends_the_recording_with_a_message` |  |  | A crashed ffmpeg ends the recording with a message. |
 | `test_wiki_apps.py` | `test_every_app_has_a_chapter_and_no_chapter_is_left_over` |  |  | Every app has a chapter and no chapter is left over. |

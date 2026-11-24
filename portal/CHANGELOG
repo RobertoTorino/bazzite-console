@@ -1,3 +1,17 @@
+Changelog: 24-11-2026 21:28:26
+
+Added. A click on the weather in the status opens the place's forecast at wttr.in in Brave Browser, a page without
+ads (owner, 24-11-2026, as in bc250-bazzite). It goes by the place's coordinates. Without Brave Browser's Flatpak, the
+portal says it is required. The weather's tooltip says so, and the wiki's Portal and Privacy pages too.
+
+Fixed. The line under the title that says what the category is for, and the version beside the title, are bold in the
+theme's text color (owner, 24-11-2026). They were muted gray and hardly readable. The Beta stage is orange, in place of
+the theme's accent.
+
+Fixed. The weather's symbol was cut off on a screen with a scale above 100 %, such as a 3840 px wide screen at 150 %.
+QIcon.pixmap() scaled it by the screen's scale a second time, so it came out 1.5 or 2 times too large for its place. It
+is now as large as a line of text at every scale.
+
 Changelog: 24-11-2026 17:44:44
 
 Release 5.1.0. Pins ps5-board-v0.13.2, ps5-quickfix-v0.8.2, ps5-upscaler-v0.9.1, ps5-rpcs3-v1.8.1, ps5-remoteplay-v1.8.1, ps5-clb-v1.8.1, ps5-shadps4-v1.8.1, ps5-datstation-v1.8.1, ps5-ppsspp-v1.8.1, ps5-pcsx2-v1.8.1, ps5-vita3k-v1.9.1, ps5-xenia-v1.9.1, ps5-sftp-v1.9.1, ps5-webcam-v1.9.1, ps5-controller-v1.9.1, ps5-ssd-v1.9.1, ps5-overlay-v1.8.1, ps5-fan-v2.8.1, ps5-compute-v1.0.1, ps5-cec-v2.9.1, ps5-bluetooth-v0.9.1, ps5-password-v0.7.1, ps5-turing-v0.3.1.

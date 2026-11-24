@@ -82,6 +82,36 @@ def test_the_music_loops_under_the_picture_and_fades_out(monkeypatch, tmp_path):
     assert argv[argv.index("-af") + 1] == "afade=t=out:st=28.000:d=2.0" and argv[argv.index("-t") + 1] == "30.000"
 
 
+
+def test_the_sounds_the_voice_and_the_music_each_start_at_their_time(monkeypatch, tmp_path):
+    """The Portal Tour's sound: each cue at its second and volume, the music from the end of the welcome, quiet under
+    the voice and faded out at the end, and a limiter over the sum."""
+    seen = []
+
+    def run(argv, **_kwargs):
+        seen.append(argv)
+        return subprocess.CompletedProcess(argv, 0)
+    monkeypatch.setattr(tour_frames.subprocess, "run", run)
+    cues = [(4.3, tmp_path / "intro.wav", 0.7), (7.5, tmp_path / "welcome.wav", 1.0), (12.25, tmp_path / "c.wav", 2.0)]
+    assert tour_frames.mix(tmp_path / "v.mp4", tmp_path / "out.mp4", 100.0, cues, tmp_path / "m.ogg", 12.0, 0.12) == 0
+    argv = seen[0]
+    graph = argv[argv.index("-filter_complex") + 1]
+    assert "[1:a]" in graph and "atrim=0:88.000,volume=0.12,afade=t=out:st=86.000:d=2.0,adelay=12000:all=1[m]" in graph
+    assert "[2:a]" in graph and "volume=0.7,adelay=4300:all=1" in graph and "volume=2.0,adelay=12250:all=1" in graph
+    assert "amix=inputs=4:normalize=0" in graph and "alimiter" in graph
+    assert argv[argv.index("-c:v") + 1] == "copy" and argv[argv.index("-t") + 1] == "100.000"
+
+
+def test_without_sound_the_video_is_only_copied(tmp_path):
+    (tmp_path / "v.mp4").write_bytes(b"video")
+    assert tour_frames.mix(tmp_path / "v.mp4", tmp_path / "out.mp4", 10.0, []) == 0
+    assert (tmp_path / "out.mp4").read_bytes() == b"video"
+
+
+def test_the_voice_says_a_few_words_as_written_for_it():
+    assert tour_frames.spoken("Upscaling, async compute for the AMD BC-250.") == (
+        "Upscaling, A-sync compute for the AMD BC twofifty.")
+
 class Image:
     """A frame as QImage gives it: its bytes, and a row stride that may hold padding."""
 

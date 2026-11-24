@@ -881,6 +881,30 @@ def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
         assert window.refresh_button.width() == bigpicture.SYMBOL_PX
 
 
+def test_the_weather_symbol_fits_its_place_at_every_screen_scale():
+    """The symbol is as large as a line of text at every scale of the screen (owner, 24-11-2026: at 150 % on a
+    3840 px wide screen it was drawn 1.5 times too large and cut off). Each scale in a Qt of its own, as the scale
+    is the screen's."""
+    import os
+    import subprocess
+    import sys
+    code = ("import sys; sys.path[:0] = sys.argv[1:]\n"
+            "from PyQt6.QtWidgets import QApplication\n"
+            "app = QApplication([])\n"
+            "from bazzite_console_portal import bigpicture, glyphs\n"
+            "line = bigpicture.StatusLine()\n"
+            "line.set_weather('Amsterdam', '8°C  Overcast', glyphs.weather('cloudy'), True, '')\n"
+            "pixmap = line.symbol.pixmap()\n"
+            "print(line.symbol.width(), pixmap.width() / pixmap.devicePixelRatio(), pixmap.devicePixelRatio())\n")
+    portal = Path(bigpicture.__file__).resolve().parents[1]
+    for scale in ("1", "1.5", "2"):
+        env = {**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_SCALE_FACTOR": scale}
+        result = subprocess.run([sys.executable, "-c", code, str(portal), str(portal.parent / "core")], env=env,
+                                capture_output=True, text=True, timeout=60)
+        side, width, ratio = result.stdout.split()
+        assert float(width) <= int(side) and float(ratio) == float(scale), (scale, result.stdout)
+
+
 def test_each_category_keeps_its_own_columns(made):
     window, _ = made()
     big = window.big

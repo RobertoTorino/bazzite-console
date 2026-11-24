@@ -48,6 +48,8 @@ controllers' latest firmware (at most once a day), and downloads the firmware wh
 - The [portal](portal.md) shows the weather in its header only for a place you choose in its Settings: the name
   you search for, then that place's coordinates every 30 minutes, go to Open-Meteo
   (`geocoding-api.open-meteo.com`, `api.open-meteo.com`), which needs no account.
+  When you click the weather, Brave Browser opens the place's forecast at `wttr.in`. That sends the place's
+  coordinates to wttr.in.
 - [PS5 Webcam](apps/webcam.md) downloads a camera's firmware from GitHub (`raw.githubusercontent.com`) only when you
   ask it to.
 - The managers' **Steam artwork…** takes the covers of your games from SteamGridDB, with the API key you enter.
