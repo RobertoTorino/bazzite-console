@@ -213,6 +213,7 @@ Each one serves one tool or one kind of work. Without it, that tool does not run
 | Node.js | the design panel's test, `tools/tests/test_design_panel.py` | `brew install node` |
 | GitHub CLI (`gh`) | runs and releases from a terminal, and Nexus Release Tool's sign-in | `brew install gh` |
 | actionlint | a changed workflow in `.github/workflows/`, checked before the push with `actionlint` at the root | `brew install actionlint` |
+| mawk | Board Test's `tests/test_awk.py`, which runs each awk program under gawk and mawk, the awk of Debian and Ubuntu | `brew install mawk` |
 | ffmpeg | the video tours, `tools/record-tour.sh` and `tools/record-app-tour.sh` | comes with Bazzite |
 | Rust, maturin, nasm and the libva headers | Remote Play's native core, for `cargo test` or `maturin build` on the machine itself | rustup from [rustup.rs](https://rustup.rs), `brew install nasm`, and maturin with pip in the venv |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | the Flatpak `com.obsproject.Studio` |

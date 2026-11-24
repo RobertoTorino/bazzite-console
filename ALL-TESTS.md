@@ -4,14 +4,14 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3201 test functions (3589 cases counting the parametrized ones) in 36 test folders, and 37 installer tests.
+3205 test functions (3593 cases counting the parametrized ones) in 36 test folders, and 37 installer tests.
 
 ## Summary
 
 | Test folder | Files | Tests | Time |
 |---|---|---|---|
 | [apps/bluetooth](#appsbluetooth) | 3 | 34 | 0.4 s |
-| [apps/board](#appsboard) | 3 | 30 | 1.8 s |
+| [apps/board](#appsboard) | 4 | 34 | 1.8 s |
 | [apps/cec](#appscec) | 8 | 68 | 0.7 s |
 | [apps/clb](#appsclb) | 13 | 91 | 2.8 s |
 | [apps/compute](#appscompute) | 8 | 76 |  |
@@ -46,7 +46,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 18 | 227 | 30.2 s |
 | [tools](#tools) | 43 | 243 | 10.2 s |
-| **All** | | **3201** | **153 s** |
+| **All** | | **3205** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -137,10 +137,14 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/board
 
-30 tests in 3 files, 1.8 s in a local run.
+34 tests in 4 files, 1.8 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
+| `test_awk.py` | `test_byte_counts_stay_whole_numbers` |  |  | Byte counts stay whole numbers. |
+| `test_awk.py` | `test_kernel_faults_match_in_any_case_and_benign_blocks_drop` |  |  | Kernel faults match in any case and benign blocks drop. |
+| `test_awk.py` | `test_an_oops_line_counts_on_its_own` |  |  | Oops as a word, also without a Call Trace beside it (24-11-2026: \b, passed with awk -v, became a backspace and the word never matched). |
+| `test_awk.py` | `test_mangohud_lows_need_no_asort` |  |  | Mangohud lows need no asort. |
 | `test_log_advice.py` | `test_table_is_pairs_of_a_pattern_and_a_sentence` |  |  | Table is pairs of a pattern and a sentence. |
 | `test_log_advice.py` | `test_nothing_for_no_lines` |  |  | Nothing for no lines. |
 | `test_log_advice.py` | `test_real_fault_is_explained_and_counted` |  | 0.1 s | Real fault is explained and counted. |
@@ -353,7 +357,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 |---|---|---|---|---|
 | `test_busy.py` | `test_the_kernel_sensor_comes_first` |  |  | The kernel sensor comes first. |
 | `test_busy.py` | `test_engine_time_between_two_samples` |  |  | Engine time between two samples. |
-| `test_busy.py` | `test_the_busier_engine_counts_and_load_stops_at_100` |  |  | The busier engine counts and load stops at 100. |
+| `test_busy.py` | `test_the_busier_engine_counts_and_load_stops_at_100` |  |  | Also where the locale writes EPOCHREALTIME with a comma (24-11-2026: the result was 0 at random there). |
 | `test_gate.py` | `test_cu_counts_and_levels` |  |  | Cu counts and levels. |
 | `test_gate.py` | `test_no_results` |  |  | No results. |
 | `test_gate.py` | `test_a_fully_retested_mask_is_accepted` |  |  | A fully retested mask is accepted. |

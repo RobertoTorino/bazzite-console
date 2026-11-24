@@ -451,19 +451,20 @@ engine_ns() { # -> "client-id gfx-ns compute-ns" lines for this GPU, one per cli
       if (k == "drm-pdev") pd[f] = v; else if (k == "drm-client-id") id[f] = v
       else if (k == "drm-engine-gfx") gfx[f] = v; else comp[f] = v }
     END { for (f in id) if (!(f in pd) || pd[f] == pdev) { g[id[f]] = gfx[f] + 0; c[id[f]] = comp[f] + 0 }
-          for (n in g) print n, g[n], c[n] }'
+          for (n in g) printf "%s %.0f %.0f\n", n, g[n], c[n] }'   # %.0f: mawk prints 5e+09 with print
 }
 gpu_busy() {
   local v n g c t sum_g=0 sum_c=0 dt
+  # EPOCHREALTIME in µs: a locale such as nl_NL writes its decimal point as a comma, which (( )) reads as two numbers.
   if v=$(cat "$GPU_DEV/gpu_busy_percent" 2>/dev/null) && [[ $v =~ ^[0-9]+$ ]]; then BUSY=$v; return; fi
-  if (( ${EPOCHREALTIME/./} - BUSY_AT > 10000000 )); then  # no sample in the last 10 s: take one first
-    GFX_NS=() COMP_NS=(); BUSY_AT=${EPOCHREALTIME/./}
+  if (( ${EPOCHREALTIME/[.,]/} - BUSY_AT > 10000000 )); then  # no sample in the last 10 s: take one first
+    GFX_NS=() COMP_NS=(); BUSY_AT=${EPOCHREALTIME/[.,]/}
     while read -r n g c; do GFX_NS[$n]=$g COMP_NS[$n]=$c; done < <(engine_ns)
     sleep 1
   fi
   local -A old_g=() old_c=()
   for n in "${!GFX_NS[@]}"; do old_g[$n]=${GFX_NS[$n]} old_c[$n]=${COMP_NS[$n]}; done
-  GFX_NS=() COMP_NS=(); t=${EPOCHREALTIME/./}
+  GFX_NS=() COMP_NS=(); t=${EPOCHREALTIME/[.,]/}
   while read -r n g c; do
     GFX_NS[$n]=$g COMP_NS[$n]=$c
     [[ -n ${old_g[$n]:-} ]] && (( g >= old_g[$n] && c >= old_c[$n] )) || continue

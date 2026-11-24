@@ -1,3 +1,13 @@
+Changelog: 24-11-2026 12:57:36
+
+Fixed. ps5-cu-bisect.sh measured a GPU load of 0% on systems whose awk is mawk, as on Debian and Ubuntu. mawk wrote
+large engine times as 5e+09, which bash can't count with. The script now writes them as whole numbers. Bazzite's awk
+is gawk, which wasn't affected. The load test failed in the local CI's Debian container for this reason.
+
+Fixed. The load reading was also wrong at random where the locale writes numbers with a decimal comma, as nl_NL does.
+The script's timer then read only the microseconds. It now reads the time with a point or a comma. The load test also
+runs in such a locale where one is installed.
+
 Changelog: 24-11-2026 12:21:30
 
 Breaking. The app is now called PS5 CU Unlock, before PS5 CU Tools. The app key compute, its folder and file names

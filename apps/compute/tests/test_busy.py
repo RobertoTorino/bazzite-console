@@ -4,6 +4,7 @@ in /proc/<pid>/fdinfo between two samples. The script's own functions run in bas
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -32,11 +33,12 @@ def _client(proc: Path, pid: int, fd: int, client: int, gfx: int, comp: int = 0,
                                 f"drm-engine-gfx:\t{gfx} ns\ndrm-engine-compute:\t{comp} ns\n")
 
 
-def _run(tmp_path: Path, body: str) -> list[str]:
+def _run(tmp_path: Path, body: str, env: dict[str, str] | None = None) -> list[str]:
     gpu = tmp_path / PDEV
     gpu.mkdir(exist_ok=True)
     script = f"set -u\nGPU_DEV={gpu}\n{_functions()}PROC={tmp_path / 'proc'}\n{body}\n"
-    out = subprocess.run(["bash", "-c", script], capture_output=True, text=True, timeout=30, check=True)
+    out = subprocess.run(["bash", "-c", script], capture_output=True, text=True, timeout=30, check=True,
+                         env={**os.environ, **(env or {})})
     return out.stdout.split()
 
 
@@ -60,7 +62,7 @@ sed -i 's/^drm-engine-compute:.*/drm-engine-compute:\\t2000000000 ns/' {proc}/20
 sed -i 's/^drm-engine-gfx:.*/drm-engine-gfx:\\t9000000000 ns/' {proc}/300/fdinfo/4
 mkdir -p {proc}/400/fdinfo
 printf 'drm-pdev:\\t{PDEV}\\ndrm-client-id:\\t11\\ndrm-engine-gfx:\\t8000000000 ns\\n' >{proc}/400/fdinfo/3
-BUSY_AT=$(( ${{EPOCHREALTIME/./}} - 2000000 ))
+BUSY_AT=$(( ${{EPOCHREALTIME/[.,]/}} - 2000000 ))
 gpu_busy; echo $BUSY
 """
     first, second = _run(tmp_path, body)
@@ -68,13 +70,34 @@ gpu_busy; echo $BUSY
     assert second in ("49", "50")
 
 
-def test_the_busier_engine_counts_and_load_stops_at_100(tmp_path):
+def _comma_locale() -> str:
+    """An installed locale whose decimal point is a comma, as nl_NL, or "" when none is."""
+    try:
+        names = subprocess.run(["locale", "-a"], capture_output=True, text=True, timeout=10).stdout.split()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    for name in ("nl_NL.UTF-8", "nl_NL.utf8", "de_DE.UTF-8", "de_DE.utf8"):
+        if name in names:
+            return name
+    return ""
+
+
+@pytest.mark.parametrize("comma", [False, True], ids=["point", "comma"])
+def test_the_busier_engine_counts_and_load_stops_at_100(tmp_path, comma):
+    """Also where the locale writes EPOCHREALTIME with a comma (24-11-2026: the result was 0 at random there)."""
+    env = {}
+    if comma:
+        name = _comma_locale()
+        if not name:
+            pytest.skip("no locale with a decimal comma is installed")
+        env = {"LC_ALL": name}
     proc = tmp_path / "proc"
-    _client(proc, 100, 18, 7, gfx=0, comp=0)
     body = f"""
 gpu_busy
 sed -i -e 's/^drm-engine-gfx:.*/drm-engine-gfx:\\t5000000000 ns/' -e 's/^drm-engine-compute:.*/drm-engine-compute:\\t500000000 ns/' {proc}/100/fdinfo/18
-BUSY_AT=$(( ${{EPOCHREALTIME/./}} - 1000000 ))
+BUSY_AT=$(( ${{EPOCHREALTIME/[.,]/}} - 1000000 ))
 gpu_busy; echo $BUSY
 """
-    assert _run(tmp_path, body) == ["100"]
+    for _ in range(5):                  # the old fault hit only some microseconds, so a few tries
+        _client(proc, 100, 18, 7, gfx=0, comp=0)
+        assert _run(tmp_path, body, env) == ["100"]

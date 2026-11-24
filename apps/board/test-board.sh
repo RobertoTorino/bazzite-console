@@ -460,7 +460,7 @@ run_as_user() {
 # Kernel-log signatures (tests 35, 36 and the stress run in 41).
 GPU_HANG_RE="ring [a-z0-9_.]+ timed? ?out|amdgpu_job_timedout|GPU reset begin|GPU reset\(|amdgpu_device_gpu_recover|Waiting for fences timed out|VM_L2_PROTECTION_FAULT|GPU fault detected|page fault \(src_id|MES failed|Failed to evict|GPU hang|soft recovery|reset was successful|failed to write reg|SMU: I'm not done"
 # "BUG: " only as a word: the match ignores case, so a bare "BUG: " also hit "PM: suspend debug: Waiting".
-PANIC_RE="Kernel panic|\bOops\b|(^|[^a-z])BUG: |general protection fault|soft lockup|hard LOCKUP|watchdog: (BUG|Watchdog detected)|unable to handle (kernel|page)|Call Trace:|RIP: 0010"
+PANIC_RE="Kernel panic|(^|[^[:alnum:]_])Oops([^[:alnum:]_]|$)|(^|[^a-z])BUG: |general protection fault|soft lockup|hard LOCKUP|watchdog: (BUG|Watchdog detected)|unable to handle (kernel|page)|Call Trace:|RIP: 0010"
 # The amdgpu DC layer throws a harmless WARN_ON at probe on the PS5, which drags a
 # RIP and a Call Trace into the journal on every boot. It is never a real fault.
 PANIC_BENIGN_RE="dal_irq_service_(set|ack)|irq_service\.c|NMI watchdog: Enabled|amdgpu_dm_hpd_init|traps: .*(general protection fault|trap int3)"
@@ -915,9 +915,10 @@ log_result "Check zram (Bazzite default swap backend)"
 if command -v zramctl >/dev/null 2>&1 && [ -n "$(zramctl --noheadings 2>/dev/null)" ]; then
     zramctl | tee -a "$LOG_FILE"
     ZRAM_ACTIVE=true
+    # Byte counts with printf %.0f: mawk's print writes 16 GiB as 1.7e+10, which bash can't count with.
     # zram lives in the same GDDR6 pool the GPU allocates from on the PS5.
-    ZRAM_BYTES=$(zramctl --noheadings --bytes --output DISKSIZE 2>/dev/null | awk '{s+=$1} END {print s+0}')
-    MEM_BYTES=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo)
+    ZRAM_BYTES=$(zramctl --noheadings --bytes --output DISKSIZE 2>/dev/null | awk '{s+=$1} END {printf "%.0f\n", s}')
+    MEM_BYTES=$(awk '/MemTotal/ {printf "%.0f\n", $2 * 1024}' /proc/meminfo)
     if [ "${MEM_BYTES:-0}" -gt 0 ] && [ "${ZRAM_BYTES:-0}" -gt 0 ]; then
         ZRAM_PCT=$((ZRAM_BYTES * 100 / MEM_BYTES))
         log_result "INFO: zram is sized at $((ZRAM_BYTES / 1048576)) MiB, ${ZRAM_PCT}% of total memory."
@@ -1809,10 +1810,11 @@ log_result "Scan retained boots for oopses, soft/hard lockups and collected core
 # so a real trace is actually diagnosable from the log.
 scan_kernel_faults() {
     awk -v panic="$PANIC_RE" -v benign="$PANIC_BENIGN_RE" '
-        BEGIN { IGNORECASE=1; tail=0; block="" }
-        function flush() { if (block != "" && block !~ benign) printf "%s\n", block; block="" }
+        # Case-insensitive through tolower(): only gawk knows IGNORECASE, and mawk ignores it.
+        BEGIN { panic = tolower(panic); benign = tolower(benign); tail=0; block="" }
+        function flush() { if (block != "" && tolower(block) !~ benign) printf "%s\n", block; block="" }
         {
-            if ($0 ~ panic) {
+            if (tolower($0) ~ panic) {
                 if (tail == 0) {
                     flush()
                     start = NR - 8; if (start < 1) start = 1
@@ -3274,6 +3276,20 @@ else
     while IFS= read -r MH_F; do
         [ -n "$MH_F" ] || continue
         MH_RES=$(mh_user cat -- "$MH_F" 2>/dev/null | head -c 20000000 | awk -F, '
+            # A heap sort of a[1..n]: only gawk has asort(), and mawk stops at it.
+            function sift(a, root, end,   child, big, t) {
+                while (2 * root <= end) {
+                    child = 2 * root; big = root
+                    if (a[big] < a[child]) big = child
+                    if (child + 1 <= end && a[big] < a[child + 1]) big = child + 1
+                    if (big == root) return
+                    t = a[root]; a[root] = a[big]; a[big] = t; root = big
+                }
+            }
+            function heapsort(a, n,   i, t) {
+                for (i = int(n / 2); i >= 1; i--) sift(a, i, n)
+                for (i = n; i > 1; i--) { t = a[1]; a[1] = a[i]; a[i] = t; sift(a, 1, i - 1) }
+            }
             !col {
                 for (i = 1; i <= NF; i++) if (tolower($i) == "frametime") { col = i; next }
                 if (NR > 10) exit
@@ -3282,7 +3298,7 @@ else
             NF >= col && $col + 0 > 0 { n++; ft[n] = $col + 0; sum += $col }
             END {
                 if (n < 100) { print "SHORT", n; exit }
-                asort(ft)
+                heapsort(ft, n)
                 med = ft[int(n / 2)]
                 st = 0; for (i = 1; i <= n; i++) if (ft[i] > 2 * med) st++
                 # 1% / 0.1% low = FPS from the average of the worst 1% / 0.1% frametimes.

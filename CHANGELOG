@@ -1,3 +1,8 @@
+Changelog: 24-11-2026 13:06:54
+
+Added. The development machine in the Development chapter lists mawk, for Board Test's awk test. Install it with
+brew install mawk.
+
 Changelog: 24-11-2026 12:37:14
 
 Fixed. PS5 CPU Tools is now called PS5 Core Unlock in the README, the wiki's navigation and pages, DESIGN.md and

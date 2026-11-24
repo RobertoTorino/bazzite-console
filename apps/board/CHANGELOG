@@ -1,3 +1,19 @@
+Changelog: 24-11-2026 13:11:31
+
+Fixed. Test 36 never found a kernel Oops line by the word Oops. Its pattern \bOops\b went to awk with -v, which
+turns \b into a backspace, so the word never matched under gawk either. An Oops was only caught through its Call
+Trace line. The pattern now marks the word with characters both awk and grep -E read the same, and Whoopsie still
+doesn't match. tests/test_awk.py checks it under gawk, mawk and grep -E.
+
+Changelog: 24-11-2026 13:06:54
+
+Fixed. test-board.sh's awk programs now give the same results under mawk, the awk of Debian and Ubuntu, as under
+gawk, the awk of Bazzite. On Bazzite nothing changes. The zram check prints the zram size and the total memory with
+printf, because mawk's print writes 16 GiB as 1.7e+10 and bash can't count with that. The kernel fault scan ignores
+case through tolower(), because mawk ignores IGNORECASE. The MangoHud analysis sorts the frame times with its own heap
+sort, because mawk has no asort() and stops there. A new test, tests/test_awk.py, runs these programs under gawk and
+mawk where they are installed.
+
 Changelog: 24-11-2026 12:37:14
 
 Fixed. PS5 CPU Tools is now called PS5 Core Unlock in the comments and messages of
