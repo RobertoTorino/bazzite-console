@@ -500,7 +500,7 @@ See [Performance score](#performance-score-comparing-kernels-and-settings) below
 |----|------------------------|----------------------------------------------------------------------------------|
 | 13 | Security Configuration | firewalld zones and SELinux enforcement mode.                                    |
 | 32 | OSTree Deployment      | On an Atomic Bazzite: the deployments, and a staged one waiting for a reboot. A flattened PS5 image has none. |
-| 33 | Update and Patch       | Available updates, read-only: `dnf` on a flattened image, `rpm-ostree` on an Atomic one; Flatpak remotes. |
+| 33 | Update and Patch       | Available updates, read-only: `dnf` on a flattened image, `rpm-ostree` on an Atomic one; Flatpak remotes. When the check fails, for example offline, the test says so. |
 | 45 | Installed Packages     | Counts installed software per source: image RPMs, layered and overridden packages, Flatpak apps (system and user), Homebrew, AppImages and Distrobox containers. Names and versions only. |
 
 ---

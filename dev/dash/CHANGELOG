@@ -1,3 +1,12 @@
+Changelog: 24-11-2026 15:46:27
+
+Breaking. Nexus Dashboard is now called Nexus Dashboard for PS5. Its ID is now nexus-dashboard-ps5 instead of
+nexus-dashboard, which both suites shared. That ID names the launcher in ~/.local/bin, the menu entry, the Desktop
+icon, the settings folder, the log folder and the check for an open window. Both suites' dashboards can now be
+installed and opened side by side. Before, the one installed last replaced the other, and opening one closed the
+other. install.sh removes the old nexus-dashboard launcher, menu entry and Desktop icon when that launcher starts
+this checkout.
+
 Changelog: 22-11-2026 18:33:23
 
 Fixed. tests/test_main_window.py expects the tile of Nexus Garbage Remover, after Nexus Deps.

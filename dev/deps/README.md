@@ -11,7 +11,7 @@ use them, what is missing or must be updated (with the known vulnerabilities fro
 state, and every update of the machine (Bazzite's image, Flatpaks, Homebrew, Rust, the development venv, Prime95's mprime); **Fix**
 installs what is missing, outdated or newer, after it shows every command and asks. An hourly notification
 says when something needs you. A development app: it runs from the checkout it lives in and has no releases of its own.
-Start it from [Nexus Dashboard](../dash), or:
+Start it from [Nexus Dashboard for PS5](../dash), or:
 
 | | Linux |
 |---|---|

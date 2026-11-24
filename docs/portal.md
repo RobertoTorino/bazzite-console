@@ -135,7 +135,7 @@ nothing in the portal. There are two ways to get every button:
   outside a game.
 
 The tools for working on the suite are not in the portal. They are in `dev/` of the repository, run from a
-checkout and have no release. [Nexus Dashboard](development/dashboard.md) opens them all. Start it from the
+checkout and have no release. [Nexus Dashboard for PS5](development/dashboard.md) opens them all. Start it from the
 checkout, or give it a menu entry with its `install.sh`.
 
 - **Nexus Release Tool** prepares and starts a release.

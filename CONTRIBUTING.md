@@ -24,7 +24,7 @@ request. Say so when something was made with generative AI tools.
 
 Every app in a category has the same icon. A new or changed icon goes in `icons/<category>/`, and
 `icons/categories.toml` names each app's category; `python3 tools/sync_icons.py` writes the copies the apps, the
-portal and the wiki use (Nexus Dashboard's Convert icons does the same from a window). The wiki's
+portal and the wiki use (Nexus Dashboard for PS5's Convert icons does the same from a window). The wiki's
 [Architecture and consistency](docs/development/architecture.md#icons) page describes it, and how a new app is built.
 
 ## Before a pull request

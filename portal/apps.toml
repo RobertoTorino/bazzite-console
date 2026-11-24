@@ -287,6 +287,33 @@ uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/ps5-cores-bisect-gui"]
 launch = [["Open", "~/.local/bin/ps5-cores-bisect-gui"]]
 
+[apps.gpu]
+name = "PS5 GPU Manager"
+summary = "Manage the cyan-skillfish GPU governor, with tuning, safe points, profiles and backups."
+tag = "ps5-gpu-v0.1.0"
+sha256 = ""
+required = false
+changes_board = true
+board_change = """
+The app edits the governor's settings file, /etc/cyan-skillfish-governor-smu/config.toml, or the tt governor's.
+Before each change from its pages it makes a dated backup of the file beside it. It starts, stops, enables and
+disables the governor's service. It sends the governor clock, voltage and range requests over D-Bus. The governor is
+what sets the GPU's clocks and voltages. The app never writes a register itself. For each attempt, the GPU sweep
+puts a test clock and voltage in the settings file and restarts the governor. It puts your own file back after each
+attempt, on a temperature abort and when it stops. A freeze can leave the test settings in the file. The sweep then
+puts your own file back first, at its next attempt. Install in the sweep makes a dated backup, writes the best step
+into the file and restarts the governor. The settings file stays across reboots and power offs. The governor reads
+it whenever it starts. What the app sets over D-Bus, test mode included, lasts until the governor restarts. Nothing
+is written to the BIOS, the firmware, the CMOS or the kernel's arguments. Restore selected on the Backups page makes
+any earlier settings file the current one again. Stop test ends a test, and Stop ends an attempt of the sweep.
+Removing the app leaves the settings file and its backups as they are.
+"""
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-governor-manager"]
+launch = [["Open", "~/.local/bin/ps5-governor-manager"]]
+
 [apps.cec]
 name = "PS5 CEC Manager"
 summary = "Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC."

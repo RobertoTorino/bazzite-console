@@ -9,7 +9,7 @@
 Nexus TTS speaks an English text in a natural voice and saves the speech as an Ogg Vorbis, MP3, FLAC or WAV
 file. Type or paste the text, choose one of 15 female voices, American or British, set a speed, and click Speak. The
 first sentence plays while the app makes the next ones. The voices run on the machine itself, and nothing of your text leaves it. It is a
-development app, so it runs from the checkout and has no releases. Start it from [Nexus Dashboard](../dash), or:
+development app, so it runs from the checkout and has no releases. Start it from [Nexus Dashboard for PS5](../dash), or:
 
 | | Linux |
 |---|---|

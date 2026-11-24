@@ -642,7 +642,7 @@ Every app has the icon of its category. `icons/categories.toml` assigns them, an
 | --- | --- | --- |
 | <img src="icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | PCSX2 Manager (`pcsx2`)<br>PPSSPP Manager (`ppsspp`)<br>PS5 DatStation (`datstation`)<br>RPCS3 Manager (`rpcs3`)<br>Remote Play (`remoteplay`)<br>Vita3K Manager (`vita3k`)<br>XBOX Remote Play (`clb`)<br>Xenia Manager (`xenia`)<br>shadPS4 Manager (`shadps4`) |
 | <img src="icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | PS5 Upscaler Manager (`upscaler`) |
-| <img src="icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | PS5 Board Test (`board`)<br>PS5 CU Unlock (`compute`)<br>PS5 Core Unlock (`cores`)<br>PS5 Fan Controller (`fan`)<br>PS5 System Overlay (`overlay`) |
+| <img src="icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | PS5 Board Test (`board`)<br>PS5 CU Unlock (`compute`)<br>PS5 Core Unlock (`cores`)<br>PS5 Fan Controller (`fan`)<br>PS5 GPU Manager (`gpu`)<br>PS5 System Overlay (`overlay`) |
 | <img src="icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | PS5 Bluetooth (`bluetooth`)<br>PS5 CEC Manager (`cec`)<br>PS5 Controller (`controller`)<br>PS5 Password Generator (`password`)<br>PS5 Quickfix (`quickfix`)<br>PS5 SFTP Tools (`sftp`)<br>PS5 SSD Check (`ssd`)<br>PS5 Turing Screen (`turing`)<br>PS5 Webcam (`webcam`) |
 
 ### The portal's symbols
@@ -702,6 +702,7 @@ Drawn by MkDocs Material in the wiki's colors.
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/shape-outline.svg" width="24" alt=""> | `material-shape-outline` | App categories |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/shield-lock-outline.svg" width="24" alt=""> | `material-shield-lock-outline` | Security |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/sitemap-outline.svg" width="24" alt=""> | `material-sitemap-outline` | Architecture and consistency |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/speedometer.svg" width="24" alt=""> | `material-speedometer` | Bazzite Console Suite { .home-hero__lead } |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/stethoscope.svg" width="24" alt=""> | `material-stethoscope` | Bazzite Console Suite { .home-hero__lead } |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/tag-outline.svg" width="24" alt=""> | `material-tag-outline` | Releases |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/television.svg" width="24" alt=""> | `material-television` | Bazzite Console Suite { .home-hero__lead } |
@@ -727,6 +728,7 @@ Characters of the font that the apps use as icons in labels and buttons.
 | PS5 Controller | ✓ ✕ › △ ○ □ |
 | PS5 Core Unlock | ✔ ✖ ▶ ■ |
 | PS5 DatStation | ← △ ○ □ ◇ ◆ ★ |
+| PS5 GPU Manager | ✔ ✖ ⚠ ▶ ● |
 | PS5 Quickfix | ● ○ |
 | PS5 SFTP Tools | ✓ ✗ ⚠ ↓ ↑ ← |
 | PS5 System Overlay | ↓ ↑ |

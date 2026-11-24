@@ -1,3 +1,8 @@
+Changelog: 24-11-2026 15:16:11
+
+Fixed. In Dutch, German and other languages the 12-hour clock showed no AM or PM, and the weekday and month names
+came out in that language. They are now always English.
+
 Changelog: 22-11-2026 21:58:22
 
 Release 0.3.0.

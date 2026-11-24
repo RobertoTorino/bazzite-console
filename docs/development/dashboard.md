@@ -4,7 +4,7 @@
 
 # Dashboard
 
-The **Nexus Dashboard** (`dev/dash/` in the repository) is the one door to the tools for working on the suite.
+The **Nexus Dashboard for PS5** (`dev/dash/` in the repository) is the one door to the tools for working on the suite.
 Its tiles start the development apps of the checkout, each in a window of its own, and open the suite's tools;
 below them, Test local apps starts the suite's own apps and its wiki from the checkout. Like every development app
 it runs from the checkout it lives in, takes Nexus's design and icon, and has no releases of its own: nothing of it
@@ -27,8 +27,8 @@ dev/dash/install.sh --uninstall             # remove them; the checkout stays
 dev/dash/install.sh --uninstall --purge     # also remove the settings
 ```
 
-Run the installer as your own user, not with sudo. Then a double-click on **Nexus Dashboard** on the Desktop, or its
-menu entry, opens the dashboard.
+Run the installer as your own user, not with sudo. Then a double-click on **Nexus Dashboard for PS5** on the Desktop, or
+its menu entry, opens the dashboard.
 
 Opening the dashboard while it is already open closes the open window and opens a new one: the app runs from the
 checkout, so the new window has the code as it is now. An open dashboard that does not answer within 5 seconds is
@@ -72,7 +72,7 @@ first). A click starts that app from the checkout, to try a change before its re
 portal is already open, its icon warns instead of starting: a second portal never opens (starting it only brings
 the open window to the front), so close it first. An app that changes how the board runs (an orange **!**
 on its icon) asks first, as in the portal; started from the checkout it uses the scripts in the checkout. Each app
-writes its output to `~/.cache/nexus-dashboard/local/<package>.log`. When an app stops with an error, the end of its log
+writes its output to `~/.cache/nexus-dashboard-ps5/local/<package>.log`. When an app stops with an error, the end of its log
 shows below. The apps keep running when you close the dashboard. The round **i** beside the title says the same.
 
 The last icon is the wiki: **Bazzite Console Suite wiki (local)** serves it from the checkout with `mkdocs serve`

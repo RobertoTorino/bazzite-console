@@ -1,3 +1,9 @@
+Changelog: 24-11-2026 15:16:11
+
+Fixed. A real controller was called fake in many languages other than English. The build date it reports, such as
+"May 15 2015", was read with the month names of the window's language, where Mar, May and Oct are no month in Dutch.
+The month names are now read in English in every language. The date in the check's detail is written in English too.
+
 Changelog: 22-11-2026 21:58:22
 
 Release 1.8.0.

@@ -63,6 +63,10 @@ def zone_of(style: ClockStyle) -> datetime.tzinfo | None:
         return None
 
 
+# The weekday and AM or PM stay English in any locale: %A and %p follow it, and Dutch or German has no AM or PM.
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+
 def clock_text(now: datetime.datetime | None = None, style: ClockStyle = ClockStyle()) -> str:
     """'Thursday 11/5/26 | 07:44 PM CEST': the weekday, month/day/year, the time and its zone, in the style's time
     zone (the system's own by default); '19:44:05 CEST' with 24 hours and the seconds."""
@@ -71,9 +75,9 @@ def clock_text(now: datetime.datetime | None = None, style: ClockStyle = ClockSt
     if zone is not None:
         now = now.astimezone(zone)
     name = now.tzname() or ""
-    form = ("%H:%M" if style.hours == 24 else "%I:%M") + (":%S" if style.seconds else "") \
-        + (" %p" if style.hours != 24 else "")
-    return f"{now:%A} {now.month}/{now.day}/{now:%y} | {now:{form}}{' ' + name if name else ''}"
+    form = ("%H:%M" if style.hours == 24 else "%I:%M") + (":%S" if style.seconds else "")
+    half = f" {'AM' if now.hour < 12 else 'PM'}" if style.hours != 24 else ""
+    return f"{WEEKDAYS[now.weekday()]} {now.month}/{now.day}/{now:%y} | {now:{form}}{half}{' ' + name if name else ''}"
 
 
 def _temperature(chip: Path, labels: tuple[str, ...] = ()) -> float | None:

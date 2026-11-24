@@ -12,7 +12,7 @@ the app from a preset, a chord and three sliders. The mix sets how loud each tra
 in, trails and fades.
 
 A development app: it runs from the checkout it lives in and has no releases of its own. Start it from
-[Nexus Dashboard](../dash), or:
+[Nexus Dashboard for PS5](../dash), or:
 
 | | Linux |
 |---|---|

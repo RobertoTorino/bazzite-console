@@ -39,6 +39,7 @@ Every app with its icon and its category.
 | ![](../assets/apps/fan.webp){ .app-icon } [PS5 Fan Controller](fan.md) | Sustainable |
 | ![](../assets/apps/compute.webp){ .app-icon } [PS5 CU Unlock](compute.md) | Sustainable |
 | ![](../assets/apps/cores.webp){ .app-icon } [PS5 Core Unlock](cores.md) | Sustainable |
+| ![](../assets/apps/gpu.webp){ .app-icon } [PS5 GPU Manager](gpu.md) | Sustainable |
 | ![](../assets/apps/overlay.webp){ .app-icon } [PS5 System Overlay](overlay.md) | Sustainable |
 | ![](../assets/apps/upscaler.webp){ .app-icon } [PS5 Upscaler Manager](upscaler.md) | Graphics |
 | ![](../assets/apps/datstation.webp){ .app-icon } [PS5 DatStation](datstation.md) | Gaming |

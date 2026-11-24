@@ -1,3 +1,22 @@
+Changelog: 24-11-2026 15:16:11
+
+Fixed. The hints that name which program logged the unexplained warnings were lost when the journal writes the month
+in another language, such as "nov 24" in Dutch. Any month name now counts.
+
+Fixed. Test 32 missed a staged deployment when rpm-ostree ran outside a UTF-8 locale, as under LC_ALL=C. rpm-ostree
+then marks the booted deployment with * instead of the bullet, so the test said the booted one was the newest. It now
+reads both marks.
+
+Fixed. Test 33 reported an available update whenever the check printed anything other than "No updates available",
+for example offline or while another rpm-ostree job ran. It now reads rpm-ostree's exit code. A check that did not
+finish says so, and says nothing about updates.
+
+Fixed. On a flattened image, a dnf update check that failed or timed out said that no updates were found. It now
+reads dnf's exit code, and a check that did not finish says so.
+
+Fixed. Test 37 read the VRAM split from card1 first and then from the last card that reports VRAM, so a second GPU
+took the board's place. It now reads the board's GPU, the one the script finds at its start.
+
 Changelog: 24-11-2026 13:15:49
 
 Release 0.13.1.

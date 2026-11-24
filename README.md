@@ -17,6 +17,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/fan.webp" width="20" height="20" alt=""/> **[PS5 Fan Controller](apps/fan)**: The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature.
 - <img src="portal/images/apps/compute.webp" width="20" height="20" alt=""/> **[PS5 CU Unlock](apps/compute)**: Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock.
 - <img src="portal/images/apps/cores.webp" width="20" height="20" alt=""/> **[PS5 Core Unlock](apps/cores)**: Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock.
+- <img src="portal/images/apps/gpu.webp" width="20" height="20" alt=""/> **[PS5 GPU Manager](apps/gpu)**: Manage the cyan-skillfish GPU governor, with tuning, safe points, profiles and backups.
 
 **Graphics**: Graphics features and tools for games.
 
@@ -47,7 +48,7 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/turing.webp" width="20" height="20" alt=""/> **[PS5 Turing Screen](apps/turing)**: CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5").
 
 The tools for working on the suite run from a checkout of the repository. They are not in the portal.
-**[Nexus Dashboard](dev/dash)** opens them all.
+**[Nexus Dashboard for PS5](dev/dash)** opens them all.
 
 - Nexus Release Tool
 - Nexus Installer Tests

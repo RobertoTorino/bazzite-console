@@ -1,3 +1,14 @@
+Changelog: 24-11-2026 16:36:23
+
+Added. The catalog lists PS5 GPU Manager and what it uses that the catalog has: memtest_vulkan, vkpeak, vkmark,
+glmark2, sudo, journalctl, pkexec, systemctl, PyQt6 and PyQt6-Charts. It also lists cyan-skillfish-governor-smu,
+busctl and radeontop for it, as the twin does (owner, 24-11-2026). The governor's description says it is made for the
+BC-250's GPU.
+
+Changelog: 24-11-2026 15:46:27
+
+Fixed. The texts name the dashboard Nexus Dashboard for PS5, its new name.
+
 Changelog: 24-11-2026 12:37:14
 
 Fixed. PS5 CPU Tools is now called PS5 Core Unlock in the bazzite-console catalog, the mprime text and two test

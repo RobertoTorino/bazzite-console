@@ -4,7 +4,7 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Nexus Dashboard
+# Nexus Dashboard for PS5
 
 One door to the tools for working on the suite. Its tiles start the development apps of the checkout, each in a window
 of its own ([Nexus Release Tool](../nrt), [Nexus Installer Tests](../itests), [Nexus Demo Recorder](../demo),

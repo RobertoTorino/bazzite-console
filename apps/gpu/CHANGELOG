@@ -1,0 +1,6 @@
+Changelog: 24-11-2026 16:36:23
+
+Added. PS5 GPU Manager, a port of BC-250 GPU Manager with its GPU sweep, as bc250-bazzite has it on 24-11-2026
+(owner, 24-11-2026: the same app in both suites, the refactor for the PS5 is done on the board). The code is the
+BC-250 app's with the suite's names. It still works with the cyan-skillfish governor, its D-Bus interface and the
+BC-250's GPU (1002:13fe). Board Test says the PS5's GPU clock needs no governor service, and its GPU is 13fb.

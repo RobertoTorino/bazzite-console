@@ -70,6 +70,7 @@ nav:
           - PS5 Core Unlock: apps/cores.md
           - PS5 CU Unlock: apps/compute.md
           - PS5 Fan Controller: apps/fan.md
+          - PS5 GPU Manager: apps/gpu.md
           - PS5 System Overlay: apps/overlay.md
       - Graphics:
           - PS5 Upscaler Manager: apps/upscaler.md

@@ -91,6 +91,15 @@ def with_colours(theme: Theme, colours: dict[str, str]) -> Theme:
 HOURS = {24: "%H:%M", 12: "%I:%M %p"}
 ZONES = ("", "name", "offset")
 DATES = {"": "", "weekday": "%a %d %b", "dmy": "%d-%m-%Y", "mdy": "%m/%d/%Y", "ymd": "%Y-%m-%d"}
+# The names stay English in any locale: strftime's %a, %b and %p follow it, and Dutch or German has no AM or PM.
+WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def english(form: str, local: time.struct_time) -> str:
+    """strftime with %a, %b and %p in English."""
+    form = form.replace("%a", WEEKDAYS[local.tm_wday]).replace("%b", MONTHS[local.tm_mon - 1])
+    return time.strftime(form.replace("%p", "AM" if local.tm_hour < 12 else "PM"), local)
 
 
 @dataclass(frozen=True)
@@ -118,7 +127,7 @@ def zone_text(local: time.struct_time, zone: str) -> str:
 def clock_text(when: float | None, clock: Clock = Clock()) -> str:
     """The time, in the system's time zone at that moment (summer and winter time follow by themselves)."""
     local = time.localtime(when)
-    text = time.strftime(HOURS.get(clock.hours, HOURS[24]), local)
+    text = english(HOURS.get(clock.hours, HOURS[24]), local)
     if clock.hours == 12:
         text = text.lstrip("0")
     zone = zone_text(local, clock.zone)
@@ -127,7 +136,7 @@ def clock_text(when: float | None, clock: Clock = Clock()) -> str:
 
 def date_text(when: float | None, clock: Clock = Clock()) -> str:
     form = DATES.get(clock.date, "")
-    return time.strftime(form, time.localtime(when)) if form else ""
+    return english(form, time.localtime(when)) if form else ""
 
 
 @dataclass(frozen=True)

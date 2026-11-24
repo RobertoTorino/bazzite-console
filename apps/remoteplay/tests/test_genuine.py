@@ -40,6 +40,14 @@ def test_the_owners_dualshock4_over_bluetooth():
     assert result.verdict() == "Genuine DS4v1: it answers as a genuine DualShock 4 v1 (CUH-ZCT1) does."
 
 
+@pytest.mark.parametrize("month", genuine.MONTHS)
+def test_the_build_date_is_read_in_english(month):
+    """The month names come from a fixed English table, not from the window's locale (24-11-2026)."""
+    date = f"{month} 15 2015".encode("ascii")
+    report = FIRMWARE[:1] + date + FIRMWARE[1 + len(date):]                    # after the report ID
+    result = genuine.check(SONY, 0x05C4, BUS_BLUETOOTH, reader({0xA3: report, 0x05: CALIBRATION_BT}), TODAY)
+    assert result.passed and result.checks[0].detail == f"Built 15 {month} 2015."
+
 def test_over_usb_the_calibration_comes_in_the_other_order():
     usb = _usb_order(CALIBRATION_BT)
     v2 = genuine.check(SONY, 0x09CC, BUS_USB, reader({0xA3: FIRMWARE, 0x02: usb}), TODAY)

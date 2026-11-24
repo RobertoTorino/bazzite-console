@@ -243,7 +243,7 @@ python3 tools/sync_icons.py --category sustainable --from ~/Pictures/leaf.png   
 python3 tools/sync_icons.py --category sustainable --from ~/Pictures/leaf-small.png --size 128
 ```
 
-[Nexus Dashboard](dashboard.md#convert-icons) does the same from a window.
+[Nexus Dashboard for PS5](dashboard.md#convert-icons) does the same from a window.
 `python3 tools/sync_icons.py --check` lists what is not converted or copied yet, and `tools/tests/test_icons.py`
 fails when a copy is out of date or an app icon has no category.
 

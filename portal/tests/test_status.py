@@ -6,6 +6,8 @@ from __future__ import annotations
 import datetime
 import zoneinfo
 
+import pytest
+
 from bazzite_console_portal import status
 
 AMSTERDAM = zoneinfo.ZoneInfo("Europe/Amsterdam")

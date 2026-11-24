@@ -1,0 +1,13 @@
+[Desktop Entry]
+# SPDX-License-Identifier: GPL-3.0-or-later
+Type=Application
+Name=PS5 GPU Manager
+GenericName=GPU Manager
+Comment=Configure and control the cyan-skillfish-governor-smu GPU governor on an AMD PS5
+Exec=ps5-governor-manager
+Icon=ps5-governor-manager
+Terminal=false
+Categories=System;Settings;HardwareSettings;Qt;
+Keywords=GPU;governor;PS5;PS5;cyan skillfish;clock;frequency;
+StartupNotify=true
+StartupWMClass=ps5-governor-manager

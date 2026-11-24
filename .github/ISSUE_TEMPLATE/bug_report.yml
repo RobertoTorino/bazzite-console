@@ -28,6 +28,7 @@ body:
         - fan
         - compute
         - cores
+        - gpu
         - cec
         - bluetooth
         - quickfix

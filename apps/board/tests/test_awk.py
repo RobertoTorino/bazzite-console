@@ -91,3 +91,12 @@ def test_mangohud_lows_need_no_asort(awk):
                 f"{1000 * k1 / sum(ordered[-k1:]):.1f}", f"{1000 * k2 / sum(ordered[-k2:]):.1f}",
                 f"{100 * sum(t > 2 * median for t in times) / n:.2f}"]
     assert fields == expected
+
+
+def test_the_hint_names_the_program_whatever_the_month_is_called(awk):
+    """journalctl writes the month in the user's language (24-11-2026: "nov 24" in Dutch matched no hint)."""
+    program = _program(r"done < <\(awk '(.*?)' <<<\"\$rest\"")
+    lines = ["Nov 24 13:14:20 host kwin_wayland[1234]: one", "nov 24 13:14:21 host kwin_wayland[1234]: two",
+             "11月 24 13:14:22 host steam: three", "Mai 04 08:00:00 host wireplumber[88]: four"]
+    assert _run(awk, [program], "\n".join(lines) + "\n").split() == ["kwin_wayland", "kwin_wayland", "steam",
+                                                                       "wireplumber"]

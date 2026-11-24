@@ -110,9 +110,14 @@ def relative(published: datetime, now: datetime) -> str:
     return f"{days} days ago"
 
 
+# The month stays English in any locale, where strftime's %b would write "okt." or "Mai".
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
 def format_date(published: datetime | None, now: datetime | None = None) -> str:
     """"15 Oct 2026 • 3 hours ago"; "" without a date."""
     if published is None:
         return ""
     now = now or datetime.now(timezone.utc)
-    return f"{published.astimezone().strftime('%d %b %Y')} • {relative(published, now)}"
+    local = published.astimezone()
+    return f"{local.day:02d} {MONTHS[local.month - 1]} {local.year} • {relative(published, now)}"

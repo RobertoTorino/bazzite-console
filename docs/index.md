@@ -39,6 +39,11 @@ the boot command line,
 board down cleanly at a critical temperature.
 </div>
 <div class="home-card" markdown>
+#### :material-speedometer: Tuning
+
+[PS5 GPU Manager](apps/gpu.md) tunes the GPU governor. Its GPU sweep finds your board's safe overclock and undervolt.
+</div>
+<div class="home-card" markdown>
 #### :material-lock-open-variant: Unlocks
 
 [PS5 CU Unlock](apps/compute.md) and [PS5 Core Unlock](apps/cores.md) tell bad CUs and cores apart from an unstable

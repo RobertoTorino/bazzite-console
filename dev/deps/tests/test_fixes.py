@@ -120,10 +120,10 @@ def test_every_tool_names_at_most_one_formula_and_package():
     for tool in load_tools(CATALOG):
         assert " " not in tool.brew and " " not in tool.rpm, tool.name
     named = {name for name, tool in tools().items() if tool.rpm}
-    # FFmpeg comes inside Remote Play; the others are part of Bazzite. CU Unlock and Core Unlock name their packages as
-    # in the twin (owner, 20-11-2026).
-    assert named == {"cec-ctl", "glmark2", "journalctl", "lspci", "ras-mc-ctl", "setpci", "stress-ng", "sudo", "taskset",
-                     "umr", "vkmark"}
+    # FFmpeg comes inside Remote Play; the others are part of Bazzite. CU Unlock, Core Unlock and GPU Manager name
+    # their packages as in the twin (owner, 20-11-2026 and 24-11-2026).
+    assert named == {"busctl", "cec-ctl", "glmark2", "journalctl", "lspci", "radeontop", "ras-mc-ctl", "setpci",
+                     "stress-ng", "sudo", "taskset", "umr", "vkmark"}
 
 
 def test_the_reminder_says_what_needs_the_user():

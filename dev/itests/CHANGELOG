@@ -1,3 +1,7 @@
+Changelog: 24-11-2026 15:46:27
+
+Fixed. The texts name the dashboard Nexus Dashboard for PS5, its new name.
+
 Changelog: 15-11-2026 10:17:45
 
 Breaking. One suite (owner, 15-11-2026): the repository is the suite, so the suite chosen in the header, --suite and

@@ -1,3 +1,7 @@
+Changelog: 24-11-2026 15:46:27
+
+Fixed. The texts name the dashboard Nexus Dashboard for PS5, its new name.
+
 Changelog: 15-11-2026 10:17:45
 
 Breaking. No VERSION (owner, 15-11-2026): a development app is never released, so its header names the checkout's

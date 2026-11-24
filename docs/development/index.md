@@ -6,7 +6,7 @@
 
 How the repository is laid out, how to set it up and test it, how the wiki's pictures and tours are made, and how
 the versions and releases fit together. How every app is built, and how to add one:
-[Architecture and consistency](architecture.md). The development apps, from Nexus Dashboard to Nexus Deps:
+[Architecture and consistency](architecture.md). The development apps, from Nexus Dashboard for PS5 to Nexus Deps:
 [Dashboard](dashboard.md). How a release is made and published: [Releases](releases.md). The repository's settings
 on GitHub and Dependabot's pull requests: [GitHub settings](github-settings.md).
 
@@ -328,7 +328,7 @@ python tools/portal_screenshot.py          # from the venv; --out FILE to save i
 ```
 
 The video tours are made the same way, frame by frame from the real windows, offscreen, from a terminal as below
-or from [Nexus Dashboard](dashboard.md#video-tours). `tools/record-tour.sh`
+or from [Nexus Dashboard for PS5](dashboard.md#video-tours). `tools/record-tour.sh`
 records the portal's tour, about two minutes, with music under it that fades out over the last two seconds
 (`tools/sounds/the_quiet_engine_remix.ogg`, made with generative AI tools; `--no-music` leaves it out).
 `tools/record-tour.sh --wiki` also writes the copy on the [Portal Tour](../portal-tour.md) page,

@@ -12,15 +12,19 @@ set -euo pipefail
 APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venvs
 
-APP_ID="nexus-dashboard"
-APP_NAME="Nexus Dashboard"
+APP_ID="nexus-dashboard-ps5"
+APP_NAME="Nexus Dashboard for PS5"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 LAUNCHER="$HOME/.local/bin/$APP_ID"
 MENU_ENTRY="$DATA_DIR/applications/$APP_ID.desktop"
 DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 DESKTOP_ICON="$DESKTOP_DIR/$APP_ID.desktop"
-ICON="$APP/images/$APP_ID-128.png"
+ICON="$APP/images/nexus-dashboard-128.png"
+# Until 24-11-2026 both suites' dashboards were installed as nexus-dashboard, so the one installed last replaced the
+# other. That launcher, menu entry and Desktop icon go when the launcher starts this checkout's run.sh.
+OLD_ID="nexus-dashboard"
+OLD_LAUNCHER="$HOME/.local/bin/$OLD_ID"
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
 die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
@@ -39,6 +43,11 @@ for arg in "$@"; do
 done
 $purge && ! $uninstall && die "--purge only goes with --uninstall."
 [ "$(id -u)" -ne 0 ] || die "Run this as your own user, not with sudo."
+
+if grep -qF "exec \"$APP/run.sh\"" "$OLD_LAUNCHER" 2>/dev/null; then
+    info "Removing the old launcher, menu entry and Desktop icon named $OLD_ID"
+    rm -f "$OLD_LAUNCHER" "$DATA_DIR/applications/$OLD_ID.desktop" "$DESKTOP_DIR/$OLD_ID.desktop"
+fi
 
 if $uninstall; then
     info "Removing the launcher, the menu entry and the Desktop icon"

@@ -1,3 +1,15 @@
+Changelog: 24-11-2026 16:36:23
+
+Added. PS5 GPU Manager (apps/gpu) is a new app: its wiki chapter, installer test, icons, its line in the README, the
+wiki's lists and navigation, a Tuning card on the wiki's home page, requirements-dev.txt and the bug report form.
+DESIGN.md, ALL-TESTS.md and the wiki's portal picture are made again.
+
+Changelog: 24-11-2026 15:46:27
+
+Fixed. The README, CONTRIBUTING.md, ALL-TESTS.md, the wiki, the tools' tests and the dashboard's installer test name
+the dashboard Nexus Dashboard for PS5, its new name. The installer test also checks its new ID and the removal of the
+old nexus-dashboard entry.
+
 Changelog: 24-11-2026 13:06:54
 
 Added. The development machine in the Development chapter lists mawk, for Board Test's awk test. Install it with

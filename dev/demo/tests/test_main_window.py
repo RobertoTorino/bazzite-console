@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Demo Recorder's window: OBS, the release and the app, the recording with the global shortcut. Ported from the
-Media Tool's tests on 02-11-2026; the pills (the tours, the icons) went to Nexus Dashboard."""
+Media Tool's tests on 02-11-2026; the pills (the tours, the icons) went to Nexus Dashboard for PS5."""
 
 from pathlib import Path
 

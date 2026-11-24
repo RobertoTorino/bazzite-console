@@ -61,8 +61,8 @@ def test_format_datetime_negative_timestamp():
 def test_format_datetime_very_large_timestamp():
     """Test very large timestamps (far future)."""
     settings = AppSettings()
-    # Year 2500
-    timestamp = 16725225600.0
+    # 1 July 2500, so the year is 2500 in every time zone
+    timestamp = 16740864000.0
     result = format_datetime(timestamp, settings)
     assert "2500" in result
 

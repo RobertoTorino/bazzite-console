@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window's side of the speech engine: engine.py as a process that stays (the model loads once, about a second),
 its commands written as JSON lines and its events read as signals. The engine's own output (stderr) goes to this
-app's, so it is in the log Nexus Dashboard keeps."""
+app's, so it is in the log Nexus Dashboard for PS5 keeps."""
 
 from __future__ import annotations
 

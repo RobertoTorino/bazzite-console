@@ -36,6 +36,9 @@ DS4_CALIBRATION_BT, DS4_CALIBRATION_BT_SIZE = 0x05, 41
 DS_FIRMWARE, DS_FIRMWARE_SIZE = 0x20, 64
 DS_CALIBRATION, DS_CALIBRATION_SIZE = 0x05, 41
 EARLIEST_YEAR = 2013                     # the DualShock 4 came out in 2013
+# The controller writes its build date in English ("Mar 05 2025"). strptime's %b reads the window's locale, where
+# Mar, May and Oct are no month in Dutch, so the names are read and written from this table.
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 ReadFeature = Callable[[int, int], bytes | None]        # (report id, size) -> the report, or None when refused
 
@@ -72,7 +75,8 @@ class Result:
 
 def _date(text: bytes, today: datetime.date) -> datetime.date | None:
     try:
-        date = datetime.datetime.strptime(text.split(b"\0")[0].decode("ascii").strip(), "%b %d %Y").date()
+        month, day, year = text.split(b"\0")[0].decode("ascii").split()
+        date = datetime.date(int(year), MONTHS.index(month.capitalize()) + 1, int(day))
     except (UnicodeDecodeError, ValueError):
         return None
     return date if EARLIEST_YEAR <= date.year and date <= today else None
@@ -90,7 +94,7 @@ def _firmware(report: bytes | None, date_at: slice | None, hw_at: int, fw_at: in
     checks = []
     if date_at is not None:
         date = _date(report[date_at], today)
-        checks.append(Check("Build date", date is not None, f"Built {date:%d %b %Y}." if date else
+        checks.append(Check("Build date", date is not None, f"Built {date.day:02d} {MONTHS[date.month - 1]} {date.year}." if date else
                             "No build date of the controller's era in its answer."))
     checks.append(Check("Versions", bool(hw and fw) and hw != (1 << 8 * size) - 1 and fw != (1 << 8 * size) - 1,
                         f"Hardware {hw:#06x}, firmware {fw:#06x}."))

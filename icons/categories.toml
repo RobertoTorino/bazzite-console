@@ -92,6 +92,11 @@ category = "sustainable"
 icons = ["apps/cores/images/ps5-cores-bisect"]
 tile = "portal/images/apps/cores.webp"
 
+[gpu]
+category = "sustainable"
+icons = ["apps/gpu/images/ps5-governor-manager"]
+tile = "portal/images/apps/gpu.webp"
+
 [cec]
 category = "utilities"
 icons = ["apps/cec/images/ps5-cec-manager"]

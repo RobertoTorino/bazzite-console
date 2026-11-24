@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts Nexus Dashboard with the checkout's dev venv, on the checkout it lives in.
+# Starts Nexus Dashboard for PS5 with the checkout's dev venv, on the checkout it lives in.
 #
 #   dev/dash/run.sh            # open the window
 #   dev/dash/install.sh        # app menu entry and Desktop icon for this checkout (Linux)

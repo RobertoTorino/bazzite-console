@@ -691,7 +691,8 @@ run_attempt() { # round item
   ev phase load
   say "Running $LOAD for ${STRESS_SECS}s..."
   case $LOAD in
-    memtest_vulkan) timeout -k 10 "$STRESS_SECS" "$LOAD_BIN" 0 "$(memtest_bytes)" </dev/null >"$log" 2>&1 & ;;
+    # memtest_vulkan writes its own memtest_vulkan.log into the current folder, so it runs in the logs folder.
+    memtest_vulkan) (cd "$LOGS" && exec timeout -k 10 "$STRESS_SECS" "$LOAD_BIN" 0 "$(memtest_bytes)") </dev/null >"$log" 2>&1 & ;;
     vkpeak)  timeout -k 10 "$STRESS_SECS" bash -c 'while :; do "$0" 0 || exit $?; done' "$LOAD_BIN" </dev/null >"$log" 2>&1 & ;;
     vkmark)  timeout -k 10 "$STRESS_SECS" "$LOAD_BIN" --run-forever -s 2560x1440 -b effect2d:kernel=blur </dev/null >"$log" 2>&1 & ;;
     glmark2) timeout -k 10 "$STRESS_SECS" "$LOAD_BIN" --run-forever -s 2560x1440 </dev/null >"$log" 2>&1 & ;;

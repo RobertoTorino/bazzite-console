@@ -25,7 +25,9 @@ TOOLS = {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "papla
          "bluetoothctl", "dbus-python", "PyGObject", "kwriteconfig6",
          # CU Unlock and Core Unlock, as they came from the twin (owner, 20-11-2026)
          "umr", "memtest_vulkan", "stress-ng", "vkpeak", "vkmark", "glmark2", "setpci", "lspci", "taskset", "mprime",
-         "ras-mc-ctl", "sudo", "journalctl"}
+         "ras-mc-ctl", "sudo", "journalctl",
+         # GPU Manager, as it came from the twin (owner, 24-11-2026)
+         "cyan-skillfish-governor-smu", "busctl", "radeontop"}
 # Tools of the kinds this suite's catalog has none of, for the checks every catalog may ask for: one of two commands,
 # and a flashrom that must have the internal programmer.
 SPEEDTEST = ExternalTool("speedtest", ("speedtest", "speedtest-cli"), (ToolSource("board", "Internet speed test."),))

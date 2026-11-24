@@ -27,7 +27,7 @@ def test_every_app_has_an_installer_test():
 
 
 def _from_the_checkout() -> set[str]:
-    """The tools that run from the checkout, outside the portal: the Nexus apps in dev/ (Nexus Dashboard, Nexus
+    """The tools that run from the checkout, outside the portal: the Nexus apps in dev/ (Nexus Dashboard for PS5, Nexus
     Release Tool, Nexus Demo Recorder, Nexus Installer Tests, Nexus Sound Lab, Nexus TTS, Nexus Remix Studio), each
     with an install.sh."""
     return {path.parent.name for path in (SUITE / "dev").glob("*/install.sh")}

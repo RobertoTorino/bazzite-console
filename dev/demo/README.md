@@ -9,7 +9,7 @@
 Records a demo of a portal installation with OBS: a portal release extracted in Downloads, or the suite in this
 checkout, installed in a terminal while OBS records the screen, then the portal opened and one optional app
 installed and shown. A development app: it runs from the checkout it lives in and has no
-releases of its own. Start it from [Nexus Dashboard](../dash), or:
+releases of its own. Start it from [Nexus Dashboard for PS5](../dash), or:
 
 | | Linux |
 |---|---|

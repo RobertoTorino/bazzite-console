@@ -9,7 +9,7 @@
 A window that shows the garbage on this machine and deletes what you check. It lists crash dumps, Steam's crash
 reports, the Trash and caches that fill up, each with its size and the command that empties it. An hourly
 notification says when there is 1 GB or more. A development app: it runs from the checkout it lives in and has no
-releases of its own. Start it from [Nexus Dashboard](../dash), or:
+releases of its own. Start it from [Nexus Dashboard for PS5](../dash), or:
 
 | | Linux |
 |---|---|
