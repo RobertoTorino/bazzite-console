@@ -1,3 +1,7 @@
+Changelog: 24-11-2026 17:44:44
+
+Release 0.13.2.
+
 Changelog: 24-11-2026 15:16:11
 
 Fixed. The hints that name which program logged the unexplained warnings were lost when the journal writes the month

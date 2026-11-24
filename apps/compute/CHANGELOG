@@ -1,3 +1,7 @@
+Changelog: 24-11-2026 17:44:44
+
+Release 1.0.1.
+
 Changelog: 24-11-2026 15:16:11
 
 Fixed. memtest_vulkan wrote its own memtest_vulkan.log into the folder the script was started from. It now runs in

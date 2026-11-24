@@ -3,7 +3,7 @@
 
 APP_NAME = "PS5 Board Test"
 APP_ID = "ps5-board-test"
-__version__ = "0.13.1"
+__version__ = "0.13.2"
 
 from pathlib import Path
 
