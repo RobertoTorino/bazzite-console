@@ -41,7 +41,7 @@ board down cleanly at a critical temperature.
 <div class="home-card" markdown>
 #### :material-lock-open-variant: Unlocks
 
-[PS5 CU Tools](apps/compute.md) and [PS5 CPU Tools](apps/cores.md) tell bad CUs and cores apart from an unstable
+[PS5 CU Unlock](apps/compute.md) and [PS5 Core Unlock](apps/cores.md) tell bad CUs and cores apart from an unstable
 unlock, and keep a tested unlock.
 </div>
 <div class="home-card" markdown>
@@ -117,7 +117,7 @@ open, update and remove every other app of the suite. You never download an app 
 ### Do the apps change my board?
 
 Only the apps marked **changes the board**: Fan Controller's thermal guard, Webcam's camera access, the SSH server
-that SFTP Tools starts, the unlocks of CU Tools and CPU Tools, CEC Manager's standby service and four of Quickfix's
+that SFTP Tools starts, the unlocks of CU Unlock and Core Unlock, CEC Manager's standby service and four of Quickfix's
 fixes. They are software-only and can be undone, and the portal says what the app changes and asks
 before it installs or opens it. Each of their chapters opens with a **Changes the board** box with the same text:
 what the app touches, what stays after a reboot and how the change is undone. Board Test only reads.

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Removes the separate unlock window of before (PS5 Cores Unlock, ps5-cores-unlock-gui) for the current user:
-# CPU Tools' one window has the unlock now, and install-bisect-gui.sh runs this on an update. Does not touch the
-# unlock service - use Uninstall in CPU Tools, or "sudo ./ps5-cores-unlock.sh --uninstall", if you also want the
+# Core Unlock's one window has the unlock now, and install-bisect-gui.sh runs this on an update. Does not touch the
+# unlock service - use Uninstall in Core Unlock, or "sudo ./ps5-cores-unlock.sh --uninstall", if you also want the
 # unlock itself removed.
 set -euo pipefail
 
@@ -21,4 +21,4 @@ rm -f "$LAUNCHER" "$DESKTOP_FILE" "$ICON_FILE" "$OLD_ICON"
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$DATA_HOME/applications" >/dev/null 2>&1 || true
 command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f -t "$DATA_HOME/icons/hicolor" >/dev/null 2>&1 || true
 
-echo "Removed PS5 Cores Unlock GUI (app, venv, launcher, menu entry, icon)."
+echo "Removed the app, venv, launcher, menu entry and icon of the PS5 Cores Unlock GUI."

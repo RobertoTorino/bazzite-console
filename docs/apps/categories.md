@@ -37,8 +37,8 @@ Every app with its icon and its category.
 |---|---|
 | ![](../assets/apps/board.webp){ .app-icon } [PS5 Board Test](board.md) | Sustainable |
 | ![](../assets/apps/fan.webp){ .app-icon } [PS5 Fan Controller](fan.md) | Sustainable |
-| ![](../assets/apps/compute.webp){ .app-icon } [PS5 CU Tools](compute.md) | Sustainable |
-| ![](../assets/apps/cores.webp){ .app-icon } [PS5 CPU Tools](cores.md) | Sustainable |
+| ![](../assets/apps/compute.webp){ .app-icon } [PS5 CU Unlock](compute.md) | Sustainable |
+| ![](../assets/apps/cores.webp){ .app-icon } [PS5 Core Unlock](cores.md) | Sustainable |
 | ![](../assets/apps/overlay.webp){ .app-icon } [PS5 System Overlay](overlay.md) | Sustainable |
 | ![](../assets/apps/upscaler.webp){ .app-icon } [PS5 Upscaler Manager](upscaler.md) | Graphics |
 | ![](../assets/apps/datstation.webp){ .app-icon } [PS5 DatStation](datstation.md) | Gaming |

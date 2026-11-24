@@ -33,8 +33,8 @@ of it.
 |---|---|
 | ![](../assets/apps/board.webp){ .app-icon } [PS5 Board Test](board.md) | Read-only system details for PlayStation 5 hardware running Bazzite. |
 | ![](../assets/apps/fan.webp){ .app-icon } [PS5 Fan Controller](fan.md) | The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature. |
-| ![](../assets/apps/compute.webp){ .app-icon } [PS5 CU Tools](compute.md) | Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock. |
-| ![](../assets/apps/cores.webp){ .app-icon } [PS5 CPU Tools](cores.md) | Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock. |
+| ![](../assets/apps/compute.webp){ .app-icon } [PS5 CU Unlock](compute.md) | Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock. |
+| ![](../assets/apps/cores.webp){ .app-icon } [PS5 Core Unlock](cores.md) | Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock. |
 | ![](../assets/apps/overlay.webp){ .app-icon } [PS5 System Overlay](overlay.md) | A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values. |
 
 **Graphics**: Graphics features and tools for games.

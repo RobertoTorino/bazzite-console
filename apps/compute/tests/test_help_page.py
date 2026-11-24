@@ -23,13 +23,13 @@ def test_the_scripts_help_becomes_a_page():
     assert "<td class='name'><code>-t, --time SECS</code></td><td>GPU load per attempt" in page
     # a continued line belongs to the option above it
     assert "(default: the live masks of a clean boot = the stock driver state)</td>" in page
-    assert page.count("<td class='name'><code>-") == 11                       # every option of Usage
+    assert page.count("<td class='name'><code>-") == 14                       # every option of Usage
     assert "<a href='https://github.com/RobertoTorino/bazzite-console/tree/main/apps/compute'>" in page
 
 
 def test_what_the_window_does_is_the_first_paragraph():
     page = help_html(_help(), WINDOW)
-    first = page.index("<p>This window starts <code>ps5-cu-bisect.sh</code>")
+    first = page.index("<p>This window runs <code>ps5-cu-bisect.sh</code>")
     assert page.index("<p class='lead'>") < first < page.index("<h2>How it works</h2>")
 
 

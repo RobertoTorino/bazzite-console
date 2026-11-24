@@ -1,29 +1,30 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# ps5-cu-unlock.sh - persists a validated PS5 CU unlock across reboots.
+# ps5-cu-unlock.sh - keeps a validated PS5 CU unlock across restarts.
 #
-# Run ps5-cu-bisect.sh first and only use masks that:
-#   - passed with the control (no crashes with just the baseline masks), and
-#   - came back GOOD for every WGP in the combined mask, on its own, and
-#   - were then tested together as the combined mask itself (WGPs that pass alone can still fail
-#     combined - more power at the same voltage; see the CU Tools manual), and
-#   - unlock the same number of WGPs on all 4 shader arrays (SE0.SH0, SE0.SH1, SE1.SH0, SE1.SH1):
-#     the GPU splits work across all 4 in lockstep, so an uneven unlock only ever runs as fast as
-#     its smallest row while still drawing the extra power - this script refuses to install one.
+# Run ps5-cu-bisect.sh first, and only use masks that:
+#   - passed with the control, so no crashes with just the baseline masks
+#   - came back GOOD for every WGP in the combined mask, on its own
+#   - were then tested together as the combined mask itself
+#   - unlock the same number of WGPs on all 4 shader arrays (SE0.SH0, SE0.SH1, SE1.SH0, SE1.SH1)
 #
-# Because of that lockstep, this script only accepts the three even levels and refuses anything else:
+# WGPs that pass alone can still fail combined, because they draw more power at the same voltage.
+# The CU Unlock wiki chapter says more. The GPU splits work across all 4 shader arrays in lockstep.
+# So an uneven unlock only ever runs as fast as its smallest row, while still drawing the extra
+# power. This script refuses to install one. It only accepts the three even levels:
 #   3 WGPs per row = 24 CUs (stock/default)   4 per row = 32 CUs   5 per row = 40 CUs (max)
 #
-# This repeats the exact register writes ps5-cu-bisect.sh uses (umr: CC_GC_SHADER_ARRAY_CONFIG,
-# SPI_PG_ENABLE_STATIC_WGP_MASK, RLC_PG_ALWAYS_ON_WGP_MASK), every boot, as a root systemd service, as
-# early as the unit ordering below allows - before the display manager starts using the GPU. It is not
-# a diagnostic: it does not retest anything, it trusts the masks you give it.
+# This repeats the exact register writes ps5-cu-bisect.sh uses, with umr, at every boot. The
+# registers are CC_GC_SHADER_ARRAY_CONFIG, SPI_PG_ENABLE_STATIC_WGP_MASK and RLC_PG_ALWAYS_ON_WGP_MASK.
+# A root systemd service writes them as early as its unit ordering allows. That is before the
+# display manager starts using the GPU. It is not a diagnostic. It does not retest anything, and
+# it trusts the masks you give it.
 #
 # Usage:
 #   sudo ./ps5-cu-unlock.sh 0x0f,0x0f,0x0f,0x0f        apply the masks once, right now (not persisted)
-#   sudo ./ps5-cu-unlock.sh --install 0x0f,0x0f,0x0f,0x0f   save + apply now + enable at every boot
-#   sudo ./ps5-cu-unlock.sh --uninstall                 disable the service; stock 24 CUs from next boot
+#   sudo ./ps5-cu-unlock.sh --install 0x0f,0x0f,0x0f,0x0f   save + enable at every boot, from the next restart
+#   sudo ./ps5-cu-unlock.sh --uninstall                 disable the service. Stock 24 CUs from next boot
 #        ./ps5-cu-unlock.sh --status                    show the installed masks, service and live state
 #        ./ps5-cu-unlock.sh --help
 #
@@ -95,11 +96,11 @@ umr_failed() { grep -Eqi '(\[ERROR\]|error|failed|invalid|unknown|cannot|no such
 # ----------------------------------------------------------------- apply ---
 apply_masks() { # masks (must run as root)
   (( EUID == 0 )) || die "writing GPU registers needs root. Run with sudo."
-  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f (same number of WGPs on every row)"
+  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f, with the same number of WGPs on every row."
   validate_even "$1"
-  lspci -nn 2>/dev/null | grep -qi '1002:13fe' || die "no PS5 GPU (1002:13fe) found; refusing to write GPU registers."
-  local UMR; UMR=$(find_umr) || die "umr not found. Install it: rpm-ostree install umr, then reboot."
-  root_safe "$UMR" || die "$UMR is not owned by root (or others can write to it)."
+  lspci -nn 2>/dev/null | grep -qi '1002:13fe' || die "no PS5 GPU (1002:13fe) found. Refusing to write GPU registers."
+  local UMR; UMR=$(find_umr) || die "umr not found. Install it: rpm-ostree install umr, then restart."
+  root_safe "$UMR" || die "$UMR is not owned by root, or others can write to it."
 
   local UMR_I=() BDF INST
   if [[ -n ${UMR_INSTANCE:-} ]]; then UMR_I=(-i "$UMR_INSTANCE")
@@ -135,14 +136,14 @@ apply_masks() { # masks (must run as root)
     now=$(reg_read_rc "$REG_SPI" $((i / 2)) $((i % 2))) || { ok=0; continue; }
     [[ $(hex2 "$now") == $(hex2 "${m[$i]}") ]] || ok=0
   done
-  (( ok )) || die "masks did not read back as written; the unlock may be partially applied. Reboot."
+  (( ok )) || die "masks did not read back as written. The CU unlock may be partially applied. Restart."
   say "CU unlock applied: $1 ($(cu_count "$1") CUs)"
 }
 
 # --------------------------------------------------------- install/remove --
 install_service() { # masks
   (( EUID == 0 )) || die "--install needs root: sudo $0 --install $1"
-  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f (same number of WGPs on every row)"
+  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f, with the same number of WGPs on every row."
   validate_even "$1"
   mkdir -p "$CONF_DIR" && chmod 755 "$CONF_DIR"
   printf '%s\n' "$1" >"$CONF_FILE" && chmod 644 "$CONF_FILE"
@@ -166,11 +167,12 @@ ExecStart=$INSTALL_PATH --apply-from-config
 WantedBy=multi-user.target
 EOF
   chmod 644 "$UNIT_PATH"
-  systemctl daemon-reload || die "systemctl daemon-reload failed; the service was not enabled. Check: systemctl status $UNIT_NAME, journalctl -u $UNIT_NAME, and that /etc/systemd/system is writable."
-  apply_masks "$1"
-  systemctl enable "$UNIT_NAME" || die "systemctl enable $UNIT_NAME failed (see the error above); the unlock will NOT survive a reboot even though it's applied right now. Common causes: SELinux, or /etc/systemd/system not writable on this image. Check: systemctl status $UNIT_NAME, journalctl -u $UNIT_NAME."
-  systemctl is-enabled --quiet "$UNIT_NAME" || die "systemctl enable reported success but $UNIT_NAME is still not enabled; the unlock will NOT survive a reboot. Check: systemctl status $UNIT_NAME, journalctl -u $UNIT_NAME."
-  say "Installed and enabled. $1 is applied now and on every future boot."
+  systemctl daemon-reload || die "systemctl daemon-reload failed. The service was not enabled. Check: systemctl status $UNIT_NAME, journalctl -u $UNIT_NAME, and that /etc/systemd/system is writable."
+  # Nothing is written to the GPU now: masks written live in a running desktop can freeze the board. The service
+  # writes them at the next boot, before the display manager uses the GPU.
+  systemctl enable "$UNIT_NAME" || die "systemctl enable $UNIT_NAME failed, see the error above. The CU unlock will NOT be applied at boot. Common causes: SELinux, or /etc/systemd/system not writable on this image. Check: systemctl status $UNIT_NAME, journalctl -u $UNIT_NAME."
+  systemctl is-enabled --quiet "$UNIT_NAME" || die "systemctl enable reported success, but $UNIT_NAME is still not enabled. The CU unlock will NOT be applied at boot. Check: systemctl status $UNIT_NAME, journalctl -u $UNIT_NAME."
+  say "Installed and enabled. $1 is applied at every boot. Restart the board to turn it on."
   say "Remove with: sudo $0 --uninstall"
 }
 
@@ -179,19 +181,19 @@ uninstall_service() {
   systemctl disable "$UNIT_NAME" 2>/dev/null || true
   rm -f "$UNIT_PATH" "$CONF_FILE" "$INSTALL_PATH"
   systemctl daemon-reload
-  say "Removed. The unlock is still active in this boot; reboot to go back to the stock 24 CUs."
+  say "Removed. The CU unlock is still active in this boot. Restart to go back to the stock 24 CUs."
 }
 
 status() {
   say "Config file: $CONF_FILE"
   if [[ -r $CONF_FILE ]]; then
     local masks; masks=$(<"$CONF_FILE")
-    say "  Configured masks: $masks ($(cu_count "$masks") CUs) - saved on disk; NOT proof it's active now, see 'Live masks now' below."
+    say "  Configured masks: $masks ($(cu_count "$masks") CUs). Saved on disk, which is NOT proof that it's active now. See 'Live masks now' below."
   else
     say "  Not installed."
   fi
   if [[ -r $UNIT_PATH ]] && [[ ! -x $INSTALL_PATH ]]; then
-    say "  WARNING: $UNIT_PATH references $INSTALL_PATH but it's missing - the service will fail at"
+    say "  WARNING: $UNIT_PATH references $INSTALL_PATH, but that file is missing. The service will fail at the"
     say "    next boot. Reinstall with: sudo $0 --install \$(cat $CONF_FILE 2>/dev/null)."
   fi
   if command -v systemctl >/dev/null 2>&1; then
@@ -207,9 +209,10 @@ status() {
   elif sudo -n true 2>/dev/null; then
     AS_ROOT=(sudo -n)
   else
-    say "Live masks: run with sudo (or cached sudo credentials) to also show these - this is the only"
-    say "  number that's 100% certain; other tools (config file above, driver-cached CU counts in"
-    say "  third-party apps) can be stale or just reflect what was requested, not what's live now."
+    say "Live masks: run with sudo, or with cached sudo credentials, to show these too."
+    say "  This is the only number that's 100% certain. The config file above and the driver-cached"
+    say "  CU counts in third-party apps can be stale. They can also show what was requested, not"
+    say "  what's live now."
     return 0
   fi
   BDF=$("${AS_ROOT[@]}" lspci -Dn -d 1002:13fe 2>/dev/null | awk 'NR==1{print $1}')
@@ -221,8 +224,8 @@ status() {
     out+=("$(hex2 "${v:-0}")")
   done
   v=$(IFS=,; echo "${out[*]}")
-  say "Live masks now: $v ($(cu_count "$v") CUs) - read straight from the GPU registers; this is the"
-  say "  authoritative, ground-truth number for this boot."
+  say "Live masks now: $v ($(cu_count "$v") CUs), read straight from the GPU registers."
+  say "  This is the authoritative, ground-truth number for this boot."
 }
 
 # ------------------------------------------------------------------- CLI ---
@@ -230,7 +233,7 @@ case "${1:-}" in
   --install)       shift; [[ -n ${1:-} ]] || die "usage: $0 --install 0x0f,0x0f,0x0f,0x0f"; install_service "$1" ;;
   --uninstall)     uninstall_service ;;
   --apply-from-config)
-                   [[ -r $CONF_FILE ]] || die "$CONF_FILE not found; install first with --install."
+                   [[ -r $CONF_FILE ]] || die "$CONF_FILE not found. Install first with --install."
                    apply_masks "$(<"$CONF_FILE")" ;;
   --status)        status ;;
   -V|--version)     echo "ps5-cu-unlock $VERSION" ;;

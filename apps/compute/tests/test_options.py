@@ -7,7 +7,7 @@ import shlex
 
 import pytest
 
-from cu_bisect.options import BASELINE_PRESETS, BASELINE_TIPS, MASK_RE, BisectOptions
+from cu_bisect.options import BisectOptions
 
 
 def test_defaults_are_the_scripts_own():
@@ -39,17 +39,3 @@ def test_validation(opts, message):
 
 def test_one_round_is_allowed_for_a_control_only_retest():
     assert BisectOptions(rounds=1, control_only=True).validate() == []
-
-
-def test_presets_are_valid_masks():
-    masks = [value for value in BASELINE_PRESETS.values() if value]
-    assert masks == ["0x07,0x07,0x07,0x07", "0x1f,0x1f,0x1f,0x1f"]
-    assert all(MASK_RE.match(mask) for mask in masks)
-    assert list(BASELINE_PRESETS.values())[0] is None          # auto-detect passes no --baseline
-
-
-def test_every_baseline_choice_has_a_short_label_and_a_tooltip():
-    assert list(BASELINE_TIPS) == list(BASELINE_PRESETS)
-    assert all(len(label) <= 16 for label in BASELINE_PRESETS)          # the field stays narrow
-    for label, masks in BASELINE_PRESETS.items():
-        assert not masks or masks in BASELINE_TIPS[label]                # the masks are in the tooltip

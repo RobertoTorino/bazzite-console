@@ -35,7 +35,8 @@ Description=PS5 cores bisect - auto-resume after reboot
 Type=oneshot
 # Give the desktop a few seconds to settle before testing.
 ExecStartPre=/bin/sleep 20
-ExecStart=/home/admin/IdeaProjects/ps5-cores-bisect/ps5-cores-bisect.sh --auto -t 1800 -r 5
+# Example: put the real path of ps5-cores-bisect.sh here (%h is your home folder).
+ExecStart=%h/ps5-cores-bisect/ps5-cores-bisect.sh --auto -t 1800 -r 5
 StandardOutput=append:%h/.local/share/ps5-cores-bisect/auto.log
 StandardError=append:%h/.local/share/ps5-cores-bisect/auto.log
 

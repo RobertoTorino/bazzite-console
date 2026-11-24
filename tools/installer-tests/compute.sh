@@ -27,7 +27,7 @@ echo "== 1. install from the suite checkout"
 bash "$SUITE/apps/compute/packaging/bazzite/install-bisect-gui.sh" > "$T/log1" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "no sudo used" "! grep -q 'sudo called' $T/log1"
-check "app copied, both scripts" "[ -f $B/app/cu_bisect/__main__.py ] && [ -f $B/app/cu_bisect/unlock_panel.py ] && [ -x $B/app/ps5-cu-bisect.sh ] && [ -x $B/app/ps5-cu-unlock.sh ] && [ -f $B/app/images/ps5-cu-bisect.webp ]"
+check "app copied, both scripts" "[ -f $B/app/cu_bisect/__main__.py ] && [ -f $B/app/cu_bisect/session.py ] && [ -x $B/app/ps5-cu-bisect.sh ] && [ -x $B/app/ps5-cu-unlock.sh ] && [ -f $B/app/images/ps5-cu-bisect.webp ]"
 check "no caches copied" "! find $B -name __pycache__ | grep -q ."
 check "one venv" "[ -x $B/venv/bin/python ] && [ ! -e $U ]"
 check "launcher passes both scripts" "grep -qF 'exec \"$B/venv/bin/python\" -m cu_bisect --script \"$B/app/ps5-cu-bisect.sh\"' $L && grep -qF -- '--unlock-script \"$B/app/ps5-cu-unlock.sh\"' $L"
@@ -89,12 +89,13 @@ check "root refused" "[ $rc -ne 0 ] && grep -q 'not with sudo' $T/log7c"
 fakeroot -- bash "$T/stage/packaging/bazzite/install-bisect-gui.sh" > "$T/log7c" 2>&1; rc=$?
 check "root refused by the app's installer too" "[ $rc -ne 0 ] && grep -q 'not with sudo' $T/log7c"
 mkdir -p "$XDG_CONFIG_HOME/ps5-cu-bisect" "$XDG_CONFIG_HOME/autostart"
-touch "$XDG_CONFIG_HOME/ps5-cu-bisect/ps5-bisect-gui.conf" "$XDG_CONFIG_HOME/autostart/ps5-cu-bisect-watch.desktop"
+touch "$XDG_CONFIG_HOME/ps5-cu-bisect/ps5-bisect-gui.conf" "$XDG_CONFIG_HOME/autostart/ps5-cu-bisect-watch.desktop" \
+    "$XDG_CONFIG_HOME/autostart/ps5-cu-tools-resume.desktop"
 old_unlock
 bash "$T/stage/install.sh" --uninstall > "$T/log7d" 2>&1; rc=$?
-check "uninstall removes the app and the old unlock window, keeps results and settings" "[ $rc -eq 0 ] && [ ! -e $B ] && [ ! -e $U ] && [ ! -e $HOME/.local/bin/ps5-unlock-cu-gui ] && [ -f $D/ps5-cu-bisect/state ] && [ -d $XDG_CONFIG_HOME/ps5-cu-bisect ]"
+check "uninstall removes the app, the old unlock window and the resume entry, keeps results and settings" "[ $rc -eq 0 ] && [ ! -e $XDG_CONFIG_HOME/autostart/ps5-cu-tools-resume.desktop ] && [ ! -e $B ] && [ ! -e $U ] && [ ! -e $HOME/.local/bin/ps5-unlock-cu-gui ] && [ -f $D/ps5-cu-bisect/state ] && [ -d $XDG_CONFIG_HOME/ps5-cu-bisect ]"
 bash "$T/stage/install.sh" --uninstall --purge > "$T/log7d" 2>&1; rc=$?
-check "--purge removes results, settings and the autostart entry" "[ $rc -eq 0 ] && [ ! -e $D/ps5-cu-bisect ] && [ ! -e $XDG_CONFIG_HOME/ps5-cu-bisect ] && [ ! -e $XDG_CONFIG_HOME/autostart/ps5-cu-bisect-watch.desktop ]"
+check "--purge removes results, settings and the autostart entry" "[ $rc -eq 0 ] && [ ! -e $D/ps5-cu-bisect ] && [ ! -e $XDG_CONFIG_HOME/ps5-cu-bisect ] && [ ! -e $XDG_CONFIG_HOME/autostart/ps5-cu-bisect-watch.desktop ] && [ ! -e $XDG_CONFIG_HOME/autostart/ps5-cu-tools-resume.desktop ]"
 
 [ $fail -eq 0 ] && echo "ALL OK" || for n in 1 2 3 4 5 6 7 7b 7c 7d; do echo "--- log$n"; cat "$T/log$n"; done
 exit $fail

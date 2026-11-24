@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Exercise apps/cores/install.sh: install from the checkout (root-owned versioned /opt copy, one venv, one
-# launcher: CPU Tools' one window), the separate unlock window of before removed, --no-desktop-shortcut, a staged
+# launcher: Core Unlock's one window), the separate unlock window of before removed, --no-desktop-shortcut, a staged
 # release replacing it, the refusal to run as root, and uninstall with and without --purge. Runs with the shims from shims.sh (CI).
 set -u
 SUITE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
@@ -27,7 +27,7 @@ check "no caches copied" "! find $L/ -name __pycache__ | grep -q ."
 check "own venv" "[ -x $D/$APP-app/venv/bin/python ]"
 check "bisect launcher" "grep -qF 'exec \"$D/$APP-app/venv/bin/python\" -m cores_bisect' $HOME/.local/bin/ps5-cores-bisect-gui"
 check "launcher cds into the /opt link" "grep -q \"cd \\\"$L\\\"\" $HOME/.local/bin/ps5-cores-bisect-gui"
-check "menu entry" "grep -qx 'Exec=$HOME/.local/bin/ps5-cores-bisect-gui' $D/applications/ps5-cores-bisect-gui.desktop && grep -qx 'Name=PS5 CPU Tools' $D/applications/ps5-cores-bisect-gui.desktop"
+check "menu entry" "grep -qx 'Exec=$HOME/.local/bin/ps5-cores-bisect-gui' $D/applications/ps5-cores-bisect-gui.desktop && grep -qx 'Name=PS5 Core Unlock' $D/applications/ps5-cores-bisect-gui.desktop"
 check "icon from /opt" "grep -qx 'Icon=$L/images/$APP-128.png' $D/applications/ps5-cores-bisect-gui.desktop && [ -f $L/images/$APP.webp ]"
 check "desktop icon, executable" "[ -x $HOME/Desktop/ps5-cores-bisect-gui.desktop ]"
 check "no unlock window" "[ ! -e $HOME/.local/bin/ps5-cores-unlock-gui ] && [ ! -e $D/applications/ps5-cores-unlock.desktop ] && [ ! -e $L/cores_unlock ]"
@@ -57,12 +57,14 @@ check "exit non-zero" "[ $rc -ne 0 ]"
 check "says why" "grep -q 'not with sudo' $T/log4"
 
 echo "== 5. uninstall keeps results and settings"
-mkdir -p "$D/$APP" "$XDG_CONFIG_HOME/$APP" && touch "$D/$APP/run.log" "$XDG_CONFIG_HOME/$APP/settings.ini"
+mkdir -p "$D/$APP" "$XDG_CONFIG_HOME/$APP" "$XDG_CONFIG_HOME/autostart" && touch "$D/$APP/run.log" \
+    "$XDG_CONFIG_HOME/$APP/settings.ini" "$XDG_CONFIG_HOME/autostart/ps5-core-unlock-resume.desktop"
 bash "$T/stage/install.sh" --uninstall > "$T/log5" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "/opt copy gone" "[ ! -e $L ] && ! ls -d $T/opt/$APP-v* >/dev/null 2>&1"
 check "venv gone" "[ ! -e $D/$APP-app ]"
 check "launchers, menu entries and icons gone" "! ls $HOME/.local/bin/ps5-cores-* $D/applications/ps5-cores-* $HOME/Desktop/ps5-cores-* 2>/dev/null | grep -q ."
+check "the window's autostart entry gone" "[ ! -e $XDG_CONFIG_HOME/autostart/ps5-core-unlock-resume.desktop ]"
 check "results and settings kept" "[ -f $D/$APP/run.log ] && [ -f $XDG_CONFIG_HOME/$APP/settings.ini ]"
 
 echo "== 6. uninstall --purge"

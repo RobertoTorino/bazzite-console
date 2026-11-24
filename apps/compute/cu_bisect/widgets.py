@@ -2,16 +2,17 @@
 
 """The Help dialog, the masked sudo password prompt (returned once, never stored), the status box and pill (copies of
 core's MetricBox and Pill: this app is not on core), the on/off pills of the run's switches and the info symbol (a
-copy of core's InfoButton)."""
+copy of core's InfoButton), and the rounded tooltips (a copy of core's RoundedToolTip)."""
 
 from __future__ import annotations
 
 import subprocess
 
-from PyQt6.QtCore import QPoint, Qt, pyqtSignal
+from PyQt6 import sip
+from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QDialog, QDialogButtonBox, QFrame, QLabel, QLineEdit, QSizePolicy, QTextBrowser, QToolButton, QVBoxLayout,
-    QWidget,
+    QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFrame, QLabel, QLineEdit, QSizePolicy, QTextBrowser,
+    QToolButton, QVBoxLayout, QWidget,
 )
 
 from . import window_title
@@ -53,7 +54,7 @@ class HelpDialog(QDialog):
             pass
         return (
             "Could not read ps5-cu-bisect.sh --help.\n\n"
-            "Run it from a terminal instead:\n"
+            "Run it from a terminal instead.\n"
             f"  bash {script} --help"
         )
 
@@ -254,3 +255,160 @@ class InfoButton(QToolButton):
         self.popup.adjustSize()
         self.popup.move(self.mapToGlobal(QPoint(-12, self.height() + 4)))
         self.popup.show()
+
+
+class RefreshButton(QToolButton):
+    """A small round refresh symbol, of the InfoButton's size and look, for the right end of the title row (owner,
+    21-11-2026: no pill stands alone in the title row). A copy of core's RefreshButton: this app is not on core."""
+
+    SIZE = InfoButton.SIZE
+
+    def __init__(self, tooltip: str = "Read again", parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setText("\u21bb")
+        self.setToolTip(tooltip)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedSize(self.SIZE, self.SIZE)
+        self.setStyleSheet(
+            f"QToolButton {{ border:1px solid {ACCENT}; border-radius:{self.SIZE // 2}px; color:white; "
+            f"background:{ACCENT}; font-weight:800; padding:0 0 2px 0; }}"
+            "QToolButton:hover, QToolButton:focus { border-color:white; }"
+            f"QToolButton:disabled {{ background:{muted()}; border-color:{muted()}; }}")
+
+
+class RoundedToolTip(QObject):
+    """Every tooltip of the app with rounded corners and a thin border in the outline, as the suite's other apps show
+    them (owner, 24-11-2026: as MangoHud Config's). A copy of core's RoundedToolTip: this app is not on core.
+
+    Qt's own tooltip window cannot have transparent corners, so this shows a translucent frameless label instead.
+    RoundedToolTip.install(app) filters the tooltip events of all widgets and of list items, as a combo box's."""
+
+    MAX_WIDTH = 380
+    _instance: RoundedToolTip | None = None
+    _HIDE_ON = (QEvent.Type.MouseButtonPress, QEvent.Type.Wheel, QEvent.Type.KeyPress,
+                QEvent.Type.WindowDeactivate)
+    # Clicks go through it to the widget below: a tooltip over a button would take the click.
+    _FLAGS = Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowTransparentForInput
+
+    def __init__(self, parent: QObject | None = None):
+        super().__init__(parent)
+        self._owner: QWidget | None = None      # the widget the tooltip belongs to
+        self._area = QRect()                    # where in the owner the text applies (an item)
+        self._build_popup(None)
+
+    def _build_popup(self, top: QWidget | None) -> None:
+        # Wayland can only map a popup relative to a parent surface, so the popup is a child of the hovered
+        # widget's window (Qt's own QToolTip does the same); the window flags keep it a top-level window.
+        # A translucent window paints no style sheet of its own, so the styled label sits inside one.
+        self.popup = QWidget(top, self._FLAGS)
+        self.popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.popup.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        box = QVBoxLayout(self.popup)
+        box.setContentsMargins(0, 0, 0, 0)
+        self.label = QLabel()
+        self.label.setTextFormat(Qt.TextFormat.AutoText)
+        self.label.setStyleSheet(
+            f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {OUTLINE}; "
+            "border-radius:6px; padding:6px 8px; }")
+        box.addWidget(self.label)
+        self.destroyed.connect(self.popup.deleteLater)
+
+    @classmethod
+    def install(cls, app: QApplication) -> RoundedToolTip:
+        tip = cls(app)
+        app.installEventFilter(tip)
+        # Off again when the app quits: the filter sees every event, also those of widgets destroyed after the
+        # event loop has ended, while Python is tearing down.
+        app.aboutToQuit.connect(lambda: app.removeEventFilter(tip))
+        cls._instance = tip
+        return tip
+
+    @classmethod
+    def uninstall(cls) -> None:
+        """Take the installed tooltip off the app. For tests: without an event loop aboutToQuit never comes."""
+        tip, cls._instance = cls._instance, None
+        app = QApplication.instance()
+        if tip is not None and app is not None and not sip.isdeleted(tip):
+            app.removeEventFilter(tip)
+
+    def show_text(self, pos: QPoint, text: str, owner: QWidget | None = None, area: QRect | None = None) -> None:
+        if not text:
+            self.hide()
+            return
+        self._owner = owner
+        self._area = area if area is not None else (owner.rect() if owner is not None else QRect())
+        top = owner.window() if owner is not None else None
+        if sip.isdeleted(self.popup):                       # died with the window it was last shown over
+            self._build_popup(top)
+        elif top is not self.popup.parentWidget():
+            self.popup.setParent(top, self._FLAGS)
+            self.popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            self.popup.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self.label.setText(text)
+        self.label.setWordWrap(False)
+        self.label.setMinimumWidth(0)
+        self.label.setMaximumWidth(16777215)
+        if self.label.sizeHint().width() > self.MAX_WIDTH:
+            self.label.setWordWrap(True)
+            self.label.setFixedWidth(self.MAX_WIDTH)
+        self.label.adjustSize()
+        self.popup.adjustSize()
+        self.popup.move(self._place(pos, self.popup.size()))
+        self.popup.show()
+        self.popup.raise_()
+
+    @staticmethod
+    def _place(cursor: QPoint, size: QSize) -> QPoint:
+        """Below and right of the cursor; above or left of it where the screen has no room, as Qt's own QToolTip
+        does. Clamped into the screen only after that, so it never comes to lie over the cursor."""
+        pos = cursor + QPoint(12, 16)
+        screen = QApplication.screenAt(cursor) or QApplication.primaryScreen()
+        if screen is None:
+            return pos
+        geo = screen.availableGeometry()
+        if pos.x() + size.width() > geo.right():
+            pos.setX(cursor.x() - 4 - size.width())
+        if pos.y() + size.height() > geo.bottom():
+            pos.setY(cursor.y() - 4 - size.height())
+        pos.setX(max(geo.left(), min(pos.x(), geo.right() - size.width())))
+        pos.setY(max(geo.top(), min(pos.y(), geo.bottom() - size.height())))
+        return pos
+
+    def hide(self) -> None:
+        self._owner = None
+        if hasattr(self, "popup") and not sip.isdeleted(self.popup) and self.popup.isVisible():
+            self.popup.hide()
+
+    @staticmethod
+    def _text_at(obj: QWidget, pos: QPoint) -> tuple[str | None, QRect]:
+        """Tooltip text at pos in obj and the area it applies to; None when obj has no tooltip handling."""
+        view = obj.parent()
+        if isinstance(view, QAbstractItemView) and obj is view.viewport():
+            index = view.indexAt(pos)
+            if not index.isValid():
+                return "", QRect()
+            return str(index.data(Qt.ItemDataRole.ToolTipRole) or ""), view.visualRect(index)
+        return obj.toolTip() or None, obj.rect()
+
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        if not hasattr(self, "popup"):
+            return False                # Python already tore this object down (garbage collection at exit)
+        kind = event.type()
+        if kind == QEvent.Type.ToolTip:
+            if not isinstance(obj, QWidget):
+                return False
+            text, area = self._text_at(obj, event.pos())
+            if text is None:
+                return False            # nothing here: Qt passes the event on to the parent widget
+            self.show_text(event.globalPos(), text, obj, area)
+            return True
+        if self._owner is not None or (not sip.isdeleted(self.popup) and self.popup.isVisible()):
+            if kind in self._HIDE_ON:
+                self.hide()
+            elif obj is self._owner:
+                if kind in (QEvent.Type.Leave, QEvent.Type.Hide):
+                    self.hide()
+                elif (kind in (QEvent.Type.MouseMove, QEvent.Type.HoverMove)
+                      and not self._area.contains(event.position().toPoint())):
+                    self.hide()
+        return False

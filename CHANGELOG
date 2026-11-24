@@ -1,3 +1,15 @@
+Changelog: 24-11-2026 12:37:14
+
+Fixed. PS5 CPU Tools is now called PS5 Core Unlock in the README, the wiki's navigation and pages, DESIGN.md and
+ALL-TESTS.md. The app key cores, its folder and file names stay. The installer test of the app checks the new menu
+name and that the window's autostart entry goes with an uninstall. DESIGN.md and ALL-TESTS.md were written again by
+their tools.
+
+Changelog: 24-11-2026 12:21:30
+
+Fixed. PS5 CU Tools is now called PS5 CU Unlock in the README, the wiki's navigation and pages and DESIGN.md. The
+app key compute, its folder and file names stay. ALL-TESTS.md was written again by its tool.
+
 Changelog: 22-11-2026 23:14:52
 
 Added. The wiki's portal chapter says that the TV remote moves the focus in the portal over HDMI, with no setup.

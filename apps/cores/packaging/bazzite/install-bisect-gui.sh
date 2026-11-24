@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Self-install for Bazzite (and any other immutable/rpm-ostree-based desktop): sets up
-# cores_bisect, the one window for the core bisect and the core unlock (PS5 CPU Tools), in a private venv
+# cores_bisect, the one window for the core bisect and the core unlock (PS5 Core Unlock), in a private venv
 # under ~/.local, with a launcher, .desktop entry and icon. Nothing here touches rpm-ostree or needs root - the
 # window starts ps5-cores-bisect.sh in a terminal, and only its Install, Uninstall and Root status run
 # ps5-cores-unlock.sh through sudo. The separate unlock window of before (ps5-cores-unlock-gui) is removed.
@@ -47,10 +47,10 @@ python3 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --quiet --upgrade pip
 "$VENV_DIR/bin/pip" install --quiet --upgrade -r "$APP_SRC/requirements.txt"
 
-echo "==> Checking PyQt6 can actually be imported in this venv"
+echo "==> Checking that PyQt6 loads in this venv"
 if ! "$VENV_DIR/bin/python" -c "from PyQt6.QtWidgets import QApplication" 2>"$APP_DIR/import-check.log"; then
   echo "error: PyQt6 installed but failed to import - see $APP_DIR/import-check.log" >&2
-  echo "       this is usually a missing system Qt/X11 library (e.g. libxcb-cursor0)." >&2
+  echo "       this is usually a missing system Qt/X11 library, for example libxcb-cursor0." >&2
   cat "$APP_DIR/import-check.log" >&2
   exit 1
 fi
@@ -81,7 +81,7 @@ sed -e "s#^Exec=.*#Exec=$LAUNCHER#" -e "s#^Icon=.*#Icon=$ICON_FILE#" \
 
 # The separate unlock window of before: this window has it now.
 if [ -e "$BIN_HOME/ps5-cores-unlock-gui" ] || [ -e "$DATA_HOME/ps5-cores-unlock-gui" ]; then
-  echo "==> Removing the separate unlock window of before (this window has it now)"
+  echo "==> Removing the separate unlock window of earlier versions. This window has it now."
   bash "$SCRIPT_DIR/uninstall-gui.sh" >/dev/null
 fi
 
@@ -92,13 +92,13 @@ command -v kbuildsycoca5 >/dev/null 2>&1 && kbuildsycoca5 --noincremental >/dev/
 
 cat <<EOF
 
-Done. PS5 CPU Tools is installed for your user account only:
+Done. PS5 Core Unlock is installed for your user account only:
   - app + venv: $APP_DIR
   - launcher:   $LAUNCHER
   - menu entry: $DESKTOP_FILE
 
 Launch it from your app menu, or run: $LAUNCHER
-If it ever fails to open (e.g. a bouncing launcher icon that never shows a window), check:
+If it ever fails to open, for example a bouncing launcher icon that never shows a window, check:
   $APP_DIR/launch.log
 To remove it again: bash "$SCRIPT_DIR/uninstall-bisect-gui.sh"
 EOF

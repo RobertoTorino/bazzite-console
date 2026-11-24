@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs PS5 CPU Tools, one window for the core bisect and the core unlock, as a desktop app, from a clone or
-# the extracted release tarball:
+# Installs PS5 Core Unlock as a desktop app. It is one window for the core bisect and the core unlock.
+# Run it from a clone or the extracted release tarball.
 #
 #   ./install.sh                         # install or update the app
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 APP_ID="ps5-cores-bisect"
-APP_NAME="PS5 CPU Tools"
+APP_NAME="PS5 Core Unlock"
 OPT_DIR="${PS5_OPT_DIR:-/opt}"            # override only for testing
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -76,10 +76,13 @@ remove_legacy_install() {
           "$DATA_DIR/icons/hicolor/128x128/apps/ps5-cores-unlock.png"
 }
 
+# The window's autostart entry goes too: it goes on with a running core test after a login, and would start the
+# removed app.
 remove_menu_entries() {
     rm -f "$BISECT_LAUNCHER" "$UNLOCK_LAUNCHER" \
           "$DATA_DIR/applications/$BISECT_DESKTOP" "$DATA_DIR/applications/$UNLOCK_DESKTOP" \
-          "$DESKTOP_DIR/$BISECT_DESKTOP" "$DESKTOP_DIR/$UNLOCK_DESKTOP"
+          "$DESKTOP_DIR/$BISECT_DESKTOP" "$DESKTOP_DIR/$UNLOCK_DESKTOP" \
+          "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/ps5-core-unlock-resume.desktop"
     refresh_menu
 }
 
@@ -235,14 +238,14 @@ StartupWMClass=$2"
 
 info "Creating the launcher $BISECT_LAUNCHER and its menu entry"
 write_launcher "$BISECT_LAUNCHER" cores_bisect
-write_entry "$BISECT_DESKTOP" ps5-cores-bisect-gui "PS5 CPU Tools" \
+write_entry "$BISECT_DESKTOP" ps5-cores-bisect-gui "PS5 Core Unlock" \
     "Find bad CPU cores with ps5-cores-bisect.sh, then keep a tested 8C/16T core unlock" "$BISECT_LAUNCHER" "$APP_ID"
 if [ -e "$UNLOCK_LAUNCHER" ] || [ -e "$DATA_DIR/applications/$UNLOCK_DESKTOP" ] || [ -e "$DESKTOP_DIR/$UNLOCK_DESKTOP" ]; then
-    info "Removing the separate unlock window of before (this window has it now)"
+    info "Removing the separate unlock window of earlier versions. This window has it now."
     rm -f "$UNLOCK_LAUNCHER" "$DATA_DIR/applications/$UNLOCK_DESKTOP" "$DESKTOP_DIR/$UNLOCK_DESKTOP"
 fi
 refresh_menu
 
-info "Done. Start the app from the app menu$($DESKTOP_SHORTCUT && echo ' or the Desktop'), or run:"
-info "  ps5-cores-bisect-gui   (or $LINK/ps5-cores-bisect.sh and $LINK/ps5-cores-unlock.sh in a terminal)"
+info "Done. Start the app from the app menu$($DESKTOP_SHORTCUT && echo ' or the Desktop'), or run ps5-cores-bisect-gui."
+info "In a terminal you can also run $LINK/ps5-cores-bisect.sh and $LINK/ps5-cores-unlock.sh."
 case ":$PATH:" in *":$BIN_DIR:"*) ;; *) info "Note: $BIN_DIR is not on your PATH, so the terminal commands need the full path." ;; esac

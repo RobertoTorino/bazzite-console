@@ -413,7 +413,7 @@ MPRIME_RELEASE = ".release"             # in it: the name of the download that i
 MPRIME_INSTALLER = "development/tools/install-requirements.sh"
 BOARD_TEST = Path("/opt/ps5-board-test")
 _MPRIME_FILE = re.compile(r'https://(?:www\.|download\.)?mersenne\.(?:org|ca)/[^" ]+/(p95v[0-9a-z]+\.linux64\.tar\.gz)"')
-MPRIME_ABOUT = ("<p>Prime95's mprime, which PS5 CPU Tools runs for a longer burn-in. It is no package: Quickfix's "
+MPRIME_ABOUT = ("<p>Prime95's mprime, which PS5 Core Unlock runs for a longer burn-in. It is no package: Quickfix's "
                 "<b>Prime95</b> pill unpacks the download from mersenne.org into <code>~/mprime</code>. <b>Update</b> "
                 "runs Board Test's installer again (<code>install-requirements.sh --mprime</code>): it takes the "
                 "release the download page lists, compares it with the SHA-256 listed there and unpacks it over the "

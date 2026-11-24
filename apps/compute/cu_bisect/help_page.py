@@ -16,9 +16,10 @@ from __future__ import annotations
 import html
 import re
 
-WINDOW = ("This window starts <code>ps5-cu-bisect.sh</code> for you: choose the options, then click <b>Start</b>. "
-          "The window closes and the run continues in a terminal, exactly as if you typed the command yourself. "
-          "Hover a field or a pill to see what it does.")
+WINDOW = ("This window runs <code>ps5-cu-bisect.sh</code> for you, in four steps. The scan reads the board. "
+          "The safety check tests the unlock method. Then each locked WGP is tested, and you choose 24, 32 or 40 CUs. "
+          "The window restarts the board between attempts and goes on after the login. Below is the script's own "
+          "help, for the options under <b>Show advanced</b>.")
 
 _TERM = re.compile(r"^  (\S(?:.*?\S)?)\s{2,}(\S.*)$")             # "  control   the same register writes"
 _OPTION = re.compile(r"^\s{2,6}(-\S.*?)\s{2,}(\S.*)$")            # "  -t, --time SECS       GPU load per attempt"
@@ -79,7 +80,7 @@ def help_html(text: str, window: str = "") -> str:
             parts.append(_table(_entries(block[1:], _OPTION), code=True))
         elif len(block) == 1 and re.match(r"^https?://\S+$", block[0]):
             url = html.escape(block[0], quote=True)
-            parts.append(f"<p class='more'>More in the manual and the code: <a href='{url}'>{url}</a></p>")
+            parts.append(f"<p class='more'>More in the wiki and the code: <a href='{url}'>{url}</a></p>")
         else:
             if not heading:
                 parts.append("<h2>How it works</h2>")

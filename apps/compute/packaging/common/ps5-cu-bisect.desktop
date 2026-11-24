@@ -2,7 +2,7 @@
 
 [Desktop Entry]
 Type=Application
-Name=PS5 CU Tools
+Name=PS5 CU Unlock
 Comment=Find bad CUs with ps5-cu-bisect.sh, then install a tested CU unlock
 Exec=ps5-bisect-gui
 Icon=ps5-cu-bisect

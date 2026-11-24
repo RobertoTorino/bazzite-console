@@ -111,14 +111,14 @@ def check(state_dir: Path = STATE_DIR) -> GateResult:
     phase = cfg.get("PHASE", "control")
     if phase != "bisect" or not new:
         result.reasons = [
-            "The bisect hasn't started yet (phase: %s). ps5-cores-bisect.sh first runs the control "
-            "on the stock cores, applies the unlock, and only then tests the new cores." % phase]
+            "The core bisect hasn't started yet (phase: %s). ps5-cores-bisect.sh first runs the control "
+            "on the stock cores. Then it applies the core unlock, and only then it tests the new cores." % phase]
         return result
 
     if pending.is_file() and pending.stat().st_size:
         result.reasons = [
-            "An attempt is still marked as in progress. Finish that bisect run (reboot and let it "
-            "resume) before the unlock can be accepted."]
+            "An attempt is still marked as in progress. Restart and let that bisect run finish. Until "
+            "then the results don't accept the core unlock."]
         return result
 
     try:
@@ -132,8 +132,8 @@ def check(state_dir: Path = STATE_DIR) -> GateResult:
     control = outcomes("control")
     if any(o != PASS for o in control):
         result.reasons = [
-            "The control (stock 6C/12T, before the unlock) failed. The board, power, heat or the load "
-            "tool is at fault, so nothing can be concluded about the new cores. Fix that first."]
+            "The control failed. It runs on the stock 6C/12T, before the core unlock. The board, power, heat "
+            "or the load tool is at fault, so the results say nothing about the new cores. Fix that first."]
         return result
     if not control:
         result.reasons = ["No control result is recorded."]
@@ -146,17 +146,17 @@ def check(state_dir: Path = STATE_DIR) -> GateResult:
     failed = {it: outcomes(it) for it in items if any(o != PASS for o in outcomes(it))}
     if "post-control" in failed:
         result.reasons = [
-            "POST-CONTROL failed: a stock core fails after the unlock. The unlock destabilises the whole "
-            "SoC on this board. Cold boot (full power off) to revert; don't persist it."]
+            "POST-CONTROL failed. A stock core fails after the core unlock. It destabilizes the whole "
+            "SoC on this board. Cold boot (full power off) to revert, and don't keep it."]
         return result
     if failed:
         lines = [f"{it}: {' '.join(o)} ({verdict(o).upper()})" for it, o in failed.items()]
         result.reasons = [
-            "Not every new-core item passed. The SMU primitive can only enable ALL cores, so one failing "
-            "item means: don't persist the unlock. Cold boot (full power off) to revert.", *lines]
+            "Not every new-core item passed. The SMU primitive can only enable ALL cores. So with one "
+            "failing item, don't keep the core unlock. Cold boot (full power off) to revert.", *lines]
         if any(verdict(o) == "random" for o in failed.values()):
             result.reasons.append(
-                "Random failures point to power or heat rather than bad silicon: improve cooling and "
+                "Random failures point to power or heat rather than bad silicon. Improve cooling and "
                 "retest with --reset.")
         return result
 
@@ -164,8 +164,8 @@ def check(state_dir: Path = STATE_DIR) -> GateResult:
                if not any(a.item == it and a.round == r for a in attempts)]
     if missing:
         result.reasons = [
-            f"The bisect isn't finished: {len(missing)} of {rounds * len(items)} attempt(s) still to do "
-            f"(next: {missing[0]}). Run ps5-cores-bisect.sh again, or let --auto continue."]
+            f"The core bisect isn't finished. {len(missing)} of {rounds * len(items)} attempt(s) are still to "
+            f"do, starting with {missing[0]}. Run ps5-cores-bisect.sh again, or let --auto continue."]
         return result
 
     tested = ["Control", "post-control", *(f"core{c}" for c in new)]
@@ -179,12 +179,12 @@ def check(state_dir: Path = STATE_DIR) -> GateResult:
     notes = []
     if len(control) < rounds:
         notes.append(f"The control ran {len(control)} round(s), fewer than the {rounds} of the other "
-                     "items (the rounds were raised after it finished).")
+                     "items. You raised the rounds after it finished.")
     time = cfg.get("TIME", "")
     shorter = sorted({it for it in ["control", *items] for a in attempts
                       if a.item == it and a.load and a.load != time})
     if shorter:
-        notes.append(f"Some attempts ran a different load than the current {time}s ({', '.join(shorter)}); "
-                     "the settings changed during the run.")
+        notes.append(f"Some attempts ran a different load than the current {time}s ({', '.join(shorter)}). "
+                     "The settings changed during the run.")
     result.reasons += [f"Note: {n}" for n in notes]
     return result

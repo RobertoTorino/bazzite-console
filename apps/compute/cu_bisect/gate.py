@@ -12,7 +12,7 @@ keeps in ~/.local/share/ps5-cu-bisect/. A mask is only accepted once that state 
   - the 4 shader-array rows are unlocked evenly, at one of the three real levels: 3 WGPs per row
     (24 CUs, stock), 4 per row (32 CUs) or 5 per row (40 CUs, max). The GPU feeds all 4 arrays in
     lockstep, so anything in between performs like its smallest row while drawing the extra power
-    (see the CU Tools manual).
+    (see the CU Unlock wiki chapter).
 
 This mirrors the "retest the combination" step ps5-cu-bisect.sh's own summary suggests
 (--reset && --baseline <masks> --control-only --rounds N) - the GUI just checks that step was actually
@@ -87,8 +87,8 @@ def check() -> GateResult:
 
     if PENDING.is_file():
         return GateResult(False, masks=base, reasons=[
-            "An attempt is still marked as in progress (umr-pending exists). Finish that bisect run, "
-            "or reboot and let it resume, before this mask can be accepted."])
+            "An attempt is still marked as in progress, because umr-pending exists. Finish that bisect run, "
+            "or restart and let it resume. Only then can the results accept this mask."])
 
     rows = [int(m, 16) for m in base.split(",")]
     counts = [popcount(m) for m in rows]
@@ -97,9 +97,10 @@ def check() -> GateResult:
         suggestion = ",".join(f"0x{(1 << target) - 1:02x}" for _ in range(4))
         return GateResult(False, masks=base, reasons=[
             f"The recorded baseline ({base}) is uneven across the 4 rows ({'/'.join(map(str, counts))} "
-            "WGPs). The GPU feeds all 4 shader arrays in lockstep, so it would run no faster than its "
-            f"smallest row ({min(counts)} WGPs = {LEVELS.get(min(counts), min(counts) * 8)} CUs) while "
-            "drawing the extra power. Retest a mask that unlocks the same number of WGPs on every row:",
+            "WGPs). The GPU feeds all 4 shader arrays in lockstep. So it would run no faster than its "
+            "smallest row while drawing the extra power. That row has "
+            f"{min(counts)} WGPs, which is {LEVELS.get(min(counts), min(counts) * 8)} CUs. "
+            "Retest a mask that unlocks the same number of WGPs on every row.",
             f"./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --baseline {suggestion} --control-only --rounds 1"])
 
     if counts[0] not in LEVELS:
@@ -133,8 +134,8 @@ def check() -> GateResult:
     if extra:
         return GateResult(False, masks=base, reasons=[
             f"This baseline still has {len(extra)} WGP(s) under individual test ({', '.join(extra[:4])}"
-            f"{', ...' if len(extra) > 4 else ''}) - that's a bisect run, not yet the retest of a final, "
-            "fully-combined mask. Retest it with:",
+            f"{', ...' if len(extra) > 4 else ''}). That's a bisect run, not yet the retest of a final, "
+            "fully combined mask. Retest it with the command below.",
             f"./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --baseline {base} --control-only --rounds 1"])
 
     if rounds < 1 or len(control) < rounds:

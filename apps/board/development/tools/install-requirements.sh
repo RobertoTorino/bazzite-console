@@ -9,7 +9,7 @@
 #                                                          # rpm-ostree on an Atomic one (needs a reboot)
 #   ./development/tools/install-requirements.sh --bins     # vkpeak + memtest_vulkan into ~/.local/bin
 #   ./development/tools/install-requirements.sh --speedtest# Ookla speedtest CLI into ~/.local/bin
-#   ./development/tools/install-requirements.sh --mprime   # Prime95's mprime into ~/mprime (PS5 CPU Tools' longer burn-in)
+#   ./development/tools/install-requirements.sh --mprime   # Prime95's mprime into ~/mprime (PS5 Core Unlock's longer burn-in)
 #   ./development/tools/install-requirements.sh --dev      # development extras (sqlite, to inspect the GUI history DB)
 #   ./development/tools/install-requirements.sh --all      # everything above except --dev
 set -euo pipefail
@@ -126,7 +126,7 @@ install_speedtest() {
 }
 
 # -------------------------------------------------------------------- mprime
-# No test uses it: PS5 CPU Tools' bisect does, for its longer burn-in (--load mprime). The whole download stays
+# No test uses it: PS5 Core Unlock's bisect does, for its longer burn-in (--load mprime). The whole download stays
 # together in $MPRIME_DIR, where the bisect looks; the link in $BIN_DIR puts it on PATH. A run with a newer
 # release on the page installs that one over it (Nexus Deps does so with its Update); mprime's own files stay.
 mprime_latest() {  # sets MPRIME_URL, MPRIME_FILE and MPRIME_SHA256 from the download page; 1 when it cannot
@@ -219,7 +219,7 @@ case "$MODE" in
         ask "Install the Ookla speedtest CLI?" && install_speedtest
         echo
         say "mprime: the latest Prime95 from mersenne.org, into $MPRIME_DIR, with a link in $BIN_DIR"
-        echo "    mprime: no test uses it; PS5 CPU Tools' longer burn-in does (its load tool mprime)"
+        echo "    mprime: no test uses it; PS5 Core Unlock's longer burn-in does (its load tool mprime)"
         ask "Install mprime?" && install_mprime
         echo
         say "Development extras: sqlite"

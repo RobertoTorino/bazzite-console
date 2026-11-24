@@ -239,21 +239,23 @@ detect = ["~/.local/bin/ps5-fan-controller"]
 launch = [["Open", "~/.local/bin/ps5-fan-controller"]]
 
 [apps.compute]
-name = "PS5 CU Tools"
+name = "PS5 CU Unlock"
 summary = "Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock."
 tag = "ps5-compute-v0.2.0"
 sha256 = "8a5ccac9799983d59741145a51e0621b2f2640a9634c449b6a9e5c6e6137f7ab"
 required = false
 changes_board = true
 board_change = """
-The app writes the GPU's shader array and WGP mask registers with umr, as root, while the driver runs: that is
-the CU unlock. The registers are volatile: any reboot puts the stock 24 CUs back, and nothing is burned into the
-chip. The unlock stays across reboots and power offs only through the root service that CU Tools installs,
-ps5-cu-unlock.service with the masks in /etc/ps5-cu-bisect, which writes the registers again early at every
-boot. Nothing is written to the BIOS, the firmware, the CMOS or the kernel's arguments. Uninstall in CU Tools
-disables the service and removes its files; the unlock lasts until the next reboot, and the board is then stock.
-CU Tools reboots the board between its rounds, by itself with the unattended option, after a question
-otherwise.
+For the CU unlock, the app writes the GPU's shader array and WGP mask registers with umr. It does so as root, while
+the driver runs. The registers are volatile. Any reboot puts the stock 24 CUs back, and nothing is burned into the
+chip. The unlock stays across reboots and power offs only through the root service that CU Unlock installs. That
+service is ps5-cu-unlock.service, with the masks in /etc/ps5-cu-bisect. It writes the registers again early at
+every boot. Nothing is written to the BIOS, the firmware, the CMOS or the kernel's arguments. Uninstall in CU Unlock
+disables the service and removes its files. The unlock then lasts until the next reboot, and after it the board is
+stock. CU Unlock runs every attempt of a test in one boot by default, and writes the board's own masks back between
+attempts. With Same boot off, it asks once and then restarts the board by itself after each attempt. While such a
+test runs, an autostart entry opens the window again after each login. The entry goes when the test ends, is paused
+or is removed with the app.
 """
 category = "sustainable"
 install = ["bash packaging/bazzite/install-bisect-gui.sh"]
@@ -262,22 +264,22 @@ detect = ["~/.local/bin/ps5-bisect-gui"]
 launch = [["Open", "~/.local/bin/ps5-bisect-gui"]]
 
 [apps.cores]
-name = "PS5 CPU Tools"
+name = "PS5 Core Unlock"
 summary = "Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock."
 tag = "ps5-cores-v0.2.0"
 sha256 = "f50d350db7633d9df384256b58c14ba527f555707610a2ab5e1b4db32a2d4b33"
 required = false
 changes_board = true
 board_change = """
-The app sends the SoC's SMU one mailbox message over PCI configuration space with setpci, which sets the core
-presence mask to 0xFF in the SMU's own memory; the governor's service is stopped around the message, as it
-shares the mailbox, and started again. The mask takes effect on the next warm reboot, survives warm reboots, and
-a full power off reverts it to the stock 6 cores. The 8 cores stay across power offs only through the root
-service that CPU Tools installs, ps5-cores-unlock.service, which sends the message again after a cold boot
-and warm-reboots once, with a guard against reboot loops. Nothing is written to the BIOS, the firmware, the CMOS
-or the kernel's arguments. Uninstall in CPU Tools disables the service and removes its files; the cores stay
-on until the next full power off, and the board is then stock. CPU Tools reboots the board between its
-rounds, by itself with the unattended option, after a question otherwise.
+The app sends the SoC's SMU one mailbox message over PCI configuration space with setpci. The message sets the core
+presence mask to 0xFF in the SMU's own memory. The governor's service shares the mailbox, so the app stops it around
+the message and starts it again. The mask takes effect on the next warm reboot and survives warm reboots. A full
+power off reverts it to the stock 6 cores. The 8 cores stay across power offs only through the root service that
+Core Unlock installs, ps5-cores-unlock.service. After a cold boot the service sends the message again and
+warm-reboots once. A guard keeps it from reboot loops. Nothing is written to the BIOS, the firmware, the CMOS or the
+kernel's arguments. Uninstall in Core Unlock disables the service and removes its files. The cores stay on until the
+next full power off, and after it the board is stock. Core Unlock restarts the board after the core unlock, and
+between its rounds when Same boot is off. It counts down 15 seconds first, and Pause stops it.
 """
 category = "sustainable"
 install = ["bash install.sh"]

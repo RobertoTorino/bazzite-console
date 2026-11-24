@@ -1,3 +1,8 @@
+Changelog: 24-11-2026 12:37:14
+
+Fixed. PS5 CPU Tools is now called PS5 Core Unlock in the comments and messages of
+development/tools/install-requirements.sh.
+
 Changelog: 22-11-2026 21:58:21
 
 Release 0.13.0.

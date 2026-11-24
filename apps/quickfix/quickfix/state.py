@@ -60,7 +60,7 @@ GROUPS: tuple[Group, ...] = (
         Tool("speedtest", "Ookla speedtest", "44 (Internet Speed; speedtest-cli works too)"),
     )),
     Group("--mprime", "Prime95", "The latest mprime from mersenne.org, into ~/mprime, with a link in ~/.local/bin.", (
-        Tool("mprime", "mprime", "no test: PS5 CPU Tools' longer burn-in (load tool mprime)"),
+        Tool("mprime", "mprime", "no test: PS5 Core Unlock's longer burn-in (load tool mprime)"),
     )),
     Group("--dev", "Development extras", LAYERED, (
         Tool("sqlite3", "sqlite", "no test: the app's history database, during development"),

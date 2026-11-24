@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""PS5 CPU Tools, one window for the core bisect and the core unlock (owner, 20-11-2026: Cores Bisect and Cores
-Unlock are one app, as CU Tools). The bisect part only assembles the command line of ps5-cores-bisect.sh and starts it
-in a terminal, exactly as if typed by hand; the unlock part reads the bisect's results and runs ps5-cores-unlock.sh."""
+"""PS5 Core Unlock (owner, 24-11-2026: the name, before PS5 CPU Tools), one window that leads through the core
+test and the core unlock in five steps, as CU Unlock does. It runs ps5-cores-bisect.sh in the window itself, and
+ps5-cores-unlock.sh for Install and Uninstall."""
 
 from pathlib import Path
 
-APP_NAME = "PS5 CPU Tools"
+APP_NAME = "PS5 Core Unlock"
 APP_ID = "ps5-cores-bisect-gui"
 ROOT = Path(__file__).resolve().parent.parent
 LOGO_PATH = ROOT / "images" / "ps5-cores-bisect.webp"

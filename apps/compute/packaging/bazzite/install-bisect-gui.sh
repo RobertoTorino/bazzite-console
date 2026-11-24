@@ -68,8 +68,8 @@ python3 -m venv "$VENV_DIR"
 echo "==> Checking PyQt6 can actually be imported in this venv"
 if ! "$VENV_DIR/bin/python" -c "from PyQt6.QtWidgets import QApplication" 2>"$APP_DIR/import-check.log"; then
   echo "error: PyQt6 installed but failed to import - see $APP_DIR/import-check.log" >&2
-  echo "       this is usually a missing system Qt/X11 library (e.g. libxcb-cursor0);" >&2
-  echo "       installing the GUI from a terminal would have failed the same way." >&2
+  echo "       This is usually a missing system Qt/X11 library, for example libxcb-cursor0." >&2
+  echo "       Installing the GUI from a terminal would have failed the same way." >&2
   cat "$APP_DIR/import-check.log" >&2
   exit 1
 fi
@@ -108,7 +108,7 @@ fi
 
 # The separate unlock window of before: this window has it now.
 if [ -e "$BIN_HOME/ps5-unlock-cu-gui" ] || [ -e "$DATA_HOME/ps5-unlock-cu-gui" ]; then
-  echo "==> Removing the separate unlock window of before (this window has it now)"
+  echo "==> Removing the separate unlock window of before. This window has it now."
   bash "$SCRIPT_DIR/uninstall-gui.sh" >/dev/null
 fi
 
@@ -119,14 +119,14 @@ command -v kbuildsycoca5 >/dev/null 2>&1 && kbuildsycoca5 --noincremental >/dev/
 
 cat <<EOF
 
-Done. PS5 CU Tools is installed for your user account only:
+Done. PS5 CU Unlock is installed for your user account only:
   - app + venv: $APP_DIR
   - launcher:   $LAUNCHER
   - menu entry: $DESKTOP_FILE
 $($DESKTOP_SHORTCUT && echo "  - Desktop:    $DESKTOP_ICON")
 
 Launch it from your app menu, or run: $LAUNCHER
-If it ever fails to open (e.g. a bouncing launcher icon that never shows a window), check:
+If it ever fails to open, for example a launcher icon that bounces and never shows a window, check:
   $APP_DIR/launch.log
 To remove it again: bash "$SCRIPT_DIR/uninstall-bisect-gui.sh"
 EOF

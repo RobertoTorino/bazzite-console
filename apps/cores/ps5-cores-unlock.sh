@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# ps5-cores-unlock.sh - persists the validated PS5 8C/16T core unlock across reboots.
+# ps5-cores-unlock.sh - keeps the tested PS5 8C/16T core unlock at every boot.
 #
 # Run ps5-cores-bisect.sh first and only install this when:
 #   - the control (stock 6C/12T) passed, and
-#   - the post-control (a stock core after the unlock) passed, and
+#   - the post-control (a stock core after the core unlock) passed, and
 #   - every new core came back GOOD alone AND in the combined item. The SMU primitive can
-#     only enable ALL cores, so a single bad core means: do not install this at all.
+#     only enable ALL cores. So with a single bad core, do not install this at all.
 #
-# The unlock is volatile: it survives warm reboots but a full power off reverts it, and a
-# fresh write only takes effect on the NEXT reboot. So "persistent" here means: a root
-# systemd service checks the core presence mask early at every boot; after a cold boot it
-# re-applies the mask (SMU queue-3 message 0x98 -> 0xFF at SMN 0x5A870) and warm-reboots
-# once. A guard prevents reboot loops when the unlock stops taking effect.
+# The core unlock is volatile. It survives warm restarts, but a full power off reverts it. A
+# fresh write only takes effect on the NEXT restart. So "persistent" here means a root
+# systemd service that checks the core presence mask early at every boot. After a cold boot it
+# applies the mask again (SMU queue-3 message 0x98 -> 0xFF at SMN 0x5A870) and does one warm
+# restart. A guard prevents restart loops when the core unlock stops taking effect.
 #
-# It is not a diagnostic: it does not retest anything, it trusts the bisect you already ran.
+# It is not a diagnostic. It does not retest anything, and it trusts the bisect you already ran.
 # It still refuses boards whose stock mask is not 0x77 (see the bisect script).
 #
 # Usage:
-#   sudo ./ps5-cores-unlock.sh --apply        write the mask once, right now (not persisted;
-#                                               takes effect on the next warm reboot)
+#   sudo ./ps5-cores-unlock.sh --apply        write the mask once, right now. Nothing keeps
+#                                               it. It takes effect on the next warm restart.
 #   sudo ./ps5-cores-unlock.sh --install      copy the script to /usr/local/sbin and enable
-#                                               the re-apply service at every boot
-#   sudo ./ps5-cores-unlock.sh --uninstall    remove the service and the installed copy;
-#                                               stock 6C/12T after the next full power off
+#                                               the service that applies the mask at every boot
+#   sudo ./ps5-cores-unlock.sh --uninstall    remove the service and the installed copy. The
+#                                               stock 6C/12T is back after the next full power off.
 #        ./ps5-cores-unlock.sh --status       show the mask, threads, service and guard state
 #        ./ps5-cores-unlock.sh --help
 #
@@ -58,7 +58,7 @@ nthreads() { getconf _NPROCESSORS_ONLN 2>/dev/null || nproc; }
 need_root() { (( EUID == 0 )) || die "$1 needs root. Run with sudo."; }
 check_board() {
   command -v lspci >/dev/null 2>&1 && command -v setpci >/dev/null 2>&1 || die "lspci/setpci not found. Install pciutils."
-  lspci -nn 2>/dev/null | grep -qi '1002:13fe' || die "no PS5 (1002:13fe) found; refusing to touch the SMU."
+  lspci -nn 2>/dev/null | grep -qi '1002:13fe' || die "no PS5 (1002:13fe) found. Refusing to touch the SMU."
 }
 
 smn_read() { # addr -> 0xXXXXXXXX
@@ -109,20 +109,20 @@ apply_mask() { # writes 0xFF; takes effect on the next reboot
   local mask st was_active=0
   mask=$(core_mask) || die "could not read the core presence mask via $NB_BDF."
   if [[ $mask == 0xff ]]; then say "The mask is already 0xFF."; return 0; fi
-  [[ $mask == 0x77 ]] || die "the mask is $mask, not the usual 0x77: the disabled cores were very
+  [[ $mask == 0x77 ]] || die "the mask is $mask, not the usual 0x77. The disabled cores were very
        likely fused off for real defects. Refusing to unlock."
   if systemctl is-active --quiet "$GOVERNOR_UNIT" 2>/dev/null; then
     was_active=1
-    systemctl stop "$GOVERNOR_UNIT" || die "could not stop $GOVERNOR_UNIT (it shares the SMU mailbox)."
+    systemctl stop "$GOVERNOR_UNIT" || die "could not stop $GOVERNOR_UNIT, which shares the SMU mailbox."
   fi
   st=$(smu_send "$MSG_WRITE_FF" "$MASK_REG"); local rc=$?
   (( was_active )) && systemctl start "$GOVERNOR_UNIT" 2>/dev/null
-  (( rc == 0 )) || die "SMU mailbox timed out. Do NOT retry blindly; reboot first."
+  (( rc == 0 )) || die "SMU mailbox timed out. Do NOT retry blindly. Restart first."
   [[ $st == 0x01 ]] || die "SMU message 0x98 returned $st (expected 0x01)."
   sleep 0.5
   mask=$(core_mask) || die "could not read the mask back."
   [[ $mask == 0xff ]] || die "the mask did not take (still $mask)."
-  say "Core presence mask set to 0xFF. It takes effect on the next (warm) reboot."
+  say "Core presence mask set to 0xFF. It takes effect on the next warm restart."
 }
 
 apply_from_boot() { # the systemd service entry point: re-apply after a cold boot, reboot once
@@ -132,18 +132,18 @@ apply_from_boot() { # the systemd service entry point: re-apply after a cold boo
   mask=$(core_mask) || die "could not read the core presence mask."
   if [[ $mask == 0xff ]] && (( $(nthreads) >= 16 )); then
     rm -f "$GUARD"
-    say "All 8 cores online, mask 0xFF: nothing to do."
+    say "All 8 cores are online, and the mask is 0xFF. Nothing to do."
     return 0
   fi
   if [[ -s $GUARD ]]; then
-    say "ERROR: a previous boot already re-applied the unlock and rebooted, but the cores are"
-    say "still not up (mask $mask, $(nthreads) threads). Not rebooting again to avoid a loop."
-    say "Remove $GUARD after fixing the cause to re-arm."
+    say "ERROR: a previous boot already applied the core unlock again and restarted, but the cores"
+    say "are still not up (mask $mask, $(nthreads) threads). Not restarting again, to avoid a loop."
+    say "Remove $GUARD after fixing the cause. The service then tries again."
     return 1
   fi
   [[ $mask == 0xff ]] || apply_mask
   echo "$boot_id" >"$GUARD"
-  say "Unlock re-applied after a cold boot; warm-rebooting once to bring the cores up..."
+  say "Applied the core unlock again after a cold boot. One warm restart now brings the cores up..."
   systemctl reboot
 }
 
@@ -155,7 +155,7 @@ install_service() {
   [[ $mask == 0x77 || $mask == 0xff ]] || die "the mask is $mask, not 0x77 or 0xFF. Refusing."
   if [[ $SELF != "$INSTALL_BIN" ]]; then
     install -m 755 -o root -g root "$SELF" "$INSTALL_BIN" || die "could not copy the script to $INSTALL_BIN."
-    say "Copied the script to $INSTALL_BIN (root-owned; the boot service runs that copy)."
+    say "Copied the script to $INSTALL_BIN, owned by root. The boot service runs that copy."
   fi
   cat >"$UNIT_PATH" <<EOF
 [Unit]
@@ -174,11 +174,11 @@ EOF
   chmod 644 "$UNIT_PATH"
   systemctl daemon-reload
   systemctl enable "$UNIT_NAME"
-  say "Installed and enabled. At every boot the service checks the mask; after a cold boot it"
-  say "re-applies the unlock and warm-reboots once (a guard prevents reboot loops)."
+  say "Installed and enabled. At every boot the service checks the mask. After a cold boot it"
+  say "applies the core unlock again and does one warm restart. A guard prevents restart loops."
   if [[ $mask != 0xff ]]; then
     apply_mask
-    say "Reboot (warm) now to bring the cores up."
+    say "Do a warm restart now to bring the cores up."
   fi
   say "Remove with: sudo $0 --uninstall"
 }
@@ -189,7 +189,7 @@ uninstall_service() {
   rm -f "$UNIT_PATH" "$GUARD" "$INSTALL_BIN"
   rmdir "$CONF_DIR" 2>/dev/null || true
   systemctl daemon-reload
-  say "Removed. The unlock is still active until the next full power off (cold boot)."
+  say "Removed. The core unlock stays active until the next full power off (cold boot)."
 }
 
 status() {
@@ -201,12 +201,12 @@ status() {
   [[ -z $enabled || $enabled == not-found ]] && enabled="not installed"
   say "Service: $enabled, ${active:-inactive}"
   say "Threads online: $(nthreads)"
-  [[ -s $GUARD ]] && say "Reboot guard: SET ($GUARD) - the service re-applied and rebooted but the cores did not come up."
+  [[ -s $GUARD ]] && say "Reboot guard: SET ($GUARD). The service applied the core unlock again and restarted, but the cores did not come up."
   if (( EUID == 0 )) || sudo -n true 2>/dev/null; then
     local mask
     if (( EUID == 0 )); then mask=$(core_mask)
     else mask=$(sudo -n bash "$SELF" --read-mask 2>/dev/null); fi
-    say "Core presence mask: ${mask:-unreadable} (0x77 = stock 6C, 0xFF = 8C unlocked)"
+    say "Core presence mask: ${mask:-unreadable}. 0x77 is the stock 6C, 0xFF is 8C unlocked."
   else
     say "Core presence mask: run with sudo (or cached sudo credentials) to also show this."
   fi

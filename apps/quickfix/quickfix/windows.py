@@ -65,7 +65,7 @@ TOOLS_INFO = ("<b>Quickfix</b> shows the optional tools PS5 Board Test's tests u
                "<code>install-requirements.sh</code>, for that group in a terminal: it asks for your password "
                "where it layers packages and skips what is there already. <b>Install all</b> installs every group "
                "but the development extras.<br><br>"
-               "<b>Prime95</b> is mprime, which no test uses: PS5 CPU Tools runs its torture test for a longer "
+               "<b>Prime95</b> is mprime, which no test uses: PS5 Core Unlock runs its torture test for a longer "
                "burn-in. The latest release is downloaded from mersenne.org and checked against the SHA-256 listed "
                "there. Nexus Deps shows a newer release when there is one, and its Update installs it.<br><br>"
                "Layered RPM packages are active after a reboot (<code>systemctl reboot</code>). glmark2, "

@@ -12,7 +12,7 @@
 #   systemctl --user disable --now ps5-cu-bisect-auto.service
 #
 # --auto skips every interactive prompt (assumes a crash on an unfinished attempt, continues past
-# warnings, and reboots on its own) and needs passwordless sudo for umr and journalctl, see README.
+# warnings, and reboots on its own) and needs passwordless sudo for umr and journalctl, see the wiki.
 #
 # Optional: live output on screen at every login. The unit below only appends to auto.log; to also
 # get a terminal window that follows it, add a desktop autostart entry (KDE example):
@@ -36,7 +36,7 @@ Type=oneshot
 # Give the desktop and GPU a few seconds to settle before testing.
 ExecStartPre=/bin/sleep 20
 # Example: add the correct path to ps5-cu-bisect.sh
-ExecStart=/home/admin/IdeaProjects/ps5-cu-bisect/ps5-cu-bisect.sh --auto -t 60 -r 2
+ExecStart=%h/ps5-cu-bisect/ps5-cu-bisect.sh --auto -t 60 -r 2
 StandardOutput=append:%h/.local/share/ps5-cu-bisect/auto.log
 StandardError=append:%h/.local/share/ps5-cu-bisect/auto.log
 

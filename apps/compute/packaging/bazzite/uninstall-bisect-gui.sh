@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Removes everything packaging/bazzite/install-bisect-gui.sh set up for the current user. Does not
-# touch any bisect results in ~/.local/share/ps5-cu-bisect or the --auto systemd unit - disable
+# Removes everything packaging/bazzite/install-bisect-gui.sh set up for the current user, and the window's
+# autostart entry that goes on with a running CU test after a login (it would start the removed launcher). Does
+# not touch any bisect results in ~/.local/share/ps5-cu-bisect or the --auto systemd unit - disable
 # that yourself with: systemctl --user disable --now ps5-cu-bisect-auto.service
 set -euo pipefail
 
@@ -17,8 +18,9 @@ OLD_ICON="$DATA_HOME/icons/hicolor/512x512/apps/ps5-cu-bisect.png"   # the 512 p
 
 rm -rf "$APP_DIR"
 rm -f "$LAUNCHER" "$DESKTOP_FILE" "$ICON_FILE" "$OLD_ICON" "$DESKTOP_DIR/ps5-cu-bisect.desktop"
+rm -f "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/ps5-cu-tools-resume.desktop"
 
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$DATA_HOME/applications" >/dev/null 2>&1 || true
 command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f -t "$DATA_HOME/icons/hicolor" >/dev/null 2>&1 || true
 
-echo "Removed PS5 CU Tools (app, venv, launcher, menu entry, icon, Desktop icon)."
+echo "Removed PS5 CU Unlock with its app, venv, launcher, menu entry, icon and Desktop icon."

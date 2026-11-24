@@ -15,8 +15,8 @@ Control your PlayStation 5 running Bazzite. The portal installs and opens the su
 - <img src="portal/images/apps/board.webp" width="20" height="20" alt=""/> **[PS5 Board Test](apps/board)**: Read-only system details for PlayStation 5 hardware running Bazzite.
 - <img src="portal/images/apps/overlay.webp" width="20" height="20" alt=""/> **[PS5 System Overlay](apps/overlay)**: A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values.
 - <img src="portal/images/apps/fan.webp" width="20" height="20" alt=""/> **[PS5 Fan Controller](apps/fan)**: The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature.
-- <img src="portal/images/apps/compute.webp" width="20" height="20" alt=""/> **[PS5 CU Tools](apps/compute)**: Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock.
-- <img src="portal/images/apps/cores.webp" width="20" height="20" alt=""/> **[PS5 CPU Tools](apps/cores)**: Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock.
+- <img src="portal/images/apps/compute.webp" width="20" height="20" alt=""/> **[PS5 CU Unlock](apps/compute)**: Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock.
+- <img src="portal/images/apps/cores.webp" width="20" height="20" alt=""/> **[PS5 Core Unlock](apps/cores)**: Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock.
 
 **Graphics**: Graphics features and tools for games.
 

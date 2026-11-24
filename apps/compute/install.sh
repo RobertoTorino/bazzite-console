@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs PS5 CU Tools, one window for the bisect and the unlock, as a desktop app, from a clone or the
+# Installs PS5 CU Unlock, one window for the bisect and the unlock, as a desktop app, from a clone or the
 # extracted release tarball:
 #
 #   ./install.sh                         # install or update the app
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
-#   ./install.sh --uninstall             # remove the app; keeps results, settings and logs
+#   ./install.sh --uninstall             # remove the app. Results, settings and logs stay
 #   ./install.sh --uninstall --purge     # also remove results, settings, logs and the autostart entries
 #
 # Run it as your own user, not with sudo; nothing here needs root. The app gets a venv with PyQt6 under
@@ -14,7 +14,7 @@
 # removes the separate unlock window of before (uninstall-gui.sh).
 set -euo pipefail
 
-APP_NAME="PS5 CU Tools"
+APP_NAME="PS5 CU Unlock"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 STATE_DIR="$DATA_DIR/ps5-cu-bisect"                # the bisect script's runs, logs and results

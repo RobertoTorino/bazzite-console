@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""PyQt6 front-end for ps5-cu-bisect.sh: a menu-driven launcher for the initial setup/start of a
-bisect run. It only assembles the command line and starts it in a terminal; the actual bisecting
-still happens in ps5-cu-bisect.sh itself, exactly as if typed by hand."""
+"""PyQt6 window for ps5-cu-bisect.sh and ps5-cu-unlock.sh: it runs the CU test itself, in four steps, and
+installs a tested CU unlock. The bisecting is the script's own, exactly as if typed by hand."""
 
-APP_NAME = "PS5 CU Tools"
+APP_NAME = "PS5 CU Unlock"
 APP_ID = "ps5-cu-bisect-gui"
 __version__ = "0.2.0"
 

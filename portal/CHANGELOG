@@ -1,3 +1,17 @@
+Changelog: 24-11-2026 12:47:30
+
+Release 4.12.1.
+
+Changelog: 24-11-2026 12:37:14
+
+Fixed. PS5 CPU Tools is now called PS5 Core Unlock in apps.toml, in its name and its "Changes the board" text.
+The text is rewritten to the writing standard, and the wiki chapter's box changed with it. The app key cores stays.
+
+Changelog: 24-11-2026 12:21:30
+
+Fixed. PS5 CU Tools is now called PS5 CU Unlock in apps.toml, in its name and its "Changes the board" text. The
+wiki chapter's box changed with it. The app key compute stays.
+
 Changelog: 22-11-2026 21:58:22
 
 Release 4.12.0. Pins ps5-board-v0.13.0, ps5-quickfix-v0.8.0, ps5-upscaler-v0.9.0, ps5-rpcs3-v1.8.0, ps5-remoteplay-v1.8.0, ps5-clb-v1.8.0, ps5-shadps4-v1.8.0, ps5-datstation-v1.8.0, ps5-ppsspp-v1.8.0, ps5-pcsx2-v1.8.0, ps5-vita3k-v1.9.0, ps5-xenia-v1.9.0, ps5-sftp-v1.9.0, ps5-webcam-v1.9.0, ps5-controller-v1.9.0, ps5-ssd-v1.9.0, ps5-overlay-v1.8.0, ps5-fan-v2.8.0, ps5-compute-v0.2.0, ps5-cores-v0.2.0, ps5-cec-v2.9.0, ps5-bluetooth-v0.9.0, ps5-password-v0.7.0, ps5-turing-v0.3.0.

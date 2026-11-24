@@ -1,3 +1,31 @@
+Changelog: 24-11-2026 12:37:14
+
+Breaking. The app is now called PS5 Core Unlock, before PS5 CPU Tools. It gets the step window of its twin in
+bc250-bazzite. The window leads through five steps instead of opening a terminal: Scan, Test the stock cores, Unlock
+and restart, Test the new cores, and Install. It runs ps5-cores-bisect.sh and ps5-cores-unlock.sh itself. Each step's
+row says the one thing to do now, with its pill on that row, and a green bar says when you're finished. After the
+unlock and between attempts the window restarts the board itself after a countdown. It opens again after the login
+with the next step. A desktop notification says when a step ends. A test blocks sleep while it runs. After a full
+power off in the middle of the test, step 4 turns the new cores on again with ps5-cores-unlock.sh --apply. Install
+needs no restart, because the cores are on already. The window's Unattended and Auto resume switches are gone, and so
+is the separate unlock part with its verdict row. The script's --auto still works from a terminal. Uninstall also
+removes the window's autostart entry.
+
+The bottom row holds the other pills on the left and the Details and Advanced pills at its right end. The window
+always opens 900 pixels wide and fits its height to the page once it shows. The tooltips are rounded boxes on the
+window's dark background, as in the suite's other apps.
+
+ps5-cores-bisect.sh has two new options. --scan reads the presence mask, the cores and what a run needs, then exits
+without writing to the SMU. --only ITEM runs only the attempts of one item. The help page lists them.
+
+Every attempt could end as LOAD-FAIL with "temp-path '.' must be readable and writeable" when the test started from a
+folder the script can't write. stress-ng 0.22 refuses to start there, even for its CPU stressors. ps5-cores-bisect.sh
+now gives stress-ng the logs folder of its results as its temp folder.
+
+The "Changes the board" text in the portal and the wiki chapter is rewritten to the writing standard. It now says that
+the app restarts the board after the core unlock, and between rounds when Same boot is off, after a 15 second
+countdown. The wiki chapter is the twin's, rewritten to the writing standard.
+
 Changelog: 22-11-2026 21:58:22
 
 Release 0.2.0.

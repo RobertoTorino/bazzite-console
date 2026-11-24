@@ -4,7 +4,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3130 test functions (3518 cases counting the parametrized ones) in 36 test folders, and 37 installer tests.
+3201 test functions (3589 cases counting the parametrized ones) in 36 test folders, and 37 installer tests.
 
 ## Summary
 
@@ -14,9 +14,9 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/board](#appsboard) | 3 | 30 | 1.8 s |
 | [apps/cec](#appscec) | 8 | 68 | 0.7 s |
 | [apps/clb](#appsclb) | 13 | 91 | 2.8 s |
-| [apps/compute](#appscompute) | 5 | 31 |  |
+| [apps/compute](#appscompute) | 8 | 76 |  |
 | [apps/controller](#appscontroller) | 13 | 164 | 5.8 s |
-| [apps/cores](#appscores) | 4 | 29 |  |
+| [apps/cores](#appscores) | 7 | 55 |  |
 | [apps/datstation](#appsdatstation) | 7 | 39 | 2.1 s |
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
 | [apps/overlay](#appsoverlay) | 2 | 19 | 0.2 s |
@@ -46,7 +46,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 18 | 227 | 30.2 s |
 | [tools](#tools) | 43 | 243 | 10.2 s |
-| **All** | | **3130** | **153 s** |
+| **All** | | **3201** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -347,10 +347,13 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/compute
 
-31 tests in 5 files.
+76 tests in 8 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
+| `test_busy.py` | `test_the_kernel_sensor_comes_first` |  |  | The kernel sensor comes first. |
+| `test_busy.py` | `test_engine_time_between_two_samples` |  |  | Engine time between two samples. |
+| `test_busy.py` | `test_the_busier_engine_counts_and_load_stops_at_100` |  |  | The busier engine counts and load stops at 100. |
 | `test_gate.py` | `test_cu_counts_and_levels` |  |  | Cu counts and levels. |
 | `test_gate.py` | `test_no_results` |  |  | No results. |
 | `test_gate.py` | `test_a_fully_retested_mask_is_accepted` |  |  | A fully retested mask is accepted. |
@@ -359,29 +362,71 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_help_page.py` | `test_the_scripts_help_becomes_a_page` |  |  | The scripts help becomes a page. |
 | `test_help_page.py` | `test_what_the_window_does_is_the_first_paragraph` |  |  | What the window does is the first paragraph. |
 | `test_help_page.py` | `test_text_is_escaped_and_an_empty_help_says_so` |  |  | Text is escaped and an empty help says so. |
-| `test_main_window.py` | `test_bisect_window_has_the_suite_header` |  |  | Bisect window has the suite header. |
-| `test_main_window.py` | `test_start_with_the_defaults` |  |  | Start with the defaults. |
-| `test_main_window.py` | `test_start_with_a_custom_baseline_and_switches` |  |  | Start with a custom baseline and switches. |
-| `test_main_window.py` | `test_unattended_offers_the_autostart_service` |  |  | Unattended offers the autostart service. |
-| `test_main_window.py` | `test_invalid_options_start_nothing` |  |  | Invalid options start nothing. |
-| `test_main_window.py` | `test_unlock_part_without_results` |  |  | Unlock part without results. |
-| `test_main_window.py` | `test_unlock_part_accepts_a_retested_mask` |  |  | Unlock part accepts a retested mask. |
-| `test_main_window.py` | `test_help_opens_the_scripts_help` |  |  | Help is a pill under the title; a click opens the page. |
-| `test_main_window.py` | `test_the_header_has_four_pills_in_order` |  |  | Help, Start, Show status and Reset under the title, of one width; no About (owner, 19-11-2026). |
-| `test_main_window.py` | `test_the_numbers_on_one_line_and_the_switches_as_pills` |  |  | The numbers on one line and the switches as pills. |
-| `test_main_window.py` | `test_one_page_with_the_unlock_under_the_bisect` |  |  | One window, one page (owner, 19-11-2026): the bisect's pills, numbers and switches, then the verdict and Install, Uninstall, Refresh and Re-check, the WGP rows, the preview with its i, and the log behind a Show logs / Hide logs button, hidden at the start. |
-| `test_main_window.py` | `test_a_failed_install_shows_a_red_mark_not_a_message` |  |  | A red ! |
-| `test_main_window.py` | `test_hiding_the_log_gives_its_room_back` |  |  | Show logs, then Hide logs: the window is as tall as before and the WGP rows stay together (owner, 20-11-2026: the rows spread over the log's room); a window made taller by hand keeps them together too. |
+| `test_main_window.py` | `test_the_suite_header` |  |  | The suite header. |
+| `test_main_window.py` | `test_a_new_window_starts_at_the_scan` |  |  | A new window starts at the scan. |
+| `test_main_window.py` | `test_a_scan_shows_the_board_and_offers_the_test` |  |  | A scan shows the board and offers the test. |
+| `test_main_window.py` | `test_what_blocks_the_test` |  |  | What blocks the test. |
+| `test_main_window.py` | `test_start_asks_once_then_runs_the_safety_check` |  |  | Start asks once then runs the safety check. |
+| `test_main_window.py` | `test_the_advanced_options_reach_the_script` |  |  | The advanced options reach the script. |
+| `test_main_window.py` | `test_a_failed_safety_check_stops_at_step_2` |  |  | A failed safety check stops at step 2. |
+| `test_main_window.py` | `test_the_wgps_go_on_or_restart_first` |  |  | The wgps go on or restart first. |
+| `test_main_window.py` | `test_after_an_attempt_the_window_restarts_the_board` |  |  | After an attempt the window restarts the board. |
+| `test_main_window.py` | `test_pause_stops_the_countdown_and_the_autostart` |  |  | Pause stops the countdown and the autostart. |
+| `test_main_window.py` | `test_after_a_login_the_window_goes_on` |  |  | After a login the window goes on. |
+| `test_main_window.py` | `test_nothing_left_after_a_login_removes_the_autostart` |  |  | Nothing left after a login removes the autostart. |
+| `test_main_window.py` | `test_the_levels_the_healthy_wgps_allow` |  |  | The levels the healthy wgps allow. |
+| `test_main_window.py` | `test_choosing_a_level_runs_the_combined_test` |  |  | Choosing a level runs the combined test. |
+| `test_main_window.py` | `test_no_combined_test_in_a_boot_with_an_attempt` |  |  | No combined test in a boot with an attempt. |
+| `test_main_window.py` | `test_a_passed_combined_test_can_be_installed` |  |  | A passed combined test can be installed. |
+| `test_main_window.py` | `test_installed_in_this_boot_waits_for_a_restart` |  |  | Installed in this boot waits for a restart. |
+| `test_main_window.py` | `test_installed_before_this_boot_is_finished` |  |  | Installed before this boot is finished. |
+| `test_main_window.py` | `test_staying_stock_is_finished` |  |  | Staying stock is finished. |
+| `test_main_window.py` | `test_the_rows_say_what_came_out` |  |  | The rows say what came out. |
+| `test_main_window.py` | `test_a_failed_combined_test_offers_the_lower_levels` |  |  | A failed combined test offers the lower levels. |
+| `test_main_window.py` | `test_the_scripts_questions` |  |  | The scripts questions. |
+| `test_main_window.py` | `test_the_live_attempt` |  |  | The live attempt. |
+| `test_main_window.py` | `test_the_uneven_counts_show_for_comparison` |  |  | The uneven counts show for comparison. |
+| `test_main_window.py` | `test_no_comparison_row_when_every_row_is_even` |  |  | No comparison row when every row is even. |
+| `test_main_window.py` | `test_a_safety_check_from_the_terminal_offers_start_over` |  |  | A safety check from the terminal offers start over. |
+| `test_main_window.py` | `test_one_boot_goes_from_the_safety_check_to_the_wgps` |  |  | Same boot, the default: when the safety check passed, the WGP test starts without a click. |
+| `test_main_window.py` | `test_one_boot_stops_after_a_failed_safety_check` |  |  | One boot stops after a failed safety check. |
+| `test_main_window.py` | `test_the_mask_column` |  |  | The mask column. |
+| `test_main_window.py` | `test_a_done_test_notifies` |  |  | A done test notifies. |
+| `test_main_window.py` | `test_a_failed_safety_check_notifies` |  |  | A failed safety check notifies. |
+| `test_main_window.py` | `test_quiet_between_attempts_and_after_stop` |  |  | Quiet between attempts and after stop. |
+| `test_main_window.py` | `test_a_script_error_notifies` |  |  | A script error notifies. |
+| `test_main_window.py` | `test_with_restarts_the_end_notifies_after_the_login` |  |  | With restarts the end notifies after the login. |
+| `test_main_window.py` | `test_only_a_test_blocks_sleep` |  |  | Only a test blocks sleep. |
+| `test_main_window.py` | `test_one_thing_to_do_and_its_pill` |  |  | One thing to do and its pill. |
+| `test_main_window.py` | `test_while_a_test_runs_there_is_nothing_to_do_and_the_indicator_turns` |  |  | While a test runs there is nothing to do and the indicator turns. |
+| `test_main_window.py` | `test_the_window_never_opens_higher_than_the_screen` |  |  | The window never opens higher than the screen. |
+| `test_main_window.py` | `test_details_and_advanced_are_pills_on_the_actions_row` |  |  | No "Other actions" label: the step's pills on the left, Details and Advanced as pills at the right end of the same row (owner, 24-11-2026). |
+| `test_main_window.py` | `test_the_window_opens_at_its_width_and_fits_its_page_once_shown` |  |  | Never at a wider saved width, and as high as its page after it shows: before that, the page doesn't know its height yet (owner, 24-11-2026: a first window cut half of it off). |
+| `test_main_window.py` | `test_tooltips_have_rounded_corners` |  |  | The tooltips as the suite's other apps show them: a rounded box on the window's dark background. |
+| `test_main_window.py` | `test_the_window_follows_the_running_test` |  |  | Started from step 1: the first attempt moves the window to the safety check, its result counts at once. |
 | `test_options.py` | `test_defaults_are_the_scripts_own` |  |  | Defaults are the scripts own. |
 | `test_options.py` | `test_every_switch_reaches_the_command_line` |  |  | Every switch reaches the command line. |
 | `test_options.py` | `test_command_is_quoted_for_bash` |  |  | Command is quoted for bash. |
 | `test_options.py` | `test_validation` |  |  | Validation. |
 | `test_options.py` | `test_one_round_is_allowed_for_a_control_only_retest` |  |  | One round is allowed for a control only retest. |
-| `test_options.py` | `test_presets_are_valid_masks` |  |  | Presets are valid masks. |
-| `test_options.py` | `test_every_baseline_choice_has_a_short_label_and_a_tooltip` |  |  | Every baseline choice has a short label and a tooltip. |
-| `test_service.py` | `test_unit_resumes_the_run_with_its_settings` |  |  | Unit resumes the run with its settings. |
-| `test_service.py` | `test_install_writes_and_enables_the_unit_without_starting_it` |  |  | The GUI starts the run in a terminal right after: the unit fires at the next login, not now. |
-| `test_service.py` | `test_without_systemctl_the_unit_is_written_and_the_error_says_so` |  |  | Without systemctl the unit is written and the error says so. |
+| `test_progress.py` | `test_the_plan_is_the_control_then_every_locked_wgp` |  |  | The plan is the control then every locked wgp. |
+| `test_progress.py` | `test_another_boards_baseline_plans_its_own_locked_wgps` |  |  | A die with other fused WGPs: the plan follows the live masks, not a stock layout. |
+| `test_progress.py` | `test_verdicts_and_the_next_attempt` |  |  | Verdicts and the next attempt. |
+| `test_progress.py` | `test_a_failed_control_stops_the_safety_check` |  |  | A failed control stops the safety check. |
+| `test_progress.py` | `test_random_is_some_rounds_only` |  |  | Random is some rounds only. |
+| `test_progress.py` | `test_levels` |  |  | Levels. |
+| `test_progress.py` | `test_the_highest_level_is_the_scripts_suggestion` |  |  | The highest level is the scripts suggestion. |
+| `test_progress.py` | `test_the_window_keeps_the_bisect_run_for_the_combined_test` |  |  | The window keeps the bisect run for the combined test. |
+| `test_progress.py` | `test_installed_masks` |  |  | Installed masks. |
+| `test_progress.py` | `test_the_uneven_counts_for_comparison` |  |  | One WGP fails every time on a board with its own masks: 32 is the highest even level, 38 the healthy total. |
+| `test_progress.py` | `test_the_unlock_is_on_only_when_saved_before_this_boot` |  |  | The unlock is on only when saved before this boot. |
+| `test_resume.py` | `test_arm_and_disarm` |  |  | Arm and disarm. |
+| `test_resume.py` | `test_the_entry_opens_the_same_code_and_scripts` |  |  | Installed or from a checkout: this Python, this package's folder and the window's own scripts. |
+| `test_resume.py` | `test_restart_reports_when_it_may_not` |  |  | Restart reports when it may not. |
+| `test_session.py` | `test_a_session` |  |  | A session. |
+| `test_session.py` | `test_one_terminal_for_every_run` |  |  | The second run uses the same shell and terminal, so sudo, which remembers per terminal, asks only once. |
+| `test_session.py` | `test_stop_ends_the_script_and_keeps_the_terminal` |  |  | Stop ends the script and keeps the terminal. |
+| `test_session.py` | `test_a_test_run_blocks_sleep_until_it_ends` |  |  | With block_sleep the script runs under systemd-inhibit; its exit code comes through. |
 
 ## apps/controller
 
@@ -556,7 +601,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/cores
 
-29 tests in 4 files.
+55 tests in 7 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -571,24 +616,50 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_help_page.py` | `test_a_sentence_above_a_list_of_terms_is_its_paragraph` |  |  | 'For a longer, harsher burn-in ...' then --load and --rasdaemon: a paragraph and a table, not one run-on line. |
 | `test_help_page.py` | `test_what_the_window_does_is_the_first_paragraph` |  |  | What the window does is the first paragraph. |
 | `test_help_page.py` | `test_text_is_escaped_and_an_empty_help_says_so` |  |  | Text is escaped and an empty help says so. |
-| `test_main_window.py` | `test_the_window_has_the_suite_header` |  |  | The window has the suite header. |
-| `test_main_window.py` | `test_start_with_the_defaults` |  |  | Start with the defaults. |
-| `test_main_window.py` | `test_start_with_mprime_and_rasdaemon` |  |  | Start with mprime and rasdaemon. |
-| `test_main_window.py` | `test_unattended_installs_the_resume_unit` |  |  | Unattended installs the resume unit. |
-| `test_main_window.py` | `test_the_estimate_is_short_and_follows_the_options` |  |  | The estimate is short and follows the options. |
-| `test_main_window.py` | `test_help_opens_the_scripts_help` |  |  | Help is a pill under the title; a click opens the page. |
-| `test_main_window.py` | `test_the_header_has_four_pills_in_order` |  |  | Help, Start, Show status and Reset under the title, of one width; no About (owner, 20-11-2026). |
-| `test_main_window.py` | `test_the_numbers_on_one_line_and_the_switches_as_pills` |  |  | The numbers on one line and the switches as pills. |
-| `test_main_window.py` | `test_unlock_part_without_results` |  |  | Unlock part without results. |
-| `test_main_window.py` | `test_one_page_with_the_unlock_under_the_bisect` |  |  | One window, one page (owner, 20-11-2026, as CU Tools): the bisect's pills, numbers and switches, then the verdict and Install, Uninstall, Refresh, Root status and Re-check, the 8 cores with their i, and the log behind a Show logs / Hide logs button, hidden at the start. |
-| `test_main_window.py` | `test_a_failed_install_shows_a_red_mark_not_a_message` |  |  | A red ! |
-| `test_main_window.py` | `test_hiding_the_log_gives_its_room_back` |  |  | Show logs, then Hide logs: the window is as tall as before and the cores stay where they were (owner, 20-11-2026: CU Tools' rows spread over the log's room); a window made taller by hand keeps them in place too. |
-| `test_options_and_service.py` | `test_defaults_are_the_scripts_own` |  |  | Defaults are the scripts own. |
-| `test_options_and_service.py` | `test_every_switch_reaches_the_command_line` |  |  | Every switch reaches the command line. |
-| `test_options_and_service.py` | `test_validation` |  |  | Validation. |
-| `test_options_and_service.py` | `test_load_tools` |  |  | Load tools. |
-| `test_options_and_service.py` | `test_unit_resumes_with_the_gui_settings_and_always_auto` |  |  | Unit resumes with the gui settings and always auto. |
-| `test_options_and_service.py` | `test_install_enables_the_unit_without_starting_it` |  |  | enable, not enable --now: the GUI starts the run itself, a second instance would share its state. |
+| `test_load.py` | `test_stress_ng_writes_its_temp_files_in_the_logs_folder` |  |  | Stress ng writes its temp files in the logs folder. |
+| `test_main_window.py` | `test_the_suite_header` |  |  | The suite header. |
+| `test_main_window.py` | `test_a_new_window_starts_at_the_scan` |  |  | A new window starts at the scan. |
+| `test_main_window.py` | `test_a_scan_shows_the_board_and_offers_the_test` |  |  | A scan shows the board and offers the test. |
+| `test_main_window.py` | `test_what_blocks_the_test` |  |  | What blocks the test. |
+| `test_main_window.py` | `test_start_asks_once_then_tests_the_stock_cores` |  |  | Start asks once then tests the stock cores. |
+| `test_main_window.py` | `test_with_restarts_the_window_comes_back` |  |  | With restarts the window comes back. |
+| `test_main_window.py` | `test_a_started_test_keeps_its_own_settings` |  |  | A started test keeps its own settings. |
+| `test_main_window.py` | `test_failed_stock_cores_stop_at_step_2` |  |  | Failed stock cores stop at step 2. |
+| `test_main_window.py` | `test_passed_stock_cores_offer_the_unlock` |  |  | Passed stock cores offer the unlock. |
+| `test_main_window.py` | `test_only_a_click_on_unlock_answers_yes` |  |  | Only a click on unlock answers yes. |
+| `test_main_window.py` | `test_after_the_unlock_the_window_restarts_and_comes_back` |  |  | After the unlock the window restarts and comes back. |
+| `test_main_window.py` | `test_a_paused_unlock_restart_offers_restart` |  |  | A paused unlock restart offers restart. |
+| `test_main_window.py` | `test_cores_gone_after_a_power_off_offer_the_unlock_again` |  |  | Cores gone after a power off offer the unlock again. |
+| `test_main_window.py` | `test_after_the_restart_the_new_cores_are_next` |  |  | After the restart the new cores are next. |
+| `test_main_window.py` | `test_the_new_cores_go_on_or_restart_first` |  |  | The new cores go on or restart first. |
+| `test_main_window.py` | `test_after_a_login_the_test_goes_on` |  |  | After a login the test goes on. |
+| `test_main_window.py` | `test_a_power_off_during_the_test_turns_the_cores_on_again` |  |  | A power off during the test turns the cores on again. |
+| `test_main_window.py` | `test_healthy_cores_can_be_installed` |  |  | Healthy cores can be installed. |
+| `test_main_window.py` | `test_installed_with_all_cores_on_is_finished` |  |  | Installed with all cores on is finished. |
+| `test_main_window.py` | `test_a_failing_core_advises_the_stock_cores` |  |  | A failing core advises the stock cores. |
+| `test_main_window.py` | `test_staying_stock_needs_a_power_off_then_is_finished` |  |  | Staying stock needs a power off then is finished. |
+| `test_main_window.py` | `test_the_rows_say_what_came_out` |  |  | The rows say what came out. |
+| `test_main_window.py` | `test_the_scripts_questions` |  |  | The scripts questions. |
+| `test_main_window.py` | `test_the_live_attempt` |  |  | The live attempt. |
+| `test_main_window.py` | `test_quiet_between_attempts` |  |  | Quiet between attempts. |
+| `test_main_window.py` | `test_only_a_test_blocks_sleep` |  |  | Only a test blocks sleep. |
+| `test_main_window.py` | `test_the_window_never_opens_higher_than_the_screen` |  |  | The window never opens higher than the screen. |
+| `test_main_window.py` | `test_details_and_advanced_are_pills_on_the_actions_row` |  |  | No "Other actions" label: the step's pills on the left, Details and Advanced as pills at the right end of the same row (owner, 24-11-2026). |
+| `test_main_window.py` | `test_the_window_opens_at_its_width_and_fits_its_page_once_shown` |  |  | Never at a wider saved width, and as high as its page after it shows: before that, the page doesn't know its height yet (owner, 24-11-2026: a first window cut half of it off). |
+| `test_main_window.py` | `test_all_cores_on_without_results_opens` |  |  | All 8 cores on and no results, as after Start over with the boot service installed: the window opens. |
+| `test_main_window.py` | `test_tooltips_have_rounded_corners` |  |  | The tooltips as the suite's other apps show them: a rounded box on the window's dark background. |
+| `test_main_window.py` | `test_every_step_has_one_thing_to_do` |  |  | The current step's row names one thing to do, and its pill sits on that row. |
+| `test_options.py` | `test_defaults_are_the_scripts_own` |  |  | Defaults are the scripts own. |
+| `test_options.py` | `test_every_switch_reaches_the_command_line` |  |  | Every switch reaches the command line. |
+| `test_options.py` | `test_validation` |  |  | Validation. |
+| `test_options.py` | `test_load_tools` |  |  | Load tools. |
+| `test_resume.py` | `test_arm_and_disarm` |  |  | Arm and disarm. |
+| `test_resume.py` | `test_the_entry_opens_the_same_code_and_scripts` |  |  | Installed or from a checkout: this Python, this package's folder and the window's own scripts. |
+| `test_resume.py` | `test_restart_reports_when_it_may_not` |  |  | Restart reports when it may not. |
+| `test_session.py` | `test_a_session` |  |  | A session. |
+| `test_session.py` | `test_one_terminal_for_every_run` |  |  | The second run uses the same shell and terminal, so sudo, which remembers per terminal, asks only once. |
+| `test_session.py` | `test_stop_ends_the_script_and_keeps_the_terminal` |  |  | Stop ends the script and keeps the terminal. |
+| `test_session.py` | `test_a_test_run_blocks_sleep_until_it_ends` |  |  | With block_sleep the script runs under systemd-inhibit; its exit code comes through. |
 
 ## apps/datstation
 
@@ -1006,7 +1077,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 |---|---|---|---|---|
 | `test_catalog.py` | `test_the_portal_lists_every_quickfix` |  |  | The portal lists every quickfix. |
 | `test_catalog.py` | `test_the_groups_are_board_tests_installers` |  |  | The groups are board tests installers. |
-| `test_catalog.py` | `test_mprime_goes_where_cpu_tools_looks_and_is_checked_first` |  |  | Prime95's mprime: unpacked into ~/mprime, the first place CPU Tools' bisect looks in, with a link in ~/.local/bin, where this window looks; the download is compared with a pinned SHA-256 before it is unpacked. |
+| `test_catalog.py` | `test_mprime_goes_where_cpu_tools_looks_and_is_checked_first` |  |  | Prime95's mprime: unpacked into ~/mprime, the first place Core Unlock's bisect looks in, with a link in ~/.local/bin, where this window looks; the download is compared with a pinned SHA-256 before it is unpacked. |
 | `test_catalog.py` | `test_how_follows_ostree` |  |  | How follows ostree. |
 | `test_kargs.py` | `test_split_and_join_keep_the_line` |  |  | Split and join keep the line. |
 | `test_kargs.py` | `test_every_argument_of_the_ps5_lines_is_described` |  |  | Every argument of the ps5 lines is described. |
@@ -2583,7 +2654,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_dependencies.py` | `test_satisfies` | 10 |  | Satisfies. |
 | `test_dependencies.py` | `test_tool_check_reports_path` |  |  | Tool check reports path. |
 | `test_dependencies.py` | `test_tools_are_found_in_the_apps_extra_folders` |  |  | A launch from the menu may lack ~/.local/bin on PATH; the apps look there anyway. |
-| `test_dependencies.py` | `test_mprime_is_found_where_its_download_is_unpacked` |  |  | mprime is a tarball from mersenne.org, unpacked into ~/mprime and on no PATH: found where CPU Tools looks. |
+| `test_dependencies.py` | `test_mprime_is_found_where_its_download_is_unpacked` |  |  | mprime is a tarball from mersenne.org, unpacked into ~/mprime and on no PATH: found where Core Unlock looks. |
 | `test_dependencies.py` | `test_either_speed_test_will_do` |  |  | Either speed test will do. |
 | `test_dependencies.py` | `test_flashrom_check_requires_internal_programmer` | 2 |  | Flashrom check requires internal programmer. |
 | `test_dependencies.py` | `test_latest_pypi_version_uses_project_json` |  |  | Latest pypi version uses project json. |

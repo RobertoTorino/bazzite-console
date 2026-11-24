@@ -1,3 +1,26 @@
+Changelog: 24-11-2026 12:21:30
+
+Breaking. The app is now called PS5 CU Unlock, before PS5 CU Tools. The app key compute, its folder and file names
+stay. The bottom row no longer has the label Other actions, and its pills start at the left. Show details and Show
+advanced are now the pills Details and Advanced at the right end of that row. Under the name they say Show or Hide.
+The window always opens 900 pixels wide, also when it was wider before. It fits its height to the page once it shows,
+so a first window no longer cuts half of the page off. The tooltips are rounded boxes on the window's dark background,
+as in the suite's other apps. The wiki's picture of the window shows the new row.
+
+Changelog: 24-11-2026 04:05:33
+
+Fixed. Install no longer writes the masks to the GPU while the desktop runs, because that can freeze the board.
+ps5-cu-unlock.sh --install only saves the masks and turns on the boot service. The unlock turns on at the next restart.
+ps5-cu-bisect.sh measures the GPU load from each program's gfx and compute time in /proc/<pid>/fdinfo when the kernel
+can't fill gpu_busy_percent. The results then no longer say "GPU load only reached 0%".
+
+Added. The window runs the CU test itself, in four steps, and no terminal opens anymore. The steps are rows at the top.
+Each row says what came out of it or the one thing to do now, with its pill on the row. The steps are Scan, Safety
+check, Test each WGP, and Choose and install. A CU map shows every WGP's state and each row's mask. By default every
+attempt runs in one boot. With Same boot off, the window restarts the board after each attempt and opens again after
+the login. The board doesn't go to sleep during a test, and a notification says when the test ends. When everything
+is done, a green bar says that you're finished.
+
 Changelog: 22-11-2026 21:58:22
 
 Release 0.2.0.

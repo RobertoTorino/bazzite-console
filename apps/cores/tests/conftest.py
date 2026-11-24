@@ -39,6 +39,13 @@ def home(tmp_path, monkeypatch):
     return home
 
 
+@pytest.fixture(autouse=True)
+def no_boot_service(tmp_path, monkeypatch):
+    """The boot service the window reads is a file in the temp folder, never the one installed on this machine."""
+    from cores_bisect import progress
+    monkeypatch.setattr(progress, "UNLOCK_UNIT", tmp_path / "ps5-cores-unlock.service")
+
+
 @pytest.fixture
 def unlock_script(tmp_path) -> Path:
     """Stands in for ps5-cores-unlock.sh: --status prints one line, nothing else runs."""

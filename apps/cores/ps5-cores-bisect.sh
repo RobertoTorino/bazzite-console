@@ -2,45 +2,47 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # ps5-cores-bisect.sh - finds out whether the PS5's 2 fused-off CPU cores are healthy
-# before you trust (or persist) the 8C/16T core unlock.
+# before you trust or keep the 8C/16T core unlock.
 #
-# The SMU primitive that enables the cores (queue-3 message 0x98) can only write 0xFF to the
-# core presence mask: all 8 cores or none. So unlike a GPU CU bisect we cannot unlock one core
-# at a time. Instead the script isolates the cores under test AFTER the unlock:
+# The SMU primitive that turns the cores on (queue-3 message 0x98) can only write 0xFF to the
+# core presence mask. That means all 8 cores or none. So unlike a GPU CU bisect, the script
+# cannot unlock one core at a time. It isolates the cores under test AFTER the core unlock instead.
 #
-#   control       before the unlock, on the stock 6C/12T: a verified CPU load on all stock
+#   control       before the core unlock, on the stock 6C/12T. A verified CPU load on all stock
 #                 cores. If the control fails, the board, power, heat or the load tool is at
 #                 fault, and the new-core verdicts can't blame your cores.
-#   post-control  after the unlock: the same pinned load on a stock core. Separates "the
-#                 unlock destabilises the whole SoC" from "a new core is bad".
-#   coreN         each newly appeared core on its own: the load pinned to only its 2 threads.
-#   combined      both new cores together (more power at the same voltage).
+#   post-control  after the core unlock. The same pinned load on a stock core. It separates "the
+#                 core unlock destabilizes the whole SoC" from "a new core is bad".
+#   coreN         each newly appeared core on its own. The load is pinned to only its 2 threads.
+#   combined      both new cores together. They draw more power at the same voltage.
 #
-# Every item runs several rounds (interleaved). By default each attempt gets its own boot;
-# warm reboots preserve the unlock, so that costs nothing. Failures are detected three ways:
-# machine-check events in the kernel log (attributed to the tested CPUs when possible),
-# stress-ng --verify computation errors (wrong results, not only crashes), and full crashes
-# (recorded crash-safe on the next run, like a fsck journal).
+# Every item runs several rounds, and the rounds are interleaved. By default each attempt gets
+# its own boot. Warm restarts keep the core unlock, so that costs nothing. The script finds
+# failures in three ways. It reads machine-check events from the kernel log. stress-ng --verify
+# reports computation errors, so wrong results count and not only crashes. The next run records
+# a full crash, like a fsck journal.
 #
 # For a longer, harsher burn-in there are two optional extras, both off by default:
-#   --load mprime|both  also (or instead) run mprime's self-checking torture test. Small in-place
-#                       FFTs are the heaviest AVX/FMA load this SoC will ever see and mprime checks
-#                       every result, so it catches silent miscalculation that stress-ng misses.
+#   --load mprime|both  also run mprime's self-checking torture test, or run it instead. Small
+#                       in-place FFTs are the heaviest AVX/FMA load this SoC will ever see. mprime
+#                       checks every result, so it catches silent miscalculation that stress-ng misses.
 #   --rasdaemon         count hardware errors through rasdaemon's ras-mc-ctl as well as the kernel
-#                       log. rasdaemon keeps a persistent database, so errors are still counted when
+#                       log. rasdaemon keeps a persistent database. So errors still count when
 #                       the journal is volatile or the attempt ends in a crash.
 #
 # Verdict per core: "fails every time" = likely a genuinely bad core. "Random" = more likely
-# power, heat or the unlock itself. Because the primitive is all-or-nothing, ONE bad core
-# means: do not use the unlock at all - cold boot to revert, and don't install persistence.
+# power, heat or the core unlock itself. The primitive is all-or-nothing. So with ONE bad core,
+# do not use the core unlock at all. Cold boot to revert, and don't install the boot service.
 #
-# The script refuses boards whose presence mask isn't the usual 0x77: a different mask
+# The script refuses boards whose presence mask isn't the usual 0x77. A different mask
 # suggests a real harvest of defective silicon.
 #
-# Known side effect of the unlock: pp_dpm_sclk / hwmon freq1_input report nonsense GPU
-# clocks afterwards. That is cosmetic and expected; this script ignores GPU clocks.
+# Known side effect of the core unlock: pp_dpm_sclk and hwmon freq1_input report nonsense GPU
+# clocks afterward. That is cosmetic and expected. This script ignores GPU clocks.
 #
-# Run it as your desktop user; sudo is used only for setpci and the kernel log.
+# Run it as your desktop user. It uses sudo for setpci and the kernel log. It also uses sudo to
+# stop the governor's service for the SMU write, for ras-mc-ctl, and for a restart that
+# systemctl refuses without it.
 #
 # Usage: ./ps5-cores-bisect.sh [options]
 #   -t, --time SECS       CPU load per attempt (default 600, minimum 60)
@@ -48,9 +50,13 @@
 #       --load TOOL       load tool: stress-ng (default), mprime, or both
 #       --mprime-bin PATH mprime binary (default: $PATH, then ~/mprime/mprime)
 #       --rasdaemon       also count hardware errors with ras-mc-ctl (needs rasdaemon)
-#       --same-boot       don't reboot between bisect attempts (faster, less isolation)
-#       --auto            no prompts; auto-reboot after each attempt and continue after every
-#                         login (needs the autostart unit, see the manual) until all items are done
+#       --same-boot       don't restart between bisect attempts (faster, less isolation)
+#       --auto            don't ask anything. Restart after each attempt, and go on after every
+#                         login until every item is done. This needs the autostart unit, see the wiki.
+#       --only ITEM       run only the attempts of one item, for example post-control. The window
+#                         runs the post-control's rounds first this way. The report stays as it is.
+#       --scan            read the presence mask, the cores and what a run needs, then exit. It
+#                         writes nothing to the SMU.
 #       --status          show the results so far and write the report, then exit
 #       --reset           delete the results and start over
 #   -V, --version         show the version
@@ -62,21 +68,23 @@ set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
 VERSION="0.2.0"
-STRESS_SECS="" ROUNDS_OPT="" SAME_BOOT=0 AUTO=0 MODE=run
+STRESS_SECS="" ROUNDS_OPT="" SAME_BOOT=0 AUTO=0 MODE=run ONLY=""
 LOAD_TOOL_OPT="" MPRIME_BIN_OPT="" RAS_OPT=""
 LOAD_TOOL=stress-ng MPRIME_BIN="" STRESS_BIN="" RAS=0 MPRIME_DIR=""
 
 say()  { printf '%s\n' "$*"; }
 hdr()  { printf '\n=== %s ===\n' "$*"; }
 die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
-ask()  { # prompt [default-used-in---auto-mode]; only the answer goes to stdout (callers capture it)
+ev()   { [[ -z ${PS5_GUI:-} ]] || printf '@@ %s\n' "$*"; }   # a line for Core Unlock's window (PS5_GUI=1), not for people
+ask()  { # prompt [default-used-in---auto-mode] [name for the window]; only the answer goes to stdout (callers capture it)
   local prompt=$1 def=${2:-}
   if (( AUTO )); then say "$prompt -> auto: ${def:-(none)}" >&2; printf '%s' "$def"; return 0; fi
+  if [[ -n ${PS5_GUI:-} ]]; then say "$prompt" >&2; ev ask "${3:-question}" >&2; local a; read -r a; printf '%s' "$a"; return 0; fi
   local a; read -rp "$prompt " a; printf '%s' "$a"
 }
 do_reboot() { # --no-ask-password: fail instead of raising a GUI auth popup, then fall back to sudo
   systemctl reboot --no-ask-password 2>/dev/null || sudo -n systemctl reboot 2>/dev/null \
-    || { say "Could not reboot automatically; reboot WARM by hand (do not power off)."; exit 1; }
+    || { say "Could not restart by itself. Do a WARM restart by hand, and do not power off."; exit 1; }
 }
 usage() { sed -n '4,/^$/{s/^# \{0,1\}//;p;}' "$0"; }   # the header comment, after the SPDX line and the blank
 
@@ -98,6 +106,8 @@ while (( $# )); do
     --mprime-bin) MPRIME_BIN_OPT=${2:-}; shift ;;
     --rasdaemon)  RAS_OPT=1 ;;
     --same-boot)  SAME_BOOT=1 ;;
+    --only)       ONLY=${2:-}; shift ;;
+    --scan)       MODE=scan ;;
     --auto)       AUTO=1 ;;
     --status)     MODE=status ;;
     --reset)      MODE=reset ;;
@@ -191,12 +201,12 @@ apply_unlock() { # one SMU write of 0xFF to the presence mask; takes effect on t
   local was_active=0 st mask
   if systemctl is-active --quiet "$GOVERNOR_UNIT" 2>/dev/null; then
     was_active=1
-    say "Stopping $GOVERNOR_UNIT (it shares the SMU mailbox)..."
+    say "Stopping $GOVERNOR_UNIT, which shares the SMU mailbox..."
     sudo -n systemctl stop "$GOVERNOR_UNIT" || { say "Could not stop the governor."; return 1; }
   fi
   st=$(smu_send "$MSG_WRITE_FF" "$MASK_REG"); local rc=$?
   (( was_active )) && sudo -n systemctl start "$GOVERNOR_UNIT" 2>/dev/null
-  (( rc == 0 )) || { say "SMU mailbox timed out. Do NOT retry blindly; reboot first."; return 1; }
+  (( rc == 0 )) || { say "SMU mailbox timed out. Do NOT retry blindly. Restart first."; return 1; }
   [[ $st == 0x01 ]] || { say "SMU message 0x98 returned $st (expected 0x01)."; return 1; }
   sleep 0.5
   mask=$(core_mask) || { say "Could not read the mask back."; return 1; }
@@ -311,7 +321,7 @@ item_verdict() { # item -> none|good|bad|random
 draw_core_map() { # [current item]
   local cur=${1:-} c cell verdict
   set_colors
-  hdr "Core map (physical cores; 2 threads each)"
+  hdr "Core map of the physical cores, 2 threads each"
   read -ra BASE_IDS <<<"${BASE_CORES:-}"
   read -ra NEW_IDS <<<"${NEW_CORES:-}"
   if (( ! ${#NEW_IDS[@]} )); then # before the unlock: the fused-off cores are the IDs missing from 0-7
@@ -346,12 +356,14 @@ record() { # round item cpus outcome mces verify_errs maxtemp maxfreq note load_
   local IFS=$'\t'
   printf '%s\n' "${fields[*]}" >>"$RUNS"
   sync "$RUNS" 2>/dev/null
+  ev result "$1" "$2" "$4"
 }
 attempt_done() { awk -F'\t' -v r="$1" -v i="$2" '$3==r && $4==i && $6!="ABORTED"{f=1} END{exit !f}' "$RUNS"; }
 next_attempt() { # prints "round item" of the first attempt without a result
   local r it
   for (( r = 1; r <= ROUNDS; r++ )); do
     for it in "${ITEMS[@]}"; do
+      [[ -z $ONLY || $it == "$ONLY" ]] || continue
       attempt_done "$r" "$it" || { echo "$r $it"; return 0; }
     done
   done
@@ -375,7 +387,8 @@ summary() {
   local shown=("${ITEMS[@]}") ctrl_tries=0 mixed=() loads want
   # after the unlock the control is history, but its verdict still frames everything else
   [[ $PHASE != control ]] && shown=(control "${ITEMS[@]}")
-  hdr "Results  (phase: $PHASE, rounds: $ROUNDS, load: $(load_desc) per attempt)"
+  hdr "Results"
+  say "Phase: $PHASE   Rounds: $ROUNDS   Load: $(load_desc) per attempt"
   [[ -n ${BASE_CORES:-} ]] && draw_core_map
   printf '%-14s %-6s %s\n' "Item" "Tries" "Verdict and outcomes"
   for it in "${shown[@]}"; do
@@ -399,7 +412,7 @@ summary() {
       verdict="FAILS EVERY TIME"; (( mces )) && verdict+=" (machine-check events)"
       (( ! mces && mprime_fails )) && verdict+=" (mprime miscalculations)"
       [[ $it == core* || $it == combined ]] && consistent+=("$it")
-    elif (( fails == tries )); then verdict="failed (only 1 try so far)"
+    elif (( fails == tries )); then verdict="failed, only 1 try so far"
     else verdict="RANDOM ($fails of $tries failed)"; [[ $it == core* || $it == combined ]] && random+=("$it")
     fi
     [[ $it == control ]] && (( fails )) && ctrl_fail=1
@@ -419,26 +432,26 @@ summary() {
   say ""
   say "What this means:"
   if (( ${#mixed[@]} )); then
-    say "- Not every attempt ran the current load ($(load_desc)): ${mixed[*]}"
-    say "  (see 'load per attempt'). The settings changed during the run. Shorter or lighter"
-    say "  attempts still count, but they are weaker evidence; use --reset for a uniform result."
+    say "- Not every attempt ran the current load, $(load_desc). See 'load per attempt' for"
+    say "  ${mixed[*]}. The settings changed during the run. Shorter or lighter attempts still"
+    say "  count, but they are weaker evidence. Use --reset for a uniform result."
   fi
   if (( ctrl_tries && ctrl_tries < ROUNDS )); then
-    say "- The control ran $ctrl_tries round(s), fewer than the current $ROUNDS: it finished before"
-    say "  the rounds were raised. It still passed, but with less evidence than the other items."
+    say "- The control ran $ctrl_tries round(s), fewer than the current $ROUNDS. It finished before"
+    say "  you raised the rounds. It still passed, but with less evidence than the other items."
   fi
   if (( ctrl_fail )); then
     say "- The CONTROL failed on the stock 6 cores, before any unlock. The board, power, heat or"
-    say "  the load tool is at fault. Fix that first; nothing can be concluded about the new cores."
+    say "  the load tool is at fault. Fix that first. Until then the results say nothing about the new cores."
   fi
   if (( postctrl_fail )); then
-    say "- POST-CONTROL failed: a stock core fails after the unlock. The unlock destabilises the"
-    say "  whole SoC on this board (or power/heat changed). Cold boot to revert; don't persist."
+    say "- POST-CONTROL failed. A stock core fails after the core unlock. It destabilizes the"
+    say "  whole SoC on this board, or power or heat changed. Cold boot to revert, and don't keep it."
   fi
   if (( ${#consistent[@]} )) && (( ! ctrl_fail && ! postctrl_fail )); then
     say "- Fail every time: ${consistent[*]}. This looks like genuinely bad silicon. The SMU"
-    say "  primitive can only enable ALL cores, so a single bad core means: do not use this"
-    say "  unlock at all. Cold boot (full power off) to revert, and don't install persistence."
+    say "  primitive can only enable ALL cores. So with a single bad core, do not use this"
+    say "  unlock at all. Cold boot (full power off) to revert, and don't install the boot service."
   fi
   if (( ${#random[@]} )); then
     say "- Fail at random: ${random[*]}. A bad core normally fails every time, so this points to"
@@ -446,17 +459,18 @@ summary() {
   fi
   if awk -F'\t' '$6=="MPRIME-FAIL"{f=1} END{exit !f}' "$RUNS"; then
     say "- MPRIME-FAIL means mprime computed a wrong result without the kernel noticing anything."
-    say "  That is silent data corruption: treat it exactly like a machine-check event."
+    say "  That is silent data corruption. Treat it exactly like a machine-check event."
   fi
   if awk -F'\t' '$6=="RAS-ERROR"{f=1} END{exit !f}' "$RUNS"; then
     say "- RAS-ERROR means rasdaemon recorded a hardware error the load itself survived. Check the"
-    say "  details with 'ras-mc-ctl --errors'; corrected errors still indicate marginal silicon."
+    say "  details with 'ras-mc-ctl --errors'. Corrected errors still point to marginal silicon."
   fi
   if (( done_n < total )); then
     say "- $done_n of $total attempts done. Run the script again to continue."
   elif [[ $PHASE == bisect ]] && (( ! ctrl_fail && ! postctrl_fail && ! ${#consistent[@]} && ! ${#random[@]} )); then
-    say "- Every new core passed every round, alone and combined. The unlock looks safe on this"
-    say "  board. Make it survive reboots (reapplied + one warm reboot after each cold boot):"
+    say "- Every new core passed every round, alone and combined. The core unlock looks safe on this"
+    say "  board. To keep it, install the boot service. It applies the core unlock again after"
+    say "  every cold boot, and then does one warm restart."
     say "  sudo ./ps5-cores-unlock.sh --install"
   fi
 }
@@ -489,7 +503,7 @@ write_report() { # report + every raw file of the run in ~/Desktop/ps5-cores-bis
 
 # ------------------------------------------------------------------ state ---
 if [[ $MODE == reset ]]; then
-  [[ $(ask "Delete all results in $STATE_DIR and start over? [y/N]" n) =~ ^[Yy]$ ]] || exit 0
+  [[ $(ask "Delete all results in $STATE_DIR and start over? [y/N]" n reset) =~ ^[Yy]$ ]] || exit 0
   rm -f "$CONFIG" "$RUNS" "$PENDING" "$LASTBOOT"; rm -rf "$LOGS" "$STATE_DIR/mprime"
   say "Results deleted."; exit 0
 fi
@@ -520,11 +534,11 @@ if [[ $MODE == status ]]; then
 fi
 
 # -------------------------------------------------------------- preflight ---
-(( EUID != 0 )) || die "run this as your normal desktop user, not as root; it uses sudo only for setpci and the kernel log."
+(( EUID != 0 )) || die "run this as your normal desktop user, not as root. It uses sudo itself where root is needed."
 command -v lspci >/dev/null 2>&1 && command -v setpci >/dev/null 2>&1 || die "lspci/setpci not found. Install pciutils."
-lspci -nn 2>/dev/null | grep -qi '1002:13fe' || die "no PS5 (1002:13fe) found; refusing to touch the SMU."
+lspci -nn 2>/dev/null | grep -qi '1002:13fe' || die "no PS5 (1002:13fe) found. Refusing to touch the SMU."
 if [[ $LOAD_TOOL == stress-ng || $LOAD_TOOL == both ]]; then
-  STRESS_BIN=$(command -v stress-ng 2>/dev/null) || die "stress-ng not found. Install it, or use --load mprime."
+  STRESS_BIN=$(command -v stress-ng 2>/dev/null) || [[ $MODE == scan ]] || die "stress-ng not found. Install it, or use --load mprime."
 fi
 if [[ $LOAD_TOOL == mprime || $LOAD_TOOL == both ]]; then
   if [[ -z $MPRIME_BIN || ! -x $MPRIME_BIN ]]; then
@@ -533,14 +547,14 @@ if [[ $LOAD_TOOL == mprime || $LOAD_TOOL == both ]]; then
              [[ -x $p ]] && { MPRIME_BIN=$p; break; }
            done; }
   fi
-  [[ -n $MPRIME_BIN && -x $MPRIME_BIN ]] || die "mprime not found. Install it (or pass --mprime-bin PATH); see the manual. Prime95/mprime is a separate download from mersenne.org."
-  command -v timeout >/dev/null 2>&1 || die "timeout not found (coreutils); it is what stops mprime after --time seconds."
-  cfg_set MPRIME_BIN "$MPRIME_BIN"
+  [[ -n $MPRIME_BIN && -x $MPRIME_BIN ]] || [[ $MODE == scan ]] || die "mprime not found. Install it, or pass --mprime-bin PATH. The wiki says how. Prime95/mprime is a separate download from mersenne.org."
+  command -v timeout >/dev/null 2>&1 || die "timeout (coreutils) not found. It stops mprime after --time seconds."
+  [[ $MODE == scan ]] || cfg_set MPRIME_BIN "$MPRIME_BIN"
 fi
 if (( RAS )); then
-  command -v ras-mc-ctl >/dev/null 2>&1 || die "--rasdaemon: ras-mc-ctl not found. Install rasdaemon (Fedora/Bazzite: rpm-ostree install rasdaemon)."
+  command -v ras-mc-ctl >/dev/null 2>&1 || [[ $MODE == scan ]] || die "--rasdaemon: ras-mc-ctl not found. Install rasdaemon (Fedora/Bazzite: rpm-ostree install rasdaemon)."
   if ! systemctl is-active --quiet rasdaemon 2>/dev/null; then
-    say "WARNING: --rasdaemon: the rasdaemon service is not active, so nothing is being recorded."
+    say "WARNING: --rasdaemon: the rasdaemon service is not active, so it records nothing."
     say "         Start it first: sudo systemctl enable --now rasdaemon"
   fi
   sudo -n ras-mc-ctl --errors >/dev/null 2>&1 || RAS_NEEDS_PROBE=1
@@ -555,11 +569,28 @@ sudo -n true 2>/dev/null || sudo -v || die "sudo failed."
 KEEPALIVE=$!
 # re-probe now that sudo credentials are cached: ras-mc-ctl always needs root
 if (( RAS )) && [[ -n ${RAS_NEEDS_PROBE:-} ]] && ! sudo -n ras-mc-ctl --errors >/dev/null 2>&1; then
-  say "WARNING: --rasdaemon: 'sudo -n ras-mc-ctl --errors' failed; hardware errors will not be counted."
+  say "WARNING: --rasdaemon: 'sudo -n ras-mc-ctl --errors' failed. The script will not count hardware errors."
 fi
 
 MASK=$(core_mask) || die "could not read the core presence mask (SMN $(printf '0x%X' "$MASK_REG")) via $NB_BDF."
 NT=$(nthreads)
+
+# ------------------------------------------------------------------- scan ---
+if [[ $MODE == scan ]]; then
+  SERVICE=$(systemctl is-enabled ps5-cores-unlock.service 2>/dev/null); SERVICE=${SERVICE:-not-found}
+  hdr "Scan (reads only, writes nothing to the SMU)"
+  say "Presence mask: $MASK   Threads online: $NT   Cores online: $(online_core_ids)"
+  say "ps5-cores-unlock.service: $SERVICE"
+  say "stress-ng: ${STRESS_BIN:-not found}"
+  ev scan mask "$MASK"
+  ev scan threads "$NT"
+  ev scan cores "$(online_core_ids)"
+  ev scan service "$SERVICE"
+  ev scan stress-ng "$(command -v stress-ng 2>/dev/null || echo -)"
+  ev scan load "$LOAD_TOOL"
+  kill "$KEEPALIVE" 2>/dev/null
+  exit 0
+fi
 
 # -------------------------------------------------- crash from last boot ----
 if [[ -s $PENDING ]]; then
@@ -567,7 +598,7 @@ if [[ -s $PENDING ]]; then
   P_TOOL=${P_TOOL:-stress-ng}
   if [[ $P_BOOT != "$BOOT_ID" ]]; then
     hdr "The last attempt did not finish"
-    say "Round $P_ROUND, $P_ITEM (CPUs $P_CPUS): the system went down while the load was running."
+    say "Round $P_ROUND, $P_ITEM (CPUs $P_CPUS). The system went down while the load was running."
     PREV=$(sudo -n journalctl -k -b -1 --no-pager 2>/dev/null | grep -E "$MCE_RE" | tail -5)
     [[ -n $PREV ]] && { say "Machine-check lines in the previous boot:"; say "$PREV"; }
     # rasdaemon survives the crash the journal may not have recorded, so show what it kept
@@ -575,9 +606,9 @@ if [[ -s $PENDING ]]; then
       PREV_RAS=$(ras_error_lines | tail -5)
       [[ -n $PREV_RAS ]] && { say "Most recent hardware errors recorded by rasdaemon:"; say "$PREV_RAS"; }
     fi
-    if [[ $(ask "Did the system freeze, crash or reboot by itself? [Y/n]" y) =~ ^[Nn]$ ]]; then
+    if [[ $(ask "Did the system freeze, crash or restart by itself? [Y/n]" y crash) =~ ^[Nn]$ ]]; then
       record "$P_ROUND" "$P_ITEM" "$P_CPUS" ABORTED - - - - "rebooted by hand during the attempt" - "$P_TOOL" -
-      say "Recorded as interrupted; this attempt will run again."
+      say "Recorded as interrupted. This attempt will run again."
     else
       record "$P_ROUND" "$P_ITEM" "$P_CPUS" CRASH-LOAD "$(grep -c . <<<"$PREV")" - - - "system went down" "${P_SECS:--}" "$P_TOOL" -
       say "Recorded as CRASH-LOAD."
@@ -595,12 +626,12 @@ if (( AUTO )); then
     # a finished run disables the unit (auto_cleanup); re-arm it for this run
     if ! systemctl --user is-enabled --quiet "$AUTO_UNIT" 2>/dev/null; then
       systemctl --user enable "$AUTO_UNIT" 2>/dev/null \
-        && say "Re-enabled $AUTO_UNIT so this run continues after every reboot." \
-        || say "WARNING: could not enable $AUTO_UNIT; the run will stop at the next reboot."
+        && say "Re-enabled $AUTO_UNIT, so this run continues after every restart." \
+        || say "WARNING: could not enable $AUTO_UNIT. The run will stop at the next restart."
     fi
   else
-    say "WARNING: $AUTO_UNIT is not installed: nothing will restart this script after a"
-    say "reboot, so --auto cannot continue on its own. See ps5-cores-bisect-auto.service.example."
+    say "WARNING: $AUTO_UNIT is not installed. Nothing will start this script again after a"
+    say "restart, so --auto cannot continue on its own. See ps5-cores-bisect-auto.service.example."
   fi
 fi
 
@@ -608,15 +639,15 @@ fi
 if [[ $PHASE == control ]]; then
   if [[ $MASK == 0xff ]]; then
     if (( NT >= 16 )); then
-      die "all 8 cores are already enabled and online: an unlock is already active. The control
+      die "all 8 cores are already enabled and online, so an unlock is already active. The control
        must run on the stock 6C/12T. Full power off (cold boot) to revert, then run this again."
     fi
-    die "the presence mask is already 0xFF (an unlock was applied this boot). The control must run
-       on the stock state: full power off (cold boot) to revert, then run this again."
+    die "the presence mask is already 0xFF, so an unlock was applied in this boot. The control must run
+       on the stock state. Full power off (cold boot) to revert, then run this again."
   fi
   if [[ $MASK != 0x77 ]]; then
     die "the core presence mask is $MASK, not the usual 0x77. On this board the disabled cores
-       were very likely fused off for real defects. Not unlocking; nothing to bisect."
+       were very likely fused off for real defects. Not unlocking, so there is nothing to bisect."
   fi
   if [[ -z $BASE_CORES ]]; then
     BASE_CORES=$(online_core_ids)
@@ -627,18 +658,23 @@ elif [[ $PHASE == unlock-pending ]]; then
   if [[ $MASK == 0xff ]] && (( NT > BASE_THREADS )); then
     NOW_IDS=$(online_core_ids)
     NEW_CORES=$(comm -13 <(tr ' ' '\n' <<<"$BASE_CORES" | sort) <(tr ' ' '\n' <<<"$NOW_IDS" | sort) | sort -n | tr '\n' ' ' | sed 's/ $//')
-    [[ -n $NEW_CORES ]] || die "mask is 0xFF and extra threads are online, but no new core_ids found. Topology unclear; stopping."
+    [[ -n $NEW_CORES ]] || die "mask is 0xFF and extra threads are online, but no new core_ids found. The topology is unclear, so the script stops."
     cfg_set NEW_CORES "$NEW_CORES"; cfg_set PHASE bisect; PHASE=bisect
-    say "Unlock took effect: new cores detected: $NEW_CORES ($NT threads online)."
+    say "The core unlock took effect. New cores detected: $NEW_CORES ($NT threads online)."
   elif [[ $MASK == 0xff ]]; then
-    die "the mask is 0xFF but the extra cores are not online yet. Reboot (warm) and run this again."
+    die "the mask is 0xFF, but the extra cores are not online yet. Do a warm restart and run this again."
   else
-    say "The unlock did not survive (mask $MASK): a cold boot reverts it. Re-applying..."
+    say "The core unlock did not survive (mask $MASK). A cold boot reverts it. The script offers it again."
     cfg_set PHASE control; PHASE=control   # fall through: control is already done, re-offer unlock below
   fi
 fi
 
 build_plan
+# --only names an item of the bisect phase; before the unlock (or after a cold boot reverted it) the control runs
+if [[ -n $ONLY && " ${ITEMS[*]} " != *" $ONLY "* ]]; then
+  [[ $PHASE == bisect ]] && die "--only needs an item of this run: ${ITEMS[*]}"
+  ONLY=""
+fi
 
 hdr "PS5 cores bisect $VERSION"
 say "Phase: $PHASE   Presence mask: $MASK   Threads online: $NT"
@@ -650,14 +686,14 @@ say "Rounds: $ROUNDS   Load: $(load_desc)   Mode: $([[ $SAME_BOOT == 1 ]] && ech
 # changing -t/-r mid-run silently mixes evidence; say so before the new values are saved
 if awk -F'\t' '$6!="ABORTED"{f=1} END{exit !f}' "$RUNS"; then
   CHANGES=()
-  [[ -n $OLD_TIME && $OLD_TIME != "$STRESS_SECS" ]] && CHANGES+=("load ${OLD_TIME}s -> ${STRESS_SECS}s: earlier attempts keep their ${OLD_TIME}s and still count")
-  [[ -n $OLD_ROUNDS && $OLD_ROUNDS != "$ROUNDS" ]] && CHANGES+=("rounds $OLD_ROUNDS -> $ROUNDS$([[ $PHASE != control ]] && echo ': the control is already done and keeps its rounds')")
-  [[ -n $OLD_LOAD_TOOL && $OLD_LOAD_TOOL != "$LOAD_TOOL" ]] && CHANGES+=("load tool $OLD_LOAD_TOOL -> $LOAD_TOOL: earlier attempts were run with $OLD_LOAD_TOOL and still count")
+  [[ -n $OLD_TIME && $OLD_TIME != "$STRESS_SECS" ]] && CHANGES+=("load ${OLD_TIME}s -> ${STRESS_SECS}s. Earlier attempts keep their ${OLD_TIME}s and still count")
+  [[ -n $OLD_ROUNDS && $OLD_ROUNDS != "$ROUNDS" ]] && CHANGES+=("rounds $OLD_ROUNDS -> $ROUNDS$([[ $PHASE != control ]] && echo '. The control is already done and keeps its rounds')")
+  [[ -n $OLD_LOAD_TOOL && $OLD_LOAD_TOOL != "$LOAD_TOOL" ]] && CHANGES+=("load tool $OLD_LOAD_TOOL -> $LOAD_TOOL. Earlier attempts ran with $OLD_LOAD_TOOL and still count")
   if (( ${#CHANGES[@]} )); then
     hdr "Settings changed during a run"
     for w in "${CHANGES[@]}"; do say "- $w"; done
-    say "The report will list the load per attempt. For a uniform result: --reset and start over."
-    [[ $(ask "Continue with the new settings? [y/N]" y) =~ ^[Yy]$ ]] || exit 0
+    say "The report will list the load per attempt. For a uniform result, use --reset and start over."
+    [[ $(ask "Continue with the new settings? [y/N]" y settings) =~ ^[Yy]$ ]] || exit 0
   fi
 fi
 cfg_set ROUNDS "$ROUNDS"; cfg_set TIME "$STRESS_SECS"; cfg_set LOAD_TOOL "$LOAD_TOOL"; cfg_set RAS "$RAS"
@@ -669,50 +705,56 @@ offer_unlock() {
   for o in $outs; do [[ $o =~ $FAIL_RE ]] && (( fails++ )); done
   if (( fails )); then
     summary
-    say ""; say "The control failed: fix the board/power/heat first. Not offering the unlock."
+    say ""; say "The control failed. Fix the board, power or heat first. The script does not offer the core unlock."
     exit 1
   fi
   summary
   hdr "Control passed - ready to unlock"
-  say "Next step: one SMU write sets the presence mask to 0xFF (all 8 cores). It only takes"
-  say "effect on the next reboot, and a full power off reverts it. Nothing is persisted yet."
-  [[ $(ask "Apply the unlock now? [y/N]" y) =~ ^[Yy]$ ]] || { say "Stopped before the unlock."; exit 0; }
+  say "The next step is one SMU write. It sets the presence mask to 0xFF (all 8 cores). It only takes"
+  say "effect on the next restart, and a full power off reverts it. Nothing stays after a power off yet."
+  [[ $(ask "Apply the core unlock now? [y/N]" y unlock) =~ ^[Yy]$ ]] || { say "Stopped before the core unlock."; exit 0; }
   cfg_set BASE_THREADS "$NT"
-  apply_unlock || die "the unlock failed; nothing was changed persistently. See the message above."
+  apply_unlock || die "the core unlock failed. Nothing lasting changed. See the message above."
   cfg_set PHASE unlock-pending
-  say "Mask is 0xFF. Reboot (warm - do NOT power off) to bring the cores up."
-  if (( AUTO )); then say "Auto-rebooting (--auto)..."; do_reboot
+  ev unlocked
+  say "The mask is 0xFF. Do a warm restart to bring the cores up, and do NOT power off."
+  if (( AUTO )); then say "Restarting by itself (--auto)..."; do_reboot
   else
-    [[ $(ask "Reboot now? [Y/n]" y) =~ ^[Nn]$ ]] || do_reboot
+    [[ $(ask "Restart now? [Y/n]" y restart) =~ ^[Nn]$ ]] || do_reboot
   fi
   exit 0
 }
 
 if ! NEXT=$(next_attempt); then
   if [[ $PHASE == control ]]; then offer_unlock
-  else summary; write_report; exit 0; fi
+  else
+    summary; ev finished
+    [[ -n $ONLY ]] || write_report
+    exit 0
+  fi
 fi
 
 # ---------------------------------------------------------- safety checks ---
 if [[ $SAME_BOOT == 0 && $(cat "$LASTBOOT" 2>/dev/null) == "$BOOT_ID" ]]; then
   say ""
-  say "An attempt already ran in this boot. Reboot (warm, to keep the unlock) and run the"
-  say "script again (or use --same-boot). Next: round ${NEXT% *}, ${NEXT#* }."
-  (( AUTO )) && { say "Auto-rebooting (--auto)..."; do_reboot; }
+  say "An attempt already ran in this boot. Do a warm restart, which keeps the core unlock. Then run"
+  say "the script again, or use --same-boot. Next: round ${NEXT% *}, ${NEXT#* }."
+  ev restart-first
+  (( AUTO )) && { say "Restarting by itself (--auto)..."; do_reboot; }
   exit 0
 fi
 WARNINGS=()
-[[ $PHASE == bisect && $MASK != 0xff ]] && die "phase is bisect but the mask is $MASK: a cold boot reverted the unlock. Run the script again; it will re-apply and reboot."
+[[ $PHASE == bisect && $MASK != 0xff ]] && die "the phase is 'bisect', but the mask is $MASK. A cold boot reverted the core unlock. Run the script again. It will apply it again and restart."
 LOADAVG=$(awk '{print int($1)}' /proc/loadavg)
 (( LOADAVG > 1 )) && WARNINGS+=("The system is busy (load $LOADAVG). Background work on the tested cores muddies the result.")
 if (( ${#WARNINGS[@]} )); then
   hdr "Before you start"
   for w in "${WARNINGS[@]}"; do say "- $w"; done
-  [[ $(ask "Continue anyway? [y/N]" y) =~ ^[Yy]$ ]] || exit 0
+  [[ $(ask "Continue anyway? [y/N]" y warnings) =~ ^[Yy]$ ]] || exit 0
 fi
 say ""
 say "WARNING: a genuinely bad core can freeze the system or corrupt data under load."
-say "Save your work. After a freeze: reboot and run the script again; it records the crash."
+say "Save your work. After a freeze, restart and run the script again. It then records the crash."
 
 # ----------------------------------------------------------------- attempt --
 LOAD_PID=""
@@ -737,9 +779,10 @@ monitor_load() { # cpus - watch $LOAD_PID, track the peaks, return the load's ex
     sleep 5
     v=$(cpu_temp); (( v > MON_MAXT )) && MON_MAXT=$v
     v=$(cpu_freq "$cpus"); (( v > MON_MAXF )) && MON_MAXF=$v
-    printf '\r  %3ds  %s C  %s MHz   ' "$(( SECONDS - start ))" "$MON_MAXT" "$MON_MAXF"
+    if [[ -n ${PS5_GUI:-} ]]; then ev load "$(( SECONDS - start ))" "$STRESS_SECS" "$MON_MAXT" "$MON_MAXF"
+    else printf '\r  %3ds  %s C  %s MHz   ' "$(( SECONDS - start ))" "$MON_MAXT" "$MON_MAXF"; fi
   done
-  wait "$LOAD_PID"; rc=$?; LOAD_PID=""; echo
+  wait "$LOAD_PID"; rc=$?; LOAD_PID=""; [[ -n ${PS5_GUI:-} ]] || echo
   return $rc
 }
 
@@ -748,6 +791,7 @@ run_attempt() { # round item
   local log mlog ras0=0 ras_new=0 mp_failed=0
   log="$LOGS/$(date '+%Y%m%d-%H%M%S')-r$1-$2.log"; mlog="${log%.log}-mprime.log"
   hdr "Round $r/$ROUNDS: $it  (CPUs $cpus)"
+  ev attempt "$r" "$it" "${cpus:--}"
   [[ -n ${BASE_CORES:-} ]] && draw_core_map "$it"
   if [[ -z $cpus ]]; then
     record "$r" "$it" "-" OFFLINE - - - - "no online CPUs found for this item" - "$LOAD_TOOL" -; return 0
@@ -760,8 +804,11 @@ run_attempt() { # round item
   MON_MAXT=0 MON_MAXF=0
 
   if [[ $LOAD_TOOL == stress-ng || $LOAD_TOOL == both ]]; then
+    ev phase stress-ng
     say "Running stress-ng --verify on CPUs $cpus for ${STRESS_SECS}s..."
-    taskset -c "$cpus" "$STRESS_BIN" --cpu "$n" --cpu-method all --verify \
+    # --temp-path: stress-ng 0.22 refuses to start in a folder it can't write, such as the root-owned app folder the
+    # window starts in, even for --cpu.
+    taskset -c "$cpus" "$STRESS_BIN" --cpu "$n" --cpu-method all --verify --temp-path "$LOGS" \
       --timeout "${STRESS_SECS}s" --metrics-brief </dev/null >"$log" 2>&1 &
     LOAD_PID=$!
     monitor_load "$cpus"; rc=$?
@@ -770,6 +817,7 @@ run_attempt() { # round item
   fi
   # mprime runs after stress-ng (not next to it) so the two never fight over the same threads
   if [[ $LOAD_TOOL == mprime || $LOAD_TOOL == both ]] && (( rc == 0 )); then
+    ev phase mprime
     say "Running mprime torture test on CPUs $cpus for ${STRESS_SECS}s..."
     if mprime_start "$it" "$cpus" "$n" "$STRESS_SECS" "$mlog"; then
       local mp_rc; monitor_load "$cpus"; mp_rc=$?
@@ -805,9 +853,9 @@ auto_cleanup() { # the run is finished: stop the --auto loop from coming back at
   rm -f "$HOME/.config/autostart/ps5-cores-bisect-watch.desktop"
   # disable WITHOUT --now: this script may be running inside that very unit
   if systemctl --user disable "$AUTO_UNIT" 2>/dev/null; then
-    say "All attempts are done: disabled $AUTO_UNIT and removed the"
+    say "All attempts are done. Disabled $AUTO_UNIT and removed the"
     say "live-output autostart entry. Nothing will start at the next login."
-    say "(A new --auto run re-enables the unit by itself.)"
+    say "A new --auto run re-enables the unit by itself."
   fi
 }
 
@@ -817,7 +865,11 @@ if [[ $SAME_BOOT == 1 ]]; then
     say "Cooling down 30 s..."; sleep 30
   done
   if [[ $PHASE == control ]] && ! next_attempt >/dev/null; then offer_unlock; fi
-  summary; next_attempt >/dev/null || { write_report; auto_cleanup; }
+  summary
+  if ! next_attempt >/dev/null; then
+    ev finished
+    [[ -n $ONLY ]] || { write_report; auto_cleanup; }
+  fi
 else
   run_attempt ${NEXT% *} "${NEXT#* }"
   if [[ $PHASE == control ]] && ! next_attempt >/dev/null; then offer_unlock; fi
@@ -825,14 +877,15 @@ else
   if NEXT=$(next_attempt); then
     say ""
     say "Next: round ${NEXT% *}, ${NEXT#* }. Each attempt needs a fresh boot."
-    say "Reboot WARM (do not power off): a cold boot reverts the unlock."
-    if (( AUTO )); then say "Auto-rebooting to continue (--auto)..."; do_reboot
+    say "Do a WARM restart and do not power off. A cold boot reverts the core unlock."
+    ev next "${NEXT% *}" "${NEXT#* }"
+    if (( AUTO )); then say "Restarting by itself to continue (--auto)..."; do_reboot
     else
-      [[ $(ask "Reboot now? [Y/n]" y) =~ ^[Nn]$ ]] || do_reboot
+      [[ $(ask "Restart now? [Y/n]" y restart) =~ ^[Nn]$ ]] || do_reboot
     fi
   else
-    write_report
-    auto_cleanup
-    say "Done. A full power off (cold boot) reverts the unlock to the stock 6C/12T."
+    ev finished
+    [[ -n $ONLY ]] || { write_report; auto_cleanup; }
+    say "Done. A full power off (cold boot) reverts the core unlock to the stock 6C/12T."
   fi
 fi

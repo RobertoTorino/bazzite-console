@@ -642,7 +642,7 @@ Every app has the icon of its category. `icons/categories.toml` assigns them, an
 | --- | --- | --- |
 | <img src="icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | PCSX2 Manager (`pcsx2`)<br>PPSSPP Manager (`ppsspp`)<br>PS5 DatStation (`datstation`)<br>RPCS3 Manager (`rpcs3`)<br>Remote Play (`remoteplay`)<br>Vita3K Manager (`vita3k`)<br>XBOX Remote Play (`clb`)<br>Xenia Manager (`xenia`)<br>shadPS4 Manager (`shadps4`) |
 | <img src="icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | PS5 Upscaler Manager (`upscaler`) |
-| <img src="icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | PS5 Board Test (`board`)<br>PS5 CPU Tools (`cores`)<br>PS5 CU Tools (`compute`)<br>PS5 Fan Controller (`fan`)<br>PS5 System Overlay (`overlay`) |
+| <img src="icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | PS5 Board Test (`board`)<br>PS5 CU Unlock (`compute`)<br>PS5 Core Unlock (`cores`)<br>PS5 Fan Controller (`fan`)<br>PS5 System Overlay (`overlay`) |
 | <img src="icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | PS5 Bluetooth (`bluetooth`)<br>PS5 CEC Manager (`cec`)<br>PS5 Controller (`controller`)<br>PS5 Password Generator (`password`)<br>PS5 Quickfix (`quickfix`)<br>PS5 SFTP Tools (`sftp`)<br>PS5 SSD Check (`ssd`)<br>PS5 Turing Screen (`turing`)<br>PS5 Webcam (`webcam`) |
 
 ### The portal's symbols
@@ -723,7 +723,9 @@ Characters of the font that the apps use as icons in labels and buttons.
 | Nexus Installer Tests | ✓ ✗ |
 | Nexus Release Tool | ✓ ▶ ● ↓ ↑ |
 | PS5 Board Test | ✔ ✖ ✕ ⚠ ▶ ■ ↓ ↑ › 💡 🎮 |
+| PS5 CU Unlock | ■ |
 | PS5 Controller | ✓ ✕ › △ ○ □ |
+| PS5 Core Unlock | ✔ ✖ ▶ ■ |
 | PS5 DatStation | ← △ ○ □ ◇ ◆ ★ |
 | PS5 Quickfix | ● ○ |
 | PS5 SFTP Tools | ✓ ✗ ⚠ ↓ ↑ ← |

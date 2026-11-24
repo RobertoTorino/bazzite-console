@@ -34,10 +34,10 @@ def test_a_finished_clean_bisect_is_accepted(state):
     ({"phase": "control", "runs": [(1, "control", "PASS")]}, "hasn't started yet"),
     ({"runs": all_passed(), "pending": True}, "still marked as in progress"),
     ({"rounds": 0, "runs": all_passed()}, "No valid round count"),
-    ({"runs": [(1, "control", "MCE"), *all_passed()[1:]]}, "The control (stock 6C/12T"),
+    ({"runs": [(1, "control", "MCE"), *all_passed()[1:]]}, "The control failed. It runs on the stock 6C/12T"),
     ({"runs": [r for r in all_passed() if r[1] != "control"]}, "No control result"),
     ({"runs": [*all_passed()[:1], (1, "post-control", "VERIFY"), *all_passed()[2:]]}, "POST-CONTROL failed"),
-    ({"runs": all_passed()[:5]}, "isn't finished: 4 of 8"),
+    ({"runs": all_passed()[:5]}, "isn't finished. 4 of 8"),
 ])
 def test_rejections(state, kwargs, reason):
     result = check(state(**kwargs))

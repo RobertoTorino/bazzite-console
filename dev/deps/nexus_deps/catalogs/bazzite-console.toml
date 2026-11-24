@@ -70,11 +70,11 @@ name = "PS5 System Overlay"
 launchers = ["~/.local/bin/ps5-system-overlay"]
 
 [app.compute]
-name = "PS5 CU Tools"
+name = "PS5 CU Unlock"
 launchers = ["~/.local/bin/ps5-bisect-gui"]
 
 [app.cores]
-name = "PS5 CPU Tools"
+name = "PS5 Core Unlock"
 launchers = ["~/.local/bin/ps5-cores-bisect-gui"]
 
 [app.fan]
@@ -173,7 +173,7 @@ usage = "Fallback GPU load during CU testing."
 [[tool]]
 name = "setpci"
 rpm = "pciutils"
-description = "Reads and writes PCI configuration registers (pciutils). CPU Tools reaches the PS5's SMU through them to switch CPU cores."
+description = "Reads and writes PCI configuration registers (pciutils). Core Unlock reaches the PS5's SMU through them to switch CPU cores."
 executables = ["setpci"]
 root = true
 
@@ -186,7 +186,7 @@ anchor = "requirements"
 [[tool]]
 name = "lspci"
 rpm = "pciutils"
-description = "Lists the PCI devices (pciutils). CPU Tools uses it to make sure the board is a PS5 before it touches the SMU."
+description = "Lists the PCI devices (pciutils). Core Unlock uses it to make sure the board is a PS5 before it touches the SMU."
 executables = ["lspci"]
 
 [[tool.source]]

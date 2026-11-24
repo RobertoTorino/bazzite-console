@@ -23,7 +23,7 @@ SUITE = Path(__file__).resolve().parents[3]
 PREFIX = "nexus_deps.dependencies"
 TOOLS = {"pkexec", "udevadm", "systemctl", "firewall-cmd", "notify-send", "paplay", "cec-ctl", "FFmpeg",
          "bluetoothctl", "dbus-python", "PyGObject", "kwriteconfig6",
-         # CU Tools and CPU Tools, as they came from the twin (owner, 20-11-2026)
+         # CU Unlock and Core Unlock, as they came from the twin (owner, 20-11-2026)
          "umr", "memtest_vulkan", "stress-ng", "vkpeak", "vkmark", "glmark2", "setpci", "lspci", "taskset", "mprime",
          "ras-mc-ctl", "sudo", "journalctl"}
 # Tools of the kinds this suite's catalog has none of, for the checks every catalog may ask for: one of two commands,
@@ -319,7 +319,7 @@ def test_tools_are_found_in_the_apps_extra_folders(tmp_path, monkeypatch):
 
 
 def test_mprime_is_found_where_its_download_is_unpacked(tmp_path, monkeypatch):
-    """mprime is a tarball from mersenne.org, unpacked into ~/mprime and on no PATH: found where CPU Tools looks."""
+    """mprime is a tarball from mersenne.org, unpacked into ~/mprime and on no PATH: found where Core Unlock looks."""
     mprime = next(tool for tool in load_tools(CATALOG) if tool.name == "mprime")
     script = (SUITE / "apps" / "cores" / "ps5-cores-bisect.sh").read_text(encoding="utf-8")
     looked = re.search(r"for p in (.+?); do\n\s+\[\[ -x \$p \]\] && { MPRIME_BIN=\$p", script).group(1)
