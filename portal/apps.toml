@@ -8,8 +8,8 @@
 [apps.board]
 name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-board-v0.13.0"
-sha256 = "ff9b3628d9b164b0d6d45d1559a9a69701c95edc7598f7b4daf422da72d9e2c2"
+tag = "ps5-board-v0.13.1"
+sha256 = ""
 required = true
 changes_board = false
 category = "sustainable"
@@ -241,8 +241,8 @@ launch = [["Open", "~/.local/bin/ps5-fan-controller"]]
 [apps.compute]
 name = "PS5 CU Unlock"
 summary = "Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock."
-tag = "ps5-compute-v0.2.0"
-sha256 = "8a5ccac9799983d59741145a51e0621b2f2640a9634c449b6a9e5c6e6137f7ab"
+tag = "ps5-compute-v1.0.0"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
@@ -266,8 +266,8 @@ launch = [["Open", "~/.local/bin/ps5-bisect-gui"]]
 [apps.cores]
 name = "PS5 Core Unlock"
 summary = "Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock."
-tag = "ps5-cores-v0.2.0"
-sha256 = "f50d350db7633d9df384256b58c14ba527f555707610a2ab5e1b4db32a2d4b33"
+tag = "ps5-cores-v1.0.0"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
@@ -326,8 +326,8 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 [apps.quickfix]
 name = "PS5 Quickfix"
 summary = "Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal, Ethernet First and the boot command line. Always installed."
-tag = "ps5-quickfix-v0.8.0"
-sha256 = "bd4097f983170c605fe49d2a2f3a3048837d439300b21fc47ba3c8ed0c54297c"
+tag = "ps5-quickfix-v0.8.1"
+sha256 = ""
 required = true
 changes_board = false
 category = "utilities"
