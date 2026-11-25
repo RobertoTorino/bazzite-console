@@ -1,3 +1,7 @@
+Changelog: 25-11-2026 18:17:28
+
+Release 5.3.0.
+
 Changelog: 25-11-2026 15:19:34
 
 Fixed. The Discord and YouTube symbols open Brave Browser in a maximized window. They opened it fullscreen in kiosk mode before. The window has its tabs, its address bar and its close button.
