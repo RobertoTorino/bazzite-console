@@ -10,7 +10,7 @@ name: Runner packages
 description: Qt's libraries and Bazzite's font from GitHub's cache
 inputs:
   pulse:
-    description: Also libpulse0, for Qt Multimedia in the apps' tests
+    description: Also libpulse0 and libva, for Qt Multimedia in the apps' tests
     default: "false"
   font:
     description: Also Bazzite's font, for the tests that measure a window and the picture of the portal

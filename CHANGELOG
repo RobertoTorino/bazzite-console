@@ -1,3 +1,9 @@
+Changelog: 25-11-2026 05:16:25
+
+Fixed. CI's app tests of Remote Play and XBOX Remote Play stop before a test runs, as in bc250-bazzite. PyQt6-Qt6
+6.12.1 links Qt Multimedia to libva and libva-drm, which GitHub's runner lacks. tools/ci-qt-libs.sh --pulse now
+also installs libva2 and libva-drm2. The board has both libraries, so the apps are unchanged.
+
 Changelog: 24-11-2026 20:47:37
 
 Added. The Portal Tour has a voice that reads every caption out, from Nexus TTS's speech engine in its default voice
