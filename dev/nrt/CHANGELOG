@@ -1,3 +1,10 @@
+Changelog: 25-11-2026 17:01:45
+
+Fixed. When GitHub's servers fail during Push, the step now says the fault is GitHub's. It names
+"! [remote rejected] ... (fatal error ...)" and HTTP 5xx answers. It said only that the push ended with exit code 1.
+githubstatus.com can report such a fault only minutes later, so the GitHub status pill stayed green. When GitHub
+refuses a push for another reason, the step shows GitHub's reason.
+
 Changelog: 24-11-2026 20:47:37
 
 Fixed. The tooltip of Record new video now says the recording takes a few minutes, with the voice of Nexus TTS's

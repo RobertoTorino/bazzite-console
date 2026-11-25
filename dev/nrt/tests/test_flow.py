@@ -688,6 +688,19 @@ def test_why_a_push_ended_badly():
         "CI failed here on pytest/apps/pcsx2, so nothing was pushed.")
     assert flow.push_failure("", None).startswith("The push was stopped")
     assert "exit code 1" in flow.push_failure("! [rejected] main -> main (fetch first)\n", 1)
+    # 25-11-2026: GitHub's own fault, while githubstatus.com still said all was well
+    broken = ("7 of 7 jobs passed; logs in ~/.cache/bazzite-console-ci-local/logs\nremote: fatal error in commit_refs_rules\n"
+              "To https://github.com/o/r.git\n ! [remote rejected] main -> main (fatal error in commit_refs_rules\n)\n"
+              "error: failed to push some refs to 'https://github.com/o/r.git'\n")
+    assert flow.push_failure(broken, 1).startswith("GitHub's servers failed during the push, so nothing was pushed.")
+    assert flow.push_failure("error: RPC failed; HTTP 503 curl 22\n", 1).startswith("GitHub's servers failed")
+    assert flow.push_failure("fatal: unable to access 'https://github.com/o/r.git/': The requested URL returned "
+                             "error: 500\n", 1).startswith("GitHub's servers failed")
+    declined = " ! [remote rejected] main -> main (push declined due to repository rule violations)\n"
+    assert flow.push_failure(declined, 1) == ("GitHub refused the push, so nothing was pushed. GitHub's reason is "
+                                              "\"push declined due to repository rule violations\". The Commands "
+                                              "tab says more.")
+    assert "exit code 1" in flow.push_failure("a job's own line: fatal error in a fixture\n", 1)    # not git's
     assert flow.step_states(flow.Facts(ahead=1, push_failed="x"))["push"] == "failed"
     assert flow.step_states(flow.Facts(ahead=1))["push"] == "now"
 

@@ -659,8 +659,10 @@ Drawn with QPainter in the portal's `glyphs.py`, in the theme's text color. Each
 | `install_apps` | Three apps of a grid of four, an arrow down in the place of the fourth. |
 | `install_updates` | A circular arrow around an arrow down. |
 | `menu` | ☰: three bars. |
+| `minimize` | A bar: the portal hides in the system tray. As bold as the close symbol beside it. |
 | `close` | A cross: the portal's exit. |
 | `steam` | Steam: a disc with a piston's rod cut out of it, a large ring at its head and a small one at its foot. |
+| `discord` | Discord: a round, wide face on two short legs, its two eyes cut out of it. |
 | `folder` | A folder: the file manager. |
 | `youtube` | A screen with a play triangle. |
 | `github` | GitHub: a disc with a cat cut out of it, its head with two ears, its body and its tail. |

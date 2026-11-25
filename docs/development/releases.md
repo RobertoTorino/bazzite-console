@@ -67,6 +67,10 @@ explanation.
    pills count the jobs done and name a job that failed (GitHub knows nothing of this push yet). When a job fails,
    nothing is pushed and the step turns red, with the job's name and where its log is; fix it, commit and push, or
    push again when it was no fault of the code.
+   Sometimes GitHub's servers fail during the push. Git then shows a line such as
+   `! [remote rejected] main -> main (fatal error in commit_refs_rules)`. The step then says the fault is GitHub's.
+   [githubstatus.com](https://www.githubstatus.com) may report it only minutes later. Wait a few minutes, then push
+   again. When GitHub refuses the push for another reason, the step shows GitHub's reason.
 4. **CI passes:** the step waits until GitHub's CI (`ci.yml`) passed on that commit. When it failed, the line says
    so. A test that failed: fix it, then commit and push again. GitHub's own trouble (an error of its servers, a job
    that never started; [githubstatus.com](https://www.githubstatus.com) says when Actions are degraded): **Run CI

@@ -663,8 +663,8 @@ def test_the_desktops_close_asks_only_while_something_runs(window, monkeypatch):
 
 
 def test_a_shortcut_starts_its_program(window, monkeypatch):
-    """The header's shortcuts (owner, 12-11-2026): the file manager, Steam, YouTube in Brave Browser, GitHub, and the
-    desktop's Bluetooth, network, sound and display settings. One whose program is missing says what is needed and
+    """The header's shortcuts (owner, 12-11-2026): the file manager, Steam, Discord and YouTube in Brave Browser,
+    GitHub, and the desktop's Bluetooth, network, sound and display settings. One whose program is missing says what is needed and
     starts nothing."""
     from bazzite_console_portal import shortcuts
     started, raised, said = [], [], []
@@ -679,15 +679,18 @@ def test_a_shortcut_starts_its_program(window, monkeypatch):
     for button in window.shortcut_buttons:
         button.click()
     assert started == [["xdg-open", str(Path.home())], ["steam"],
-                       ["flatpak", "run", "com.brave.Browser", "--kiosk", "https://www.youtube.com/"],
+                       ["flatpak", "run", "com.brave.Browser", "--start-maximized", "https://discord.com/app"],
+                       ["flatpak", "run", "com.brave.Browser", "--start-maximized", "https://www.youtube.com/"],
                        ["xdg-open", "https://github.com/"],
                        ["systemsettings", "kcm_bluetooth"], ["systemsettings", "kcm_networkmanagement"],
                        ["systemsettings", "kcm_pulseaudio"], ["systemsettings", "kcm_kscreen"]]
-    assert raised[1] == ("steam",) and len(raised) == 8 and said == []
+    assert raised[1] == ("steam",) and len(raised) == 9 and said == []
     started.clear()
     flatpaks[0] = 1                                             # Brave Browser is not installed
     window.youtube_button.click()
     assert started == [] and "Brave Browser is required" in said[-1]
+    window.discord_button.click()
+    assert started == [] and "to open Discord" in said[-1]
     monkeypatch.setattr(shortcuts.shutil, "which", lambda name: None)
     window.steam_button.click()
     window.bluetooth_button.click()
@@ -1146,25 +1149,27 @@ def test_one_theme_for_every_app(window, home):
 def test_the_header_is_an_apps_header_with_symbols(window):
     """The suite's icon, spanning the name, ☰ and the close symbol at the top right and the row of big symbols
     (owner, 05-11-2026, in place of the pills): Refresh, Sys info, Install all apps and Install all updates, then the
-    shortcuts (owner, 12-11-2026): Files, Steam, YouTube, GitHub, Bluetooth, Network, Volume and Screen, what each does in
-    its tooltip; on their right the installed count over the status. The Desktop
+    shortcuts (owner, 12-11-2026): Files, Steam, Discord, YouTube, GitHub, Bluetooth, Network, Volume and Screen, what
+    each does in its tooltip; on their right the installed count over the status. The Desktop
     icons, Sound, the theme, the wallpaper, the clock and the weather on the Settings page behind ☰ (owner,
     04-11-2026 and 05-11-2026)."""
     symbols = window.header_buttons
     listed = len(window.entries)
     sound = "Yes" if window.sounds.available() else "No"             # No on a machine without an audio output
     assert symbols == [window.refresh_button, window.sysinfo_button, window.apps_button, window.updates_button,
-                       window.files_button, window.steam_button, window.youtube_button, window.github_button,
-                       window.bluetooth_button, window.network_button, window.volume_button, window.screen_button]
+                       window.files_button, window.steam_button, window.discord_button, window.youtube_button,
+                       window.github_button, window.bluetooth_button, window.network_button, window.volume_button,
+                       window.screen_button]
     assert window.big.status.weather.isHidden()                         # no place chosen: no weather
-    corner = [window.settings_button, window.close_button]
+    corner = [window.settings_button, window.minimize_button, window.close_button]
     assert all(isinstance(s, mw.SymbolButton) for s in [*symbols, *corner])
     assert [s.toolTip().split(":")[0].split(".")[0] for s in [*symbols, *corner]] == [
-        "Refresh", "Sys info", "Install all apps", "Install all updates", "Files", "Steam", "YouTube", "GitHub",
-        "Bluetooth", "Network", "Volume", "Screen", "Settings", "Exit"]
-    assert [window.big.symbol_row.indexOf(s) for s in symbols] == list(range(12))
-    upper = window.big.upper                                            # the top right: ☰, then the close symbol
-    assert [upper.indexOf(s) for s in corner] == [upper.count() - 2, upper.count() - 1]
+        "Refresh", "Sys info", "Install all apps", "Install all updates", "Files", "Steam", "Discord", "YouTube",
+        "GitHub", "Bluetooth", "Network", "Volume", "Screen", "Settings", "Minimize",
+        "Exit"]
+    assert [window.big.symbol_row.indexOf(s) for s in symbols] == list(range(13))
+    upper = window.big.upper                                            # the top right: ☰, minimize, close
+    assert [upper.indexOf(s) for s in corner] == [upper.count() - 3, upper.count() - 2, upper.count() - 1]
     assert window.big.installed.text() == f"0/{listed} installed"
     assert " | " in window.big.status.text()
     assert [(p.value.text(), p.caption.text()) for p in window.setting_pills] == [
@@ -1612,3 +1617,30 @@ def test_the_touchpad_pill_steps_through_the_speeds(window):
     window.settings.setValue(mw.TOUCH_KEY, 333)                 # not a step: the normal speed
     assert window.touch_speed() == 100
 
+
+def test_minimize_hides_the_portal_in_the_tray(window, monkeypatch):
+    """The minimize symbol (owner, 25-11-2026): the portal hides and its icon shows in the system tray; a click on
+    that icon, or a second launch, brings the portal back as it was, and the tray icon goes. A desktop without a
+    system tray gets a plain minimize."""
+    from PyQt6.QtWidgets import QApplication, QSystemTrayIcon
+    from bazzite_console_core import instance
+    monkeypatch.setattr(QSystemTrayIcon, "isSystemTrayAvailable", staticmethod(lambda: True))
+    window.show()
+    QApplication.processEvents()
+    window.minimize_button.click()
+    QApplication.processEvents()
+    assert not window.isVisible() and window.tray.isVisible()
+    assert [a.text() for a in window.tray.contextMenu().actions()] == ["Show the portal", "Exit"]
+    window.tray.activated.emit(QSystemTrayIcon.ActivationReason.Trigger)
+    QApplication.processEvents()
+    assert window.isVisible() and not window.tray.isVisible()
+    window.minimize_button.click()
+    instance.raise_window(window)                       # a second launch of the portal
+    QApplication.processEvents()
+    assert window.isVisible() and not window.tray.isVisible()
+    window.tray = None
+    monkeypatch.setattr(QSystemTrayIcon, "isSystemTrayAvailable", staticmethod(lambda: False))
+    minimized = []
+    monkeypatch.setattr(window, "showMinimized", lambda: minimized.append(True))
+    window.minimize_button.click()
+    assert minimized == [True] and window.tray is None and window.isVisible()

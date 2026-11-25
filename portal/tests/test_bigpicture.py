@@ -474,23 +474,24 @@ def test_without_an_audio_output_the_pill_is_disabled_with_a_reason(made):
 # ------------------------------------------------------------------------------------------------ the header
 def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     """Big symbols in place of the pills (owner, 05-11-2026): all the same square size, their row ending at the bottom
-    of the suite's icon; ☰ at the top right, level with the title, and the close symbol in the corner beside it
-    (owner, 12-11-2026); on the right of the symbols the installed count over the status. Scaled with the view
+    of the suite's icon; ☰ at the top right, level with the title, then minimize (owner, 25-11-2026) and the close
+    symbol in the corner (owner, 12-11-2026); on the right of the symbols the installed count over the status. Scaled with the view
     on a handheld's screen."""
     window, _ = made()
     symbols = window.header_buttons
-    assert len(symbols) == 12 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
+    assert len(symbols) == 13 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
     window.show()
     window.resize(1920, 1080)
     QApplication.processEvents()
     QApplication.processEvents()
     big = window.big
-    corner, menu = window.close_button, window.settings_button
-    assert {(s.width(), s.height()) for s in [*symbols, menu, corner]} == {(bigpicture.SYMBOL_PX,
+    corner, menu, minimize = window.close_button, window.settings_button, window.minimize_button
+    assert {(s.width(), s.height()) for s in [*symbols, menu, minimize, corner]} == {(bigpicture.SYMBOL_PX,
                                                                             bigpicture.SYMBOL_PX)}
     at = lambda w: w.mapTo(big, w.rect().topLeft())  # noqa: E731
     at_x, at_y = (lambda w: at(w).x()), (lambda w: at(w).y())
-    assert at_x(menu) + menu.width() <= at_x(corner) and at_y(menu) == at_y(corner)     # ☰, then the close symbol
+    assert at_x(menu) + menu.width() <= at_x(minimize) and at_y(menu) == at_y(minimize)  # ☰, minimize, close
+    assert at_x(minimize) + minimize.width() <= at_x(corner) and at_y(minimize) == at_y(corner)
     bottom = lambda w: w.mapTo(big, w.rect().bottomLeft()).y()  # noqa: E731
     assert abs(bottom(symbols[0]) - bottom(big.logo)) <= 2                # the row ends at the icon's bottom
     assert at(corner).y() <= at(big.title).y() + big.title.height()       # ☰ at the top ...
@@ -500,7 +501,7 @@ def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     window.resize(1280, 720)
     QApplication.processEvents()
     QApplication.processEvents()
-    # Scaled with the view, or smaller still where twelve symbols and the status would not fit 1280 px (the width
+    # Scaled with the view, or smaller still where thirteen symbols and the status would not fit 1280 px (the width
     # of the status depends on the font), all the same size
     sides = {s.width() for s in symbols}
     assert big.scale < 1 and len(sides) == 1
@@ -866,7 +867,7 @@ def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
         big.set_weather(place, "-12°C  Thunderstorm, hail" if place else "", glyphs.weather("cloudy"), True, "")
         big.fit_symbols()
         symbols = [s for s in window.header_buttons if not s.isHidden()]
-        assert len(symbols) == 12
+        assert len(symbols) == 13
         assert big.status.weather.isHidden() is (not place)                   # the third line only with a place
         row = (sum(s.width() for s in symbols) + len(symbols) * big.symbol_row.spacing()
                + big.status.minimumSizeHint().width())

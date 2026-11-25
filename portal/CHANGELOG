@@ -1,3 +1,23 @@
+Changelog: 25-11-2026 15:19:34
+
+Fixed. The Discord and YouTube symbols open Brave Browser in a maximized window. They opened it fullscreen in kiosk mode before. The window has its tabs, its address bar and its close button.
+
+Changelog: 25-11-2026 14:00:36
+
+Fixed. The music no longer starts before the intro. Since the system tray came, the first show of the window started it, so it played over the intro. Closing the portal no longer pauses the music after it has stopped.
+
+Changelog: 25-11-2026 09:49:07
+
+Added. A minimize symbol between ☰ and the close symbol. It hides the portal in the system tray, where the portal's icon shows while it is hidden. A click on that icon brings the portal back, and so does starting the portal again. The icon's menu holds Show the portal and Exit. While hidden, the music waits and the portal reads no status, batteries or weather. On a desktop without a system tray, the portal minimizes to the taskbar.
+
+Changelog: 25-11-2026 09:42:05
+
+Fixed. The close symbol at the top right is drawn with a thicker line. It looked too thin beside the other symbols.
+
+Changelog: 25-11-2026 09:36:46
+
+Added. A Discord symbol in the header, right after Steam. It opens Discord fullscreen in Brave Browser's kiosk mode, as YouTube does. Alt+F4 closes it. Without Brave Browser, the portal says so and opens nothing. The row of symbols is more compact, so the extra symbol still fits a screen 1920 pixels wide. The symbols are 78 pixels instead of 84, with 6 pixels between them instead of 14. The glyphs keep their size.
+
 Changelog: 24-11-2026 21:45:07
 
 Release 5.2.0. Pins ps5-gpu-v0.1.1.

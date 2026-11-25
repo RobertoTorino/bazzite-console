@@ -138,9 +138,22 @@ def menu(color: str) -> QIcon:
     return _icon(color, draw, BIG)
 
 
+def minimize(color: str) -> QIcon:
+    """A bar: the portal hides in the system tray. As bold as the close symbol beside it."""
+    def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(9)
+        p.setPen(pen)
+        _line(p, (16, 32), (48, 32))
+    return _icon(color, draw, BIG)
+
+
 def close(color: str) -> QIcon:
     """A cross: the portal's exit."""
     def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(9)                                    # bolder than the others (owner, 25-11-2026: too thin)
+        p.setPen(pen)
         _line(p, (16, 16), (48, 48))
         _line(p, (48, 16), (16, 48))
     return _icon(color, draw, BIG)
@@ -164,6 +177,29 @@ def steam(color: str) -> QIcon:
         cut.setWidthF(4.5)
         p.setPen(cut)
         p.drawEllipse(QPointF(18, 42), 6, 6)                # the foot
+    return _icon(color, draw, BIG)
+
+
+def discord(color: str) -> QIcon:
+    """Discord: a round, wide face on two short legs, its two eyes cut out of it."""
+    def draw(p: QPainter) -> None:
+        face = QPainterPath(QPointF(20, 15))
+        face.quadTo(QPointF(32, 19), QPointF(44, 15))                                 # the top, a dip in its middle
+        face.cubicTo(QPointF(47, 15.5), QPointF(50, 16.5), QPointF(52, 18))
+        face.cubicTo(QPointF(54, 22), QPointF(58, 33), QPointF(58, 44))               # the right side
+        face.cubicTo(QPointF(54, 48), QPointF(49, 50), QPointF(45, 51))               # the right leg
+        face.lineTo(QPointF(42, 46))
+        face.quadTo(QPointF(32, 48.5), QPointF(22, 46))                               # the chin
+        face.lineTo(QPointF(19, 51))                                                  # the left leg
+        face.cubicTo(QPointF(15, 50), QPointF(10, 48), QPointF(6, 44))
+        face.cubicTo(QPointF(6, 33), QPointF(10, 22), QPointF(12, 18))                # the left side
+        face.cubicTo(QPointF(14, 16.5), QPointF(17, 15.5), QPointF(20, 15))
+        p.setBrush(QColor(color))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawPath(face)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+        for x in (24.5, 39.5):                                                        # the eyes
+            p.drawEllipse(QPointF(x, 33), 4.5, 5)
     return _icon(color, draw, BIG)
 
 

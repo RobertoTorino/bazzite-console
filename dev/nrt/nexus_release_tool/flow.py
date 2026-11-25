@@ -441,6 +441,11 @@ _CI_TOTAL = re.compile(r"^(\d+) jobs? from ci\.yml", re.M)
 _CI_JOB = re.compile(r"^\s+(ok|FAIL|skip)\s+(\S+)", re.M)
 CI_WAITING = "waiting until it ends"    # tools/ci-local.sh: another run goes on; this one waits for it
 CI_LOGS = "~/.cache/bazzite-console-ci-local/logs"
+# git push: GitHub turned the push down ("! [remote rejected] main -> main (reason"), or its servers failed (owner,
+# 25-11-2026: "fatal error in commit_refs_rules" twice, while githubstatus.com still said all was well)
+_REMOTE_REJECTED = re.compile(r"^\s*! \[remote rejected\] \S+ -> \S+ \(([^)\n]*)", re.M)
+_GITHUB_FAULT = re.compile(r"^(?:remote: .*fatal error|error: RPC failed; HTTP 5\d\d"
+                           r"|fatal: unable to access .*error: 5\d\d)", re.M | re.I)
 
 
 @dataclass(frozen=True)
@@ -485,6 +490,13 @@ def push_failure(output: str, code: int | None) -> str:
         return (f"CI failed here on {', '.join(failed)}, so nothing was pushed. Its output is on the Commands tab, each "
                 f"job's log in {CI_LOGS}. Fix it, Commit and Push; when it was no fault of the code (a crash that "
                 "does not come again), Push again.")
+    rejected = _REMOTE_REJECTED.search(output)
+    if _GITHUB_FAULT.search(output) or (rejected and "fatal error" in rejected[1]):
+        return ("GitHub's servers failed during the push, so nothing was pushed. The fault is GitHub's, not your "
+                "code's. githubstatus.com may report it only minutes later. Wait a few minutes, then Push again.")
+    if rejected:
+        return (f"GitHub refused the push, so nothing was pushed. GitHub's reason is \"{rejected[1].strip()}\". "
+                "The Commands tab says more.")
     return f"The push ended with exit code {code}, so nothing was pushed: the Commands tab says why. Then Push again."
 
 

@@ -15,13 +15,14 @@ to skip it. When the intro has played to its end, a short welcome sound follows.
 **The header**: the suite's icon, as large as a tile's (click it to watch the [Portal Tour](portal-tour.md) over the whole screen: **A** or Space pauses it, **B** or Esc closes it, and without a connection it opens in the browser), its name (click it to open this wiki) with the version,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
 for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal.
+Between them is **– Minimize**. It hides the portal in the system tray.
 Left of **☰ Settings** is a battery for each connected device with one, such as a controller, a mouse, a keyboard
 or a headset. The level is under it, and the fill turns red at 20 % or less. A yellow bolt means the device is
 charging. Hover a battery to see the device's name. Without such a device, no battery shows. Under
-them, in a row, twelve big symbols. Four act on the apps: **Refresh** (two
+them, in a row, thirteen big symbols. Four act on the apps: **Refresh** (two
 circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install all apps** (a grid of
-apps with an arrow down) and **Install all updates** (a circular arrow around an arrow down). Eight are shortcuts
-to what is outside the suite: **Files** (a folder), **Steam**, **YouTube** (a screen with a play triangle),
+apps with an arrow down) and **Install all updates** (a circular arrow around an arrow down). Nine are shortcuts
+to what is outside the suite: **Files** (a folder), **Steam**, **Discord** (a face with two eyes), **YouTube** (a screen with a play triangle),
 **GitHub** (a cat in a disc),
 **Bluetooth**, **Network**, **Volume** (a loudspeaker) and **Screen** (a screen on its foot). Each is described
 below. Hover a symbol to see what it does. The one with the focus is framed in silver, as a tile is; a symbol that
@@ -210,9 +211,12 @@ checkout, or give it a menu entry with its `install.sh`.
 - **Files**, a symbol at the top: opens the desktop's file manager (Dolphin on Bazzite's KDE Plasma) on your home
   folder.
 - **Steam**, a symbol at the top: opens Steam, or brings its window to the front when it runs already.
-- **YouTube**, a symbol at the top: opens YouTube fullscreen in Brave Browser's kiosk mode; Alt+F4 closes it. Brave
-  Browser must be installed as a Flatpak (`com.brave.Browser`, from Bazzite's software store or with
-  `flatpak install flathub com.brave.Browser`); without it the portal says so and opens nothing.
+- **Discord**, a symbol at the top, opens Discord in a maximized window of Brave Browser.
+  Brave Browser must be installed as a Flatpak, `com.brave.Browser`. Get it from Bazzite's software store, or with
+  `flatpak install flathub com.brave.Browser`. Without it, the portal says so and opens nothing.
+- **YouTube**, a symbol at the top, opens YouTube in a maximized window of Brave Browser.
+  Brave Browser must be installed as a Flatpak, `com.brave.Browser`. Get it from Bazzite's software store, or with
+  `flatpak install flathub com.brave.Browser`. Without it, the portal says so and opens nothing.
 - **GitHub**, a symbol at the top: opens github.com in the desktop's own browser, in a normal window with its tabs
   and address bar; a browser that runs already comes to the front with a new tab.
 - **Bluetooth**, **Network**, **Volume** and **Screen**, four symbols at the top: open the desktop's Bluetooth
@@ -220,6 +224,11 @@ checkout, or give it a menu entry with its `install.sh`.
   settings (the volume, the output and the input) and its display settings (the resolution, the refresh rate, the
   scaling). On KDE Plasma that is System Settings on that page, on GNOME its Settings.
 - **✕ Exit**, the symbol in the top right corner: closes the portal, as B and Escape do. See **Exiting** above.
+- **– Minimize**, left of **✕ Exit**, hides the portal in the system tray, next to the clock on the taskbar.
+  The portal's icon shows there while it is hidden. Click that icon to bring the portal back. Starting the
+  portal again from the menu or the Desktop brings it back too. Right-click the icon for **Show the portal**
+  and **Exit**. While the portal is hidden, its music waits. It reads no status, batteries or weather until it
+  comes back. On a desktop without a system tray, the portal goes to the taskbar instead.
 - **☰ Settings**, the symbol at the top right, or the ☰ button on the controller (Start, Options on a PlayStation
   controller): the Settings page, in place of the category strip and the tiles, under the same header. It holds
   the nine settings below, each a pill with a short line beside it; on a small screen the page scrolls, following

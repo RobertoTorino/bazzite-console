@@ -2,10 +2,12 @@
 """The portal window: one fullscreen view (bigpicture.py; owner, 01-11-2026: Suite Desktop Mode, the window of
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
 icon (a click plays the Portal Tour), spanning the name with the version and the stage, a line that says what the open
-category is for, ☰ and the close symbol at the top right, and under them a row of big symbols (owner, 05-11-2026: in
+category is for, ☰, minimize (to the system tray; owner, 25-11-2026) and the close symbol at the top right, and
+under them a row of big symbols (owner, 05-11-2026: in
 place of the pills): Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py),
 Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
-shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, YouTube (in Brave Browser), GitHub
+shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, Discord (in Brave Browser;
+owner, 25-11-2026), YouTube (in Brave Browser), GitHub
 (in the desktop's browser; owner, 18-11-2026), and the
 desktop's Bluetooth, Network, Volume (sound) and Screen (display) settings. On the right of the symbols
 how many apps are installed (installed / listed), and under it the status, a line each (owner, 12-11-2026): the
@@ -90,7 +92,7 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import (
     QAbstractButton, QAbstractSpinBox, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSlider, QTabBar,
-    QTextEdit, QVBoxLayout, QWidget, QWidgetAction,
+    QSystemTrayIcon, QTextEdit, QVBoxLayout, QWidget, QWidgetAction,
 )
 
 from bazzite_console_core import SUITE_MANUAL_URL, __version__ as CORE_VERSION, upstream
@@ -120,6 +122,7 @@ EXIT_QUESTION = "Do you really want to exit the Portal?"
 BACK_GRACE_S = 0.5
 # The header's shortcuts (owner, 12-11-2026): what a message calls each one, and what finds its program.
 SHORTCUTS = {"files": ("The file manager", shortcuts.files), "steam": ("Steam", shortcuts.steam),
+             "discord": ("Discord", shortcuts.discord),
              "youtube": ("YouTube", shortcuts.youtube), "github": ("GitHub", shortcuts.github),
              "bluetooth": ("The Bluetooth settings", shortcuts.bluetooth_settings),
              "network": ("The network settings", shortcuts.network_settings),
@@ -540,6 +543,7 @@ class MainWindow(QMainWindow):
         self.weather_at = ""                            # when the weather shown came: "14:32"
         self.weather_skipped = False                    # a time to ask came while the portal was minimized
         self.intro: Intro | None = None
+        self.started_up = False                         # start_up() ran and the window is not closing
         self.installed = installed
         self.launch = launch or (lambda argv: QProcess.startDetached(argv[0], argv[1:])[0])
         self.setWindowTitle(INFO.display_name)
@@ -601,18 +605,29 @@ class MainWindow(QMainWindow):
         self.close_button = SymbolButton(glyphs.close, "Exit: close the portal. B on the controller and Escape close "
                                          "it too.")
         self.close_button.clicked.connect(self.exit_portal)
+        # Left of the close symbol (owner, 25-11-2026): the portal hides in the system tray, its icon there brings it
+        # back. The tray icon shows only while the portal is hidden.
+        self.minimize_button = SymbolButton(glyphs.minimize, "Minimize: hide the portal in the system tray. Click "
+                                            "its icon there to bring it back.")
+        self.minimize_button.clicked.connect(self.hide_to_tray)
+        self.tray: QSystemTrayIcon | None = None       # made on the first minimize
+        self.tray_fullscreen = True                     # how the window comes back from the tray
         # The shortcuts (owner, 12-11-2026): programs outside the suite, started from the header (shortcuts.py).
         self.files_button = SymbolButton(glyphs.folder, "Files: open the file manager on your home folder.")
         self.steam_button = SymbolButton(glyphs.steam, "Steam: open Steam.")
-        self.youtube_button = SymbolButton(glyphs.youtube, "YouTube: open YouTube fullscreen in Brave Browser, which "
-                                           "must be installed as a Flatpak. Alt+F4 closes it.")
+        self.discord_button = SymbolButton(glyphs.discord, "Discord: open Discord in a maximized window of Brave "
+                                           "Browser, which must be installed as a Flatpak.")
+        self.youtube_button = SymbolButton(glyphs.youtube, "YouTube: open YouTube in a maximized window of Brave "
+                                           "Browser, which must be installed as a Flatpak.")
         self.github_button = SymbolButton(glyphs.github, "GitHub: open github.com in your browser.")
         self.bluetooth_button = SymbolButton(glyphs.bluetooth, "Bluetooth: open the desktop's Bluetooth settings.")
         self.network_button = SymbolButton(glyphs.network, "Network: open the desktop's network settings.")
         self.volume_button = SymbolButton(glyphs.volume, "Volume: open the desktop's sound settings.")
         self.screen_button = SymbolButton(glyphs.screen, "Screen: open the desktop's display settings.")
-        # In the row's order: Files before Steam (owner, 12-11-2026), GitHub after YouTube (owner, 18-11-2026)
-        self.shortcuts = {self.files_button: "files", self.steam_button: "steam", self.youtube_button: "youtube",
+        # In the row's order: Files before Steam (owner, 12-11-2026), Discord after Steam (owner, 25-11-2026),
+        # GitHub after YouTube (owner, 18-11-2026)
+        self.shortcuts = {self.files_button: "files", self.steam_button: "steam", self.discord_button: "discord",
+                          self.youtube_button: "youtube",
                           self.github_button: "github", self.bluetooth_button: "bluetooth",
                           self.network_button: "network",
                           self.volume_button: "sound", self.screen_button: "display"}
@@ -647,11 +662,11 @@ class MainWindow(QMainWindow):
         self.touch_pill.clicked.connect(self._next_touch_speed)
         # The settings have a page of their own behind ☰ (owner, 04-11-2026, as the earlier implementation's portal);
         # what acts on the apps stays in the header, as big symbols (owner, 05-11-2026), ☰ at the top right, and
-        # the close symbol in the corner itself (owner, 12-11-2026).
+        # the close symbol in the corner itself (owner, 12-11-2026), minimize left of it (owner, 25-11-2026).
         self.shortcut_buttons = list(self.shortcuts)
         self.header_buttons = [self.refresh_button, self.sysinfo_button, self.apps_button, self.updates_button,
                                *self.shortcut_buttons]
-        self.big.place_symbols(self.header_buttons, [self.settings_button, self.close_button])
+        self.big.place_symbols(self.header_buttons, [self.settings_button, self.minimize_button, self.close_button])
         self.status = status.Status()
         self.loads = self.status.loads()                # the first line at once, the load from the next sample
         self.loads_at = time.monotonic()
@@ -1142,14 +1157,74 @@ class MainWindow(QMainWindow):
         self.big.set_status(self.loads, status.clock_text(style=self.clock_style()))
 
     def show_batteries(self) -> None:
-        """A battery left of ☰ for each connected device with one; none read while the portal is minimized."""
-        if not self.isMinimized():
+        """A battery left of ☰ for each connected device with one; none read while the portal is minimized or in
+        the tray."""
+        if not self.isMinimized() and not self.in_tray():
             self.big.set_batteries(batteries.read())
+
+    # -------------------------------------------------------------------------------------------- the tray
+    def hide_to_tray(self) -> None:
+        """The minimize symbol: the portal hides, and its icon in the system tray brings it back. A desktop without
+        a system tray gets a plain minimize to its taskbar."""
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            self.showMinimized()
+            return
+        if self.tray is None:
+            self.tray = QSystemTrayIcon(QApplication.windowIcon(), self)
+            self.tray.setToolTip(f"{APP_NAME}: click to show the portal.")
+            self.tray.activated.connect(self._tray_activated)
+            menu = QMenu(self)
+            menu.addAction("Show the portal", self.show_from_tray)
+            menu.addAction("Exit", self._exit_from_tray)
+            self.tray.setContextMenu(menu)
+        self.tray_fullscreen = self.isFullScreen()
+        self.tray.show()
+        self.hide()
+
+    def in_tray(self) -> bool:
+        """Whether the portal is hidden in the system tray."""
+        return self.tray is not None and self.tray.isVisible()
+
+    def _exit_from_tray(self) -> None:
+        """Exit in the tray icon's menu: as the close symbol, and the application ends too, as a hidden window's
+        close does not end it by itself."""
+        if self.confirm_exit():
+            self.exit_confirmed = True
+            self.close()
+            QCoreApplication.quit()
+
+    def _tray_activated(self, reason) -> None:
+        if reason in (QSystemTrayIcon.ActivationReason.Trigger, QSystemTrayIcon.ActivationReason.DoubleClick):
+            self.show_from_tray()
+
+    def show_from_tray(self) -> None:
+        """The portal back from the tray, as it was: fullscreen or not, in front, the tray icon gone."""
+        if self.tray_fullscreen:
+            self.showFullScreen()
+        else:
+            self.showNormal()
+        self.raise_()
+        self.activateWindow()
+
+    def showEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        """Shown again, from the tray or by a second launch: the tray icon goes, and what waited goes on."""
+        super().showEvent(event)
+        if self.tray is not None:
+            self.tray.hide()
+        if self.weather_skipped:
+            self.update_weather()
+        if self.started_up:                             # the first show comes before the intro
+            self._sync_music()
+
+    def hideEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().hideEvent(event)
+        if self.started_up:                             # closing: the music stopped already
+            self._sync_music()                          # in the tray: the music waits
 
     def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.type() == QEvent.Type.WindowStateChange and not self.isMinimized() and self.weather_skipped:
             self.update_weather()                       # restored: the weather skipped while it was minimized
-        if event.type() == QEvent.Type.WindowStateChange:
+        if event.type() == QEvent.Type.WindowStateChange and self.started_up:
             self._sync_music()                          # minimized: the music waits
         if event.type() == QEvent.Type.ActivationChange and self.isActiveWindow():
             self.check_installed()                      # back from the terminal that installed a new portal
@@ -1429,7 +1504,7 @@ class MainWindow(QMainWindow):
             self.weather_timer.stop()
             return
         self.weather_timer.start()
-        self.weather_skipped = self.isMinimized()
+        self.weather_skipped = self.isMinimized() or self.in_tray()
         if self.weather_skipped:
             return
         place, fetch = self.place, self.weather_fetch
@@ -1617,6 +1692,7 @@ class MainWindow(QMainWindow):
         self._show_sound()
         self._show_music()
         self.gamepad.start()
+        self.started_up = True
         self.intro = Intro(self.big)
         self.intro.finished.connect(self._intro_done)
         self.intro.skipped.connect(self.sounds.stop)
@@ -2101,9 +2177,12 @@ class MainWindow(QMainWindow):
         self.gamepad.stop()
         self.mouse.close()
         self.raiser.close()
+        if self.tray is not None:
+            self.tray.hide()
         self.weather_timer.stop()
         self.weather_job.stop(2000)
         self.sounds.stop()
+        self.started_up = False
         self.music.stop()
         self.worker.stop(2000)
         self.portal_checker.stop(2000)

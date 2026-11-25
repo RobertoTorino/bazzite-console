@@ -118,6 +118,24 @@ def test_the_music_plays_while_the_portal_is_in_front(make):
     assert player.calls[-1] == "stop"
 
 
+def test_the_music_waits_for_the_intro_and_in_the_tray(make):
+    """The portal shows itself fullscreen before the intro: the music does not start before the intro has ended.
+    Hidden in the tray it waits, and it plays on when the portal is shown again."""
+    window = make()
+    player = window.music
+    window.showFullScreen()
+    assert "play" not in player.calls                                     # the first show: before the intro
+    window.start_up()
+    window.intro.skip()
+    assert player.playing
+    window.hide()
+    assert not player.playing and player.calls[-1] == "pause"
+    window.show()
+    assert player.playing
+    window.close()
+    assert player.calls[-1] == "stop"
+
+
 def test_the_music_pill_is_apart_from_the_sound_pill(make):
     """Music has a switch of its own (owner, 14-11-2026): off, the music stops and Sound stays as it is, and the
     other way round; the choice is kept."""

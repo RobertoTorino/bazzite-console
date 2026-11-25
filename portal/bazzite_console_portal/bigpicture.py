@@ -37,7 +37,8 @@ PILL_W = 128                    # a pill on the Settings page: a rounded rectang
 PILL_MIN_H = 64
 PILL_RADIUS = 16
 PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse) shows the wallpaper through it
-SYMBOL_PX = 84                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
+SYMBOL_PX = 78                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
+SYMBOL_GAP = 6                  # between the row's symbols (owner, 25-11-2026: a compacter row, for Discord)
 GLYPH_PX = 56
 BATTERY_W, BATTERY_H = 58, 84    # a device's battery in the header (owner, 22-11-2026): upright, its level under it
 SYMBOL_SMALLEST = 0.5           # the row's symbols on a narrow screen: never smaller than this part of their size
@@ -973,7 +974,7 @@ class BigPicture(Backdrop):
         self.words.setSpacing(round(6 * s))
         self.title_row.setSpacing(round(12 * s))
         self.upper.setSpacing(round(12 * s))
-        self.symbol_row.setSpacing(round(14 * s))
+        self.symbol_row.setSpacing(round(SYMBOL_GAP * s))
         self.logo.set_side(round(LOGO_PX * s))
         self.banner.setStyleSheet(f"background:{ORANGE}; color:white; font-weight:700; padding:6px 10px;"
                                   f" font-size:{max(12, round(16 * s))}px;")
