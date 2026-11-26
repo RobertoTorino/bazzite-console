@@ -1,3 +1,9 @@
+Changelog: 26-11-2026 12:21:07
+
+Added. log_page.py holds LogPage, the View logs tab of a game manager. Two radio buttons choose the app's log or the
+emulator's, emulator.log beside it, which the run wrapper writes. The hint names the file shown, and Clear logs
+empties the log shown. applog.EMULATOR_LOG names that file.
+
 Changelog: 24-11-2026 17:44:44
 
 Version 4.8.1.

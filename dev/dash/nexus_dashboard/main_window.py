@@ -41,7 +41,7 @@ ABOUT = ("One place for the tools for working on the suite. The first tiles are 
          "checkout, each a window of its own that keeps running when the dashboard closes: Nexus Release Tool (a "
          "release's versions, CHANGELOG entries, pins and the board checks), Nexus Deps (the suite's packages and "
          "tools on this machine, and its updates), Nexus Installer Tests (the suite's installer tests one at a "
-         "time), Nexus Demo Recorder (a portal installation recorded with OBS), Nexus Sound Lab (short sound "
+         "time), Nexus Marketing for PS5 (an article that presents the portal and its apps, as a web page), Nexus Demo Recorder (a portal installation recorded with OBS), Nexus Sound Lab (short sound "
          "effects for the windows, made from sliders and saved as WAV), Nexus TTS (an English text "
          "spoken in a natural voice and saved as a sound file) and Nexus Remix Studio (a voice mixed with a "
          "synthesized background and saved).\n\n"

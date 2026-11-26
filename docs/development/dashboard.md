@@ -51,6 +51,7 @@ of its own that keeps running when the dashboard closes.
 | **Nexus Deps** | The suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). |
 | **Nexus Garbage Remover** | The garbage on this machine, with its size, and Delete for it ([below](#garbage-remover)). |
 | **Nexus Installer Tests** | The suite's installer tests, one at a time ([below](#installer-tests)). |
+| **Nexus Marketing for PS5** | Writes an article that presents the portal and its apps, as a web page to share ([below](#marketing)). |
 | **Nexus Remix Studio** | Mixes a voice with a synthesized background and saves the result ([below](#remix-studio)). |
 | **Nexus Sound Lab** | Short sound effects for the suite's windows, made from sliders ([below](#sound-lab)). |
 | **Nexus TTS** | Speaks an English text in a natural voice and saves it as a sound file ([below](#nexus-tts)). |
@@ -489,3 +490,60 @@ Every hour, or at the next login when the machine was off, the app measures the 
 when the garbage grew by another GB. **Open** opens the window. The notification deletes nothing. It is a systemd
 user timer, `nexus-garbage-remover-reminder.timer`, that `install.sh` adds and `--uninstall` removes.
 `systemctl --user disable --now nexus-garbage-remover-reminder.timer` switches it off.
+
+## Marketing
+
+**Nexus Marketing for PS5** (`dev/marketing/`) writes an article that presents the portal and every app in it.
+The article is a web page to share, in the suite's own design. It covers the portal and its apps only, never the
+development apps. It has these parts:
+
+- a hero with the headline and the buttons
+- the board's numbers, when `copy.md` has them
+- the number of apps, categories and quickfixes
+- the portal, with a picture of its Settings page
+- each category with a picture of its tab and a card per app
+- **And more...**, the small touches of the portal and the apps
+- the Portal Tour, the four steps to get it, and the links
+- the license and the disclaimer from the suite's README, then the notes on the board's numbers
+
+The board's numbers come from the **Specs** part of `copy.md`. Each line is a number, a space and its label.
+A label that ends in `*` or `**` gets a small mark. Its note under **Spec notes** starts with the same mark.
+The notes show at the bottom of the page.
+
+The links go to the latest release, the wiki, the Portal Tour and the repository on GitHub. **Watch the tour**
+and the video's picture play the video itself. Only the footer's link opens the Portal Tour page. Each app's card
+opens its chapter of the wiki. An app that changes the board carries **Changes the board** on its card, in the portal's orange.
+
+The article keeps up with the suite by itself. The apps, their order, their categories and their marks come from
+`portal/apps.toml`. The words come from `dev/marketing/nexus_marketing/copy.md`, with a line for each category and
+each app. The window lists every app of the portal with its line. **Apps with a line** turns red when an app has
+none. The app's tests fail then too. The pencil after the line under the table opens `copy.md` in your
+text editor. Write the new line there, then click the round symbol to read it again.
+
+The pictures of the portal are stills of the real portal from this checkout, in `dev/marketing/images/shots/`.
+`tools/portal_shots.py` takes them offscreen, the way `tools/portal_tour.py` records the Portal Tour. **Screenshots** shows whether they
+are **Current**. It says **Out of date** when the portal changed since. Then the **Screenshots** pill takes them
+again. For the hero's background, put a picture named `hero.webp` in the app's `images` folder. Without one, the
+article draws a purple placeholder.
+
+The pills:
+
+- **Preview** opens the article in the browser. It is one file with the pictures and fonts inside, so a browser
+  in a Flatpak shows it whole.
+- **Export** writes the article to a new folder in the folder you choose. The folder holds `index.html` with its
+  pictures and fonts. An export never writes over a folder that is there already.
+  A git checkout, such as the website's folder, is the exception. There, Export writes the files straight into it,
+  over the old ones. It removes nothing. Publish then commits and pushes them.
+- **Screenshots** takes the stills of the portal again.
+- **Text check** runs `tools/text_check.py` on `copy.md`. Its output shows below the table.
+- **Publish** sends the article to the website. Its caption says how many files differ from the website's folder,
+  or **Up to date**. The first click asks for the website's folder, the checkout of its repository. The app
+  takes only a checkout of `RobertoTorino/console-suite`, this suite's website, and remembers it.
+  Then Publish asks first. It writes the article into the folder and removes the pictures it no
+  longer has. It commits only the article's files as "see the changelog" and pushes to GitHub. The website shows
+  the new article a minute or two later. Other files in the folder, such as `.nojekyll`, stay as they are.
+  **Other folder…** in the question takes another folder. The pill is off while the website is up to date.
+
+The globe beside the round **i** opens the website in the browser. Its address comes from the website's folder. A
+`CNAME` file there gives a domain of your own. Without one, the address is GitHub Pages' address of the repository,
+in the form `https://robertotorino.github.io/<repository>/`. The globe is off until Publish knows the folder.

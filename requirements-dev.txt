@@ -35,6 +35,7 @@
 -r dev/deps/requirements-dev.txt
 -r dev/garbage/requirements-dev.txt
 -r dev/itests/requirements-dev.txt
+-r dev/marketing/requirements-dev.txt
 -r dev/nrt/requirements-dev.txt
 -r dev/sounds/requirements-dev.txt
 -r dev/studio/requirements-dev.txt       # numpy and soundfile: the background, the mix and the sound files

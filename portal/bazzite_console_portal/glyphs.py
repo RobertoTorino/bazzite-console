@@ -227,6 +227,18 @@ def youtube(color: str) -> QIcon:
     return _icon(color, draw, BIG)
 
 
+def twitch(color: str) -> QIcon:
+    """Twitch: a speech bubble with its lower right corner cut off, a tail at the bottom left and two eyes inside."""
+    def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(5)
+        p.setPen(pen)
+        _line(p, (16, 9), (55, 9), (55, 35), (44, 46), (33, 46), (25, 54), (25, 46), (12, 46), (12, 14), (16, 9))
+        for x in (31, 42):                                  # the eyes
+            _line(p, (x, 20), (x, 32))
+    return _icon(color, draw, BIG)
+
+
 def github(color: str) -> QIcon:
     """GitHub: a disc with a cat cut out of it, its head with two ears, its body and its tail."""
     def draw(p: QPainter) -> None:

@@ -222,6 +222,12 @@ over at 1 MB (the three older files are kept). **Clear logs**, the tab beside Vi
 the file and the View logs tab and removes the three older files. The log holds what the app did, with your home folder written as
 `~`, and not your SteamGridDB key. `install.sh --uninstall` keeps it; `--purge` removes it.
 
+Two buttons sit above the log. **Xenia Manager** shows the app's own log. **Xenia** shows what Xenia
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-xenia-manager/emulator.log`. Each
+game's part opens with a line that says how the wrapper started Xenia. It ends with a line that gives Xenia's exit
+code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+the three older files. With **Xenia** chosen, **Clear logs** empties that log and removes its three older files.
+
 ## From a terminal
 
 `ps5-xenia-run` starts the installed Xenia with the options you give it. The Steam shortcuts use it, so they keep
@@ -232,6 +238,10 @@ ps5-xenia-run --fullscreen=true "/path/to/game.iso"   # a game full screen (Stea
 ps5-xenia-run "/path/to/game.iso"                     # a game in a window
 ps5-xenia-run                                         # Xenia's own window
 ```
+
+The run wrapper stays while Xenia runs. It passes a stop from Steam on to Xenia, and ends with Xenia's exit
+code. What Xenia prints goes to `~/.local/share/ps5-xenia-manager/emulator.log`, not to the terminal. The
+View logs tab shows it.
 
 ## New Xenia builds
 
@@ -285,6 +295,7 @@ the desktop too, and the run wrapper has nothing to change for it.
 | Your games | `~/Games/XBOX360` (the app's own folder), and `Games/XBOX360` on a removable drive |
 | The app's settings | `~/.config/ps5-xenia-manager` |
 | The app's log | `~/.local/share/ps5-xenia-manager/ps5-xenia-manager.log` |
+| What Xenia printed while a game ran | `~/.local/share/ps5-xenia-manager/emulator.log` |
 | The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The pictures found on SteamGridDB | `~/.local/share/ps5-xenia-manager/covers` |
 | The SteamGridDB key, one for the suite | `~/.config/bazzite-console/steamgriddb-key` |

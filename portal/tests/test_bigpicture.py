@@ -479,7 +479,7 @@ def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     on a handheld's screen."""
     window, _ = made()
     symbols = window.header_buttons
-    assert len(symbols) == 13 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
+    assert len(symbols) == 14 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
     window.show()
     window.resize(1920, 1080)
     QApplication.processEvents()
@@ -867,7 +867,7 @@ def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
         big.set_weather(place, "-12°C  Thunderstorm, hail" if place else "", glyphs.weather("cloudy"), True, "")
         big.fit_symbols()
         symbols = [s for s in window.header_buttons if not s.isHidden()]
-        assert len(symbols) == 13
+        assert len(symbols) == 14
         assert big.status.weather.isHidden() is (not place)                   # the third line only with a place
         row = (sum(s.width() for s in symbols) + len(symbols) * big.symbol_row.spacing()
                + big.status.minimumSizeHint().width())

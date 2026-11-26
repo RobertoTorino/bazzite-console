@@ -7,9 +7,12 @@ fusermount; the game started written into the app's log."""
 from __future__ import annotations
 
 import os
+import re
+import signal as signal_module
 import subprocess
-import tempfile
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 import pytest
@@ -46,6 +49,14 @@ Path(GAME).write_text("")
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="a bash script for Linux")
 
 
+def _printed(log: Path) -> dict[str, str]:
+    """What the fake emulator printed, from the app's emulator log, where the wrapper writes it (owner, 26-11-2026):
+    its own started and ended lines left out. The log is removed, so the next start has its own."""
+    lines = [line for line in log.read_text().splitlines() if not re.match(r"\d\d-\d\d-\d{4} ", line)]
+    log.unlink()
+    return dict(line.split("=", 1) for line in lines)
+
+
 @pytest.fixture
 def run(tmp_path):
     pcsx2 = tmp_path / "data" / "ps5-pcsx2-manager" / "emulator" / "current" / "pcsx2.AppImage"
@@ -78,7 +89,7 @@ def run(tmp_path):
                        PATH=path if path is not None else f"{fusermount}:{tools}", **env)
         done = subprocess.run(["/bin/bash", str(WRAPPER), *args], capture_output=True, text=True, env=environ,
                               check=True)
-        return dict(line.split("=", 1) for line in done.stdout.splitlines())
+        return _printed(tmp_path / "data" / "ps5-pcsx2-manager" / "emulator.log")
     return go
 
 
@@ -151,3 +162,64 @@ def test_a_game_that_is_gone_is_not_started(tmp_path):
                                "PS5_INPUT_DEVICES": str(tmp_path / "none")})
     assert done.returncode == 1 and "started" not in done.stdout
     assert "This game is no longer there" in done.stderr and str(gone) in done.stderr
+
+
+def _emulator(tmp_path: Path, script: str) -> tuple[Path, dict[str, str]]:
+    """A fake PCSX2 that runs *script*, and the wrapper's environment for it: the home folder in tmp_path."""
+    appimage = tmp_path / "data" / "ps5-pcsx2-manager" / "emulator" / "current" / "pcsx2.AppImage"
+    appimage.parent.mkdir(parents=True, exist_ok=True)
+    appimage.write_text("#!/bin/bash\n" + script)
+    appimage.chmod(0o755)
+    environ = {k: v for k, v in os.environ.items() if not k.startswith(("SDL_", "QT_")) and k != "SteamGameId"}
+    environ.update(XDG_DATA_HOME=str(tmp_path / "data"), HOME=str(tmp_path / "home"),
+                   PS5_INPUT_DEVICES=str(tmp_path / "none"))
+    return tmp_path / "data" / "ps5-pcsx2-manager" / "emulator.log", environ
+
+
+def test_what_the_emulator_prints_goes_to_its_log(tmp_path):
+    """Its output and errors in the app's emulator log (owner, 26-11-2026: the View logs tab shows it), between a
+    started and an ended line in the app's form, with the home folder written as ~; a last line without a newline
+    is ended before the wrapper's own. The wrapper ends with the emulator's exit code."""
+    home = str(tmp_path / "home")
+    log, environ = _emulator(tmp_path, f'echo "out {home}/x"\necho "error at {home}" >&2\n'
+                                       f'echo "not {home}2"\nprintf "last"\nexit 3\n')
+    (tmp_path / "home").mkdir()
+    (tmp_path / "home" / "game").write_text("")
+    done = subprocess.run(["/bin/bash", str(WRAPPER), f"{home}/game"], capture_output=True, text=True, env=environ)
+    assert done.returncode == 3 and done.stdout == ""
+    lines = log.read_text().splitlines()
+    assert all(re.fullmatch(r"\d\d-\d\d-\d{4} \d\d:\d\d:\d\d", line[:19]) for line in (lines[0], lines[-1]))
+    assert [lines[0][20:], *lines[1:-1], lines[-1][20:]] == [
+        "INFO PCSX2 started: ~/game", "out ~/x", "error at ~", f"not {home}2", "last",
+        "INFO PCSX2 ended (exit code 3)."]
+
+
+def test_a_stop_is_passed_on(tmp_path):
+    """Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which
+    saves and ends as on any close; the wrapper waits for it and ends with its exit code."""
+    for signal in (signal_module.SIGTERM, signal_module.SIGINT):
+        log, environ = _emulator(tmp_path, 'trap "echo stopped; exit 5" TERM\necho ready\n'
+                                           'while :; do sleep 0.05; done\n')
+        log.unlink(missing_ok=True)
+        wrapper = subprocess.Popen(["/bin/bash", str(WRAPPER)], env=environ, stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL)
+        deadline = time.monotonic() + 10
+        while not (log.exists() and "ready" in log.read_text()) and time.monotonic() < deadline:
+            time.sleep(0.05)
+        wrapper.send_signal(signal)
+        assert wrapper.wait(timeout=10) == 5
+        assert log.read_text().splitlines()[-2:][0] == "stopped"
+        assert log.read_text().endswith("INFO PCSX2 ended (exit code 5).\n")
+
+
+def test_the_log_turns_over_at_1_mb(tmp_path):
+    """As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept."""
+    log, environ = _emulator(tmp_path, "echo new\n")
+    log.parent.mkdir(parents=True, exist_ok=True)
+    log.write_text("x" * 1_000_000)
+    for number in (1, 2, 3):
+        log.with_name(f"emulator.log.{number}").write_text(f"old {number}")
+    subprocess.run(["/bin/bash", str(WRAPPER)], env=environ, capture_output=True, check=True)
+    assert log.with_name("emulator.log.1").stat().st_size == 1_000_000
+    assert [log.with_name(f"emulator.log.{n}").read_text() for n in (2, 3)] == ["old 1", "old 2"]
+    assert "new" in log.read_text() and len(log.read_text()) < 1000

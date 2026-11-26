@@ -665,6 +665,7 @@ Drawn with QPainter in the portal's `glyphs.py`, in the theme's text color. Each
 | `discord` | Discord: a round, wide face on two short legs, its two eyes cut out of it. |
 | `folder` | A folder: the file manager. |
 | `youtube` | A screen with a play triangle. |
+| `twitch` | Twitch: a speech bubble with its lower right corner cut off, a tail at the bottom left and two eyes inside. |
 | `github` | GitHub: a disc with a cat cut out of it, its head with two ears, its body and its tail. |
 | `bluetooth` | The Bluetooth rune. |
 | `network` | Three arcs over a dot: the network. |

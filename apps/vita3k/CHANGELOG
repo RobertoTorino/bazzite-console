@@ -1,3 +1,12 @@
+Changelog: 26-11-2026 12:21:07
+
+Added. What Vita3K prints while a game runs now goes to the app's emulator log, emulator.log beside the app's own
+log. Before, ps5-vita3k-run started Vita3K in its place, so the output went to Steam's console only. The run wrapper
+now stays while Vita3K runs. It writes a started and an ended line around each run, with Vita3K's exit code. Every
+line shows the home folder as ~. The file turns over at 1 MB with three older ones kept. The wrapper passes a stop
+from Steam on to Vita3K and ends with Vita3K's exit code. Two radio buttons at the top of the View logs tab choose
+the app's log or Vita3K's. Clear logs empties the log shown.
+
 Changelog: 24-11-2026 17:44:44
 
 Release 1.9.1.

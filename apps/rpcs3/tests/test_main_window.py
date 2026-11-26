@@ -1216,3 +1216,31 @@ def test_rpcs3_running_and_end_read_proc(tmp_path):
     assert sent == [20, 10]
     (proc / "10" / "stat").write_text(f"10 ({"rpcs3"}) Z 1 0\n")
     assert not userdata.rpcs3_running(proc)
+
+
+def test_view_logs_shows_the_emulators_log_too(qapp, folders):
+    """View logs (owner, 26-11-2026): two radio buttons above the log choose the app's log or what RPCS3 printed
+    (emulator.log beside it, which the run wrapper writes). The hint names the file shown. A line the app logs
+    shows only while its own log is shown. Clear logs empties the log shown, with its older ones."""
+    from rpcs3_manager import APP_NAME
+    log = folders["log_path"]
+    log.write_text("26-11-2026 10:00:00 INFO the app's line\n")
+    emulator_log = log.with_name("emulator.log")
+    emulator_log.write_text("26-11-2026 10:00:01 INFO RPCS3 started: ~/game\nprinted\n")
+    older = log.with_name("emulator.log.1")
+    older.write_text("old\n")
+    window = _window(folders)
+    page = window.log_page
+    assert page.app_button.text() == APP_NAME and page.emulator_button.text() == "RPCS3"
+    assert page.app_button.isChecked() and "the app's line" in window.output.toPlainText()
+    assert log.name in page.hint.text() and "emulator.log" not in page.hint.text()
+    page.emulator_button.click()
+    assert window.output.toPlainText().endswith("printed") and "emulator.log" in page.hint.text()
+    window.note("a line of the app's")
+    assert "a line of the app's" not in window.output.toPlainText()
+    window.tabs.tabBarClicked.emit(window.clear_tab.index)
+    assert emulator_log.read_text() == "" and not older.exists() and window.output.toPlainText() == ""
+    assert log.read_text().startswith("26-11-2026 10:00:00 INFO the app's line")          # the app's log kept
+    page.app_button.click()
+    assert "the app's line" in window.output.toPlainText()
+    window.close()

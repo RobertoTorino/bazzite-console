@@ -19,11 +19,11 @@ Between them is **– Minimize**. It hides the portal in the system tray.
 Left of **☰ Settings** is a battery for each connected device with one, such as a controller, a mouse, a keyboard
 or a headset. The level is under it, and the fill turns red at 20 % or less. A yellow bolt means the device is
 charging. Hover a battery to see the device's name. Without such a device, no battery shows. Under
-them, in a row, thirteen big symbols. Four act on the apps: **Refresh** (two
+them, in a row, fourteen big symbols. Four act on the apps: **Refresh** (two
 circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install all apps** (a grid of
-apps with an arrow down) and **Install all updates** (a circular arrow around an arrow down). Nine are shortcuts
+apps with an arrow down) and **Install all updates** (a circular arrow around an arrow down). Ten are shortcuts
 to what is outside the suite: **Files** (a folder), **Steam**, **Discord** (a face with two eyes), **YouTube** (a screen with a play triangle),
-**GitHub** (a cat in a disc),
+**Twitch** (a speech bubble), **GitHub** (a cat in a disc),
 **Bluetooth**, **Network**, **Volume** (a loudspeaker) and **Screen** (a screen on its foot). Each is described
 below. Hover a symbol to see what it does. The one with the focus is framed in silver, as a tile is; a symbol that
 has nothing to do is grayed out. On a screen 1280 pixels wide the symbols are drawn smaller when the row would not
@@ -217,6 +217,9 @@ checkout, or give it a menu entry with its `install.sh`.
 - **YouTube**, a symbol at the top, opens YouTube in a maximized window of Brave Browser.
   Brave Browser must be installed as a Flatpak, `com.brave.Browser`. Get it from Bazzite's software store, or with
   `flatpak install flathub com.brave.Browser`. Without it, the portal says so and opens nothing.
+- **Twitch**, a symbol at the top, opens Twitch in a maximized window of Brave Browser.
+  Brave Browser must be installed as a Flatpak, `com.brave.Browser`. Get it from Bazzite's software store, or with
+  `flatpak install flathub com.brave.Browser`. Without it, the portal says so and opens nothing.
 - **GitHub**, a symbol at the top: opens github.com in the desktop's own browser, in a normal window with its tabs
   and address bar; a browser that runs already comes to the front with a new tab.
 - **Bluetooth**, **Network**, **Volume** and **Screen**, four symbols at the top: open the desktop's Bluetooth
@@ -292,8 +295,9 @@ checkout, or give it a menu entry with its `install.sh`.
   the mouse pointer. Click it for the next speed: 50, 75, 100 (the normal speed, at first), 125 and 150 %, then 50
   again. The new speed applies at once, and the portal remembers it.
 - **Sys info**, a symbol at the top: a small window with what the system reports about the board: the mainboard, the
-  BIOS (with UEFI and Secure Boot), the CPU (model, cores and threads online, top clock, microcode), each GPU (name,
-  driver, VRAM, shared memory, clock levels, VBIOS, PCIe link), the memory, the drives with the free space in your
+  BIOS (with UEFI and Secure Boot), the CPU (model, cores and threads online, top clock, clock now, microcode), each GPU (name,
+  driver, VRAM, shared memory, clock levels, VBIOS, PCIe link), the memory and whether the GPU's VRAM comes out of it,
+  the drives with the free space in your
   home folder, the displays (each output, the monitor's name and its preferred mode), the resolution, refresh rate and scale
   of each screen in use, the sound cards, the network
   adapters and Bluetooth controllers (driver and link), the USB devices, the input devices (keyboards, mice and

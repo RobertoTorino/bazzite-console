@@ -1,3 +1,17 @@
+Changelog: 26-11-2026 06:54:24
+
+Added. Sys info says when the GPU's VRAM comes out of the board's own memory. RAM and VRAM then add up to less than the board has, because the firmware keeps a part. Only root can read the exact total, so Sys info says that too.
+
+Changelog: 26-11-2026 06:47:47
+
+Fixed. Sys info shows the resolution and scale a screen really runs at. A 4K screen at 175 % showed as 4388 × 2468 at 200 %, because Qt rounds a fractional scale up.
+
+Added. Sys info shows the clock of the fastest core at that moment. A board without frequency scaling reports no top clock, so the CPU showed no clock at all.
+
+Changelog: 26-11-2026 00:01:43
+
+Added. A Twitch symbol in the header, right after YouTube. It opens Twitch in a maximized window of Brave Browser, as YouTube does. Without Brave Browser, the portal says so and opens nothing.
+
 Changelog: 25-11-2026 18:17:28
 
 Release 5.3.0.

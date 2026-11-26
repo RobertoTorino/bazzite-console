@@ -36,11 +36,12 @@ from bazzite_console_core import builds
 from bazzite_console_core.action_tab import ActionTab
 from bazzite_console_core.builds_dialog import BuildsDialog, fill_menu
 from bazzite_console_core.keep_dialog import KeepDialog
+from bazzite_console_core.log_page import LogPage
 from bazzite_console_core.platform import bin_home, private, xdg_open
 from bazzite_console_core.settings import SettingsStore
 from bazzite_console_core.settings_page import SettingsPage
 from bazzite_console_core.updates import ReleaseInfo, UpdateChecker
-from bazzite_console_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
+from bazzite_console_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, WrappedLabel, hint_label
 
 from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, shortcuts, style,
                xenia_settings)
@@ -290,15 +291,11 @@ class MainWindow(QMainWindow):
                                           lambda setting, value: xenia_settings.write_setting(self.xenia_home, setting,
                                                                                               value),
                                           self.xenia_running, log=self.log)
-        self.output = Terminal()
-        self.output.setPlaceholderText("What the app did, with the time, appears here.")
-        self.output.set_text(applog.tail(self.log_path))
-        log_page = QWidget()
-        log = QVBoxLayout(log_page)
-        log.setContentsMargins(0, 8, 0, 0)
-        log.addWidget(hint_label(f"Everything the app said and did, newest last; the same lines are in "
-                                 f"{escape(private(self.log_path))}, which turns over at 1 MB."))
-        log.addWidget(self.output, 1)
+        # View logs (owner, 26-11-2026): the app's own log or what Xenia printed, chosen above it (core's
+        # log_page)
+        self.log_page = LogPage(APP_NAME, "Xenia", self.log_path,
+                                "Everything the app said and did, newest last.")
+        self.output = self.log_page.output
         self.tabs = QTabWidget()
         # The six tabs share the whole width, the last one up to the window\'s margin (owner, 18-11-2026)
         self.tabs.setDocumentMode(True)
@@ -322,7 +319,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.saves_page, "Memory cards")
         # Memory cards before Settings, and the log's tab is View logs (owner, 20-11-2026)
         self.tabs.addTab(self.settings_scroll, "Settings")
-        self.tabs.addTab(log_page, "View logs")
+        self.tabs.addTab(self.log_page, "View logs")
         # Clear logs (owner, 18-11-2026): beside the View logs tab, a tab that is a button and empties the log
         self.clear_tab = ActionTab(self.tabs, "Clear logs", CLEAR_TIP, self.on_clear_logs)
 
@@ -442,15 +439,16 @@ class MainWindow(QMainWindow):
         """Into the View logs tab and the log file only: something that happened, not what the window is doing now."""
         (self.log.info if ok else self.log.error)(text)
         stamp = time.strftime(applog.DATE)
-        self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
+        self.log_page.add_line(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
 
     def on_clear_logs(self) -> None:
-        """Clear logs (owner, 18-11-2026): the app's log file emptied, with the older ones kept beside it, and the
-        View logs tab with them. Said in the line under the tabs only, so the log stays empty."""
-        if not applog.clear(APP_ID, self.log_path):
-            self.say(f"The log could not be cleared: {private(self.log_path)}", ok=False)
+        """Clear logs (owner, 18-11-2026): the log the View logs tab shows emptied, the app's or the emulator's
+        (owner, 26-11-2026), with the older ones kept beside it, and the tab with it. Said in the line under the
+        tabs only, so the log stays empty."""
+        failed = self.log_page.clear(APP_ID)
+        if failed is not None:
+            self.say(f"The log could not be cleared: {private(failed)}", ok=False)
             return
-        self.output.clear()
         self.running.setStyleSheet("font-weight:600;")
         self.running.setText("The log was cleared.")
 

@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The header's shortcuts (owner, 12-11-2026): the file manager, Steam, Discord (owner, 25-11-2026), YouTube, GitHub
-(owner, 18-11-2026), and
+"""The header's shortcuts (owner, 12-11-2026): the file manager, Steam, Discord (owner, 25-11-2026), YouTube, Twitch
+(owner, 25-11-2026), GitHub (owner, 18-11-2026), and
 the desktop's Bluetooth, network, sound and display settings, each a symbol that starts a program outside the
 suite. What to start is found here, from what the
 machine has: Steam's own launcher, the desktop's file manager on the home folder (xdg-open, whichever desktop),
 Discord's web app in a maximized window of Brave Browser,
-YouTube in a maximized window of Brave Browser (its Flatpak, which must be installed), GitHub in the desktop's
+YouTube in a maximized window of Brave Browser (its Flatpak, which must be installed), Twitch in one as well,
+GitHub in the desktop's
 own browser (xdg-open), and the settings of KDE
 Plasma (System Settings, else the module alone) or of GNOME. A click on the weather opens the place's forecast at
 wttr.in in Brave Browser (owner, 24-11-2026: a page without ads). A shortcut whose program is missing raises Missing
@@ -21,6 +22,7 @@ from pathlib import Path
 
 BRAVE_ID, BRAVE_NAME = "com.brave.Browser", "Brave Browser"
 YOUTUBE_URL = "https://www.youtube.com/"
+TWITCH_URL = "https://www.twitch.tv/"
 GITHUB_URL = "https://github.com/"
 DISCORD_URL = "https://discord.com/app"
 WEATHER_URL = "https://wttr.in/{latitude:.4f},{longitude:.4f}"      # the forecast of a place, by its coordinates
@@ -91,6 +93,13 @@ def discord(run: Run | None = None) -> Start:
     if not flatpak_installed(BRAVE_ID, run):
         raise Missing(f"{BRAVE_NAME} is required. Install its Flatpak ({BRAVE_ID}) to open Discord.")
     return Start(["flatpak", "run", BRAVE_ID, "--start-maximized", DISCORD_URL], (BRAVE_ID, "brave-browser"))
+
+
+def twitch(run: Run | None = None) -> Start:
+    """Twitch in a maximized window of Brave Browser, as YouTube."""
+    if not flatpak_installed(BRAVE_ID, run):
+        raise Missing(f"{BRAVE_NAME} is required. Install its Flatpak ({BRAVE_ID}) to open Twitch.")
+    return Start(["flatpak", "run", BRAVE_ID, "--start-maximized", TWITCH_URL], (BRAVE_ID, "brave-browser"))
 
 
 def weather(latitude: float, longitude: float, run: Run | None = None) -> Start:

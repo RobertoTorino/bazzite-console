@@ -52,6 +52,7 @@ The tools for working on the suite run from a checkout of the repository. They a
 
 - Nexus Release Tool
 - Nexus Installer Tests
+- Nexus Marketing for PS5
 - Nexus Demo Recorder
 - Nexus Sound Lab
 - Nexus TTS

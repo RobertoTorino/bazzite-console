@@ -1,0 +1,72 @@
+Changelog: 26-11-2026 11:44:33
+
+Fixed. Publish takes only a checkout of this suite's own website repository. The PS5 article was pushed to the BC-250 website, because both twins kept one website folder in the settings file they share (owner, 26-11-2026). Each twin now keeps its website and export folders under its own name, so each asks for its folder once.
+
+Changelog: 26-11-2026 07:27:53
+
+Added. A small pencil after the line that names copy.md opens the file in your default text editor (owner, 26-11-2026). The line stays on one line.
+
+Changelog: 26-11-2026 07:16:40
+
+Fixed. Watch the tour and the picture under See it in action play the Portal Tour video itself (owner, 26-11-2026). Before, they opened its wiki page first. The footer's Portal Tour link still opens that page.
+
+Changelog: 26-11-2026 07:11:08
+
+Fixed. The Quickfix card shows only its line from copy.md, like every other card (owner, 26-11-2026). It listed four quickfixes by name under it before. A card's text takes at most four lines.
+
+Fixed. The DatStation line is shorter, so its card takes four lines.
+
+Changelog: 26-11-2026 07:02:21
+
+Fixed. The row of the board's numbers spreads wider on a big screen.
+
+Changelog: 26-11-2026 06:47:47
+
+Added. A row with the board's numbers under the hero, when copy.md has a Specs part. The PS5 copy has none yet. A label that ends in asterisks gets a small mark, and its note from Spec notes shows at the bottom of the page (owner, 26-11-2026).
+
+Fixed. Changes the board is in the portal's orange, on the cards and above the safety band.
+
+Fixed. The Portal line in copy.md names a TV with a controller and a monitor with a keyboard and mouse. It said "a desk" before.
+
+Changelog: 26-11-2026 00:56:13
+
+Fixed. Export into a git checkout, such as the website's folder, writes the article straight into it, over the old files. It made a dated folder inside the repository before.
+
+Fixed. The app has its .gitignore, as every app must.
+
+Changelog: 26-11-2026 00:49:26
+
+Fixed. The page builds on Python 3.12 again. Loading the portal's manifest.py failed there, because its dataclass could not find its module.
+
+Changelog: 26-11-2026 00:01:43
+
+Fixed. The copy lists Twitch among the portal's shortcuts.
+
+Changelog: 25-11-2026 23:51:31
+
+Fixed. Each line under Headline in copy.md is a line of the headline on the page, so copy.md sets where it
+breaks (owner, 25-11-2026).
+
+Changelog: 25-11-2026 23:49:52
+
+Fixed. The headline is wider, 18 characters instead of 15, so it takes two lines (owner, 25-11-2026).
+
+Changelog: 25-11-2026 23:47:47
+
+Fixed. Preview writes a file named after the suite, such as bc250-bazzite-suite.html, so the twins in the two
+suites never write over each other's preview (owner, 25-11-2026). "PlayStation 5" and "BC-250" never break in two
+at the end of a line.
+
+Changelog: 25-11-2026 23:40:24
+
+Added. Nexus Marketing for PS5, a development app, the twin of Nexus Marketing for BC-250 (owner, 25-11-2026). It
+writes an article that presents the portal and every app in it, as a web page in the suite's Bazzite design. The
+apps, their categories, their tile names and their marks come from portal/apps.toml. The words come from
+nexus_marketing/copy.md, a line per category and per app, and the tests fail when one is missing. The license and
+the disclaimer come from the suite's README. The development apps are left out. The page links to the latest
+release, the wiki, the Portal Tour and GitHub. It shows stills of the portal from tools/portal_shots.py, one per
+category and one of the Settings page. The hero's background is a drawn placeholder until images/hero.webp is there.
+Preview opens the page in the browser as one file. Export writes it to a new folder. Screenshots takes the stills
+again, and Text check checks copy.md. Publish writes the article into the website's folder, commits only its files
+as "see the changelog" and pushes. Its caption counts the files that differ, and it is off while the website is up
+to date. A globe beside the info symbol opens the website.

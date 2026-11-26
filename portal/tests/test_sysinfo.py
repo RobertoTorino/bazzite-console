@@ -241,6 +241,47 @@ def test_the_screens_in_use(tmp_path):
         ("HDMI-A-1", "connected"), ("HDMI-A-1 now", "1280 × 720, scale 100%")]
 
 
+def test_a_fractional_scale_shows_the_outputs_own_resolution(tmp_path):
+    """Qt's size times 175 % is half a pixel off; the output's listed mode is what it runs (owner, 26-11-2026: a 4K
+    TV at 175 % showed 4388 × 2468 at 200 %)."""
+    sys = tmp_path / "sys"
+    write(sys / "class" / "drm" / "card1-DP-1" / "status", "connected\n")
+    write(sys / "class" / "drm" / "card1-DP-1" / "modes", "3840x2160\n4096x2160\n2560x1440\n")
+    assert sysinfo.displays(sys, {"DP-1": (3840, 2160, 120.0, 1.75)})[1][1] == (
+        "DP-1 now", "3840 × 2160, 120 Hz, scale 175%")
+    assert sysinfo.listed_mode((3839, 2159, 120.0, 1.75), ["3840x2160"]) == (3840, 2160, 120.0, 1.75)
+    assert sysinfo.listed_mode((1000, 700, 60.0, 1.0), ["3840x2160"]) == (1000, 700, 60.0, 1.0)   # none near it
+
+
+def test_the_clock_now_without_cpufreq(tmp_path):
+    """A board without cpufreq (no ACPI override) reports no max clock, so the fastest core's clock of the moment
+    shows (owner, 26-11-2026)."""
+    proc, sys = tmp_path / "proc", tmp_path / "sys"
+    write(proc / "cpuinfo", "processor\t: 0\nmodel name\t: AMD BC-250\ncpu MHz\t\t: 2782.789\n\n"
+                            "processor\t: 1\nmodel name\t: AMD BC-250\ncpu MHz\t\t: 3492.833\n")
+    write(sys / "devices" / "system" / "cpu" / "online", "0-1\n")
+    rows = dict(sysinfo.cpu(sys, proc)[1])
+    assert rows["Max clock"] == "" and rows["Clock now"] == "up to 3.49 GHz"
+
+
+def test_vram_taken_from_the_boards_memory_is_explained(tmp_path):
+    """The firmware's memory map reserves exactly the VRAM's 6 GiB (as on the owner's BC-250, 26-11-2026), so the
+    Memory section says why RAM and VRAM do not add up to the board's memory; a GPU with its own memory gets no line."""
+    sys, proc = tmp_path / "sys", tmp_path / "proc"
+    write(proc / "meminfo", "MemTotal:        9879860 kB\n")
+    write(sys / "class" / "drm" / "card1" / "device" / "mem_info_vram_total", "6442450944\n")
+    for number, start, end, kind in (("20", "0x100000000", "0x2efffffff", "System RAM"),
+                                     ("21", "0x2f0000000", "0x46fffffff", "Reserved")):
+        for name, value in (("start", start), ("end", end), ("type", kind)):
+            write(sys / "firmware" / "memmap" / number / name, value + "\n")
+    assert sysinfo.memory(proc, sys)[1] == [
+        ("RAM", "9.4 GiB"),
+        ("Shared", "The GPU's 6 GiB VRAM comes out of this memory. The firmware keeps a part. "
+                   "Only root can read the exact total.")]
+    write(sys / "class" / "drm" / "card1" / "device" / "mem_info_vram_total", "8589934592\n")   # 8 GiB of its own
+    assert sysinfo.memory(proc, sys)[1] == [("RAM", "9.4 GiB")]
+
+
 def test_a_system_that_reports_nothing(tmp_path, monkeypatch):
     """No sysfs, /proc or /etc (another OS, a container): only what Python itself knows."""
     monkeypatch.delenv("XDG_CURRENT_DESKTOP", raising=False)

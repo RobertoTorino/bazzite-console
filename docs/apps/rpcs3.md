@@ -287,6 +287,12 @@ kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
 keeps it; `--purge` removes it.
 
+Two buttons sit above the log. **RPCS3 Manager** shows the app's own log. **RPCS3** shows what RPCS3
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-rpcs3-manager/emulator.log`. Each
+game's part opens with a line that says how the wrapper started RPCS3. It ends with a line that gives RPCS3's exit
+code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+the three older files. With **RPCS3** chosen, **Clear logs** empties that log and removes its three older files.
+
 ## RPCN
 
 RPCN is RPCS3's online service: online play, friends and scores, in the games RPCS3 supports online. RPCS3 signs in
@@ -330,6 +336,10 @@ ps5-rpcs3-run --installpkg "/path/to/folder"                               # the
 ps5-rpcs3-run --headless --installpkg "/path/to/file.pkg"                  # the same, without RPCS3's window
 ps5-rpcs3-run                                                              # RPCS3's own window
 ```
+
+The run wrapper stays while RPCS3 runs. It passes a stop from Steam on to RPCS3, and ends with RPCS3's exit
+code. What RPCS3 prints goes to `~/.local/share/ps5-rpcs3-manager/emulator.log`, not to the terminal. The
+View logs tab shows it.
 
 ## New RPCS3 builds
 
@@ -407,6 +417,7 @@ already.
 | Your disc games and the firmware file | `~/Games/PS3` and `~/Games/PS3/Firmware` (the app's own folder), and `Games/PS3` on a removable drive |
 | The app's settings | `~/.config/ps5-rpcs3-manager` |
 | The app's log | `~/.local/share/ps5-rpcs3-manager/ps5-rpcs3-manager.log` |
+| What RPCS3 printed while a game ran | `~/.local/share/ps5-rpcs3-manager/emulator.log` |
 | The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The covers found on SteamGridDB | `~/.local/share/ps5-rpcs3-manager/covers` |
 | Launchers | `~/.local/bin/ps5-rpcs3-manager`, `~/.local/bin/ps5-rpcs3-run` |

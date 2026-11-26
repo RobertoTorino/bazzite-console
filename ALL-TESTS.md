@@ -4,7 +4,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3289 test functions (3677 cases counting the parametrized ones) in 37 test folders, and 38 installer tests.
+3349 test functions (3737 cases counting the parametrized ones) in 38 test folders, and 39 installer tests.
 
 ## Summary
 
@@ -22,32 +22,33 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/gpu](#appsgpu) | 14 | 72 |  |
 | [apps/overlay](#appsoverlay) | 2 | 19 | 0.2 s |
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
-| [apps/pcsx2](#appspcsx2) | 14 | 150 | 19.0 s |
-| [apps/ppsspp](#appsppsspp) | 11 | 99 | 4.5 s |
+| [apps/pcsx2](#appspcsx2) | 14 | 154 | 19.0 s |
+| [apps/ppsspp](#appsppsspp) | 11 | 103 | 4.5 s |
 | [apps/quickfix](#appsquickfix) | 6 | 45 |  |
 | [apps/remoteplay](#appsremoteplay) | 26 | 243 | 9.6 s |
-| [apps/rpcs3](#appsrpcs3) | 12 | 122 | 5.6 s |
+| [apps/rpcs3](#appsrpcs3) | 12 | 126 | 5.6 s |
 | [apps/sftp](#appssftp) | 11 | 86 | 5.6 s |
-| [apps/shadps4](#appsshadps4) | 17 | 154 | 7.7 s |
+| [apps/shadps4](#appsshadps4) | 17 | 158 | 7.7 s |
 | [apps/ssd](#appsssd) | 4 | 50 | 0.8 s |
 | [apps/turing](#appsturing) | 9 | 75 |  |
 | [apps/upscaler](#appsupscaler) | 11 | 119 | 1.6 s |
-| [apps/vita3k](#appsvita3k) | 9 | 81 | 4.9 s |
+| [apps/vita3k](#appsvita3k) | 9 | 85 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
-| [apps/xenia](#appsxenia) | 8 | 75 | 4.2 s |
-| [core](#core) | 28 | 210 | 3.5 s |
+| [apps/xenia](#appsxenia) | 8 | 79 | 4.2 s |
+| [core](#core) | 29 | 213 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 105 | 2.1 s |
 | [dev/garbage](#devgarbage) | 1 | 8 |  |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
+| [dev/marketing](#devmarketing) | 2 | 29 |  |
 | [dev/nrt](#devnrt) | 4 | 135 | 23.1 s |
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
-| [portal](#portal) | 18 | 233 | 30.2 s |
+| [portal](#portal) | 18 | 237 | 30.2 s |
 | [tools](#tools) | 43 | 246 | 10.2 s |
-| **All** | | **3289** | **153 s** |
+| **All** | | **3349** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -72,6 +73,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `garbage.sh` | Exercise dev/garbage/install.sh, Nexus Garbage Remover's installer. |
 | `gpu.sh` | Exercise apps/gpu/install.sh. |
 | `itests.sh` | Exercise dev/itests/install.sh, Nexus Installer Tests's installer. |
+| `marketing.sh` | Exercise dev/marketing/install.sh, Nexus Marketing for PS5's installer. |
 | `not-installed.sh` | Every app's installer and the portal's, with --uninstall and with --uninstall --purge, on a computer where nothing of them is installed. |
 | `nrt.sh` | Exercise dev/nrt/install.sh (and tools/nrt.sh, which forwards to it). |
 | `overlay.sh` | Exercise apps/overlay/install.sh. |
@@ -894,7 +896,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/pcsx2
 
-150 tests in 14 files, 19.0 s in a local run.
+154 tests in 14 files, 19.0 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -967,6 +969,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_pcsx2_is_on_while_pcsx2_runs_and_ends_it_at_once` |  |  | Exit PCSX2 (owner, 22-11-2026): the first button of the row under Your games, on only while PCSX2 runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_pcsx2_running_and_end_read_proc` |  |  | PCSX2's process is found by its name, and ending it ends what it started first. |
+| `test_main_window.py` | `test_view_logs_shows_the_emulators_log_too` |  |  | View logs (owner, 26-11-2026): two radio buttons above the log choose the app's log or what PCSX2 printed (emulator.log beside it, which the run wrapper writes). |
 | `test_memcard_icon.py` | `test_rez_as_mymcs_opengl_viewer_draws_it` |  | 0.8 s | Rez as mymcs opengl viewer draws it. |
 | `test_memcard_icon.py` | `test_vertex_colours_and_light` |  | 0.3 s | Vertex colours and light. |
 | `test_memcard_icon.py` | `test_back_faces_are_left_out` |  | 0.1 s | Back faces are left out. |
@@ -1029,6 +1032,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_run_wrapper.py` | `test_the_game_started_goes_to_the_apps_log` |  |  | One line in the app's log file, in its form, with the game's file name (not its path) and from where; a start without a game (PCSX2's window) says nothing. |
 | `test_run_wrapper.py` | `test_not_installed` |  |  | Not installed. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_run_wrapper.py` | `test_what_the_emulator_prints_goes_to_its_log` |  |  | Its output and errors in the app's emulator log (owner, 26-11-2026: the View logs tab shows it), between a started and an ended line in the app's form, with the home folder written as ~; a last line without a newline is ended before the wrapper's own. |
+| `test_run_wrapper.py` | `test_a_stop_is_passed_on` |  |  | Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which saves and ends as on any close; the wrapper waits for it and ends with its exit code. |
+| `test_run_wrapper.py` | `test_the_log_turns_over_at_1_mb` |  |  | As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept. |
 | `test_settings_page.py` | `test_the_defaults_and_a_change` |  |  | The defaults and a change. |
 | `test_settings_page.py` | `test_player_2` |  |  | Player 2. |
 | `test_settings_page.py` | `test_quit_with_select_and_start` |  |  | The switch binds PCSX2's shutdown to Select + Start on the first controller and turns PCSX2's question before shutting down off; off again takes the binding out. |
@@ -1051,7 +1057,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/ppsspp
 
-99 tests in 11 files, 4.5 s in a local run.
+103 tests in 11 files, 4.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1113,6 +1119,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_ppsspp_is_on_while_ppsspp_runs_and_ends_it_at_once` |  |  | Exit PPSSPP (owner, 22-11-2026): the first button of the row under Your games, on only while PPSSPP runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_ppsspp_running_and_end_read_proc` |  |  | PPSSPP's process is found by its name, and ending it ends what it started first. |
+| `test_main_window.py` | `test_view_logs_shows_the_emulators_log_too` |  |  | View logs (owner, 26-11-2026): two radio buttons above the log choose the app's log or what PPSSPP printed (emulator.log beside it, which the run wrapper writes). |
 | `test_ppsspp_settings.py` | `test_the_values_as_ppsspp_writes_them` |  |  | The values as ppsspp writes them. |
 | `test_ppsspp_settings.py` | `test_the_defaults_without_a_file` |  |  | The defaults without a file. |
 | `test_ppsspp_settings.py` | `test_other_forms_of_a_value` |  |  | Other forms of a value. |
@@ -1136,6 +1143,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_run_wrapper.py` | `test_without_fusermount_it_unpacks_itself` |  |  | Without fusermount it unpacks itself. |
 | `test_run_wrapper.py` | `test_not_installed` |  |  | Not installed. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_run_wrapper.py` | `test_what_the_emulator_prints_goes_to_its_log` |  |  | Its output and errors in the app's emulator log (owner, 26-11-2026: the View logs tab shows it), between a started and an ended line in the app's form, with the home folder written as ~; a last line without a newline is ended before the wrapper's own. |
+| `test_run_wrapper.py` | `test_a_stop_is_passed_on` |  |  | Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which saves and ends as on any close; the wrapper waits for it and ends with its exit code. |
+| `test_run_wrapper.py` | `test_the_log_turns_over_at_1_mb` |  |  | As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept. |
 | `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
 | `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
 | `test_saves.py` | `test_a_zip_with_the_files_at_the_top_takes_its_own_name` |  |  | A zip with the files at the top takes its own name. |
@@ -1459,7 +1469,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/rpcs3
 
-122 tests in 12 files, 5.6 s in a local run.
+126 tests in 12 files, 5.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1529,6 +1539,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_rpcs3_is_on_while_rpcs3_runs_and_ends_it_at_once` |  |  | Exit RPCS3 (owner, 22-11-2026): the first button of the row under Your games, on only while RPCS3 runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_rpcs3_running_and_end_read_proc` |  |  | RPCS3's process is found by its name, and ending it ends what it started first. |
+| `test_main_window.py` | `test_view_logs_shows_the_emulators_log_too` |  |  | View logs (owner, 26-11-2026): two radio buttons above the log choose the app's log or what RPCS3 printed (emulator.log beside it, which the run wrapper writes). |
 | `test_rpcn.py` | `test_the_password_as_rpcs3_derives_it` |  |  | The password as rpcs3 derives it. |
 | `test_rpcn.py` | `test_create_an_account` |  |  | Create an account. |
 | `test_rpcn.py` | `test_the_server_refuses_an_account` |  |  | The server refuses an account. |
@@ -1551,6 +1562,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_run_wrapper.py` | `test_the_game_started_goes_to_the_apps_log` |  |  | One line in the app's log file, in its form, with the game's folder name (the disc's, or the installed game's ID; not its path) and from where; a start without a game (RPCS3's window, the firmware, the packages) says nothing. |
 | `test_run_wrapper.py` | `test_not_installed` |  |  | Not installed. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_run_wrapper.py` | `test_what_the_emulator_prints_goes_to_its_log` |  |  | Its output and errors in the app's emulator log (owner, 26-11-2026: the View logs tab shows it), between a started and an ended line in the app's form, with the home folder written as ~; a last line without a newline is ended before the wrapper's own. |
+| `test_run_wrapper.py` | `test_a_stop_is_passed_on` |  |  | Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which saves and ends as on any close; the wrapper waits for it and ends with its exit code. |
+| `test_run_wrapper.py` | `test_the_log_turns_over_at_1_mb` |  |  | As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept. |
 | `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
 | `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
 | `test_saves.py` | `test_a_zip_with_the_files_at_the_top_takes_its_own_name` |  |  | A zip with the files at the top takes its own name. |
@@ -1681,7 +1695,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/shadps4
 
-154 tests in 17 files, 7.7 s in a local run.
+158 tests in 17 files, 7.7 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -1789,6 +1803,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_shadps4_is_on_while_shadps4_runs_and_ends_it_at_once` |  |  | Exit shadPS4 (owner, 22-11-2026): the first button of the row under Your games, on only while shadPS4 runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_shadps4_running_and_end_read_proc` |  |  | shadPS4's process is found by its name, and ending it ends what it started first. |
+| `test_main_window.py` | `test_view_logs_shows_the_emulators_log_too` |  |  | View logs (owner, 26-11-2026): two radio buttons above the log choose the app's log or what shadPS4 printed (emulator.log beside it, which the run wrapper writes). |
 | `test_pkg.py` | `test_sanitize_file_name` |  |  | Sanitize file name. |
 | `test_pkg.py` | `test_find_pfsc_offset_priorities` |  |  | Find pfsc offset priorities. |
 | `test_pkg.py` | `test_decompress_pfsc_roundtrip` |  |  | Decompress pfsc roundtrip. |
@@ -1801,6 +1816,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_run_wrapper.py` | `test_started_by_steam_on_a_wayland_desktop` |  |  | Started by steam on a wayland desktop. |
 | `test_run_wrapper.py` | `test_the_game_started_goes_to_the_apps_log` |  |  | One line in the app's log file, in its form, with the game's folder name (its ID as Extract PKG names it; not its path) and from where; a start without a game (shadPS4's own window) says nothing. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_run_wrapper.py` | `test_what_the_emulator_prints_goes_to_its_log` |  |  | Its output and errors in the app's emulator log (owner, 26-11-2026: the View logs tab shows it), between a started and an ended line in the app's form, with the home folder written as ~; a last line without a newline is ended before the wrapper's own. |
+| `test_run_wrapper.py` | `test_a_stop_is_passed_on` |  |  | Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which saves and ends as on any close; the wrapper waits for it and ends with its exit code. |
+| `test_run_wrapper.py` | `test_the_log_turns_over_at_1_mb` |  |  | As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept. |
 | `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
 | `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
 | `test_saves.py` | `test_what_is_no_save_is_refused` |  |  | What is no save is refused. |
@@ -2107,7 +2125,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/vita3k
 
-81 tests in 9 files, 4.9 s in a local run.
+85 tests in 9 files, 4.9 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2162,12 +2180,16 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_vita3k_is_on_while_vita3k_runs_and_ends_it_at_once` |  |  | Exit Vita3K (owner, 22-11-2026): the first button of the row under Your games, on only while Vita3K runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_vita3k_running_and_end_read_proc` |  |  | Vita3K's process is found by its name, and ending it ends what it started first. |
+| `test_main_window.py` | `test_view_logs_shows_the_emulators_log_too` |  |  | View logs (owner, 26-11-2026): two radio buttons above the log choose the app's log or what Vita3K printed (emulator.log beside it, which the run wrapper writes). |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
 | `test_run_wrapper.py` | `test_started_by_steam_on_a_wayland_desktop` |  |  | Started by steam on a wayland desktop. |
 | `test_run_wrapper.py` | `test_without_fusermount_it_unpacks_itself` |  |  | Without fusermount it unpacks itself. |
 | `test_run_wrapper.py` | `test_help_and_not_installed` |  |  | Help and not installed. |
+| `test_run_wrapper.py` | `test_what_the_emulator_prints_goes_to_its_log` |  |  | Its output and errors in the app's emulator log (owner, 26-11-2026: the View logs tab shows it), between a started and an ended line in the app's form, with the home folder written as ~; a last line without a newline is ended before the wrapper's own. |
+| `test_run_wrapper.py` | `test_a_stop_is_passed_on` |  |  | Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which saves and ends as on any close; the wrapper waits for it and ends with its exit code. |
+| `test_run_wrapper.py` | `test_the_log_turns_over_at_1_mb` |  |  | As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept. |
 | `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
 | `test_saves.py` | `test_export_and_import_again` |  |  | Export and import again. |
 | `test_saves.py` | `test_what_is_no_save_is_refused` |  |  | What is no save is refused. |
@@ -2315,7 +2337,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/xenia
 
-75 tests in 8 files, 4.2 s in a local run.
+79 tests in 8 files, 4.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2371,12 +2393,16 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_xenia_is_on_while_xenia_runs_and_ends_it_at_once` |  |  | Exit Xenia (owner, 22-11-2026): the first button of the row under Your games, on only while Xenia runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_xenia_running_and_end_read_proc` |  |  | Xenia's process is found by its name, and ending it ends what it started first. |
+| `test_main_window.py` | `test_view_logs_shows_the_emulators_log_too` |  |  | View logs (owner, 26-11-2026): two radio buttons above the log choose the app's log or what Xenia printed (emulator.log beside it, which the run wrapper writes). |
 | `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
 | `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
 | `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
 | `test_run_wrapper.py` | `test_without_fusermount_it_unpacks_itself` |  |  | Without fusermount it unpacks itself. |
 | `test_run_wrapper.py` | `test_not_installed` |  |  | Not installed. |
 | `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_run_wrapper.py` | `test_what_the_emulator_prints_goes_to_its_log` |  |  | Its output and errors in the app's emulator log (owner, 26-11-2026: the View logs tab shows it), between a started and an ended line in the app's form, with the home folder written as ~; a last line without a newline is ended before the wrapper's own. |
+| `test_run_wrapper.py` | `test_a_stop_is_passed_on` |  |  | Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which saves and ends as on any close; the wrapper waits for it and ends with its exit code. |
+| `test_run_wrapper.py` | `test_the_log_turns_over_at_1_mb` |  |  | As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept. |
 | `test_saves.py` | `test_the_saves_are_read_from_their_folders` |  |  | The saves are read from their folders. |
 | `test_saves.py` | `test_export_and_import_again_with_the_headers` |  |  | Export and import again with the headers. |
 | `test_saves.py` | `test_what_is_no_save_or_has_no_profile_is_refused` |  |  | What is no save or has no profile is refused. |
@@ -2397,7 +2423,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## core
 
-210 tests in 28 files, 3.5 s in a local run.
+213 tests in 29 files, 3.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2494,6 +2520,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_keep.py` | `test_a_missing_path_has_no_size` |  |  | A missing path has no size. |
 | `test_keep.py` | `test_delete_takes_files_and_folders_read_only_ones_too` |  |  | Delete takes files and folders read only ones too. |
 | `test_keep_dialog.py` | `test_the_rows_and_their_marks` |  |  | The rows and their marks. |
+| `test_log_page.py` | `test_the_apps_log_first_then_the_emulators` |  |  | The apps log first then the emulators. |
+| `test_log_page.py` | `test_clear_empties_the_log_shown` |  |  | Clear empties the log shown. |
+| `test_log_page.py` | `test_without_an_emulator_log_yet` |  |  | Without an emulator log yet. |
 | `test_nexus.py` | `test_amsterdam_time_is_cet_in_winter_and_cest_in_summer` |  |  | Amsterdam time is cet in winter and cest in summer. |
 | `test_nexus.py` | `test_the_stamp_names_the_commit_and_its_time` |  |  | The stamp names the commit and its time. |
 | `test_nexus.py` | `test_the_header_shows_the_stamp_without_a_version` |  |  | The header shows the stamp without a version. |
@@ -2857,6 +2886,42 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_runner.py` | `test_installer_creates_desktop_entries_and_uninstalls_only_them` |  | 0.1 s | Installer creates desktop entries and uninstalls only them. |
 | `test_runner.py` | `test_a_second_launch_opens_no_window` |  |  | A double-click on the Desktop icon starts the app twice: the second launch hands over to the first. |
 
+## dev/marketing
+
+29 tests in 2 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_article.py` | `test_copy_has_a_line_for_every_app_and_category` |  |  | A new app in the portal fails here until copy.md has its line (owner, 25-11-2026: kept in sync). |
+| `test_article.py` | `test_missing_names_an_app_without_a_line_and_a_line_for_nothing` |  |  | Missing names an app without a line and a line for nothing. |
+| `test_article.py` | `test_every_part_of_the_copy_is_there` |  |  | Every part of the copy is there. |
+| `test_article.py` | `test_the_page_shows_every_portal_app_and_no_development_app` |  |  | The page shows every portal app and no development app. |
+| `test_article.py` | `test_the_count_comes_from_the_portal` |  |  | The count comes from the portal. |
+| `test_article.py` | `test_the_page_links_the_release_the_wiki_the_video_and_github` |  |  | The page links the release the wiki the video and github. |
+| `test_article.py` | `test_the_license_and_the_disclaimer_are_the_readmes` |  |  | The license and the disclaimer are the readmes. |
+| `test_article.py` | `test_a_readme_link_points_at_the_repository` |  |  | A readme link points at the repository. |
+| `test_article.py` | `test_the_changes_board_mark_follows_apps_toml` |  |  | The changes board mark follows apps toml. |
+| `test_article.py` | `test_stills_and_hero_go_along_when_there_are_some` |  |  | Stills and hero go along when there are some. |
+| `test_article.py` | `test_write_puts_every_file_beside_the_page` |  |  | Write puts every file beside the page. |
+| `test_article.py` | `test_every_file_of_the_page_exists` |  |  | Every file of the page exists. |
+| `test_article.py` | `test_the_preview_is_one_file_with_nothing_beside_it` |  |  | A browser in a sandbox (a Flatpak) gets only the file it opens: the preview refers to no file beside it. |
+| `test_article.py` | `test_the_quickfix_card_has_only_its_line_from_the_copy` |  |  | The quickfix card is like every other card: its one line from copy.md, no list of names under it (owner, 26-11-2026). |
+| `test_article.py` | `test_and_more_sits_above_the_safety_band` |  |  | And more sits above the safety band. |
+| `test_article.py` | `test_changes_and_publish_touch_only_the_articles_files` |  |  | Changes and publish touch only the articles files. |
+| `test_article.py` | `test_publish_commands_commit_the_articles_files_and_push` |  |  | Run against a local bare repository: the commit has the article's files, its message, and reaches the remote. |
+| `test_article.py` | `test_each_headline_line_in_the_copy_is_a_line_on_the_page` |  |  | copy.md sets where the headline breaks: a line there is a line on the page (owner, 25-11-2026). |
+| `test_article.py` | `test_the_specs_row_has_its_numbers_and_their_notes` |  |  | The board's numbers sit under the hero, a label with asterisks has its note at the bottom (owner, 26-11-2026), and a copy.md without the "Specs" part has no row. |
+| `test_main_window.py` | `test_a_row_for_every_app` |  |  | A row for every app. |
+| `test_main_window.py` | `test_current_stills_cannot_be_taken_again` |  |  | Current stills cannot be taken again. |
+| `test_main_window.py` | `test_export_never_takes_a_folder_that_is_there` |  |  | Export never takes a folder that is there. |
+| `test_main_window.py` | `test_export_writes_into_a_git_checkout_itself` |  |  | A git checkout, as the website's (owner, 26-11-2026): the article goes straight in, no dated folder. |
+| `test_main_window.py` | `test_publish_says_when_the_website_is_behind` |  |  | Publish says when the website is behind. |
+| `test_main_window.py` | `test_website_url_from_the_remote_or_the_cname` |  |  | Website url from the remote or the cname. |
+| `test_main_window.py` | `test_the_globe_is_on_with_a_website` |  |  | The globe is on with a website. |
+| `test_main_window.py` | `test_only_this_suites_website_and_its_own_settings` |  |  | The twin publishes only to its own suite's website, and keeps its folders under its own name in the settings file both twins share (owner, 26-11-2026: the PS5 article was pushed to the BC-250 website). |
+| `test_main_window.py` | `test_each_suite_has_its_own_preview_file` |  |  | Both suites' twins have the same app ID, so the preview is named after the suite (owner, 25-11-2026). |
+| `test_main_window.py` | `test_the_pencil_opens_copy_md` |  |  | The pencil beside the line that names copy.md opens the file in the default editor (owner, 26-11-2026). |
+
 ## dev/nrt
 
 135 tests in 4 files, 23.1 s in a local run.
@@ -3153,7 +3218,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## portal
 
-233 tests in 18 files, 30.2 s in a local run.
+237 tests in 18 files, 30.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3262,6 +3327,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_shortcuts.py` | `test_steam_and_the_file_manager` |  |  | Steam and the file manager. |
 | `test_shortcuts.py` | `test_youtube_needs_brave_browsers_flatpak` |  |  | Youtube needs brave browsers flatpak. |
 | `test_shortcuts.py` | `test_discord_opens_in_brave` |  |  | Discord (owner, 25-11-2026): its web app in a maximized window of Brave Browser, and a message while it is missing. |
+| `test_shortcuts.py` | `test_twitch_opens_in_brave` |  |  | Twitch (owner, 25-11-2026): in a maximized window of Brave Browser, and a message while it is missing. |
 | `test_shortcuts.py` | `test_the_weather_opens_its_forecast_in_brave` |  |  | A click on the weather (owner, 24-11-2026): the place's forecast at wttr.in, a page without ads, by its coordinates, in a window of Brave Browser. |
 | `test_shortcuts.py` | `test_github_opens_in_the_desktops_own_browser` |  |  | github.com with xdg-open; the browser's window is the one KWin brings to the front, when it can be asked. |
 | `test_shortcuts.py` | `test_the_settings_of_the_desktop_that_is_there` | 4 |  | KDE Plasma's System Settings, else the module alone, else GNOME's Settings (not only the owner's desktop). |
@@ -3292,6 +3358,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_sysinfo.py` | `test_the_owners_board` |  |  | The owners board. |
 | `test_sysinfo.py` | `test_two_gpus_a_sata_drive_and_a_usb_stick` |  |  | Two gpus a sata drive and a usb stick. |
 | `test_sysinfo.py` | `test_the_screens_in_use` |  |  | The screens the desktop shows now get a row each under their output, with the mode in use (owner, 22-11-2026); a screen the desktop does not show, or a mode Qt does not know, gets none. |
+| `test_sysinfo.py` | `test_a_fractional_scale_shows_the_outputs_own_resolution` |  |  | Qt's size times 175 % is half a pixel off; the output's listed mode is what it runs (owner, 26-11-2026: a 4K TV at 175 % showed 4388 × 2468 at 200 %). |
+| `test_sysinfo.py` | `test_the_clock_now_without_cpufreq` |  |  | A board without cpufreq (no ACPI override) reports no max clock, so the fastest core's clock of the moment shows (owner, 26-11-2026). |
+| `test_sysinfo.py` | `test_vram_taken_from_the_boards_memory_is_explained` |  |  | The firmware's memory map reserves exactly the VRAM's 6 GiB (as on the owner's BC-250, 26-11-2026), so the Memory section says why RAM and VRAM do not add up to the board's memory; a GPU with its own memory gets no line. |
 | `test_sysinfo.py` | `test_a_system_that_reports_nothing` |  |  | No sysfs, /proc or /etc (another OS, a container): only what Python itself knows. |
 | `test_sysinfo.py` | `test_as_text` |  |  | As text. |
 | `test_touchpad_and_raise.py` | `test_a_finger_moves_the_pointer_and_a_press_clicks` |  |  | A finger moves the pointer and a press clicks. |
@@ -3345,7 +3414,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_a_download_counts_its_megabytes` |  | 0.2 s | The tile says how far a download is (owner, 03-11-2026: Downloading… for a 90 MB release looked like a hang): the part file's size, read every PROGRESS_MS while the job runs. |
 | `test_window.py` | `test_the_exit_asks_nothing` |  | 0.2 s | Escape (B) and the close symbol close the portal without a question (owner, 12-11-2026). |
 | `test_window.py` | `test_the_desktops_close_asks_only_while_something_runs` |  | 0.2 s | The desktops close asks only while something runs. |
-| `test_window.py` | `test_a_shortcut_starts_its_program` |  | 0.2 s | The header's shortcuts (owner, 12-11-2026): the file manager, Steam, Discord and YouTube in Brave Browser, GitHub, and the desktop's Bluetooth, network, sound and display settings. |
+| `test_window.py` | `test_a_shortcut_starts_its_program` |  | 0.2 s | The header's shortcuts (owner, 12-11-2026): the file manager, Steam, Discord, YouTube and Twitch in Brave Browser, GitHub, and the desktop's Bluetooth, network, sound and display settings. |
 | `test_window.py` | `test_a_key_for_each_controller_action` |  | 0.2 s | Steam's desktop layout turns a pad's buttons into keys (owner, 05-11-2026): U, S, K and M do what Y, ☰, R3 and X do, for the buttons it gives no key of their own. |
 | `test_window.py` | `test_the_s_key_opens_the_settings` |  | 0.2 s | The s key opens the settings. |
 | `test_window.py` | `test_the_arrow_keys_move_between_a_questions_buttons` |  | 0.2 s | With Steam's desktop layout a controller is the arrow keys and Enter: Qt's questions take them as they are. |
@@ -3372,7 +3441,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_restart_that_cannot_start` |  | 0.2 s | Restart that cannot start. |
 | `test_window.py` | `test_no_restart_from_a_checkout` |  | 0.2 s | No restart from a checkout. |
 | `test_window.py` | `test_one_theme_for_every_app` |  | 0.7 s | The theme pill shows the chosen theme; a click takes the next one, for every app; its tooltip says when it shows. |
-| `test_window.py` | `test_the_header_is_an_apps_header_with_symbols` |  | 0.2 s | The suite's icon, spanning the name, ☰ and the close symbol at the top right and the row of big symbols (owner, 05-11-2026, in place of the pills): Refresh, Sys info, Install all apps and Install all updates, then the shortcuts (owner, 12-11-2026): Files, Steam, Discord, YouTube, GitHub, Bluetooth, Network, Volume and Screen, what each does in its tooltip; on their right the installed count over the status. |
+| `test_window.py` | `test_the_header_is_an_apps_header_with_symbols` |  | 0.2 s | The suite's icon, spanning the name, ☰ and the close symbol at the top right and the row of big symbols (owner, 05-11-2026, in place of the pills): Refresh, Sys info, Install all apps and Install all updates, then the shortcuts (owner, 12-11-2026): Files, Steam, Discord, YouTube, Twitch, GitHub, Bluetooth, Network, Volume and Screen, what each does in its tooltip; on their right the installed count over the status. |
 | `test_window.py` | `test_the_sys_info_symbol_opens_one_window_read_each_time` |  | 0.2 s | Sys info (owner, 20-10-2026): a small window with what the system reports, read again each time it opens; Copy puts it on the clipboard as text. |
 | `test_window.py` | `test_the_wallpaper` |  | 0.4 s | A picture of at least 1920 x 1080 in 16:9 becomes the wallpaper (a copy in the portal's state folder); another is refused, with the rules (owner, 20-10-2026). |
 | `test_window.py` | `test_the_example_wallpaper` |  | 0.5 s | The portal ships an example wallpaper (owner, 20-10-2026) and starts with it (owner, 15-11-2026): it is the wallpaper until the user chooses a picture of their own or none, and No wallpaper is remembered. |

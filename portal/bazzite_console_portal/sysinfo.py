@@ -28,6 +28,7 @@ SECURE_BOOT = "SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c"    # the EFI glo
 USB_SPEEDS = {"1.5": "USB 1.0", "12": "USB 1.1", "480": "USB 2.0", "5000": "USB 3.0", "10000": "USB 3.1",
               "20000": "USB 3.2"}
 Mode = tuple[int, int, float, float]    # a screen in use, as Qt reports it: width, height (pixels), refresh (Hz), scale
+MODE = re.compile(r"^(\d+)x(\d+)")      # a mode the output lists in sysfs: 3840x2160
 EDID_NAME = 0xFC                # the display descriptor with the monitor's name (0xFF holds its serial: never read)
 MAC = re.compile(r"([0-9a-f]{2}[:-]){5}[0-9a-f]{2}", re.IGNORECASE)
 INPUT_BUSES = {"0003": "USB", "0005": "Bluetooth", "0006": "virtual", "0011": "PS/2", "0018": "I2C",
@@ -146,9 +147,12 @@ def cpu(sys_root: Path, proc_root: Path) -> Section:
     cores = {(_read(base / f"cpu{n}" / "topology" / "physical_package_id"),
               _read(base / f"cpu{n}" / "topology" / "core_id")) for n in online}
     khz = _read(base / "cpu0" / "cpufreq" / "cpuinfo_max_freq")
+    # the fastest core at this moment, from /proc/cpuinfo: a board without cpufreq reports no max clock
+    mhz = [float(found) for found in re.findall(r"^cpu MHz\s*:\s*([0-9.]+)", _read(proc_root / "cpuinfo"), re.M)]
     return "CPU", [("Model", fields.get("model name", "")),
                    ("Online", f"{len(cores)} cores, {len(online)} threads" if online else ""),
                    ("Max clock", f"{int(khz) / 1e6:.2f} GHz" if khz.isdigit() else ""),
+                   ("Clock now", f"up to {max(mhz) / 1e3:.2f} GHz" if mhz else ""),
                    ("Microcode", fields.get("microcode", ""))]
 
 
@@ -179,12 +183,33 @@ def gpus(sys_root: Path, ids: tuple[Path, ...] = PCI_IDS) -> list[Section]:
     return sections
 
 
-def memory(proc_root: Path) -> Section:
+def shared_vram(sys_root: Path) -> int:
+    """The VRAM a GPU takes out of the board's own memory, in bytes: the firmware's memory map holds it back as a
+    Reserved region of exactly the VRAM's size. 0 when no GPU's VRAM matches one (a GPU with memory of its own)."""
+    reserved = set()
+    for region in (sys_root / "firmware" / "memmap").glob("*"):
+        start, end = _read(region / "start"), _read(region / "end")
+        if _read(region / "type") == "Reserved" and start.startswith("0x") and end.startswith("0x"):
+            reserved.add(int(end, 16) - int(start, 16) + 1)
+    for vram in (_read(card / "device" / "mem_info_vram_total")
+                 for card in sorted((sys_root / "class" / "drm").glob("card*")) if card.name[4:].isdigit()):
+        if vram.isdigit() and int(vram) in reserved:
+            return int(vram)
+    return 0
+
+
+def memory(proc_root: Path, sys_root: Path = Path("/sys")) -> Section:
     rows = []
     for line in _read(proc_root / "meminfo").splitlines():
         key, _, value = line.partition(":")
         if key in ("MemTotal", "SwapTotal") and value.split()[0].isdigit():
             rows.append(("RAM" if key == "MemTotal" else "Swap", _gib(int(value.split()[0]) * 1024)))
+    # RAM and VRAM add up to less than the memory on the board: the firmware keeps a part, and only root reads the
+    # size of the chips (owner, 26-11-2026: the BC-250's 16 GB shows nowhere)
+    vram = shared_vram(sys_root)
+    if vram:
+        rows.append(("Shared", f"The GPU's {_gib(vram)} VRAM comes out of this memory. "
+                               "The firmware keeps a part. Only root can read the exact total."))
     return "Memory", rows
 
 
@@ -222,6 +247,17 @@ def mode_text(mode: Mode) -> str:
     return ", ".join(v for v in (f"{width} × {height}", f"{hz:.0f} Hz" if hz > 0 else "", f"scale {scale:.0%}") if v)
 
 
+def listed_mode(mode: Mode, modes: list[str]) -> Mode:
+    """*mode* with the output's own resolution when it lists one within a pixel or two of it. Qt's size times a
+    fractional scale is off by a pixel: 2194 × 1.75 is 3839.5, where the output runs 3840 pixels wide."""
+    width, height, hz, scale = mode
+    for listed in modes:
+        found = MODE.match(listed)
+        if found and abs(int(found.group(1)) - width) <= scale + 1 and abs(int(found.group(2)) - height) <= scale + 1:
+            return int(found.group(1)), int(found.group(2)), hz, scale
+    return mode
+
+
 def displays(sys_root: Path, in_use: dict[str, Mode] | None = None) -> Section:
     """Each output of each GPU: connected (the monitor's name and its preferred mode) or not. *in_use*: the screens
     the desktop shows now, by output name (DP-1), from the portal's window; each gets a row with its current mode."""
@@ -239,10 +275,11 @@ def displays(sys_root: Path, in_use: dict[str, Mode] | None = None) -> Section:
             name = edid_name((connector / "edid").read_bytes())
         except OSError:
             name = ""
-        mode = _read(connector / "modes").partition("\n")[0]
+        modes = _read(connector / "modes").splitlines()
+        mode = modes[0] if modes else ""
         rows.append((output, ", ".join(v for v in (name or "connected", mode and f"{mode} preferred") if v)))
         if output in in_use:
-            rows.append((f"{output} now", mode_text(in_use[output])))
+            rows.append((f"{output} now", mode_text(listed_mode(in_use[output], modes))))
     return "Display", rows
 
 
@@ -363,7 +400,7 @@ def collect(sys_root: Path = Path("/sys"), proc_root: Path = Path("/proc"), etc_
             home: Path | None = None, ids: tuple[Path, ...] = PCI_IDS, image_info: Path = IMAGE_INFO,
             usb_ids: tuple[Path, ...] = USB_IDS, in_use: dict[str, Mode] | None = None) -> list[Section]:
     """Every section with the rows the system reports: one without any is left out. *in_use*: see displays()."""
-    sections = [board(sys_root), bios(sys_root), cpu(sys_root, proc_root), *gpus(sys_root, ids), memory(proc_root),
+    sections = [board(sys_root), bios(sys_root), cpu(sys_root, proc_root), *gpus(sys_root, ids), memory(proc_root, sys_root),
                 drives(sys_root, home or Path.home()), displays(sys_root, in_use), audio(proc_root),
                 network(sys_root, ids, usb_ids), usb(sys_root, usb_ids), inputs(sys_root), sensors(sys_root),
                 os_release(etc_root, image_info)]

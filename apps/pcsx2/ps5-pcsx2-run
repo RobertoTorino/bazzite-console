@@ -86,4 +86,54 @@ if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
     fi
     exit 1
 fi
-exec "$APPIMAGE" "$@"
+# What PCSX2 prints goes to the app's emulator log (owner, 26-11-2026), which the View logs tab shows beside the
+# app's own. Before, it went to Steam's console only, where no one saw it. Every line has the home folder written
+# as ~, so no user name is in it. The file turns over at 1 MB with three older ones kept, as the app's own log does.
+# The wrapper stays while PCSX2 runs, passes a stop on to it and ends with its exit code, so Steam sees the game
+# end as before. SIGINT is passed on as SIGTERM: a program started in the background ignores SIGINT.
+EMULATOR_LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-pcsx2-manager/emulator.log"
+{ [ -d "${EMULATOR_LOG%/*}" ] && : >>"$EMULATOR_LOG"; } 2>/dev/null || exec "$APPIMAGE" "$@"
+size=$(stat -c %s "$EMULATOR_LOG" 2>/dev/null) || size=0
+if [ "$size" -ge 1000000 ]; then
+    { rm -f "$EMULATOR_LOG.3"
+      for n in 2 1; do [ ! -e "$EMULATOR_LOG.$n" ] || mv -f "$EMULATOR_LOG.$n" "$EMULATOR_LOG.$((n + 1))"; done
+      mv -f "$EMULATOR_LOG" "$EMULATOR_LOG.1"; } 2>/dev/null || true
+fi
+private_lines() {
+    # Each line as it comes, the home folder written as ~ (and /home/<user> for /var/home/<user>, Bazzite's link),
+    # as core's platform.private() does: only where the next character is not part of a longer name.
+    awk 'function swap(text, from,   out, at, after) {
+             out = ""
+             while ((at = index(text, from)) > 0) {
+                 after = substr(text, at + length(from), 1)
+                 out = out substr(text, 1, at - 1) (after ~ /[A-Za-z0-9_]/ ? from : "~")
+                 text = substr(text, at + length(from))
+             }
+             return out text
+         }
+         BEGIN { home = ENVIRON["HOME"]; sub(/\/+$/, "", home)
+                 short = home ~ /^\/var\/home\// ? substr(home, 5) : "" }
+         { line = length(home) > 1 ? swap($0, home) : $0
+           if (short != "") line = swap(line, short)
+           print line; fflush() }'
+}
+printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
+printf '%s INFO PCSX2 started: %s\n' "$stamp" "$*" | private_lines >>"$EMULATOR_LOG"
+exec 3> >(private_lines >>"$EMULATOR_LOG")
+writer=$!
+emulator=""
+trap '[ -z "$emulator" ] || kill -TERM "$emulator" 2>/dev/null || true' TERM INT
+trap '[ -z "$emulator" ] || kill -HUP "$emulator" 2>/dev/null || true' HUP
+"$APPIMAGE" "$@" <&0 >&3 2>&3 &
+emulator=$!
+status=0
+wait "$emulator" || status=$?
+while kill -0 "$emulator" 2>/dev/null; do        # the wait above was cut short by a stop passed on: wait again
+    status=0
+    wait "$emulator" || status=$?
+done
+exec 3>&-
+wait "$writer" 2>/dev/null || true             # its last lines written, a last one without a newline ended
+printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
+printf '%s INFO PCSX2 ended (exit code %s).\n' "$stamp" "$status" >>"$EMULATOR_LOG"
+exit "$status"

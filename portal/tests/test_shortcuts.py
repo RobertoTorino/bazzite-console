@@ -52,6 +52,15 @@ def test_discord_opens_in_brave():
         shortcuts.discord(flatpak(1))
 
 
+def test_twitch_opens_in_brave():
+    """Twitch (owner, 25-11-2026): in a maximized window of Brave Browser, and a message while it is missing."""
+    start = shortcuts.twitch(flatpak())
+    assert start.argv == ["flatpak", "run", "com.brave.Browser", "--start-maximized", "https://www.twitch.tv/"]
+    assert "com.brave.Browser" in start.app_ids
+    with pytest.raises(shortcuts.Missing, match="Brave Browser is required.*to open Twitch"):
+        shortcuts.twitch(flatpak(1))
+
+
 def test_the_weather_opens_its_forecast_in_brave():
     """A click on the weather (owner, 24-11-2026): the place's forecast at wttr.in, a page without ads, by its
     coordinates, in a window of Brave Browser."""

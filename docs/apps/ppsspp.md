@@ -225,6 +225,12 @@ kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, with your home folder written as `~`, and not your SteamGridDB key.
 `install.sh --uninstall` keeps it; `--purge` removes it.
 
+Two buttons sit above the log. **PPSSPP Manager** shows the app's own log. **PPSSPP** shows what PPSSPP
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-ppsspp-manager/emulator.log`. Each
+game's part opens with a line that says how the wrapper started PPSSPP. It ends with a line that gives PPSSPP's exit
+code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+the three older files. With **PPSSPP** chosen, **Clear logs** empties that log and removes its three older files.
+
 ## Renaming the files
 
 A dumped disc often gets a meaningless file name. **Games Rename** opens the **Rename files** window with the ISO
@@ -260,6 +266,10 @@ ps5-ppsspp-run --fullscreen --pause-menu-exit "/path/to/game.iso"   # a game ful
 ps5-ppsspp-run "/path/to/game.iso"                                  # a game, as PPSSPP is set up
 ps5-ppsspp-run                                                      # PPSSPP's own window
 ```
+
+The run wrapper stays while PPSSPP runs. It passes a stop from Steam on to PPSSPP, and ends with PPSSPP's exit
+code. What PPSSPP prints goes to `~/.local/share/ps5-ppsspp-manager/emulator.log`, not to the terminal. The
+View logs tab shows it.
 
 ## New PPSSPP releases
 
@@ -324,6 +334,7 @@ already.
 | Your games | `~/Games/PSP` (the app's own folder), and `Games/PSP` on a removable drive |
 | The app's settings | `~/.config/ps5-ppsspp-manager` |
 | The app's log | `~/.local/share/ps5-ppsspp-manager/ps5-ppsspp-manager.log` |
+| What PPSSPP printed while a game ran | `~/.local/share/ps5-ppsspp-manager/emulator.log` |
 | The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The covers found on SteamGridDB | `~/.local/share/ps5-ppsspp-manager/covers` |
 | The SteamGridDB key, one for the suite | `~/.config/bazzite-console/steamgriddb-key` |

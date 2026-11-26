@@ -296,6 +296,12 @@ kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
 keeps it; `--purge` removes it.
 
+Two buttons sit above the log. **PCSX2 Manager** shows the app's own log. **PCSX2** shows what PCSX2
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-pcsx2-manager/emulator.log`. Each
+game's part opens with a line that says how the wrapper started PCSX2. It ends with a line that gives PCSX2's exit
+code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+the three older files. With **PCSX2** chosen, **Clear logs** empties that log and removes its three older files.
+
 ## From a terminal
 
 `ps5-pcsx2-run` starts the installed PCSX2 with the options you give it. The Steam shortcuts use it, so they
@@ -306,6 +312,10 @@ ps5-pcsx2-run -nogui -fullscreen -- "/path/to/game.iso"   # a game alone, full s
 ps5-pcsx2-run -nogui -- "/path/to/game.iso"               # a game alone, in a window
 ps5-pcsx2-run                                             # PCSX2's own window
 ```
+
+The run wrapper stays while PCSX2 runs. It passes a stop from Steam on to PCSX2, and ends with PCSX2's exit
+code. What PCSX2 prints goes to `~/.local/share/ps5-pcsx2-manager/emulator.log`, not to the terminal. The
+View logs tab shows it.
 
 ## New PCSX2 releases
 
@@ -390,6 +400,7 @@ already.
 | Your games and your BIOS dump | `~/Games/PS2` and `~/Games/PS2/BIOS` (the app's own folder), and `Games/PS2` on a removable drive |
 | The app's settings | `~/.config/ps5-pcsx2-manager` |
 | The app's log | `~/.local/share/ps5-pcsx2-manager/ps5-pcsx2-manager.log` |
+| What PCSX2 printed while a game ran | `~/.local/share/ps5-pcsx2-manager/emulator.log` |
 | The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The pictures found on SteamGridDB | `~/.local/share/ps5-pcsx2-manager/covers` |
 | Launchers | `~/.local/bin/ps5-pcsx2-manager`, `~/.local/bin/ps5-pcsx2-run` |

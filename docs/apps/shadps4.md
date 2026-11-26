@@ -303,6 +303,12 @@ which turns over at 1 MB (the three older files are kept). **Clear logs**, the t
 the file and the View logs tab and removes the three older files. The log holds what the app did, not your SteamGridDB key,
 your shadNet password or anything else personal. `install.sh --uninstall` keeps it; `--purge` removes it.
 
+Two buttons sit above the log. **shadPS4 Manager** shows the app's own log. **shadPS4** shows what shadPS4
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-shadps4-manager/emulator.log`. Each
+game's part opens with a line that says how the wrapper started shadPS4. It ends with a line that gives shadPS4's exit
+code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+the three older files. With **shadPS4** chosen, **Clear logs** empties that log and removes its three older files.
+
 ## shadNet
 
 shadNet is shadPS4's online service: online trophies, friends and online play, in the games shadPS4 supports online.
@@ -445,6 +451,10 @@ ps5-shadps4-run -g "/path/to/game/eboot.bin"           # a game, as shadPS4's se
 ps5-shadps4-run -b                                     # shadPS4's own window
 ```
 
+The run wrapper stays while shadPS4 runs. It passes a stop from Steam on to shadPS4, and ends with shadPS4's exit
+code. What shadPS4 prints goes to `~/.local/share/ps5-shadps4-manager/emulator.log`, not to the terminal. The
+View logs tab shows it.
+
 The app itself takes packages: `ps5-shadps4-manager file.pkg` opens it in Extract PKG, as opening a package with
 the app from the file manager does; `ps5-shadps4-manager a.pkg b.pkg` opens the first and queues the rest. When
 the app is open already, the packages go to the open window. `ps5-shadps4-pkg-cli` extracts without a window:
@@ -524,6 +534,7 @@ already.
 | shadPS4's settings (the Settings tab) | `~/.local/share/shadPS4/config.json`, shadPS4's own |
 | shadPS4's play time per game | `~/.local/share/shadPS4/play_time.txt`, shadPS4's own |
 | The app's log | `~/.local/share/ps5-shadps4-manager/ps5-shadps4-manager.log` |
+| What shadPS4 printed while a game ran | `~/.local/share/ps5-shadps4-manager/emulator.log` |
 | Your shadNet account | `~/.local/share/shadPS4/users.json`, the server in its `config.json` |
 | The quit hotkeys | `~/.local/share/shadPS4/input_config/global.ini` |
 | The app's settings, with Extract PKG's last used folders | `~/.config/ps5-shadps4-manager` |

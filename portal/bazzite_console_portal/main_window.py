@@ -7,7 +7,8 @@ under them a row of big symbols (owner, 05-11-2026: in
 place of the pills): Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py),
 Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
 shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, Discord (in Brave Browser;
-owner, 25-11-2026), YouTube (in Brave Browser), GitHub
+owner, 25-11-2026), YouTube (in Brave Browser), Twitch (in Brave Browser;
+owner, 25-11-2026), GitHub
 (in the desktop's browser; owner, 18-11-2026), and the
 desktop's Bluetooth, Network, Volume (sound) and Screen (display) settings. On the right of the symbols
 how many apps are installed (installed / listed), and under it the status, a line each (owner, 12-11-2026): the
@@ -123,7 +124,8 @@ BACK_GRACE_S = 0.5
 # The header's shortcuts (owner, 12-11-2026): what a message calls each one, and what finds its program.
 SHORTCUTS = {"files": ("The file manager", shortcuts.files), "steam": ("Steam", shortcuts.steam),
              "discord": ("Discord", shortcuts.discord),
-             "youtube": ("YouTube", shortcuts.youtube), "github": ("GitHub", shortcuts.github),
+             "youtube": ("YouTube", shortcuts.youtube), "twitch": ("Twitch", shortcuts.twitch),
+             "github": ("GitHub", shortcuts.github),
              "bluetooth": ("The Bluetooth settings", shortcuts.bluetooth_settings),
              "network": ("The network settings", shortcuts.network_settings),
              "sound": ("The sound settings", shortcuts.sound_settings),
@@ -198,12 +200,16 @@ def shell_line(folder: PurePath, commands: tuple[str, ...]) -> str:
     return " && ".join([f"cd {shlex.quote(str(folder))}", *commands])
 
 
-def screens_in_use() -> dict[str, sysinfo.Mode]:
+def screens_in_use(window: QWidget | None = None) -> dict[str, sysinfo.Mode]:
     """The screens the desktop shows now, by output name, as Qt reports them: the resolution in pixels (its size
-    times the scale), the refresh rate and the scale."""
+    times the scale), the refresh rate and the scale. The screen *window* is on takes the window's scale: a screen
+    reports a fractional scale rounded up (175 % as 200 %), a shown window the real one."""
     found = {}
+    handle = window.windowHandle() if window is not None else None
     for screen in QApplication.screens():
         scale, size = screen.devicePixelRatio(), screen.geometry().size()
+        if handle is not None and handle.screen() is screen:
+            scale = handle.devicePixelRatio()
         found[screen.name()] = (round(size.width() * scale), round(size.height() * scale), screen.refreshRate(), scale)
     return found
 
@@ -619,15 +625,17 @@ class MainWindow(QMainWindow):
                                            "Browser, which must be installed as a Flatpak.")
         self.youtube_button = SymbolButton(glyphs.youtube, "YouTube: open YouTube in a maximized window of Brave "
                                            "Browser, which must be installed as a Flatpak.")
+        self.twitch_button = SymbolButton(glyphs.twitch, "Twitch: open Twitch in a maximized window of Brave "
+                                          "Browser, which must be installed as a Flatpak.")
         self.github_button = SymbolButton(glyphs.github, "GitHub: open github.com in your browser.")
         self.bluetooth_button = SymbolButton(glyphs.bluetooth, "Bluetooth: open the desktop's Bluetooth settings.")
         self.network_button = SymbolButton(glyphs.network, "Network: open the desktop's network settings.")
         self.volume_button = SymbolButton(glyphs.volume, "Volume: open the desktop's sound settings.")
         self.screen_button = SymbolButton(glyphs.screen, "Screen: open the desktop's display settings.")
         # In the row's order: Files before Steam (owner, 12-11-2026), Discord after Steam (owner, 25-11-2026),
-        # GitHub after YouTube (owner, 18-11-2026)
+        # Twitch after YouTube (owner, 25-11-2026), GitHub after them (owner, 18-11-2026)
         self.shortcuts = {self.files_button: "files", self.steam_button: "steam", self.discord_button: "discord",
-                          self.youtube_button: "youtube",
+                          self.youtube_button: "youtube", self.twitch_button: "twitch",
                           self.github_button: "github", self.bluetooth_button: "bluetooth",
                           self.network_button: "network",
                           self.volume_button: "sound", self.screen_button: "display"}
@@ -1342,7 +1350,7 @@ class MainWindow(QMainWindow):
         """The Sys info window, read again each time it opens; one at a time."""
         if self.sysinfo_window is None:
             self.sysinfo_window = SysInfoDialog(self)
-        self.sysinfo_window.fill(sysinfo.collect(in_use=screens_in_use()))
+        self.sysinfo_window.fill(sysinfo.collect(in_use=screens_in_use(self)))
         self.sysinfo_window.show()
         self.sysinfo_window.raise_()
         self.sysinfo_window.activateWindow()

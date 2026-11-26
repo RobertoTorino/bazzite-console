@@ -1,3 +1,10 @@
+Changelog: 25-11-2026 23:40:24
+
+Added. tools/portal_shots.py takes stills of the portal from the checkout, one per category tab and one of
+the Settings page, as WebP. It sets the portal up as the Portal Tour does and writes the stamp of what they show.
+Nexus Marketing for PS5 uses them. The README lists that app, its installer test is
+tools/installer-tests/marketing.sh, and the text check knows the word Sys, from the portal's Sys info.
+
 Changelog: 25-11-2026 05:16:25
 
 Fixed. CI's app tests of Remote Play and XBOX Remote Play stop before a test runs, as in bc250-bazzite. PyQt6-Qt6

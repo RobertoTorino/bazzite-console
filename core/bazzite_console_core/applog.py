@@ -21,6 +21,9 @@ MAX_BYTES = 1_000_000
 KEPT = 3
 FORMAT = "%(asctime)s %(levelname)s %(message)s"
 DATE = "%d-%m-%Y %H:%M:%S"
+# What the emulator printed, beside the app's log (owner, 26-11-2026): a game manager's run wrapper writes it
+# and its View logs tab shows it (log_page)
+EMULATOR_LOG = "emulator.log"
 
 
 def log_file(app_id: str) -> Path:

@@ -240,6 +240,12 @@ older files are kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, with your home folder written as `~`, and not your
 SteamGridDB key. `install.sh --uninstall` keeps it; `--purge` removes it.
 
+Two buttons sit above the log. **Vita3K Manager** shows the app's own log. **Vita3K** shows what Vita3K
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-vita3k-manager/emulator.log`. Each
+game's part opens with a line that says how the wrapper started Vita3K. It ends with a line that gives Vita3K's exit
+code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+the three older files. With **Vita3K** chosen, **Clear logs** empties that log and removes its three older files.
+
 ## From a terminal
 
 `ps5-vita3k-run` starts the installed Vita3K with the options you give it. The Steam shortcuts use it, so they keep
@@ -252,6 +258,10 @@ ps5-vita3k-run --pkg "/path/to/game.pkg" --zrif KO5i...      # install a game fr
 ps5-vita3k-run "/path/to/game.vpk"                           # install a game and start it
 ps5-vita3k-run                                               # Vita3K's own window
 ```
+
+The run wrapper stays while Vita3K runs. It passes a stop from Steam on to Vita3K, and ends with Vita3K's exit
+code. What Vita3K prints goes to `~/.local/share/ps5-vita3k-manager/emulator.log`, not to the terminal. The
+View logs tab shows it.
 
 ## New Vita3K builds
 
@@ -316,6 +326,7 @@ game. Game Mode runs every game through X11 already.
 | The PS Vita's storage: firmware, installed games, saves | `~/.local/share/Vita3K/Vita3K` (Vita3K's own folder) |
 | The app's settings | `~/.config/ps5-vita3k-manager` |
 | The app's log | `~/.local/share/ps5-vita3k-manager/ps5-vita3k-manager.log` |
+| What Vita3K printed while a game ran | `~/.local/share/ps5-vita3k-manager/emulator.log` |
 | The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The covers found on SteamGridDB | `~/.local/share/ps5-vita3k-manager/covers` |
 | The SteamGridDB key, one for the suite | `~/.config/bazzite-console/steamgriddb-key` |
