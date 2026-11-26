@@ -3,7 +3,7 @@
 
 APP_NAME = "PS5 Upscaler Manager"
 APP_ID = "ps5-upscaler"
-__version__ = "0.9.1"
+__version__ = "0.10.0"
 
 import os
 from pathlib import Path

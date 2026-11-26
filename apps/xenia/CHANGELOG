@@ -1,3 +1,7 @@
+Changelog: 26-11-2026 14:03:51
+
+Release 1.10.0.
+
 Changelog: 26-11-2026 12:21:07
 
 Added. What Xenia prints while a game runs now goes to the app's emulator log, emulator.log beside the app's own

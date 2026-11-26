@@ -4,7 +4,7 @@ on PPSSPP's memory stick and adds them to Steam for Game Mode."""
 
 APP_NAME = "PPSSPP Manager"
 APP_ID = "ps5-ppsspp-manager"
-__version__ = "1.8.1"
+__version__ = "1.9.0"
 
 from pathlib import Path
 

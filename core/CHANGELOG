@@ -1,3 +1,7 @@
+Changelog: 26-11-2026 14:03:51
+
+Version 4.9.0.
+
 Changelog: 26-11-2026 12:21:07
 
 Added. log_page.py holds LogPage, the View logs tab of a game manager. Two radio buttons choose the app's log or the

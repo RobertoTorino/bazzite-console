@@ -1,3 +1,7 @@
+Changelog: 26-11-2026 14:03:51
+
+Release 5.4.0. Pins ps5-board-v0.14.0, ps5-quickfix-v0.9.0, ps5-upscaler-v0.10.0, ps5-rpcs3-v1.9.0, ps5-remoteplay-v1.9.0, ps5-clb-v1.9.0, ps5-shadps4-v1.9.0, ps5-datstation-v1.9.0, ps5-ppsspp-v1.9.0, ps5-pcsx2-v1.9.0, ps5-vita3k-v1.10.0, ps5-xenia-v1.10.0, ps5-sftp-v1.10.0, ps5-webcam-v1.10.0, ps5-controller-v1.10.0, ps5-ssd-v1.10.0, ps5-overlay-v1.9.0, ps5-fan-v2.9.0, ps5-cec-v2.10.0, ps5-bluetooth-v0.10.0, ps5-password-v0.8.0, ps5-turing-v0.4.0.
+
 Changelog: 26-11-2026 06:54:24
 
 Added. Sys info says when the GPU's VRAM comes out of the board's own memory. RAM and VRAM then add up to less than the board has, because the firmware keeps a part. Only root can read the exact total, so Sys info says that too.

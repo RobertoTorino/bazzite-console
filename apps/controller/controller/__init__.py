@@ -6,7 +6,7 @@ It has not been validated on PS5 hardware.
 
 APP_NAME = "PS5 Controller"
 APP_ID = "ps5-controller"
-__version__ = "1.9.1"
+__version__ = "1.10.0"
 
 from pathlib import Path
 
