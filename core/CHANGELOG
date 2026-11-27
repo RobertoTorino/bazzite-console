@@ -1,3 +1,9 @@
+Changelog: 26-11-2026 20:34:55
+
+Fixed. The mouse wheel changes a list, a number field or a slider only after a click on it. Before, a wheel
+turn over a window changed every value the pointer passed. Until the click, the wheel scrolls the page under it.
+WheelGuard in widgets.py does it, and create_app() installs it.
+
 Changelog: 26-11-2026 14:03:51
 
 Version 4.9.0.

@@ -22,7 +22,7 @@ from .main_window import MainWindow
 from .profiles import ProfileStore
 from .theme import apply_theme
 from .tray import TRAY_FLAG
-from .widgets import RoundedToolTip
+from .widgets import RoundedToolTip, WheelGuard
 
 def main() -> int:
     if "--sweep" in sys.argv[1:]:           # the GPU sweep window, a program of its own (sweep/app.py)
@@ -62,6 +62,7 @@ def main() -> int:
     app.setStyle("Fusion")
     apply_theme(app)                # the suite's theme
     RoundedToolTip.install(app)     # every tooltip: rounded corners, a thin border in the accent
+    WheelGuard.install(app)                 # the wheel changes a value only after a click on it
     if WINDOW_ICON_PATH.is_file():
         app.setWindowIcon(QIcon(str(WINDOW_ICON_PATH)))
 

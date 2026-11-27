@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The one window opens offscreen with the suite's header and leads through the four steps: the scan, the safety
-check (--only control), each WGP, and the choice of 24, 32 or 40 CUs with its combined test and Install. The script
+check (--only control), each WGP, and the choice of the CUs (an even level or an uneven count) with its combined
+test and Install. The script
 runs in a fake session here: the tests see the arguments it would get and play its events back."""
 
 from __future__ import annotations
@@ -365,22 +366,45 @@ def test_the_live_attempt(qapp, results):
         type(w.session).busy = monkeypatch_busy
 
 
-def test_the_uneven_counts_show_for_comparison(qapp, results):
+def test_the_uneven_counts_are_pills(qapp, results):
     base = "0x07,0x07,0x07,0x0b"
     items = [it for it, _ in progress.plan(base, False)]
     results(base=base, runs=[(r, "control", "PASS") for r in (1, 2, 3)] + [
         (r, it, "FAULT" if it == "SE1.SH0.WGP3" else "PASS") for r in (1, 2, 3) for it in items if it != "control"])
     w = window()
     assert w.uneven_row.isVisibleTo(w)
-    assert [(b.value.text(), b.caption.text()) for b in w.uneven_boxes] == [
-        ("34 CUs", "5\u00b74\u00b74\u00b74 WGPs"), ("36 CUs", "5\u00b75\u00b74\u00b74 WGPs"),
-        ("38 CUs", "5\u00b75\u00b74\u00b75 WGPs")]
+    assert [(b.value.text(), b.caption.text()) for b in w.uneven_boxes] == [("36 CUs", "4\u00b75\u00b74\u00b75 WGPs")]
     assert dict(pills(w))["32 CUs"] is True and dict(pills(w))["40 CUs"] is False
     link = next(l for l in w.uneven_row.findChildren(QLabel) if "href" in l.text())
-    assert main_window.WHY_EVEN in link.text() and link.openExternalLinks()
+    assert main_window.WHY_EVEN in link.text() and link.openExternalLinks() and "What the counts in between give" in link.text()
+    assert all(isinstance(b, Pill) and b.isEnabled() for b in w.uneven_boxes)
 
 
-def test_no_comparison_row_when_every_row_is_even(qapp, results):
+def test_an_uneven_count_runs_the_combined_test_and_installs(qapp, results, runs, monkeypatch):
+    base = "0x07,0x07,0x07,0x07"
+    asked = []
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: asked.append(a[2]) or QMessageBox.StandardButton.Yes)
+    results(base=base, runs=full(bad=("SE1.SH0.WGP4",)))
+    w = window()
+    w.uneven_boxes[-1].click()
+    assert "Test 36 CUs as a whole?" in asked[0] and "runs as fast as" not in asked[0]
+    assert runs[-1] == ["--reset"] and w._after_reset[2:4] == ["--baseline", "0x0f,0x1f,0x0f,0x1f"]
+    assert progress.read_wizard()["level"] == "36"
+    assert w._uneven_line("0x1f,0x1f,0x0f,0x1f") == "Its two halves differ, so it runs as fast as 36 CUs.\n"
+    assert w._uneven_line("0x0f,0x0f,0x0f,0x0f") == ""
+
+
+def test_a_failed_uneven_count_offers_the_lower_ones(qapp, results):
+    results(base="0x07,0x07,0x07,0x07", runs=full(bad=("SE1.SH0.WGP4",)))
+    progress.keep_bisect()
+    results(base="0x0f,0x1f,0x0f,0x1f", rounds=1, runs=[(1, "control", "FAULT")], control_only=1,
+            wizard="phase=combined\nlevel=36\n")
+    w = window()
+    assert [b.value.text() for b in w.uneven_boxes] == []
+    assert dict(pills(w))["32 CUs"] is True
+
+
+def test_no_uneven_row_when_every_row_is_even(qapp, results):
     results(runs=full())
     w = window()
     assert not w.uneven_row.isVisibleTo(w) and w.uneven_boxes == []

@@ -23,8 +23,9 @@ def qapp():
     # create_app() installs the tooltip filter on this app, and no aboutToQuit takes it off without an event loop:
     # left on, it saw the events of the widgets pytest's final garbage collection destroyed, and crashed it now and
     # then (CI, 06-11-2026). Off before that collection, and the leftover widgets collected while the app is whole.
-    from bazzite_console_core.widgets import RoundedToolTip
+    from bazzite_console_core.widgets import RoundedToolTip, WheelGuard
     RoundedToolTip.uninstall()
+    WheelGuard.uninstall()
     gc.collect()
 
 

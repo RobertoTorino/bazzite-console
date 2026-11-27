@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The unlock gate: a mask is accepted only after ps5-cu-bisect.sh retested it as its own baseline and every
-round passed, at one of the three even levels (24, 32 or 40 CUs)."""
+round passed, with 3, 4 or 5 WGPs on every row (24 to 40 CUs, even or uneven)."""
 
 from __future__ import annotations
 
@@ -37,8 +37,8 @@ def test_a_fully_retested_mask_is_accepted(state):
 @pytest.mark.parametrize(("kwargs", "reason"), [
     ({"base": "none"}, "No usable baseline"),
     ({"base": FULL, "runs": PASSED, "pending": True}, "still marked as in progress"),
-    ({"base": "0x1f,0x0f,0x1f,0x1f", "runs": PASSED}, "uneven across the 4 rows"),
-    ({"base": "0x03,0x03,0x03,0x03", "runs": PASSED}, "Only 3 per row"),
+    ({"base": "0x03,0x03,0x03,0x03", "runs": PASSED}, "Every row needs 3, 4 or 5 WGPs"),
+    ({"base": "0x1f,0x03,0x1f,0x1f", "runs": PASSED}, "5/2/5/5 WGPs on the 4 rows"),
     ({"base": FULL}, "No attempts recorded"),
     ({"base": FULL, "runs": [*PASSED, (1, "SE0.SH0.WGP4", "PASS")]}, "under individual test"),
     ({"base": FULL, "runs": PASSED[:2]}, "Only 2 of 3 retest round(s)"),
@@ -52,6 +52,12 @@ def test_rejections(state, kwargs, reason):
     assert any(reason in line for line in result.reasons), result.reasons
 
 
-def test_uneven_mask_suggests_an_even_retest(state):
-    state("0x1f,0x0f,0x1f,0x1f", runs=PASSED)
-    assert "--baseline 0x0f,0x0f,0x0f,0x0f --control-only" in check().reasons[1]
+def test_a_retested_uneven_mask_is_accepted_and_says_what_it_gives(state):
+    state("0x1f,0x1f,0x0f,0x1f", runs=PASSED)
+    result = check()
+    assert result.accepted and result.cu_total == 38
+    assert "5/5/4/5 WGPs" in result.reasons[0] and "runs as fast as 36 CUs" in result.reasons[1]
+    state("0x0f,0x07,0x07,0x0b", runs=PASSED)
+    assert check().cu_total == 26 and "runs as fast as 24 CUs" in check().reasons[1]
+    state("0x0f,0x1f,0x0f,0x1f", runs=PASSED)               # 9 WGPs in each engine: it runs like its count
+    assert check().accepted and check().cu_total == 36 and len(check().reasons) == 1

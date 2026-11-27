@@ -1,3 +1,11 @@
+Changelog: 27-11-2026 04:47:26
+
+Fixed. install-requirements.sh could not install vkpeak and said to install it by hand (owner, 27-11-2026). It
+looked for a release file with ubuntu in its name. vkpeak's release files are named linux now, such as
+vkpeak-20260527-linux.zip. The script looks for linux.
+Added. The RPM packages group installs umr too (owner, 27-11-2026). Test 21 reads the live CU masks with it, and
+PS5 CU Unlock needs it. The Containerfile of the test image layers it as well. The wiki lists it.
+
 Changelog: 26-11-2026 14:03:51
 
 Release 0.14.0.

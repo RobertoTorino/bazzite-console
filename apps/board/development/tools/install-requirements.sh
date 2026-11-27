@@ -15,7 +15,7 @@
 set -euo pipefail
 
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
-RPMS=(stress-ng lm_sensors vkmark nvme-cli fio)
+RPMS=(stress-ng lm_sensors vkmark nvme-cli fio umr)
 SPEEDTEST_VERSION="${SPEEDTEST_VERSION:-1.2.0}"
 # Prime95 for Linux: the release mersenne.org's download page lists now, with the SHA-256 it lists for it. The
 # three values below are one known release, used only when the page cannot be read.
@@ -80,7 +80,7 @@ install_vkpeak() {
     fi
     command -v unzip >/dev/null 2>&1 || die "unzip is needed to unpack vkpeak."
     local url tmp
-    url=$(latest_asset_url "nihui/vkpeak" "ubuntu") || true
+    url=$(latest_asset_url "nihui/vkpeak" "linux") || true
     [ -n "${url:-}" ] || { warn "Could not find a vkpeak release asset; install it manually from https://github.com/nihui/vkpeak/releases"; return; }
     say "Downloading vkpeak: $url"
     tmp=$(mktemp -d)
@@ -205,6 +205,7 @@ case "$MODE" in
         echo "    vkmark: GPU load in test 41 when memtest_vulkan and vkpeak are missing"
         echo "    nvme-cli: SMART health in test 10"
         echo "    fio: random 4K read in test 43"
+        echo "    umr: live CU masks in test 21, and PS5 CU Unlock needs it"
         if [ -e "$OSTREE_BOOTED" ]; then echo "    Layered with rpm-ostree; active after a reboot."
         else echo "    Installed with dnf (a flattened image); ready at once."; fi
         ask "Install the RPM packages?" && install_rpms

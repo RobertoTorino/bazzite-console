@@ -321,6 +321,7 @@ def test_installed_with_all_cores_on_is_finished(qapp, results, online, installe
     assert w.finished_bar.isVisibleTo(w) and "runs all 8 cores at every boot" in w.finished_bar.text()
     assert all(r.caption.text() == "Done" for r in w.step_boxes)
     assert w.boot_box.value.text() == "Installed" and pills(w) == ["Uninstall", "Start over"]
+    assert w.core_map.states == ["on"] * 8                  # the two unlocked cores are on now, not only healthy
 
 
 def test_a_failing_core_advises_the_stock_cores(qapp, results, online, notes):

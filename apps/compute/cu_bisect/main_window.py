@@ -7,7 +7,8 @@ ps5-cu-bisect.sh itself (session.py) and leads through four steps:
   2. Safety check: the control's rounds (--only control), the unlock's register writes with the stock masks. When it
      fails, the unlock method breaks on this board, and the window stops here.
   3. Test each WGP: every locked WGP on its own, a restart after each attempt.
-  4. Choose and install: the even levels the healthy WGPs allow (24, 32 or 40 CUs), a combined test of the chosen
+  4. Choose and install: the even levels the healthy WGPs allow (24, 32 or 40 CUs) and the counts above them that
+     add speed with uneven rows, a combined test of the chosen
      level (--reset, then --baseline <mask> --control-only -r 1), then Install with ps5-cu-unlock.sh (runner.py).
      Install writes nothing to the GPU: the boot service turns the unlock on at the next restart.
 
@@ -52,8 +53,8 @@ GO_ON_SECS = 20                         # the countdown after a login before the
 WHY_EVEN = "https://robertotorino.github.io/bazzite-console/apps/compute/#cu-levels"
 ABOUT = ("CU Unlock finds out how many of your GPU's 40 CUs work, and turns on the healthy ones. A CU is a compute "
          "unit. Two CUs make a WGP.<br><br>The steps:<br>1. The scan reads which CUs are on now.<br>2. The safety "
-         "check tests the unlock method itself.<br>3. Each locked WGP is tested on its own.<br>4. You choose 24, "
-         "32 or 40 CUs, and the app installs it.<br><br>"
+         "check tests the unlock method itself.<br>3. Each locked WGP is tested on its own.<br>4. You choose how "
+         "many CUs to turn on, and the app installs it.<br><br>"
          "<a href='https://robertotorino.github.io/bazzite-console/apps/compute/'>CU Unlock in the wiki</a>")
 
 OUTCOMES = {
@@ -319,37 +320,39 @@ class MainWindow(QWidget):
         return self.step_boxes[self.step].line
 
     def _build_uneven(self) -> QWidget:
-        """Step 4's uneven counts between the highest even level and every healthy WGP, as status boxes, for comparison
-        with other tools (owner, 23-11-2026). They can't be applied; the link says why."""
+        """Step 4's counts above the highest even level that add speed (progress.uneven), as pills (owner,
+        27-11-2026): each is tested as a whole and installed like a level. The link says how the counts work."""
         row = QWidget()
         box = QHBoxLayout(row)
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(8)
-        label = QLabel(f"For comparison,<br>can't be applied.<br><a href='{WHY_EVEN}'>Why uneven CUs don't help</a>")
-        label.setOpenExternalLinks(True)
-        label.setStyleSheet(f"color:{muted()}; font-size:12px;")
-        box.addWidget(label)
-        self.uneven_boxes: list[MetricBox] = []
+        self.uneven_label = QLabel()
+        self.uneven_label.setOpenExternalLinks(True)
+        self.uneven_label.setStyleSheet(f"color:{muted()}; font-size:12px;")
+        box.addWidget(self.uneven_label)
+        self.uneven_boxes: list[Pill] = []
         self.uneven_layout = box
         box.addStretch(1)
         row.hide()
         return row
 
-    def _set_uneven(self, counts: list[tuple[int, list[int]]]) -> None:
+    def _set_uneven(self, counts: list[tuple[int, list[int], str]]) -> None:
         for old in self.uneven_boxes:
             self.uneven_layout.removeWidget(old)
             old.hide()
             old.setParent(None)
             old.deleteLater()
         self.uneven_boxes = []
-        for cus, rows in counts:
-            box = MetricBox("\u00b7".join(map(str, rows)) + " WGPs", GREY)
-            box.set_value(f"{cus} CUs", f"{cus} CUs with {'/'.join(map(str, rows))} WGPs on the rows SE0.SH0 to "
-                          "SE1.SH1. "
-                          "It runs as fast as its smallest row, so it can't be installed.")
-            self.uneven_layout.insertWidget(self.uneven_layout.count() - 1, box)
-            self.uneven_boxes.append(box)
+        for cus, rows, mask in counts:
+            pill = Pill(f"{cus} CUs", "\u00b7".join(map(str, rows)) + " WGPs",
+                        f"{cus} CUs with {'/'.join(map(str, rows))} WGPs on the rows SE0.SH0 to SE1.SH1. "
+                        f"A combined test of {mask}, then Install.", ACCENT)
+            pill.clicked.connect(lambda c=cus, m=mask: self._choose(c, m))
+            self.uneven_layout.insertWidget(self.uneven_layout.count() - 1, pill)
+            self.uneven_boxes.append(pill)
         if self.uneven_boxes:
+            self.uneven_label.setText("More CUs, with<br>uneven rows.<br>"
+                                      f"<a href='{WHY_EVEN}'>What the counts in between give</a>")
             same_width(self.uneven_boxes)
         self.uneven_row.setVisible(bool(counts))
 
@@ -573,7 +576,7 @@ class MainWindow(QWidget):
             return ("Reads which CUs your GPU runs now. It writes nothing.",
                     "Tests the unlock method with your own masks. It adds no CUs.",
                     "Tests each locked WGP on its own.",
-                    "You choose 24, 32 or 40 CUs. The level is tested as a whole and then installed.")[index]
+                    "You choose how many CUs to turn on. That count is tested as a whole and then installed.")[index]
         bisect = self._bisect()
         if index == 0:
             base = bisect.base or (self.scan or {}).get("live", "")
@@ -616,7 +619,7 @@ class MainWindow(QWidget):
         self.finished_bar.setVisible(finished)
         self._render_boxes()
         page = (self._page_scan, self._page_control, self._page_wgps, self._page_choose)[view]
-        self.uneven: list[tuple[int, list[int]]] = []    # step 4 fills it
+        self.uneven: list[tuple[int, list[int], str]] = []    # step 4 fills it
         heading, lines, states, actions, hint, nxt = page()
         self._set_uneven(self.uneven)
         if self.countdown:
@@ -907,6 +910,7 @@ class MainWindow(QWidget):
                 lines = [f"The combined test of {level} CUs failed. WGPs that pass alone can fail together.",
                          "Pick a lower level, or stay at the stock CUs."]
                 actions = self._level_actions({c: m for c, m in levels.items() if c < level}, level)
+                self.uneven = [u for u in bisect.uneven() if u[0] < level]
                 if self.p.this_boot_used:
                     actions.insert(0, ("Restart", "Back to stock", "Restarts the board. The masks go back to stock.",
                                        BLUE, self._restart_only))
@@ -1102,6 +1106,15 @@ class MainWindow(QWidget):
         self.view = -1
         self.refresh()
 
+    @staticmethod
+    def _uneven_line(mask: str) -> str:
+        """The line a question adds for a mask that runs slower than its count (progress.speed_cus): what it gives.
+        Empty for an even level and for the uneven counts the window offers."""
+        speed = progress.speed_cus(mask)
+        if speed == progress.cu_count(mask):
+            return ""
+        return f"Its two halves differ, so it runs as fast as {speed} CUs.\n"
+
     def _choose(self, cus: int, mask: str | None) -> None:
         if not mask:
             return
@@ -1109,6 +1122,7 @@ class MainWindow(QWidget):
             self, APP_NAME,
             f"Test {cus} CUs as a whole?\n\n"
             f"The combined test runs {mask} for one round.\n"
+            f"{self._uneven_line(mask)}"
             "The bisect results stay for this window. The script's own copy is cleared for the new test.\n"
             "After the test the board restarts. Then you can install the unlock.\n"
             "You'll be asked for your password.")
@@ -1155,6 +1169,7 @@ class MainWindow(QWidget):
             self, APP_NAME,
             f"Install the {progress.cu_count(mask)}-CU unlock?\n\n"
             f"A service applies {mask} at every boot.\n"
+            f"{self._uneven_line(mask)}"
             "It turns on after a restart. Nothing changes before that.\n"
             "Uninstall puts back the stock CUs after a restart.\n"
             "You'll be asked for your password, unless sudo still has it.")

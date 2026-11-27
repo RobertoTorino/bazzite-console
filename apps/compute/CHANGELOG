@@ -1,3 +1,34 @@
+Changelog: 27-11-2026 16:16:03
+
+Added. CU Unlock applies and keeps counts with uneven rows. Step 4 offers the counts above the highest even level
+that add speed, such as 36 CUs with 4, 5, 4 and 5 WGPs on the rows, as pills. Each is tested as a whole and installed
+like a level. `ps5-cu-unlock.sh` and the gate accept every mask with 3, 4 or 5 WGPs on every row. Before, only
+24, 32 and 40 CUs could be installed.
+A wrong fact is corrected. The scripts, the window and the wiki said that an uneven mask runs as fast as its smallest
+row. A board measured otherwise with vkpeak on 27-11-2026. The two shader engines, SE0 and SE1, run in step, and a
+mask runs like 4 CUs for each WGP in its smaller engine. So 28 CUs with 7 WGPs in each engine scored 17 percent over
+24 CUs, and 28 CUs with 8 and 6 scored the same as 24. The scripts say what a mask runs like when that is less than
+its count. The wiki's CU Unlock chapter has the measured scores as a table.
+The summary of the test script says "The even version:" where it said "Use the even version instead:".
+
+Changelog: 27-11-2026 07:31:39
+
+Fixed. The CU unlock no longer lists a WGP as active that its mask leaves off. Before, it cleared
+CC_GC_SHADER_ARRAY_CONFIG on every row, which listed all 5 WGPs as active. That included a WGP that failed its test.
+It also wrote the always-on mask as the union of the rows, for all rows at once. Now CC_GC_SHADER_ARRAY_CONFIG marks
+every WGP that the row's mask leaves off as inactive, as the chip does at stock. RLC_PG_ALWAYS_ON_WGP_MASK is not
+written anymore. Both ps5-cu-unlock.sh and ps5-cu-bisect.sh write this way. --writes defaults to cc,spi, and rlc
+still writes the union on request. The script's check for an unlock that is on since boot looked for CC values of 0.
+A board that reads the upper bits as 1 never matched. The check now reads bits 16-20, and also sees the boot
+service. The wiki's register table said CC is cleared to 0 and the always-on mask is the union. It now says what is
+written. tests/test_unlock_writes.py covers the writes.
+
+Changelog: 26-11-2026 20:34:55
+
+Fixed. The mouse wheel changes a list, a number field or a slider only after a click on it. Before, a wheel
+turn over a window changed every value the pointer passed. Until the click, the wheel scrolls the page under it.
+WheelGuard in widgets.py is a copy of core's.
+
 Changelog: 24-11-2026 17:44:44
 
 Release 1.0.1.

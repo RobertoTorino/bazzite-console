@@ -27,7 +27,7 @@ dev/<name>/                   the development apps, run from the checkout and ne
                               Dashboard (the door to the others), dev/nrt/ Nexus Release Tool, dev/demo/ Nexus
                               Demo Recorder, dev/itests/ Nexus Installer Tests, dev/sounds/ Nexus Sound Lab,
                               dev/deps/ Nexus Deps, dev/text/ Nexus TTS, dev/studio/ Nexus Remix Studio,
-                              dev/garbage/ Nexus Garbage Remover
+                              dev/garbage/ Nexus Garbage Remover, dev/flight/ Nexus Flight Recorder
 docs/ mkdocs.yml              this wiki (MkDocs Material)
 icons/                        the category icons
 DESIGN.md design/colors/      every color of the suite and its samples (tools/make_design.py writes them)
@@ -255,6 +255,42 @@ source's updates after it shows the command and asks. Its hourly notification sa
 The venv's packages are upgraded within what `requirements-dev.txt` allows. The venv's `python` links to Bazzite's
 `/usr/bin/python3`, so a Bazzite image with a newer Python leaves the venv without its packages. Nexus Deps says so,
 and **Update** installs `requirements-dev.txt` for the new Python.
+
+### Starting the previous Bazzite version once
+
+A Bazzite update keeps the version before it on the drive. Starting that version once shows whether a problem came
+with the update, such as with its kernel. `rpm-ostree status` lists both versions, and a dot marks the running one.
+
+GRUB is the program that starts Bazzite. Its menu shows for one second, with the new version first and the previous
+one second. `grub2-reboot` chooses an entry for the next start only. Bazzite's `/boot/grub2/grub.cfg` never reads
+that choice, so the command alone changes nothing. It does read `/boot/grub2/custom.cfg`. Write the missing step
+there once, when the file does not exist yet:
+
+```bash
+sudo tee /boot/grub2/custom.cfg > /dev/null <<'EOF'
+# Start the entry that grub2-reboot chose, once.
+if [ "${next_entry}" ]; then
+  set default="${next_entry}"
+  set next_entry=
+  save_env next_entry
+fi
+EOF
+sudo grub2-script-check /boot/grub2/custom.cfg
+```
+
+Then choose the previous version and restart:
+
+```bash
+sudo grub2-reboot 1
+systemctl reboot
+```
+
+Entry `1` is the previous version and entry `0` is the new one. After the restart, `uname -r` shows the kernel of
+the previous version. The start after that one uses the new version again. `custom.cfg` can stay. It does nothing
+until `grub2-reboot` runs again.
+
+Each Bazzite version keeps its own `/etc`. A change made there while the previous version runs is missing in the
+new version. Make it again after the next start.
 
 ### Keeping it clean
 
@@ -513,8 +549,8 @@ Code shared by the suite's apps (`core/`). Nothing in it imports an app: each ap
 | `appinfo` | `AppInfo` (id, name, version, logo, tag prefix, settings names) |
 | `theme` | The suite's theme (`THEMES`, `theme_name()`, `save_theme_name()`, `apply_theme()`, `surface_style()`, `muted()`), `STATE_COLORS`, bundled Inter font, `header_font()`, `HOVER_STYLESHEET`; self-contained, so an app not on core carries a copy |
 | `text` | `fmt()` (`%1` placeholders), `fill()` (`{name}` placeholders), `plain_tooltip()`, `window_title()` |
-| `widgets` | `AppHeader` (the window header), `StatusPill`, `StatusText` (a state beside a title; with a name, the name alone, a green or red dot and the state in its tooltip), `MetricBox`, `Pill` (a `MetricBox` that is a button), `same_width()`, `RefreshButton`, `ClickableLogo`, `Terminal`, `TextDialog`, `RoundedToolTip`, `show_tooltip()`, `page_header()`, `hint_label()`, `accent_button()`, `set_button_active()` |
-| `app` | `create_app()` / `run_app()` / `exec_app()`: names, Fusion with the theme, tooltip, icon, SIGTERM |
+| `widgets` | `AppHeader` (the window header), `StatusPill`, `StatusText` (a state beside a title; with a name, the name alone, a green or red dot and the state in its tooltip), `MetricBox`, `Pill` (a `MetricBox` that is a button), `same_width()`, `RefreshButton`, `ClickableLogo`, `Terminal`, `TextDialog`, `RoundedToolTip`, `WheelGuard`, `show_tooltip()`, `page_header()`, `hint_label()`, `accent_button()`, `set_button_active()` |
+| `app` | `create_app()` / `run_app()` / `exec_app()`: names, Fusion with the theme, tooltip, wheel guard, icon, SIGTERM |
 | `exit_keys` | `install(app)`: Escape and a controller's B close the app's window, after a key the window takes for itself and through its `closeEvent`; the controller, read with pygame-ce, works the app (the d-pad and the stick move the focus, A presses, LB and RB change the tab, B is Escape for what has the focus, the touchpad moves a uinput mouse at the portal's **Touchpad** speed), and only for the app that has had the focus for a moment; `install(app, controller=False)` for Escape alone, the class attribute `exit_keys = False` for a window that keeps every key. SDL's dummy drivers are in the environment only while SDL starts, so a program the app starts never gets them. Self-contained, so an app not on core carries a copy |
 | `card` | `CardWindow`: the template of a small window, with the header's two symbols and rows of five even places |
 | `action_tab` | `ActionTab`: the last tab of a `QTabWidget` as a button (Start game in the game managers): a click acts and the open page stays open |

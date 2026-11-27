@@ -546,7 +546,8 @@ class MainWindow(QWidget):
             self._render()
 
     def _map(self) -> list[str]:
-        """The state of each of the 8 cores: on, not tested, testing, healthy, fails or random."""
+        """The state of each of the 8 cores: on, not tested, testing, healthy, fails or random. A healthy core is on
+        once the boot unlock is installed and the core is online."""
         base, new = self._base(), self._new()
         if not base:
             return ["on" if c in self.online else "unknown" for c in progress.CORES]
@@ -557,8 +558,10 @@ class MainWindow(QWidget):
                 if current in (f"core{core}", "combined"):
                     states.append("now")
                 else:
-                    states.append({"good": "ok", "bad": "bad", "random": "random"}.get(
-                        self.p.verdict(f"core{core}"), "wait"))
+                    state = {"good": "ok", "bad": "bad", "random": "random"}.get(
+                        self.p.verdict(f"core{core}"), "wait")
+                    # A healthy core the installed boot unlock has turned on is on, as the stock cores are.
+                    states.append("on" if state == "ok" and self.installed and core in self.online else state)
             elif current == "post-control" and core == base[0]:
                 states.append("now")
             elif current == "control" and core in base:

@@ -5,7 +5,7 @@
 FROM ghcr.io/ublue-os/bazzite:latest
 
 # RPM packages the tests can use (same list as development/tools/install-requirements.sh --rpms).
-RUN rpm-ostree install stress-ng lm_sensors vkmark nvme-cli fio
+RUN rpm-ostree install stress-ng lm_sensors vkmark nvme-cli fio umr
 
 # To test a locally built RPM of this project, drop it next to this file and uncomment:
 # COPY ./ps5-board-test-*.rpm /tmp/

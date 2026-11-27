@@ -49,6 +49,7 @@ of its own that keeps running when the dashboard closes.
 | **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the board checks ([Releases](releases.md)). |
 | **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)). |
 | **Nexus Deps** | The suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). |
+| **Nexus Flight Recorder** | What the board does, one line per second, kept for after a fault ([below](#flight-recorder)). |
 | **Nexus Garbage Remover** | The garbage on this machine, with its size, and Delete for it ([below](#garbage-remover)). |
 | **Nexus Installer Tests** | The suite's installer tests, one at a time ([below](#installer-tests)). |
 | **Nexus Marketing for PS5** | Writes an article that presents the portal and its apps, as a web page to share ([below](#marketing)). |
@@ -458,6 +459,40 @@ Each card has one status, the most urgent that applies. The boxes at the top cou
 
 The check sends the names and versions of the Python packages to PyPI and OSV.dev, nothing else.
 
+## Flight Recorder
+
+**Nexus Flight Recorder** (`dev/flight/`) writes down what the board does, one line per second. After a crash or a
+freeze, the minutes before it are on the disk. A test afterward often cannot bring a fault back, and the recording
+shows what the board was doing when it happened.
+
+A system service does the recording, `nexus-flight-recorder.service`. It also runs before you log in. Its files are
+in `/var/log/nexus-flight-recorder`, one per day, and the newest 7 days are kept. A day is about 13 MB. A line
+reaches the disk within 2 seconds. Each line holds:
+
+- the time, the boot it belongs to and the threads online
+- the CPU load and temperature
+- the SoC temperature and the warmest board temperature
+- the GPU load, clock and temperature, and the GPU's temperature limit
+- the fan's duty
+- the memory, the GPU memory and the swap in use, and the memory pressure
+- the name of the program that used the most CPU in that second
+
+The window shows the service's state in its header. **Recording since** is the time it started. **Today's file** is
+its size, and **Days kept** counts the days on the disk. Three pills follow:
+
+- **Install**, **Start** or **Stop** does that with the recorder. It asks for your password.
+- **At boot** turns starting with the board on or off. It asks for your password.
+- **Open** opens the folder with the files.
+
+Type a time after **Show the minutes around**, such as `00:46`, and pick the day. The table then shows each value's
+last, lowest and highest between 5 minutes before and 5 minutes after that time. Without a time it shows the last
+10 minutes and follows the recording. The line under the table names the programs that were busiest in those
+minutes, and says when the board restarted in them.
+
+The recorder reads the console's own sensors and files in `/proc`. It writes nowhere but its folder. It uses about
+2 percent of one thread. `dev/flight/install.sh --uninstall` removes the menu entry and says how to remove the
+service.
+
 ## Garbage Remover
 
 **Nexus Garbage Remover** (`dev/garbage/`) shows the garbage on this machine and deletes what you check. Garbage is
@@ -471,7 +506,7 @@ a file, however small:
 |---|---|---|
 | **Crash dumps** | `/var/lib/systemd/coredump` | `sudo find /var/lib/systemd/coredump -mindepth 1 -delete` |
 | **Steam's crash reports** | `config/htmlcache/BrowserMetrics` in Steam's folder | `find <that folder> -mindepth 1 -delete` |
-| **Trash** | `~/.local/share/Trash` | `find ~/.local/share/Trash -mindepth 2 -delete` |
+| **Trash** | `~/.local/share/Trash` | `find ~/.local/share/Trash -mindepth 1 -not -path ~/.local/share/Trash/files -not -path ~/.local/share/Trash/info -delete` |
 | **Picture previews** | `~/.cache/thumbnails` | `find ~/.cache/thumbnails -mindepth 1 -delete` |
 | **pip's download cache** | `~/.cache/pip` | `find ~/.cache/pip -mindepth 1 -delete` |
 | **Homebrew's downloads** | `~/.cache/Homebrew` | `brew cleanup --prune=all` |

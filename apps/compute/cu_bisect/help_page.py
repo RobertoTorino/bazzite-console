@@ -17,7 +17,7 @@ import html
 import re
 
 WINDOW = ("This window runs <code>ps5-cu-bisect.sh</code> for you, in four steps. The scan reads the board. "
-          "The safety check tests the unlock method. Then each locked WGP is tested, and you choose 24, 32 or 40 CUs. "
+          "The safety check tests the unlock method. Then each locked WGP is tested, and you choose how many CUs to turn on. "
           "The window restarts the board between attempts and goes on after the login. Below is the script's own "
           "help, for the options under <b>Show advanced</b>.")
 

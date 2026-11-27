@@ -1,3 +1,15 @@
+Changelog: 27-11-2026 16:13:00
+
+Fixed. The core map shows a healthy core as On once the boot unlock is installed and the core is
+online. Before, the two unlocked cores stayed blue, Healthy, while the window said all 8 cores were on. The wiki's
+legend says the same now.
+
+Changelog: 26-11-2026 20:34:55
+
+Fixed. The mouse wheel changes a list, a number field or a slider only after a click on it. Before, a wheel
+turn over a window changed every value the pointer passed. Until the click, the wheel scrolls the page under it.
+WheelGuard in widgets.py is a copy of core's.
+
 Changelog: 24-11-2026 13:15:49
 
 Release 1.0.0.

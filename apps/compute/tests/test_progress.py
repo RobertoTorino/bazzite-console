@@ -83,7 +83,7 @@ def test_levels(tmp_path, bad, levels):
 def test_the_highest_level_is_the_scripts_suggestion(tmp_path, home, bad):
     folder = write(home / ".local" / "share" / "ps5-cu-bisect", "0x07,0x07,0x07,0x07", 3, full_run(bad))
     out = subprocess.run(["bash", str(SCRIPT), "--status"], capture_output=True, text=True, timeout=60).stdout
-    even = re.search(r"Use the even version instead: (\S+)", out) or re.search(r"Combined: (\S+)", out)
+    even = re.search(r"The even version: (\S+)", out) or re.search(r"Combined: (\S+)", out)
     levels = progress.load(folder).levels()
     assert even and levels[max(levels)] == even.group(1)
 
@@ -107,15 +107,17 @@ def test_installed_masks(tmp_path):
     assert progress.installed_masks(path) == "0x0f,0x0f,0x0f,0x0f"
 
 
-def test_the_uneven_counts_for_comparison(tmp_path):
-    """One WGP fails every time on a board with its own masks: 32 is the highest even level, 38 the healthy total."""
+def test_the_uneven_counts_and_their_masks(tmp_path):
+    """One WGP fails every time on a board with its own masks: 32 is the highest even level, 38 the healthy total.
+    36 is the one count above 32 that adds speed: 9 WGPs in each shader engine."""
     base = "0x07,0x07,0x07,0x0b"
     items = [it for it, _ in progress.plan(base, False)]
     runs = [(1, "control", "PASS"), (2, "control", "PASS"), (3, "control", "PASS")] + [
         (r, it, "FAULT" if it == "SE1.SH0.WGP3" else "PASS") for r in (1, 2, 3) for it in items if it != "control"]
     p = progress.load(write(tmp_path / "s", base, 3, runs))
     assert max(p.levels()) == 32
-    assert p.uneven() == [(34, [5, 4, 4, 4]), (36, [5, 5, 4, 4]), (38, [5, 5, 4, 5])]
+    assert p.uneven() == [(36, [4, 5, 4, 5], "0x0f,0x1f,0x17,0x1f")]
+    assert [progress.cu_count(mask) for _, _, mask in p.uneven()] == [36]
     assert progress.load(write(tmp_path / "t", "0x07,0x07,0x07,0x07", 3, full_run())).uneven() == []
 
 
@@ -133,3 +135,33 @@ def test_the_unlock_is_on_only_when_saved_before_this_boot(tmp_path):
     assert progress.unlock_on(masks, stat)
     stat.write_text("cpu  1 2 3\n")
     assert progress.boot_time(stat) == 0.0 and not progress.unlock_on(masks, stat)   # unknown boot: not claimed
+
+
+@pytest.mark.parametrize(("masks", "score"), [
+    # vkpeak fp32-scalar on a board, 27-11-2026: the masks written live, the registers read back before each run.
+    ("0x07,0x07,0x07,0x0b", 5664), ("0x0f,0x07,0x07,0x0b", 5668), ("0x0f,0x0f,0x07,0x0b", 5669),
+    ("0x0f,0x0f,0x0f,0x0b", 6610), ("0x0f,0x0f,0x0f,0x1b", 7547), ("0x0f,0x07,0x0f,0x0b", 6606),
+    ("0x07,0x0f,0x07,0x1b", 6607), ("0x0f,0x07,0x07,0x1b", 6607), ("0x07,0x07,0x0f,0x1b", 5670)])
+def test_the_speed_of_a_mask_follows_the_measured_scores(masks, score):
+    """4 CUs for each WGP in the smaller shader engine: within 1 % of what the board scored."""
+    assert abs(score / 5664 - progress.speed_cus(masks) / 24) < 0.01
+
+
+class _Healthy(progress.Progress):
+    def __init__(self, rows):
+        self._rows = rows
+
+    def healthy_rows(self):
+        return self._rows
+
+
+@pytest.mark.parametrize(("rows", "offered"), [
+    ([0x1F, 0x1F, 0x0F, 0x1F], [(36, [4, 5, 4, 5], "0x0f,0x1f,0x0f,0x1f")]),
+    ([0x0F, 0x07, 0x0F, 0x0B], [(28, [4, 3, 4, 3], "0x0f,0x07,0x0f,0x0b")]),
+    ([0x1F, 0x07, 0x07, 0x1F], [(28, [4, 3, 3, 4], "0x0f,0x07,0x07,0x0f"), (32, [5, 3, 3, 5], "0x1f,0x07,0x07,0x1f")]),
+    ([0x1F, 0x0F, 0x07, 0x07], []),                 # every extra WGP is in SE0: nothing adds speed
+    ([0x0F, 0x0F, 0x0F, 0x1B], []), ([0x1F, 0x1F, 0x1F, 0x1F], [])])
+def test_only_counts_that_add_speed_are_offered(rows, offered):
+    found = _Healthy(rows).uneven()
+    assert found == offered
+    assert all(progress.speed_cus(mask) == cus for cus, _, mask in found)

@@ -9,10 +9,10 @@ keeps in ~/.local/share/ps5-cu-bisect/. A mask is only accepted once that state 
     recorded run has no individual "SEx.SHy.WGPn" items left, only "control";
   - every round of that retest is recorded with outcome PASS (no crash, no drift, no mismatch);
   - no attempt is still marked as in progress (umr-pending would mean an interrupted run); and
-  - the 4 shader-array rows are unlocked evenly, at one of the three real levels: 3 WGPs per row
-    (24 CUs, stock), 4 per row (32 CUs) or 5 per row (40 CUs, max). The GPU feeds all 4 arrays in
-    lockstep, so anything in between performs like its smallest row while drawing the extra power
-    (see the CU Unlock wiki chapter).
+  - every one of the 4 shader-array rows has 3, 4 or 5 WGPs unlocked: 24 CUs (3 on every row, stock) up to 40 CUs
+    (5 on every row, max). The two shader engines (SE0 and SE1, two rows each) run in step: a mask runs like 4 CUs
+    for each WGP in its smaller engine (measured, see the CU Unlock wiki chapter). A mask with more WGPs in one
+    engine is accepted, and the result says what it runs like.
 
 This mirrors the "retest the combination" step ps5-cu-bisect.sh's own summary suggests
 (--reset && --baseline <masks> --control-only --rounds N) - the GUI just checks that step was actually
@@ -35,7 +35,7 @@ MASK_RE = re.compile(r"^0x[0-9a-fA-F]{1,2}(,0x[0-9a-fA-F]{1,2}){3}$")
 # Outcomes that count as a failed attempt in ps5-cu-bisect.sh (same FAIL_RE as the script).
 FAIL_RE = re.compile(r"^(CRASH-APPLY|CRASH-LOAD|FAULT|ERRORS|LOAD-FAIL|DRIFT|MISMATCH)$")
 INCOMPLETE = {"ABORTED", "SKIPPED", ""}
-# WGPs per shader-array row -> total CUs. Only these three are installable; see check().
+# WGPs per shader-array row -> total CUs of the even levels; a row of an installable mask has one of these counts.
 LEVELS = {3: 24, 4: 32, 5: 40}
 
 
@@ -92,21 +92,10 @@ def check() -> GateResult:
 
     rows = [int(m, 16) for m in base.split(",")]
     counts = [popcount(m) for m in rows]
-    if len(set(counts)) != 1:
-        target = min(counts) if min(counts) in LEVELS else 3
-        suggestion = ",".join(f"0x{(1 << target) - 1:02x}" for _ in range(4))
+    if any(c not in LEVELS for c in counts):
         return GateResult(False, masks=base, reasons=[
-            f"The recorded baseline ({base}) is uneven across the 4 rows ({'/'.join(map(str, counts))} "
-            "WGPs). The GPU feeds all 4 shader arrays in lockstep. So it would run no faster than its "
-            "smallest row while drawing the extra power. That row has "
-            f"{min(counts)} WGPs, which is {LEVELS.get(min(counts), min(counts) * 8)} CUs. "
-            "Retest a mask that unlocks the same number of WGPs on every row.",
-            f"./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --baseline {suggestion} --control-only --rounds 1"])
-
-    if counts[0] not in LEVELS:
-        return GateResult(False, masks=base, reasons=[
-            f"The recorded baseline ({base}) unlocks {counts[0]} WGPs per row. Only 3 per row "
-            "(24 CUs, stock), 4 per row (32 CUs) and 5 per row (40 CUs, max) are supported."])
+            f"The recorded baseline ({base}) unlocks {'/'.join(map(str, counts))} WGPs on the 4 rows. Every row "
+            "needs 3, 4 or 5 WGPs: 24 CUs (stock) up to 40 CUs (max)."])
 
     try:
         rounds = int(cfg.get("ROUNDS", "0") or 0)
@@ -148,6 +137,13 @@ def check() -> GateResult:
         return GateResult(False, masks=base, reasons=[f"The retest did not pass every round ({bad})."])
 
     total = cu_count(base)
+    if len(set(counts)) != 1:
+        speed = 4 * min(counts[0] + counts[1], counts[2] + counts[3])
+        reasons = [f"{base} ({total} CUs, {'/'.join(map(str, counts))} WGPs on the 4 shader-array rows) passed "
+                   f"{rounds} retest round(s) as its own baseline."]
+        if speed != total:
+            reasons.append(f"Its two halves differ, so it runs as fast as {speed} CUs.")
+        return GateResult(True, masks=base, cu_total=total, reasons=reasons)
     return GateResult(True, masks=base, cu_total=total, reasons=[
         f"{base} ({total} CUs, {counts[0]} WGPs on each of the 4 shader-array rows) passed "
         f"{rounds} retest round(s) as its own baseline."])

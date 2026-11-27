@@ -1,3 +1,10 @@
+Changelog: 27-11-2026 02:04:29
+
+Added. The Development chapter of the wiki says how to start the previous Bazzite version once, under The development
+machine. Bazzite's grub.cfg never reads the choice of grub2-reboot, so the text gives the custom.cfg that
+applies it. Tested on the BC-250 on 27-11-2026 (owner, 27-11-2026). It also says that each Bazzite version
+keeps its own /etc.
+
 Changelog: 25-11-2026 23:40:24
 
 Added. tools/portal_shots.py takes stills of the portal from the checkout, one per category tab and one of

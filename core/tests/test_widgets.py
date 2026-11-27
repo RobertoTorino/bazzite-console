@@ -471,3 +471,52 @@ def test_action_pill_stands_in_for_a_button(qapp):
     pill.click()
     assert menu.isVisible() and clicks == [1, 1]
     menu.close()
+
+
+def test_wheel_guard_leaves_a_value_until_a_click(qapp):
+    """Over a list, a number field or a slider without the focus, the wheel changes nothing and the turn is left
+    ignored, which QApplication::notify then hands to the parent (the page scrolls). After a click it changes it. A
+    sent event is never spontaneous, so the parent's part needs a real wheel and is not tested here."""
+    from PyQt6.QtCore import QPointF
+    from PyQt6.QtGui import QWheelEvent
+    from PyQt6.QtWidgets import QComboBox, QScrollBar, QSlider, QSpinBox, QVBoxLayout
+    from bazzite_console_core.widgets import WheelGuard
+    guard = WheelGuard.install(qapp)
+    try:
+        page = QWidget()
+        lay = QVBoxLayout(page)
+        combo, spin, slider = QComboBox(), QSpinBox(), QSlider(Qt.Orientation.Horizontal)
+        bar = QScrollBar()
+        combo.addItems(["one", "two", "three"])
+        combo.setCurrentIndex(1)
+        for w in (spin, slider, bar):
+            w.setValue(50)
+        button = QPushButton("Has the focus")
+        for w in (button, combo, spin, slider, bar):
+            lay.addWidget(w)
+        page.show()
+        button.setFocus()
+        qapp.processEvents()
+
+        def turn(widget: QWidget) -> bool:
+            event = QWheelEvent(QPointF(5, 5), QPointF(widget.mapToGlobal(QPoint(5, 5))), QPoint(), QPoint(0, -120),
+                                Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier,
+                                Qt.ScrollPhase.NoScrollPhase, False)
+            QApplication.sendEvent(widget, event)
+            return event.isAccepted()
+
+        for widget in (combo, spin, slider):
+            assert widget.focusPolicy() == Qt.FocusPolicy.StrongFocus     # a turn does not give it the focus
+            assert not turn(widget)
+        assert (combo.currentIndex(), spin.value(), slider.value()) == (1, 50, 50)
+        turn(bar)
+        assert bar.value() != 50                                # a scroll bar scrolls as before
+        for widget in (combo, spin, slider):
+            widget.setFocus()
+            qapp.processEvents()
+            turn(widget)
+        assert combo.currentIndex() != 1 and spin.value() != 50 and slider.value() != 50
+        page.close()
+    finally:
+        qapp.removeEventFilter(guard)
+        WheelGuard._instance = None

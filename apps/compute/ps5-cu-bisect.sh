@@ -3,8 +3,9 @@
 
 # ps5-cu-bisect.sh - finds out whether CU-unlock crashes come from bad WGPs or from the unlock itself.
 #
-# The script writes the WGP masks itself with umr. A runtime CU unlock uses three GPU registers.
-# They are CC_GC_SHADER_ARRAY_CONFIG, SPI_PG_ENABLE_STATIC_WGP_MASK and RLC_PG_ALWAYS_ON_WGP_MASK.
+# The script writes the WGP masks itself with umr. A runtime CU unlock writes two GPU registers per row.
+# They are CC_GC_SHADER_ARRAY_CONFIG and SPI_PG_ENABLE_STATIC_WGP_MASK. CC lists as inactive exactly the WGPs
+# the mask leaves off, as the chip itself does at stock. RLC_PG_ALWAYS_ON_WGP_MASK stays as the chip set it.
 #
 #   control   the same register writes, but with your baseline masks, so no extra CUs. If the
 #             control crashes, the unlock method, power or heat is at fault, not your CUs.
@@ -44,8 +45,9 @@
 #                         control's rounds first this way. The results and the report stay as they are.
 #       --scan            read the live masks and what a run needs, then exit. Writes no register.
 #       --writes LIST     a test of the unlock method itself: write only these registers, comma-separated,
-#                         from cc, spi and rlc (default cc,spi,rlc, the full unlock). Use it with
-#                         --control-only, and --reset between tests.
+#                         from cc, spi and rlc (default cc,spi, the full unlock). rlc also writes the
+#                         always-on mask, as the union of the rows. Use it with --control-only, and
+#                         --reset between tests.
 #       --status          show the results so far and write the report, then exit
 #       --reset           delete the results and start over
 #   -V, --version         show the version
@@ -57,7 +59,7 @@ set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
 VERSION="1.0.1"
-STRESS_SECS="" ROUNDS_OPT="" BASE_OPT="" SAME_BOOT=0 AUTO=0 WATCH=1 MODE=run CONTROL_ONLY_OPT="" ONLY="" WRITES=cc,spi,rlc
+STRESS_SECS="" ROUNDS_OPT="" BASE_OPT="" SAME_BOOT=0 AUTO=0 WATCH=1 MODE=run CONTROL_ONLY_OPT="" ONLY="" WRITES=cc,spi
 
 say()  { printf '%s\n' "$*"; }
 hdr()  { printf '\n=== %s ===\n' "$*"; }
@@ -295,9 +297,8 @@ summary() {
     FINAL=$(IFS=,; echo "${final[*]}")
     for i in 0 1 2 3; do rowcounts+=("$(popcount "${final[$i]}")"); done
     for i in 1 2 3; do [[ ${rowcounts[$i]} == "${rowcounts[0]}" ]] || uneven=1; done
-    # Only 24/32/40 CUs (3/4/5 WGPs on every row) are installable: the GPU feeds all 4 shader
-    # arrays in lockstep, so an uneven mask performs like its smallest row. Trim the suggestion
-    # down to the largest even level this board's good WGPs actually support.
+    # The even version is the largest even level this board's good WGPs support. The combined mask can be
+    # installed too: it runs like 4 CUs for each WGP in its smaller shader engine (SE0 or SE1, two rows each).
     local level=${rowcounts[0]} even=() kept bit
     for i in 1 2 3; do (( rowcounts[i] < level )) && level=${rowcounts[$i]}; done
     (( level > 5 )) && level=5
@@ -313,17 +314,20 @@ summary() {
     say "- WGPs that passed every round: ${good[*]}"
     say "  Combined: $FINAL ($(cu_count "$FINAL") CUs, WGPs per row: ${rowcounts[*]})."
     if (( uneven )); then
-      say "  That is UNEVEN, and you cannot install an uneven mask. The GPU splits work across all 4"
-      say "  rows in lockstep. So it would run exactly as fast as its smallest row ($level WGPs ="
-      say "  $(cu_count "$EVEN") CUs) while burning the extra power. Only 3 WGPs per row (24 CUs,"
-      say "  stock), 4 per row (32 CUs) and 5 per row (40 CUs, max) are supported."
-      say "  Use the even version instead: $EVEN ($(cu_count "$EVEN") CUs)."
+      local se0=$(( rowcounts[0] + rowcounts[1] )) se1=$(( rowcounts[2] + rowcounts[3] )) speed
+      speed=$(( (se0 < se1 ? se0 : se1) * 4 ))
+      say "  That is UNEVEN: SE0 has $se0 WGPs and SE1 has $se1. The two run in step, so it runs as"
+      say "  fast as $speed CUs."
+      say "  The even version: $EVEN ($(cu_count "$EVEN") CUs)."
     fi
     say "  WGPs that pass one by one can still fail together, because they draw more power at the"
     say "  same voltage. So test the combination before you save it to boot:"
     say "  $0 --reset && $0 --baseline $EVEN --control-only --rounds 1"
     say "  Once the combination also passes, make it survive a restart:"
     say "  sudo ./ps5-cu-unlock.sh --install $EVEN"
+    if (( uneven )); then
+      say "  The uneven mask is tested and installed the same way, with $FINAL."
+    fi
   fi
 }
 
@@ -422,14 +426,23 @@ reg_write() { # reg value [se sh]
 read_spi_all() { local i v out=(); for i in 0 1 2 3; do v=$(reg_read "$REG_SPI" $((i / 2)) $((i % 2))) || return 1; out+=("$(hex2 "$v")"); done; (IFS=,; echo "${out[*]}"); }
 read_cc_all()  { local i v out=(); for i in 0 1 2 3; do v=$(reg_read "$REG_CC" $((i / 2)) $((i % 2))) || return 1; out+=("$v"); done; echo "${out[*]}"; }
 
-# Runtime unlock sequence: clear CC, write SPI per row, RLC = union of the rows.
-# --writes picks which of the three registers are written, to test the method itself (default: all three).
+# Runtime unlock sequence, per row: CC lists every WGP the mask leaves off as inactive, SPI is the mask. A WGP that
+# is off, or failed its test, is so never listed as active. RLC stays as the chip set it.
+# --writes picks the registers that are written, to test the method itself (default: cc and spi). With rlc, the
+# always-on mask is written too, as the union of the rows.
 writes() { [[ ,$WRITES, == *,$1,* ]]; }
+cc_of() { printf '0x%08x' $(( (~$1 & 0xffff) << 16 )); }
+# The unlock is on since boot: the boot service ran, or CC lists no WGP of any row as inactive.
+unlock_at_boot() {
+  systemctl is-active --quiet ps5-cu-unlock.service 2>/dev/null && return 0
+  local v; [[ -n $CC_NOW ]] || return 1
+  for v in $CC_NOW; do (( (v >> 16) & 31 )) && return 1; done
+  return 0
+}
 apply_masks() {
   local i union=0 m; IFS=, read -ra m <<<"$1"
-  if writes cc; then reg_write "$REG_CC" 0x0 || true; fi
   for i in 0 1 2 3; do
-    if writes cc; then reg_write "$REG_CC" 0x0 $((i / 2)) $((i % 2)) || return 1; fi
+    if writes cc; then reg_write "$REG_CC" "$(cc_of "${m[$i]}")" $((i / 2)) $((i % 2)) || return 1; fi
     if writes spi; then reg_write "$REG_SPI" "$(hex2 "${m[$i]}")" $((i / 2)) $((i % 2)) || return 1; fi
     (( union |= m[i] ))
   done
@@ -489,7 +502,7 @@ RLC_NOW=$(reg_read "$REG_RLC") || RLC_NOW=""
 
 # ------------------------------------------------------------------- scan ----
 if [[ $MODE == scan ]]; then
-  AT_BOOT=no; [[ -n $CC_NOW ]] && [[ -z $(tr -d '0x ' <<<"$CC_NOW") ]] && AT_BOOT=yes
+  AT_BOOT=no; unlock_at_boot && AT_BOOT=yes
   SERVICE=$(systemctl is-enabled ps5-cu-unlock.service 2>/dev/null); SERVICE=${SERVICE:-not-found}
   GOV_MAX=$(gov_max)
   hdr "Scan (reads only, writes no register)"
@@ -557,7 +570,7 @@ build_plan
 
 hdr "PS5 CU unlock test $VERSION"
 say "Baseline: $BASE ($(cu_count "$BASE") CUs)   Live now: $SPI_NOW   CC: ${CC_NOW:-?}   RLC: ${RLC_NOW:-?}"
-[[ $WRITES == cc,spi,rlc ]] || say "Writes only: $WRITES (a test of the unlock method itself)"
+[[ $WRITES == cc,spi ]] || say "Writes only: $WRITES (a test of the unlock method itself)"
 say "Items: ${ITEMS[*]}$([[ $CONTROL_ONLY == 1 ]] && echo '   (--control-only: per-WGP bisecting skipped)')"
 say "Rounds: $ROUNDS   Load: $LOAD, ${STRESS_SECS}s   Mode: $([[ $SAME_BOOT == 1 ]] && echo 'same boot' || echo 'one attempt per boot')"
 draw_cu_map
@@ -579,8 +592,8 @@ if [[ $SAME_BOOT == 0 ]]; then
     (( AUTO )) && { say "Restarting by itself (--auto)..."; do_reboot; }
     exit 0
   fi
-  if [[ -n $CC_NOW ]] && [[ -z $(tr -d '0x ' <<<"$CC_NOW") ]]; then
-    die "the unlock is already active in this boot (CC registers are 0). Something applied it at boot.
+  if unlock_at_boot; then
+    die "the unlock is already active in this boot. Something applied it at boot.
        Turn off whatever applies a CU unlock at boot, then restart and run this again."
   fi
 fi
@@ -588,7 +601,7 @@ fi
 # must keep every WGP the chip runs. Otherwise the control switches a working WGP off and a switched-off one on.
 # Only before the first attempt of a boot: after one, the registers hold this script's own writes, not the chip's
 # (with --same-boot every attempt after the first runs in such a boot, and so does a retest after --reset).
-if [[ $(cat "$WRITTEN" 2>/dev/null) != "$BOOT_ID" ]] && [[ -n $CC_NOW ]] && [[ -n $(tr -d '0x ' <<<"$CC_NOW") ]]; then
+if [[ $(cat "$WRITTEN" 2>/dev/null) != "$BOOT_ID" ]] && [[ -n $CC_NOW ]] && ! unlock_at_boot; then
   read -ra CC_ROWS <<<"$CC_NOW"; IFS=, read -ra B_ROWS <<<"$BASE"; OWN=() DROPPED=()
   for i in 0 1 2 3; do
     act=$(( ~(CC_ROWS[i] >> 16) & 31 )); OWN+=("$(hex2 "$act")")
@@ -657,7 +670,7 @@ memtest_bytes() {
 
 run_attempt() { # round item
   local r=$1 it=$2 masks=${ITEM_MASKS[$2]} t0 now drift="" faults errs=0 rc note="" o
-  [[ $WRITES == cc,spi,rlc ]] || note="writes $WRITES"
+  [[ $WRITES == cc,spi ]] || note="writes $WRITES"
   local maxt=0 maxf=0 maxb=0 log="$LOGS/$(date '+%Y%m%d-%H%M%S')-r$1-$2.log"
   hdr "Round $r/$ROUNDS: $it  ($masks = $(cu_count "$masks") CUs)"
   ev attempt "$r" "$it" "$masks"

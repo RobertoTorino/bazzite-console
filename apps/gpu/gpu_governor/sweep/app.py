@@ -17,7 +17,7 @@ from .. import exit_keys
 from ..theme import HOVER_STYLESHEET, apply_theme
 from . import APP_ID, APP_NAME, ROOT, SCRIPT, WINDOW_ICON_PATH, __version__, instance
 from .main_window import MainWindow
-from .widgets import RoundedToolTip
+from .widgets import RoundedToolTip, WheelGuard
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     app.setStyle("Fusion")
     apply_theme(app, HOVER_STYLESHEET)     # GPU Manager's theme, the outline on hover
     RoundedToolTip.install(app)            # the tooltips as the suite's other apps show them
+    WheelGuard.install(app)                 # the wheel changes a value only after a click on it
     if WINDOW_ICON_PATH.is_file():
         app.setWindowIcon(QIcon(str(WINDOW_ICON_PATH)))
 

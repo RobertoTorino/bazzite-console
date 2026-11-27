@@ -367,10 +367,10 @@ are at the right end of the bottom row. Under the name they say **Show** or **Hi
 
 The map shows the 8 physical cores. Each cell shows its state in words and in color:
 
-- green, **On**: a stock core
+- green, **On**: a stock core, or a healthy core that the installed unlock has turned on
 - gray, **Not tested**: a new core without a result yet
 - yellow, **Testing**: the core under test now
-- blue, **Healthy**: it passed every round
+- blue, **Healthy**: it passed every round and is not kept on at every boot yet
 - red, **Fails**: it failed every round
 - orange, **Random**: it failed in some rounds only
 

@@ -4,7 +4,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3349 test functions (3737 cases counting the parametrized ones) in 38 test folders, and 39 installer tests.
+3390 test functions (3778 cases counting the parametrized ones) in 39 test folders, and 40 installer tests.
 
 ## Summary
 
@@ -14,12 +14,12 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/board](#appsboard) | 4 | 35 | 1.8 s |
 | [apps/cec](#appscec) | 8 | 68 | 0.7 s |
 | [apps/clb](#appsclb) | 13 | 91 | 2.8 s |
-| [apps/compute](#appscompute) | 8 | 76 |  |
+| [apps/compute](#appscompute) | 10 | 91 |  |
 | [apps/controller](#appscontroller) | 13 | 164 | 5.8 s |
-| [apps/cores](#appscores) | 7 | 55 |  |
+| [apps/cores](#appscores) | 8 | 56 |  |
 | [apps/datstation](#appsdatstation) | 7 | 39 | 2.1 s |
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
-| [apps/gpu](#appsgpu) | 14 | 72 |  |
+| [apps/gpu](#appsgpu) | 15 | 73 |  |
 | [apps/overlay](#appsoverlay) | 2 | 19 | 0.2 s |
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
 | [apps/pcsx2](#appspcsx2) | 14 | 154 | 19.0 s |
@@ -31,15 +31,16 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/shadps4](#appsshadps4) | 17 | 158 | 7.7 s |
 | [apps/ssd](#appsssd) | 4 | 50 | 0.8 s |
 | [apps/turing](#appsturing) | 9 | 75 |  |
-| [apps/upscaler](#appsupscaler) | 11 | 119 | 1.6 s |
+| [apps/upscaler](#appsupscaler) | 12 | 120 | 1.6 s |
 | [apps/vita3k](#appsvita3k) | 9 | 85 | 4.9 s |
 | [apps/webcam](#appswebcam) | 12 | 113 | 2.5 s |
 | [apps/xenia](#appsxenia) | 8 | 79 | 4.2 s |
-| [core](#core) | 29 | 213 | 3.5 s |
+| [core](#core) | 29 | 214 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
 | [dev/deps](#devdeps) | 6 | 105 | 2.1 s |
-| [dev/garbage](#devgarbage) | 1 | 8 |  |
+| [dev/flight](#devflight) | 3 | 21 |  |
+| [dev/garbage](#devgarbage) | 1 | 9 |  |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
 | [dev/marketing](#devmarketing) | 2 | 29 |  |
 | [dev/nrt](#devnrt) | 4 | 135 | 23.1 s |
@@ -48,7 +49,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 18 | 237 | 30.2 s |
 | [tools](#tools) | 43 | 246 | 10.2 s |
-| **All** | | **3349** | **153 s** |
+| **All** | | **3390** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -70,6 +71,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `demo.sh` | Exercise dev/demo/install.sh, Nexus Demo Recorder's installer. |
 | `deps.sh` | Exercise dev/deps/install.sh, Nexus Deps' installer. |
 | `fan.sh` | Exercise apps/fan/install.sh. |
+| `flight.sh` | Exercise dev/flight/install.sh, Nexus Flight Recorder's installer. |
 | `garbage.sh` | Exercise dev/garbage/install.sh, Nexus Garbage Remover's installer. |
 | `gpu.sh` | Exercise apps/gpu/install.sh. |
 | `itests.sh` | Exercise dev/itests/install.sh, Nexus Installer Tests's installer. |
@@ -356,7 +358,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/compute
 
-76 tests in 8 files.
+91 tests in 10 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -367,7 +369,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_gate.py` | `test_no_results` |  |  | No results. |
 | `test_gate.py` | `test_a_fully_retested_mask_is_accepted` |  |  | A fully retested mask is accepted. |
 | `test_gate.py` | `test_rejections` |  |  | Rejections. |
-| `test_gate.py` | `test_uneven_mask_suggests_an_even_retest` |  |  | Uneven mask suggests an even retest. |
+| `test_gate.py` | `test_a_retested_uneven_mask_is_accepted_and_says_what_it_gives` |  |  | A retested uneven mask is accepted and says what it gives. |
 | `test_help_page.py` | `test_the_scripts_help_becomes_a_page` |  |  | The scripts help becomes a page. |
 | `test_help_page.py` | `test_what_the_window_does_is_the_first_paragraph` |  |  | What the window does is the first paragraph. |
 | `test_help_page.py` | `test_text_is_escaped_and_an_empty_help_says_so` |  |  | Text is escaped and an empty help says so. |
@@ -394,8 +396,10 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_failed_combined_test_offers_the_lower_levels` |  |  | A failed combined test offers the lower levels. |
 | `test_main_window.py` | `test_the_scripts_questions` |  |  | The scripts questions. |
 | `test_main_window.py` | `test_the_live_attempt` |  |  | The live attempt. |
-| `test_main_window.py` | `test_the_uneven_counts_show_for_comparison` |  |  | The uneven counts show for comparison. |
-| `test_main_window.py` | `test_no_comparison_row_when_every_row_is_even` |  |  | No comparison row when every row is even. |
+| `test_main_window.py` | `test_the_uneven_counts_are_pills` |  |  | The uneven counts are pills. |
+| `test_main_window.py` | `test_an_uneven_count_runs_the_combined_test_and_installs` |  |  | An uneven count runs the combined test and installs. |
+| `test_main_window.py` | `test_a_failed_uneven_count_offers_the_lower_ones` |  |  | A failed uneven count offers the lower ones. |
+| `test_main_window.py` | `test_no_uneven_row_when_every_row_is_even` |  |  | No uneven row when every row is even. |
 | `test_main_window.py` | `test_a_safety_check_from_the_terminal_offers_start_over` |  |  | A safety check from the terminal offers start over. |
 | `test_main_window.py` | `test_one_boot_goes_from_the_safety_check_to_the_wgps` |  |  | Same boot, the default: when the safety check passed, the WGP test starts without a click. |
 | `test_main_window.py` | `test_one_boot_stops_after_a_failed_safety_check` |  |  | One boot stops after a failed safety check. |
@@ -427,8 +431,10 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_progress.py` | `test_the_highest_level_is_the_scripts_suggestion` |  |  | The highest level is the scripts suggestion. |
 | `test_progress.py` | `test_the_window_keeps_the_bisect_run_for_the_combined_test` |  |  | The window keeps the bisect run for the combined test. |
 | `test_progress.py` | `test_installed_masks` |  |  | Installed masks. |
-| `test_progress.py` | `test_the_uneven_counts_for_comparison` |  |  | One WGP fails every time on a board with its own masks: 32 is the highest even level, 38 the healthy total. |
+| `test_progress.py` | `test_the_uneven_counts_and_their_masks` |  |  | One WGP fails every time on a board with its own masks: 32 is the highest even level, 38 the healthy total. |
 | `test_progress.py` | `test_the_unlock_is_on_only_when_saved_before_this_boot` |  |  | The unlock is on only when saved before this boot. |
+| `test_progress.py` | `test_the_speed_of_a_mask_follows_the_measured_scores` |  |  | 4 CUs for each WGP in the smaller shader engine: within 1 % of what the board scored. |
+| `test_progress.py` | `test_only_counts_that_add_speed_are_offered` |  |  | Only counts that add speed are offered. |
 | `test_resume.py` | `test_arm_and_disarm` |  |  | Arm and disarm. |
 | `test_resume.py` | `test_the_entry_opens_the_same_code_and_scripts` |  |  | Installed or from a checkout: this Python, this package's folder and the window's own scripts. |
 | `test_resume.py` | `test_restart_reports_when_it_may_not` |  |  | Restart reports when it may not. |
@@ -436,6 +442,17 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_session.py` | `test_one_terminal_for_every_run` |  |  | The second run uses the same shell and terminal, so sudo, which remembers per terminal, asks only once. |
 | `test_session.py` | `test_stop_ends_the_script_and_keeps_the_terminal` |  |  | Stop ends the script and keeps the terminal. |
 | `test_session.py` | `test_a_test_run_blocks_sleep_until_it_ends` |  |  | With block_sleep the script runs under systemd-inhibit; its exit code comes through. |
+| `test_unlock_writes.py` | `test_cc_lists_the_wgps_the_mask_leaves_off` |  |  | Cc lists the wgps the mask leaves off. |
+| `test_unlock_writes.py` | `test_the_unlock_writes_cc_and_spi_per_row_and_no_always_on_mask` |  |  | The unlock writes cc and spi per row and no always on mask. |
+| `test_unlock_writes.py` | `test_stock_masks_write_the_chips_own_cc_values` |  |  | Stock masks write the chips own cc values. |
+| `test_unlock_writes.py` | `test_writes_picks_the_registers` |  |  | Writes picks the registers. |
+| `test_unlock_writes.py` | `test_the_default_writes_are_cc_and_spi` |  |  | The default writes are cc and spi. |
+| `test_unlock_writes.py` | `test_the_unlock_script_never_clears_cc_or_writes_the_always_on_mask` |  |  | The unlock script never clears cc or writes the always on mask. |
+| `test_unlock_writes.py` | `test_unlock_at_boot` |  |  | Unlock at boot. |
+| `test_unlock_writes.py` | `test_a_mask_that_runs_like_its_count_is_accepted_without_a_note` |  |  | A mask that runs like its count is accepted without a note. |
+| `test_unlock_writes.py` | `test_a_mask_with_unequal_halves_is_accepted_and_says_what_it_gives` |  |  | A mask with unequal halves is accepted and says what it gives. |
+| `test_unlock_writes.py` | `test_a_row_under_three_wgps_is_refused` |  |  | A row under three wgps is refused. |
+| `test_wheel_guard.py` | `test_the_wheel_changes_a_value_only_after_a_click` |  |  | The wheel changes a value only after a click. |
 
 ## apps/controller
 
@@ -610,7 +627,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/cores
 
-55 tests in 7 files.
+56 tests in 8 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -669,6 +686,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_session.py` | `test_one_terminal_for_every_run` |  |  | The second run uses the same shell and terminal, so sudo, which remembers per terminal, asks only once. |
 | `test_session.py` | `test_stop_ends_the_script_and_keeps_the_terminal` |  |  | Stop ends the script and keeps the terminal. |
 | `test_session.py` | `test_a_test_run_blocks_sleep_until_it_ends` |  |  | With block_sleep the script runs under systemd-inhibit; its exit code comes through. |
+| `test_wheel_guard.py` | `test_the_wheel_changes_a_value_only_after_a_click` |  |  | The wheel changes a value only after a click. |
 
 ## apps/datstation
 
@@ -762,7 +780,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/gpu
 
-72 tests in 14 files.
+73 tests in 15 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -836,6 +854,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_sweep_window.py` | `test_installed_and_kept_are_finished` |  |  | Installed and kept are finished. |
 | `test_sweep_window.py` | `test_one_boot_each_restarts_and_goes_on_after_the_login` |  |  | One boot each restarts and goes on after the login. |
 | `test_sweep_window.py` | `test_a_crash_is_asked_in_the_window` |  |  | A crash is asked in the window. |
+| `test_wheel_guard.py` | `test_the_wheel_changes_a_value_only_after_a_click` |  |  | The wheel changes a value only after a click. |
 | `test_widgets.py` | `test_tooltip_filter_is_removed_when_the_app_quits` |  |  | Tooltip filter is removed when the app quits. |
 | `test_widgets.py` | `test_tooltip_border_is_the_outline` |  |  | Framed in the theme's outline, silver, not the accent (owner, 07-11-2026). |
 
@@ -1999,7 +2018,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/upscaler
 
-119 tests in 11 files, 1.6 s in a local run.
+120 tests in 12 files, 1.6 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2120,6 +2139,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_store_steam.py` | `test_store_round_trip` |  |  | Store round trip. |
 | `test_store_steam.py` | `test_store_tolerates_garbage` |  |  | Store tolerates garbage. |
 | `test_store_steam.py` | `test_steam_libraries_and_games` |  |  | Steam libraries and games. |
+| `test_wheel_guard.py` | `test_the_wheel_changes_a_value_only_after_a_click` |  |  | The wheel changes a value only after a click. |
 | `test_widgets.py` | `test_tooltip_filter_is_removed_when_the_app_quits` |  |  | Tooltip filter is removed when the app quits. |
 | `test_widgets.py` | `test_tooltip_border_is_the_outline` |  |  | Framed in the theme's outline, silver, not the accent (owner, 07-11-2026). |
 
@@ -2423,7 +2443,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## core
 
-213 tests in 29 files, 3.5 s in a local run.
+214 tests in 29 files, 3.5 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2640,6 +2660,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_widgets.py` | `test_an_apps_own_theme` |  |  | An app that is not a suite's (Nexus Releases) draws the widgets with its own theme: the surfaces, the muted text and the accent follow set_theme(), and create_app(theme=) sets it (owner, 26-10-2026: a Nexus app takes Nexus's design). |
 | `test_widgets.py` | `test_info_button_opens_its_text_below_it` |  |  | The info symbol (owner, 01-11-2026): a click opens the text in a popup that stays; links work in it. |
 | `test_widgets.py` | `test_action_pill_stands_in_for_a_button` |  |  | Action pill stands in for a button. |
+| `test_widgets.py` | `test_wheel_guard_leaves_a_value_until_a_click` |  |  | Over a list, a number field or a slider without the focus, the wheel changes nothing and the turn is left ignored, which QApplication::notify then hands to the parent (the page scrolls). |
 
 ## dev/dash
 
@@ -2849,14 +2870,43 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_the_question_for_dnf_names_pkexec_and_the_kernels_restart` |  |  | The question for dnf names pkexec and the kernels restart. |
 | `test_window.py` | `test_a_dnf_card_updates_the_checked_packages_alone` |  |  | A dnf card updates the checked packages alone. |
 
+## dev/flight
+
+21 tests in 3 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_main_window.py` | `test_a_running_recorder` |  |  | A running recorder. |
+| `test_main_window.py` | `test_the_minutes_around_a_typed_time` |  |  | The minutes around a typed time. |
+| `test_main_window.py` | `test_install_asks_first` |  |  | Install asks first. |
+| `test_main_window.py` | `test_stop_start_and_at_boot` |  |  | Stop start and at boot. |
+| `test_main_window.py` | `test_a_failed_action_says_why_and_a_canceled_password_is_no_error` |  |  | A failed action says why and a canceled password is no error. |
+| `test_main_window.py` | `test_an_older_installed_recorder_is_replaced_at_start` |  |  | An older installed recorder is replaced at start. |
+| `test_main_window.py` | `test_the_service_state_and_its_commands` |  |  | The service state and its commands. |
+| `test_reader.py` | `test_the_days_newest_first` |  |  | The days newest first. |
+| `test_reader.py` | `test_times` |  |  | Times. |
+| `test_reader.py` | `test_the_minutes_around_a_time` |  |  | The minutes around a time. |
+| `test_reader.py` | `test_without_a_time_the_last_ten_minutes` |  |  | Without a time the last ten minutes. |
+| `test_reader.py` | `test_no_lines` |  |  | No lines. |
+| `test_reader.py` | `test_sizes` |  |  | Sizes. |
+| `test_recorder.py` | `test_a_line_has_every_column` |  |  | A line has every column. |
+| `test_recorder.py` | `test_memory_readings_without_their_files` |  |  | Memory readings without their files. |
+| `test_recorder.py` | `test_the_busiest_program_is_the_one_that_used_most_cpu_since_the_last_look` |  |  | The busiest program is the one that used most cpu since the last look. |
+| `test_recorder.py` | `test_a_new_day_gets_its_heading_and_the_oldest_days_go` |  |  | A new day gets its heading and the oldest days go. |
+| `test_recorder.py` | `test_the_helper_installs_switches_and_removes` |  |  | The helper installs switches and removes. |
+| `test_recorder.py` | `test_the_helpers_simple_actions` |  |  | The helpers simple actions. |
+| `test_recorder.py` | `test_the_helper_says_why_it_failed` |  |  | The helper says why it failed. |
+| `test_recorder.py` | `test_the_recorder_and_the_helper_need_only_the_standard_library` |  |  | The recorder and the helper need only the standard library. |
+
 ## dev/garbage
 
-8 tests in 1 files.
+9 tests in 1 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
 | `test_garbage.py` | `test_it_finds_the_full_places_largest_first` |  |  | It finds the full places largest first. |
 | `test_garbage.py` | `test_the_trash_shows_with_any_file_in_it` |  |  | The Trash shows whatever it holds, a file of a few KB too (owner, 24-11-2026); an empty one does not. |
+| `test_garbage.py` | `test_emptying_the_trash_leaves_nothing_to_show` |  |  | The desktop keeps directorysizes beside files and info, its list of the trashed folders' sizes. |
 | `test_garbage.py` | `test_the_crash_dumps_take_root` |  |  | The crash dumps take root. |
 | `test_garbage.py` | `test_homebrew_only_where_it_is_installed` |  |  | Homebrew only where it is installed. |
 | `test_garbage.py` | `test_homebrews_own_cache_is_not_garbage` |  |  | Homebrews own cache is not garbage. |

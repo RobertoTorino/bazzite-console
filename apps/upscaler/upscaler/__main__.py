@@ -17,7 +17,7 @@ from .acquire import WORK_DIR
 from .main_window import MainWindow
 from .style import set_link_colour
 from .theme import apply_theme
-from .widgets import RoundedToolTip
+from .widgets import RoundedToolTip, WheelGuard
 from . import exit_keys, instance
 
 
@@ -44,6 +44,7 @@ def main() -> int:
     apply_theme(app)                # the suite's theme
     set_link_colour(app)
     RoundedToolTip.install(app)
+    WheelGuard.install(app)                 # the wheel changes a value only after a click on it
     if WINDOW_ICON_PATH.is_file():
         app.setWindowIcon(QIcon(str(WINDOW_ICON_PATH)))
 

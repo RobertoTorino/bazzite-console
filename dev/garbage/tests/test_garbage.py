@@ -22,7 +22,9 @@ def test_it_finds_the_full_places_largest_first(tmp_path):
     found = garbage.find(home, steam, dumps, which=lambda _name: None)
     assert [place.key for place in found] == ["steam-reports", "trash"]
     assert found[0].size == 3 << 20 and found[0].files == 1 and not found[0].root
-    assert found[1].command == ["find", str(home / ".local" / "share" / "Trash"), "-mindepth", "2", "-delete"]
+    trash = home / ".local" / "share" / "Trash"
+    assert found[1].command == ["find", str(trash), "-mindepth", "1", "-not", "-path", str(trash / "files"),
+                                "-not", "-path", str(trash / "info"), "-delete"]
 
 
 def test_the_trash_shows_with_any_file_in_it(tmp_path):
@@ -33,6 +35,21 @@ def test_the_trash_shows_with_any_file_in_it(tmp_path):
     assert garbage.find(home, None, tmp_path / "dumps", which=lambda _name: None) == []
     fill(trash / "files", 72 << 10)
     assert [place.key for place in garbage.find(home, None, tmp_path / "dumps", which=lambda _name: None)] == ["trash"]
+
+
+def test_emptying_the_trash_leaves_nothing_to_show(tmp_path):
+    """The desktop keeps directorysizes beside files and info, its list of the trashed folders' sizes. It goes too,
+    or the Trash shows a few bytes forever (owner, 27-11-2026). The two folders stay."""
+    home = tmp_path / "home"
+    trash = home / ".local" / "share" / "Trash"
+    fill(trash / "files" / "folder", 72 << 10)
+    (trash / "info").mkdir()
+    (trash / "info" / "folder.trashinfo").write_text("[Trash Info]\n")
+    (trash / "directorysizes").write_text("73728 1795633161361 folder\n")
+    [place] = garbage.find(home, None, tmp_path / "dumps", which=lambda _name: None)
+    assert garbage.remove([place]) == []
+    assert sorted(path.name for path in trash.rglob("*")) == ["files", "info"]
+    assert garbage.find(home, None, tmp_path / "dumps", which=lambda _name: None) == []
 
 
 def test_the_crash_dumps_take_root(tmp_path):

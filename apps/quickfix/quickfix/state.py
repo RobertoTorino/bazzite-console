@@ -50,6 +50,7 @@ GROUPS: tuple[Group, ...] = (
         Tool("vkmark", "vkmark", "41 (GPU load, when memtest_vulkan and vkpeak are missing)"),
         Tool("nvme", "nvme-cli", "10 (SMART health)"),
         Tool("fio", "fio", "43 (random 4K read)"),
+        Tool("umr", "umr", "21 (live CU masks), and PS5 CU Unlock needs it"),
     )),
     Group("--bins", "Binaries", "The latest releases from their GitHub projects, into ~/.local/bin.", (
         Tool("memtest_vulkan", "memtest_vulkan", "41 (GPU load and a VRAM error check)"),

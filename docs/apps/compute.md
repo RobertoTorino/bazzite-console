@@ -42,10 +42,7 @@ causes.
     `ps5-cu-bisect.sh` without `--baseline` read your board's own masks. The script refuses a baseline that
     switches off a WGP your chip runs.
 
-    **Only 24, 32 or 40 CUs exist.** The GPU front-end splits work across the 4 shader arrays in lockstep. The
-    slowest row caps them all. Unlocking WGPs on only one or two rows doesn't speed anything up, because the other
-    rows still bottleneck at their old CU count. The extra CUs just sit idle, hot and powered. So the only
-    configurations worth having unlock the *same* number of WGPs on every row.
+    **24, 32 and 40 CUs are the even levels.** They unlock the same number of WGPs on every row.
 
     | WGPs per row | Example mask          | Total CUs              | What you get                       |
     |--------------|-----------------------|------------------------|------------------------------------|
@@ -54,17 +51,34 @@ causes.
     | 5            | `0x1f,0x1f,0x1f,0x1f` | **40** (max)           | +2 good WGPs on each of the 4 rows |
 
     The per-row mask doesn't have to be exactly `0x0f` or `0x1f`. If WGP3 is bad on a row but WGP4 is good, `0x17`
-    is also 4 WGPs. What matters is that all 4 rows unlock the *same count*. On a row where the chip switched off
+    is also 4 WGPs. For an even level, all 4 rows unlock the *same count*. On a row where the chip switched off
     WGP2, stock is `0x0b`.
 
-    **The counts in between.** When some rows have more healthy WGPs than others, a board counts 34, 36 or 38 CUs.
-    For example, one bad WGP leaves 5, 5, 4 and 5 WGPs on the rows, which is 38 CUs. Other tools and discussions
-    often quote such numbers. Such a board runs as fast as its smallest row, here 32 CUs, while it uses more power
-    and makes more heat. One example is 5 extra CUs on one row and none on another. It would boot and run, but no
-    faster than 24 CUs. CU Unlock shows the counts in between in step 4, for comparison only.
+    **The counts in between.** When some rows have more healthy WGPs than others, a board can run 28 or 36 CUs, or
+    32 with uneven rows. The GPU has two halves, the shader engines SE0 and SE1, with two rows each. The two halves
+    run in step. Inside a half, the two rows add up. So a mask runs like 4 CUs for each WGP in its smaller half.
 
-    `ps5-cu-unlock.sh` and the window **refuse** anything else. They reject an uneven mask like
-    `0x1f,0x1f,0x07,0x07` (5/5/3/3) with an error and don't install it. So you're aiming for 32, and trying for 40.
+    For example, one bad WGP leaves 5, 5, 4 and 5 WGPs on the rows. That is 10 WGPs in SE0 and 9 in SE1. All 38 CUs
+    then run like 36. A mask of 4, 5, 4 and 5 WGPs is 36 CUs, runs like 36 and uses less power.
+
+    This was measured on one board on 27-11-2026 with the `vkpeak` benchmark. The masks were written live, and the
+    registers were read back before each run. A game can gain less than this compute score.
+
+    | CUs | WGPs per row | WGPs in SE0 / SE1 | Score (fp32-scalar) | Against 24 CUs |
+    |-----|--------------|-------------------|---------------------|----------------|
+    | 24  | 3·3·3·3      | 6 / 6             | 5664                | stock          |
+    | 26  | 4·3·3·3      | 7 / 6             | 5668                | no gain        |
+    | 28  | 4·4·3·3      | 8 / 6             | 5669                | no gain        |
+    | 28  | 3·3·4·4      | 6 / 8             | 5670                | no gain        |
+    | 28  | 4·3·4·3      | 7 / 7             | 6606                | **+17%**       |
+    | 28  | 3·4·3·4      | 7 / 7             | 6607                | **+17%**       |
+    | 28  | 4·3·3·4      | 7 / 7             | 6607                | **+17%**       |
+    | 30  | 4·4·4·3      | 8 / 7             | 6610                | **+17%**       |
+    | 32  | 4·4·4·4      | 8 / 8             | 7547                | **+33%**       |
+
+    CU Unlock offers a count in between in step 4 when it adds speed. `ps5-cu-unlock.sh` and the window accept
+    every mask with 3, 4 or 5 WGPs on every row. For a mask that runs slower than its count, such as
+    `0x1f,0x1f,0x07,0x07` (5/5/3/3), they say what it runs like. They refuse a mask with fewer than 3 WGPs on a row.
 
 ## Unlocking extra CUs, step by step
 
@@ -74,10 +88,9 @@ New here? This is the whole process, start to finish. If you only read one secti
 them off because they are defective. Others are fine. These scripts find out which are good, and then switch on
 the good ones at every boot.
 
-**The only three outcomes.** The GPU has 4 identical rows, called shader arrays. It feeds all 4 in lockstep, so a
-row with fewer active CUs holds the other three back. Only three settings do anything useful, 24, 32 and 40 CUs, and
-the tools here will not let you install anything else. [The box above](#cu-levels) explains them, with the masks
-and the counts in between.
+**The outcomes.** The GPU has 4 identical rows, called shader arrays, in two halves. The even levels are 24, 32 and
+40 CUs. With uneven rows, a board can also reach 28 or 36 CUs. [The box above](#cu-levels) explains them, with the
+masks and the measured scores.
 
 ------------------------|-----------------------|-----------------------------------|
 | **24 CUs** (default)   | `0x07,0x07,0x07,0x07` | What the board does out of the box |
@@ -123,8 +136,8 @@ When every WGP has a verdict, the script prints the best **even** mask your boar
   Combined: 0x0f,0x0f,0x0f,0x0f (32 CUs, WGPs per row: 4 4 4 4).
 ```
 
-If one row had a bad WGP, the script trims the others down to match. So what it suggests is always 24, 32 or 40,
-never a lopsided number like 38.
+If one row had a bad WGP, the script also names the even version, with the other rows trimmed down to match. Its
+commands use that even mask. The uneven mask is tested and installed the same way.
 
 **Step 4 — Retest that exact combination (this step is not optional).**
 WGPs that each pass alone can still fail *together*. More active CUs draw more power at the same voltage. So run
@@ -147,7 +160,7 @@ sudo ./ps5-cu-unlock.sh --install 0x0f,0x0f,0x0f,0x0f
 ```
 
 That's it. From now on the board comes up with 32 or 40 CUs on every boot. That includes cold boots and boots
-after system updates. The script refuses to install a mask that isn't one of the three even settings.
+after system updates. The script refuses to install a mask with fewer than 3 WGPs on a row.
 
 **Step 6 — Verify it's actually live.**
 
@@ -168,18 +181,22 @@ Do this if the system starts misbehaving later. A WGP that passed the tests can 
 different game or in a hotter room.
 
 > **Prefer clicking to typing?** [The window](#the-window) runs these steps for you, one after the other. It scans
-> the board, tests the unlock method and each WGP, and restarts the board in between. Then you choose 24, 32 or 40
-> CUs, and it runs the combined test and installs the unlock. **Install** stays off until the combined test passed.
+> the board, tests the unlock method and each WGP, and restarts the board in between. Then you choose how many
+> CUs to turn on, and it runs the combined test and installs the unlock. **Install** stays off until the combined test passed.
 
 ## How it works
 
-The script writes the three registers of a runtime CU unlock with [umr](https://gitlab.freedesktop.org/tomstdenis/umr):
+The script writes the registers of a runtime CU unlock with [umr](https://gitlab.freedesktop.org/tomstdenis/umr):
 
-| Register                         | Per shader array | Meaning                                    |
-|----------------------------------|------------------|--------------------------------------------|
-| `CC_GC_SHADER_ARRAY_CONFIG`      | yes              | Bits 16-20 mark WGPs inactive, cleared to 0 |
-| `SPI_PG_ENABLE_STATIC_WGP_MASK`  | yes              | WGPs that get work, 5 bits of 2 CUs each   |
-| `RLC_PG_ALWAYS_ON_WGP_MASK`      | no               | Union of the four SPI masks                |
+| Register                         | Per shader array | Meaning                                    | Written                                  |
+|----------------------------------|------------------|--------------------------------------------|------------------------------------------|
+| `CC_GC_SHADER_ARRAY_CONFIG`      | yes              | Bits 16-20 mark WGPs inactive              | Every WGP the row's mask leaves off      |
+| `SPI_PG_ENABLE_STATIC_WGP_MASK`  | yes              | WGPs that get work, 5 bits of 2 CUs each   | The row's mask                           |
+| `RLC_PG_ALWAYS_ON_WGP_MASK`      | no               | WGPs that are always on, one value for all rows | Not written, it stays as the chip set it |
+
+At stock, the chip keeps the two per-row registers in step. `CC_GC_SHADER_ARRAY_CONFIG` marks exactly the WGPs that
+`SPI_PG_ENABLE_STATIC_WGP_MASK` leaves off. The unlock keeps it that way. So a WGP that is off, or that failed its
+test, is never listed as active. For example, the mask `0x1b` goes with `0xffe40000`, and `0x0f` with `0xfff00000`.
 
 The board has 4 shader arrays of 5 WGPs each, which is 40 CUs. The arrays are SE0.SH0, SE0.SH1, SE1.SH0 and
 SE1.SH1. Stock is 24 CUs.
@@ -208,8 +225,8 @@ they are differs per board. The other 2 per array are fused off at the factory. 
 script tests one by one. The script shows this same map live while it runs. `>>` marks the WGP under test. Once a WGP
 has a verdict, it shows `ok` for GOOD, `xx` for FAILS EVERY TIME or `??` for RANDOM. See [Results](#results).
 
-**Only 24, 32 or 40 CUs exist.** The box [24, 32 or 40 CUs, and the counts in between](#cu-levels) at the top of
-this chapter explains why.
+**24, 32 and 40 CUs are the even levels.** The box [24, 32 or 40 CUs, and the counts in between](#cu-levels) at the
+top of this chapter explains them and the counts in between.
 
 The test plan:
 
@@ -233,7 +250,7 @@ The test plan:
 - AMD PS5, Linux with bash 4+. Tested against Bazzite (Fedora Atomic).
 - `umr`, owned by root, in `/usr/bin`, `/usr/sbin` or `/usr/local/bin`.
   On Bazzite, run `sudo rpm-ostree install umr`, then restart. "Already requested" means it's waiting for that
-  restart.
+  restart. [Quickfix](quickfix.md#quickfix) installs it too, with the RPM packages.
 - A GPU load tool, preferably [memtest_vulkan](https://github.com/GpuZelenograd/memtest_vulkan/releases)
   in `~/.local/bin`. vkpeak, vkmark and glmark2 work too.
 - sudo rights, only for umr and the kernel log.
@@ -260,7 +277,7 @@ chmod +x ps5-cu-bisect.sh
 ./ps5-cu-bisect.sh --baseline 0x0f,0x0f,0x0f,0x0f --control-only --rounds 1   # re-validate a combined mask, control only
 ./ps5-cu-bisect.sh --scan          # live masks and what a run needs, writes no register
 ./ps5-cu-bisect.sh --only control  # only the control's rounds, as the window's safety check does
-./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --control-only --rounds 1 --writes spi,rlc   # SPI and RLC only
+./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --control-only --rounds 1 --writes spi,rlc   # SPI and the always-on mask only
 ./ps5-cu-bisect.sh --status        # results so far, report on the Desktop
 ./ps5-cu-bisect.sh --same-boot     # no reboots: restore the baseline live between attempts
 ./ps5-cu-bisect.sh --auto          # no prompts, auto-reboot after each attempt (see below)
@@ -436,8 +453,8 @@ With `--control-only`, the script doesn't bisect the WGPs that are still locked 
 is a WGP you already know is bad and left out on purpose. Only the `control` item runs, so this is a single-boot
 check and not another full bisect run.
 
-The suggested mask is always even already, at 24, 32 or 40 CUs. If one row has a bad WGP, the script trims the
-other rows down to match. You can't install an uneven mask, and it wouldn't be faster anyway. Once the
+The summary's commands use the even mask, at 24, 32 or 40 CUs. If one row has a bad WGP, the script trims the
+other rows down to match. An uneven mask is tested and installed the same way. Once the
 combination also passes, make it survive a restart with
 [ps5-cu-unlock.sh](#keeping-the-unlock-after-a-reboot).
 
@@ -486,16 +503,16 @@ sudo ./ps5-cu-unlock.sh --uninstall                     # disable it; stock 24 C
 
 `--status` shows the live masks only when you run it with sudo, or when sudo needs no password.
 
-**Only 24, 32 and 40 CUs can be installed.** `--install` checks the mask before it touches a single register.
-So does a bare apply. They refuse anything that isn't 3, 4 or 5 WGPs on *every* one of the 4 shader-array rows:
+**Every row needs 3, 4 or 5 WGPs.** `--install` checks the mask before it touches a single register. So does a
+bare apply. They refuse a mask with fewer than 3 WGPs on a row. For a mask that runs slower than its count, they
+print a note and go on:
 
 ```
-$ sudo ./ps5-cu-unlock.sh --install 0x1f,0x1f,0x07,0x07
-ERROR: uneven mask 0x1f,0x1f,0x07,0x07 - 5/5/3/3 WGPs on SE0.SH0/SE0.SH1/SE1.SH0/SE1.SH1.
-  The GPU drives all 4 shader arrays in lockstep, so an uneven unlock runs no faster than its
-  smallest row while burning the extra power. Unlock the SAME number of WGPs on every row.
-  Allowed: 3 per row = 24 CUs (stock), 4 per row = 32 CUs, 5 per row = 40 CUs (max).
-  Example 32 CUs: 0x0f,0x0f,0x0f,0x0f     Example 40 CUs: 0x1f,0x1f,0x1f,0x1f
+$ sudo ./ps5-cu-unlock.sh --install 0x1f,0x1f,0x0f,0x1f
+Mask 0x1f,0x1f,0x0f,0x1f - 5/5/4/5 WGPs on SE0.SH0/SE0.SH1/SE1.SH0/SE1.SH1.
+SE0 has 10 WGPs and SE1 has 9. The two run in step, so the mask runs as fast as
+36 CUs while it draws the power of 38 CUs.
+Installed and enabled. 0x1f,0x1f,0x0f,0x1f is applied at every boot. Restart the board to turn it on.
 ```
 
 **Once `--install` has run, the CU unlock is persistent.** The systemd service applies the saved mask again on
@@ -508,25 +525,21 @@ Only install a mask that:
 - passed with the control, so no crashes with just the baseline masks
 - came back GOOD for every WGP in it, on its own, in `ps5-cu-bisect.sh`
 - was then also tested as the combined mask itself, because WGPs that pass alone can still fail together
-- unlocks the same number of WGPs on all 4 shader arrays, for 24, 32 or 40 CUs, which the script enforces
+- has 3, 4 or 5 WGPs on each of the 4 shader arrays, which the script enforces
 
-> **Worked example: why an uneven mask gets rejected.** Say your bisect run found one bad WGP, `SE1.SH0.WGP4`,
-> and everything else good. The "everything that passed" combination would be `0x1f,0x1f,0x0f,0x1f`. That is 38
-> CUs, with `5/5/4/5` WGPs per row. Both the script and the window refuse it.
+> **Worked example: what an uneven mask gives.** Say your bisect run found one bad WGP, `SE1.SH0.WGP4`, and
+> everything else good. The "everything that passed" combination would be `0x1f,0x1f,0x0f,0x1f`. That is 38 CUs,
+> with `5/5/4/5` WGPs per row. SE0 then has 10 WGPs and SE1 has 9.
 >
-> This isn't a bug. The GPU front-end splits work across the 4 shader arrays in lockstep. So the row with the
-> fewest active WGPs caps the actual performance. The spare WGP on the other 3 rows just sits unused. `38` CUs
-> (`5/5/4/5`) performs the same as `32` CUs (`4/4/4/4`). You get no real-world gain in speed, just extra power
-> and heat.
+> The two halves run in step, so the tenth WGP in SE0 has no partner. `38` CUs (`5/5/4/5`) performs the same as
+> `36` CUs (`4/5/4/5`). The extra WGP only adds power and heat.
 >
-> With one WGP permanently bad, the best option is `4/4/4/4`. Drop the spare good WGP on the 3 healthy rows to
-> match the row with the bad one. `ps5-cu-bisect.sh` does this trim for you and suggests the even mask
-> directly.
+> So the window offers `4/5/4/5`, which is `0x0f,0x1f,0x0f,0x1f`, as **36 CUs**. From the terminal, retest that
+> mask as a whole first:
 > ```
-> ./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --baseline 0x0f,0x0f,0x0f,0x0f --control-only --rounds 1
+> ./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --baseline 0x0f,0x1f,0x0f,0x1f --control-only --rounds 1
 > ```
-> That retest passes evenly on all 4 rows, so the window shows **Accepted**. You get 32 real, usable CUs over
-> the stock 24.
+> When that retest passes, the window shows **Accepted**. You get 36 usable CUs over the stock 24.
 
 Config and the systemd unit:
 
@@ -648,14 +661,14 @@ During an attempt, the line under the pills shows the round, the WGP, the load t
 - **32 CUs** needs 4 healthy WGPs on every row.
 - **40 CUs** needs all 5 WGPs healthy on every row.
 
-A level that the healthy WGPs don't reach is off and says **Not healthy**. Under the pills, a row of boxes shows the
-uneven counts between the highest even level and all your healthy WGPs, for example **38 CUs** with **5·5·4·5 WGPs**.
-They help when you compare with other tools or discussions, which often quote such numbers. You can't apply them. The
-link **Why uneven CUs don't help** leads to [24, 32 or 40 CUs, and the counts in between](#cu-levels). When you choose
-32 or 40, the window first keeps a copy of the bisect results, in `bisect-runs.tsv` and `bisect-config`. Then it runs
+A level that the healthy WGPs don't reach is off and says **Not healthy**. Under the pills, a second row offers the
+counts above your highest even level that add speed, for example **36 CUs** with **4·5·4·5 WGPs**. You test and
+install such a count the same way as a level. The link **What the counts in between give** leads to
+[24, 32 or 40 CUs, and the counts in between](#cu-levels). When you choose
+a count, the window first keeps a copy of the bisect results, in `bisect-runs.tsv` and `bisect-config`. Then it runs
 the combined test of that mask for one round. That is `--reset`, then `--baseline <mask> --control-only --rounds 1`.
 
-When the combined test fails, the higher levels say **Failed together**. You can then pick a lower level. When it
+When the combined test fails, the higher levels say **Failed together**. You can then pick a lower level or count. When it
 passes, **Install** saves the mask for every boot. It writes nothing to the GPU now. Writing the masks while the
 desktop runs can freeze the board. Step 4 then says "Restart the board to turn on 32 CUs." **Restart** asks
 first, then restarts the board. The boot service turns the unlock on before the desktop starts. After the restart,

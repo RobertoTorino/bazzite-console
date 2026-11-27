@@ -92,9 +92,9 @@ INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH
                settings_ini=True)
 ```
 
-`__main__.py` starts the app the same way in every app: `create_app()` sets the names, style, fonts and icon;
-`instance.already_running()` brings an open window to the front instead of opening a second one; `exec_app()` runs
-the event loop and handles SIGTERM.
+`__main__.py` starts the app the same way in every app: `create_app()` sets the names, style, fonts, icon and the
+wheel guard; `instance.already_running()` brings an open window to the front instead of opening a second one;
+`exec_app()` runs the event loop and handles SIGTERM.
 
 ```python
 def main() -> int:

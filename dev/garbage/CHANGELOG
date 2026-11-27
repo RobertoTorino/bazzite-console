@@ -1,3 +1,10 @@
+Changelog: 27-11-2026 05:21:38
+
+Fixed. Emptying the Trash left one small file, so the Trash kept showing with a few hundred bytes (owner,
+27-11-2026). The desktop keeps directorysizes beside the Trash's two folders, its list of the trashed folders' sizes.
+The command deleted only what is inside the two folders. It now deletes that file too and keeps the two folders.
+The desktop writes the file again when it needs it. The wiki shows the new command.
+
 Changelog: 24-11-2026 21:28:26
 
 Fixed. The Trash shows whenever it holds a file, however small (owner, 24-11-2026). Like every place, it was left out

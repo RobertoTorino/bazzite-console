@@ -10,8 +10,8 @@ from PyQt6 import sip
 from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, Qt, pyqtSignal
 from PyQt6.QtGui import QFontDatabase, QMouseEvent, QPixmap
 from PyQt6.QtWidgets import (
-    QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QHeaderView, QLabel,
-    QPlainTextEdit, QPushButton, QVBoxLayout, QWidget,
+    QAbstractItemView, QAbstractSpinBox, QApplication, QComboBox, QDialog, QDialogButtonBox, QFrame, QHBoxLayout,
+    QHeaderView, QLabel, QPlainTextEdit, QPushButton, QScrollBar, QSlider, QVBoxLayout, QWidget,
 )
 
 from . import FONT_DIR, plain_tooltip, window_title
@@ -289,3 +289,38 @@ class RoundedToolTip(QObject):
                 elif kind in (QEvent.Type.MouseMove, QEvent.Type.HoverMove) and not self._area.contains(event.position().toPoint()):
                     self.hide()
         return False
+
+
+class WheelGuard(QObject):
+    """The mouse wheel changes a list, a number field or a slider only after a click on it (owner, 26-11-2026: a
+    wheel turn over a window changed every value the pointer passed). Until then the wheel scrolls the page under
+    it. WheelGuard.install(app) filters the wheel events of all widgets. A copy of core's."""
+
+    _instance: WheelGuard | None = None
+    _GUARDED = (QComboBox, QAbstractSpinBox, QSlider)
+
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:  # noqa: N802 (Qt override)
+        if not isinstance(obj, self._GUARDED) or isinstance(obj, QScrollBar):
+            return False
+        if event.type() == QEvent.Type.Polish and obj.focusPolicy() == Qt.FocusPolicy.WheelFocus:
+            obj.setFocusPolicy(Qt.FocusPolicy.StrongFocus)      # a wheel turn does not give it the focus
+        elif event.type() == QEvent.Type.Wheel and not obj.hasFocus():
+            event.ignore()                      # ignored and filtered: Qt hands the turn to the parent
+            return True
+        return False
+
+    @classmethod
+    def install(cls, app: QApplication) -> WheelGuard:
+        guard = cls(app)
+        app.installEventFilter(guard)
+        app.aboutToQuit.connect(lambda: app.removeEventFilter(guard))     # as RoundedToolTip's
+        cls._instance = guard
+        return guard
+
+    @classmethod
+    def uninstall(cls) -> None:
+        """For tests: off again before Python's final garbage collection."""
+        guard, cls._instance = cls._instance, None
+        app = QApplication.instance()
+        if guard is not None and app is not None and not sip.isdeleted(guard):
+            app.removeEventFilter(guard)

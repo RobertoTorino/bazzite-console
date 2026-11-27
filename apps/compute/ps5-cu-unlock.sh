@@ -7,16 +7,19 @@
 #   - passed with the control, so no crashes with just the baseline masks
 #   - came back GOOD for every WGP in the combined mask, on its own
 #   - were then tested together as the combined mask itself
-#   - unlock the same number of WGPs on all 4 shader arrays (SE0.SH0, SE0.SH1, SE1.SH0, SE1.SH1)
+#   - unlock 3, 4 or 5 WGPs on each of the 4 shader arrays (SE0.SH0, SE0.SH1, SE1.SH0, SE1.SH1)
 #
 # WGPs that pass alone can still fail combined, because they draw more power at the same voltage.
-# The CU Unlock wiki chapter says more. The GPU splits work across all 4 shader arrays in lockstep.
-# So an uneven unlock only ever runs as fast as its smallest row, while still drawing the extra
-# power. This script refuses to install one. It only accepts the three even levels:
+# The CU Unlock wiki chapter says more. The even levels are:
 #   3 WGPs per row = 24 CUs (stock/default)   4 per row = 32 CUs   5 per row = 40 CUs (max)
+# An uneven mask is accepted too. The two shader engines (SE0 and SE1, two rows each) run in step,
+# so a mask runs like 4 CUs for each WGP in its smaller engine: 5/4/4/5 WGPs is 36 CUs and runs like
+# 36, 5/5/4/5 is 38 CUs and runs like 36 too. The script says so when a mask runs slower than its count.
 #
 # This repeats the exact register writes ps5-cu-bisect.sh uses, with umr, at every boot. The
-# registers are CC_GC_SHADER_ARRAY_CONFIG, SPI_PG_ENABLE_STATIC_WGP_MASK and RLC_PG_ALWAYS_ON_WGP_MASK.
+# registers are CC_GC_SHADER_ARRAY_CONFIG and SPI_PG_ENABLE_STATIC_WGP_MASK. On every row, CC lists
+# as inactive exactly the WGPs the mask leaves off, as the chip itself does at stock. A WGP that
+# failed the test is so never listed as active. RLC_PG_ALWAYS_ON_WGP_MASK stays as the chip set it.
 # A root systemd service writes them as early as its unit ordering allows. That is before the
 # display manager starts using the GPU. It is not a diagnostic. It does not retest anything, and
 # it trusts the masks you give it.
@@ -43,7 +46,6 @@ UNIT_PATH="/etc/systemd/system/$UNIT_NAME"
 ASIC="${UMR_ASIC:-cyan_skillfish.gfx1013}"
 REG_CC="mmCC_GC_SHADER_ARRAY_CONFIG"
 REG_SPI="mmSPI_PG_ENABLE_STATIC_WGP_MASK"
-REG_RLC="mmRLC_PG_ALWAYS_ON_WGP_MASK"
 ROWS=(SE0.SH0 SE0.SH1 SE1.SH0 SE1.SH1)
 MASK_RE='^0x[0-9a-fA-F]{1,2}(,0x[0-9a-fA-F]{1,2}){3}$'
 
@@ -51,30 +53,28 @@ say()  { printf '%s\n' "$*"; }
 die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 usage() { sed -n '4,/^$/{s/^# \{0,1\}//;p;}' "$0"; }   # the header comment, after the SPDX line and the blank
 hex2() { printf '0x%02x' $(( $1 & 31 )); }
+# CC_GC_SHADER_ARRAY_CONFIG for a row's mask: bits 16-31 list the inactive WGPs, so every WGP the mask leaves off.
+cc_of() { printf '0x%08x' $(( (~$1 & 0xffff) << 16 )); }
 popcount() { local n=$(( $1 )) c=0; while (( n )); do (( c += n & 1, n >>= 1 )); done; echo "$c"; }
 cu_count() { local t=0 m; IFS=, read -ra M <<<"$1"; for m in "${M[@]}"; do (( t += $(popcount "$m") * 2 )); done; echo "$t"; }
 
-# Only 24 (3 WGPs/row, stock), 32 (4/row) and 40 (5/row, max) are real configurations. The GPU
-# front-end feeds all 4 shader arrays in lockstep, so an uneven mask performs like its *smallest*
-# row while still drawing the extra power - it's never worth installing. Refuse it outright.
-validate_even() { # masks
-  local m i counts=() n
+# Every row needs 3, 4 or 5 WGPs: 24 CUs (3 on every row, stock) up to 40 CUs (5 on every row, max). The two
+# shader engines run in step: a mask runs like 4 CUs for each WGP in its smaller engine (measured with vkpeak,
+# 27-11-2026). A mask with more WGPs in one engine is accepted, with a note that says what it runs like.
+validate_mask() { # masks
+  local m i counts=() speed
   IFS=, read -ra m <<<"$1"
-  for i in 0 1 2 3; do counts+=("$(popcount $(( ${m[$i]} & 31 )) )"); done
-  n=${counts[0]}
-  for i in 1 2 3; do
-    [[ ${counts[$i]} == "$n" ]] && continue
-    die "uneven mask $1 - ${counts[0]}/${counts[1]}/${counts[2]}/${counts[3]} WGPs on SE0.SH0/SE0.SH1/SE1.SH0/SE1.SH1.
-  The GPU drives all 4 shader arrays in lockstep, so an uneven unlock runs no faster than its
-  smallest row while burning the extra power. Unlock the SAME number of WGPs on every row.
-  Allowed: 3 per row = 24 CUs (stock), 4 per row = 32 CUs, 5 per row = 40 CUs (max).
-  Example 32 CUs: 0x0f,0x0f,0x0f,0x0f     Example 40 CUs: 0x1f,0x1f,0x1f,0x1f"
+  for i in 0 1 2 3; do
+    counts+=("$(popcount $(( ${m[$i]} & 31 )) )")
+    (( counts[i] >= 3 )) || die "unsupported mask $1 - ${counts[i]} WGPs on ${ROWS[$i]}.
+  Every row needs 3, 4 or 5 WGPs: 24 CUs (stock) up to 40 CUs (max).
+  Example 32 CUs: 0x0f,0x0f,0x0f,0x0f     Example 38 CUs: 0x1f,0x1f,0x0f,0x1f"
   done
-  case $n in
-    3|4|5) return 0 ;;
-    *) die "unsupported mask $1 ($(cu_count "$1") CUs, $n WGPs per row).
-  Allowed: 3 per row = 24 CUs (stock), 4 per row = 32 CUs, 5 per row = 40 CUs (max)." ;;
-  esac
+  speed=$(( counts[0] + counts[1] )); (( counts[2] + counts[3] < speed )) && speed=$(( counts[2] + counts[3] ))
+  (( speed * 4 == $(cu_count "$1") )) && return 0
+  say "Mask $1 - ${counts[0]}/${counts[1]}/${counts[2]}/${counts[3]} WGPs on SE0.SH0/SE0.SH1/SE1.SH0/SE1.SH1."
+  say "SE0 has $(( counts[0] + counts[1] )) WGPs and SE1 has $(( counts[2] + counts[3] )). The two run in step, so the mask runs as fast as"
+  say "$(( speed * 4 )) CUs while it draws the power of $(cu_count "$1") CUs."
 }
 
 root_safe() { # the file and every folder above it are owned by root and only root can write them
@@ -96,8 +96,8 @@ umr_failed() { grep -Eqi '(\[ERROR\]|error|failed|invalid|unknown|cannot|no such
 # ----------------------------------------------------------------- apply ---
 apply_masks() { # masks (must run as root)
   (( EUID == 0 )) || die "writing GPU registers needs root. Run with sudo."
-  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f, with the same number of WGPs on every row."
-  validate_even "$1"
+  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f, with 3, 4 or 5 WGPs on every row."
+  validate_mask "$1"
   lspci -nn 2>/dev/null | grep -qi '1002:13fe' || die "no PS5 GPU (1002:13fe) found. Refusing to write GPU registers."
   local UMR; UMR=$(find_umr) || die "umr not found. Install it: rpm-ostree install umr, then restart."
   root_safe "$UMR" || die "$UMR is not owned by root, or others can write to it."
@@ -112,29 +112,25 @@ apply_masks() { # masks (must run as root)
   reg_write_rc() { # reg value se sh
     local out; out=$("$UMR" "${UMR_I[@]}" -w "$ASIC.$1" "$2" -b "$3" "$4" 0xffffffff 2>&1); ! umr_failed "$out"
   }
-  reg_write_global() { # reg value, no se/sh
-    local out; out=$("$UMR" "${UMR_I[@]}" -w "$ASIC.$1" "$2" 2>&1); ! umr_failed "$out"
-  }
   reg_read_rc() { # reg se sh
     local v; v=$("$UMR" "${UMR_I[@]}" -r "$ASIC.$1" -b "$2" "$3" 0xffffffff 2>&1 | parse_hex)
     [[ -n $v ]] || v=$("$UMR" "${UMR_I[@]}" -r "$ASIC.$1" -b "$2" "$3" 2>&1 | parse_hex)
     [[ -n $v ]] && echo "$v"
   }
 
-  local m i union=0
+  local m i
   IFS=, read -ra m <<<"$1"
-  reg_write_global "$REG_CC" 0x0 || true
   for i in 0 1 2 3; do
-    reg_write_rc "$REG_CC" 0x0 $((i / 2)) $((i % 2)) || die "could not clear $REG_CC on ${ROWS[$i]}"
+    reg_write_rc "$REG_CC" "$(cc_of "${m[$i]}")" $((i / 2)) $((i % 2)) || die "could not write $REG_CC on ${ROWS[$i]}"
     reg_write_rc "$REG_SPI" "$(hex2 "${m[$i]}")" $((i / 2)) $((i % 2)) || die "could not write $REG_SPI on ${ROWS[$i]}"
-    (( union |= m[i] ))
   done
-  reg_write_global "$REG_RLC" "$(hex2 $union)" || true
 
   local now ok=1
   for i in 0 1 2 3; do
     now=$(reg_read_rc "$REG_SPI" $((i / 2)) $((i % 2))) || { ok=0; continue; }
     [[ $(hex2 "$now") == $(hex2 "${m[$i]}") ]] || ok=0
+    now=$(reg_read_rc "$REG_CC" $((i / 2)) $((i % 2))) || { ok=0; continue; }
+    [[ $(hex2 $(( ~(now >> 16) ))) == $(hex2 "${m[$i]}") ]] || ok=0
   done
   (( ok )) || die "masks did not read back as written. The CU unlock may be partially applied. Restart."
   say "CU unlock applied: $1 ($(cu_count "$1") CUs)"
@@ -143,8 +139,8 @@ apply_masks() { # masks (must run as root)
 # --------------------------------------------------------- install/remove --
 install_service() { # masks
   (( EUID == 0 )) || die "--install needs root: sudo $0 --install $1"
-  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f, with the same number of WGPs on every row."
-  validate_even "$1"
+  [[ $1 =~ $MASK_RE ]] || die "masks must look like 0x0f,0x0f,0x0f,0x0f, with 3, 4 or 5 WGPs on every row."
+  validate_mask "$1"
   mkdir -p "$CONF_DIR" && chmod 755 "$CONF_DIR"
   printf '%s\n' "$1" >"$CONF_FILE" && chmod 644 "$CONF_FILE"
   # Copy the script itself under /usr/local, never reference $SELF directly: a unit that execs a

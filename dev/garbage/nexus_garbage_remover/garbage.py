@@ -64,10 +64,13 @@ def measure(path: Path, kept: tuple[str, ...] = ()) -> tuple[int, int]:
     return size, files
 
 
-def _empty(path: Path, depth: int = 1) -> list[str]:
-    """find's command that deletes everything under *path* and keeps the folder itself (*depth* 2 keeps its
-    subfolders too)."""
-    return ["find", str(path), "-mindepth", str(depth), "-delete"]
+def _empty(path: Path, keep: tuple[str, ...] = ()) -> list[str]:
+    """find's command that deletes everything under *path* and keeps the folder itself, and its folders named in
+    *keep* (their contents go)."""
+    command = ["find", str(path), "-mindepth", "1"]
+    for name in keep:
+        command += ["-not", "-path", str(path / name)]
+    return [*command, "-delete"]
 
 
 def places(home: Path | None = None, steam: Path | None = None, dumps: Path = DUMPS,
@@ -85,7 +88,7 @@ def places(home: Path | None = None, steam: Path | None = None, dumps: Path = DU
                              "never needs them again.", _empty(reports)))
     trash = home / ".local" / "share" / "Trash"
     found.append(Garbage("trash", "Trash", trash, "Files you deleted on the desktop. Emptying the Trash removes them "
-                         "for good.", _empty(trash, depth=2)))
+                         "for good.", _empty(trash, keep=("files", "info"))))
     thumbnails = home / ".cache" / "thumbnails"
     found.append(Garbage("thumbnails", "Picture previews", thumbnails, "Small previews the file manager made of "
                          "pictures and videos. It makes them again when it needs them.", _empty(thumbnails)))

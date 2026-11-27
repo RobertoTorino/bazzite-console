@@ -210,18 +210,30 @@ class Progress:
         top = min(popcount(m) for m in rows)
         return {LEVELS[n]: hex_masks(trim(rows, n)) for n in sorted(LEVELS) if n <= top}
 
-    def uneven(self) -> list[tuple[int, list[int]]]:
-        """The uneven counts between the highest even level and every healthy WGP, as (CUs, WGPs per row), one more
-        WGP each, rows in order. Only for comparison: they can't be installed, and run as fast as their smallest row."""
-        rows = [popcount(m) for m in self.healthy_rows()]
+    def uneven(self) -> list[tuple[int, list[int], str]]:
+        """The counts above the highest even level that add speed, as (CUs, WGPs per row, mask). The two shader
+        engines (SE0 and SE1, two rows each) run in step, and inside an engine the rows add up: measured on a board
+        with vkpeak, 27-11-2026, the speed is 4 CUs for each WGP in the smaller engine. So a count is offered when
+        both engines have the same number of WGPs, spread over an engine's two rows as evenly as its healthy WGPs
+        allow. Each row keeps its lowest healthy WGPs, as the even levels do."""
+        healthy = self.healthy_rows()
+        rows = [popcount(m) for m in healthy]
         top = min(rows)
-        cur, out = [top] * 4, []
-        for r in range(4):
-            for _ in range(rows[r] - top):
-                cur[r] += 1
-                out.append((sum(cur) * 2, list(cur)))
+        out = []
+        for per_engine in range(2 * top + 1, min(rows[0] + rows[1], rows[2] + rows[3]) + 1):
+            cur = []
+            for first, second in ((rows[0], rows[1]), (rows[2], rows[3])):
+                low = min(per_engine // 2, first, second)
+                a = max(low, per_engine - second) if first >= second else low
+                cur += [a, per_engine - a]
+            out.append((sum(cur) * 2, cur, hex_masks([trim([healthy[i]], cur[i])[0] for i in range(4)])))
         return out
 
+
+def speed_cus(text: str) -> int:
+    """The CUs a mask runs like: 4 for each WGP in the smaller of the two shader engines (see Progress.uneven)."""
+    rows = [popcount(m) for m in masks_of(text)]
+    return 4 * min(rows[0] + rows[1], rows[2] + rows[3])
 
 def load(folder: Path | None = None) -> Progress:
     folder = folder or state_dir()

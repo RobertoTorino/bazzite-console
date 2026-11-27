@@ -21,10 +21,10 @@ def test_the_icons_are_nexus_at_512_and_128_px():
 def test_the_checkout_is_the_suite_with_its_development_apps():
     assert checkout.suite_name(CHECKOUT) == "Bazzite Console Suite"
     apps = checkout.dev_apps(CHECKOUT)
-    assert [app.key for app in apps] == ["nrt", "demo", "deps", "garbage", "itests", "marketing",
+    assert [app.key for app in apps] == ["nrt", "demo", "deps", "flight", "garbage", "itests", "marketing",
                                           "studio", "sounds", "text"]   # the release tool, then by name
     assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps",
-                                          "Nexus Garbage Remover", "Nexus Installer Tests",
+                                          "Nexus Flight Recorder", "Nexus Garbage Remover", "Nexus Installer Tests",
                                           "Nexus Marketing for PS5", "Nexus Remix Studio", "Nexus Sound Lab",
                                           "Nexus TTS"]
     assert all(app.icon is not None and app.icon.is_file() for app in apps)
@@ -37,11 +37,12 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
 
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
-    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps", "Nexus Garbage Remover",
+    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps", "Nexus Flight Recorder",
+                     "Nexus Garbage Remover",
                      "Nexus Installer Tests", "Nexus Marketing for PS5", "Nexus Remix Studio", "Nexus Sound Lab",
                      "Nexus TTS", "Portal video tour", "Apps video tour", "Convert icons", "Close issues"]
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
-    assert enabled == [True] * 13
+    assert enabled == [True] * 14
     window.close()
 
 

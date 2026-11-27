@@ -1,0 +1,6 @@
+Changelog: 27-11-2026 17:54:15
+
+Added. Nexus Flight Recorder, a new development app (owner, 27-11-2026). A system service writes one line per second
+with the console's sensors, the memory and the busiest program to /var/log/nexus-flight-recorder, one file per day, the
+newest 7 kept. The window installs, starts and stops the service, turns it on or off at boot, opens the folder, and
+shows each value's lowest and highest in the minutes around a time you type. It has its tile in Nexus Dashboard.
