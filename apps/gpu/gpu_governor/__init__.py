@@ -3,7 +3,7 @@
 
 APP_NAME = "PS5 GPU Manager"
 APP_ID = "ps5-governor-manager"
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from pathlib import Path
 

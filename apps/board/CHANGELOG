@@ -1,3 +1,7 @@
+Changelog: 27-11-2026 19:59:41
+
+Release 0.14.1.
+
 Changelog: 27-11-2026 04:47:26
 
 Fixed. install-requirements.sh could not install vkpeak and said to install it by hand (owner, 27-11-2026). It

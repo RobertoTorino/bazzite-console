@@ -4,7 +4,7 @@ folders and adds them to Steam for Game Mode."""
 
 APP_NAME = "Xenia Manager"
 APP_ID = "ps5-xenia-manager"
-__version__ = "1.10.0"
+__version__ = "1.10.1"
 
 from pathlib import Path
 
