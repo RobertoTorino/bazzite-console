@@ -109,15 +109,17 @@ def test_installed_masks(tmp_path):
 
 def test_the_uneven_counts_and_their_masks(tmp_path):
     """One WGP fails every time on a board with its own masks: 32 is the highest even level, 38 the healthy total.
-    36 is the one count above 32 that adds speed: 9 WGPs in each shader engine."""
+    Every count above 32 is offered. 36 is the one that adds speed: 9 WGPs in each shader engine."""
     base = "0x07,0x07,0x07,0x0b"
     items = [it for it, _ in progress.plan(base, False)]
     runs = [(1, "control", "PASS"), (2, "control", "PASS"), (3, "control", "PASS")] + [
         (r, it, "FAULT" if it == "SE1.SH0.WGP3" else "PASS") for r in (1, 2, 3) for it in items if it != "control"]
     p = progress.load(write(tmp_path / "s", base, 3, runs))
     assert max(p.levels()) == 32
-    assert p.uneven() == [(36, [4, 5, 4, 5], "0x0f,0x1f,0x17,0x1f")]
-    assert [progress.cu_count(mask) for _, _, mask in p.uneven()] == [36]
+    assert p.uneven() == [(34, [4, 5, 4, 4], "0x0f,0x1f,0x17,0x0f"), (36, [4, 5, 4, 5], "0x0f,0x1f,0x17,0x1f"),
+                          (38, [5, 5, 4, 5], "0x1f,0x1f,0x17,0x1f")]
+    assert [progress.cu_count(mask) for _, _, mask in p.uneven()] == [34, 36, 38]
+    assert [progress.speed_cus(mask) for _, _, mask in p.uneven()] == [32, 36, 36]
     assert progress.load(write(tmp_path / "t", "0x07,0x07,0x07,0x07", 3, full_run())).uneven() == []
 
 
@@ -156,12 +158,18 @@ class _Healthy(progress.Progress):
 
 
 @pytest.mark.parametrize(("rows", "offered"), [
-    ([0x1F, 0x1F, 0x0F, 0x1F], [(36, [4, 5, 4, 5], "0x0f,0x1f,0x0f,0x1f")]),
-    ([0x0F, 0x07, 0x0F, 0x0B], [(28, [4, 3, 4, 3], "0x0f,0x07,0x0f,0x0b")]),
-    ([0x1F, 0x07, 0x07, 0x1F], [(28, [4, 3, 3, 4], "0x0f,0x07,0x07,0x0f"), (32, [5, 3, 3, 5], "0x1f,0x07,0x07,0x1f")]),
-    ([0x1F, 0x0F, 0x07, 0x07], []),                 # every extra WGP is in SE0: nothing adds speed
-    ([0x0F, 0x0F, 0x0F, 0x1B], []), ([0x1F, 0x1F, 0x1F, 0x1F], [])])
-def test_only_counts_that_add_speed_are_offered(rows, offered):
+    # healthy rows -> (CUs, WGPs per row, mask, the CUs it runs like)
+    ([0x1F, 0x1F, 0x1F, 0x1B], [(34, [4, 5, 4, 4], "0x0f,0x1f,0x0f,0x1b", 32), (36, [4, 5, 5, 4], "0x0f,0x1f,0x1f,0x1b", 36),
+                                (38, [5, 5, 5, 4], "0x1f,0x1f,0x1f,0x1b", 36)]),
+    ([0x1F, 0x1F, 0x0F, 0x1F], [(34, [4, 5, 4, 4], "0x0f,0x1f,0x0f,0x0f", 32), (36, [4, 5, 4, 5], "0x0f,0x1f,0x0f,0x1f", 36),
+                                (38, [5, 5, 4, 5], "0x1f,0x1f,0x0f,0x1f", 36)]),
+    ([0x0F, 0x07, 0x0F, 0x0B], [(26, [4, 3, 3, 3], "0x0f,0x07,0x07,0x0b", 24), (28, [4, 3, 4, 3], "0x0f,0x07,0x0f,0x0b", 28)]),
+    ([0x1F, 0x0F, 0x07, 0x07], [(26, [3, 4, 3, 3], "0x07,0x0f,0x07,0x07", 24), (28, [4, 4, 3, 3], "0x0f,0x0f,0x07,0x07", 24),
+                                (30, [5, 4, 3, 3], "0x1f,0x0f,0x07,0x07", 24)]),      # every extra WGP is in SE0
+    ([0x0F, 0x0F, 0x0F, 0x1B], []), ([0x1F, 0x1F, 0x1F, 0x1F], []), ([0x07, 0x07, 0x07, 0x0B], [])])
+def test_every_count_above_the_highest_level_is_offered_with_its_best_rows(rows, offered):
     found = _Healthy(rows).uneven()
-    assert found == offered
-    assert all(progress.speed_cus(mask) == cus for cus, _, mask in found)
+    assert [(cus, counts, mask, progress.speed_cus(mask)) for cus, counts, mask in found] == offered
+    top = min(progress.popcount(r) for r in rows)
+    assert all(cus > top * 8 for cus, _, _ in found)                 # nothing the board can already run
+    assert [cus for cus, _, _ in found] == list(range(top * 8 + 2, sum(progress.popcount(r) for r in rows) * 2 + 1, 2))

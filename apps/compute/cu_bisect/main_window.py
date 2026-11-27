@@ -320,8 +320,9 @@ class MainWindow(QWidget):
         return self.step_boxes[self.step].line
 
     def _build_uneven(self) -> QWidget:
-        """Step 4's counts above the highest even level that add speed (progress.uneven), as pills (owner,
-        27-11-2026): each is tested as a whole and installed like a level. The link says how the counts work."""
+        """Step 4's counts above the highest even level (progress.uneven), as pills (owner, 27-11-2026): each is
+        tested as a whole and installed like a level. A count that runs slower than its number says what it runs
+        like. The link says how the counts work."""
         row = QWidget()
         box = QHBoxLayout(row)
         box.setContentsMargins(0, 0, 0, 0)
@@ -344,9 +345,11 @@ class MainWindow(QWidget):
             old.deleteLater()
         self.uneven_boxes = []
         for cus, rows, mask in counts:
-            pill = Pill(f"{cus} CUs", "\u00b7".join(map(str, rows)) + " WGPs",
+            speed = progress.speed_cus(mask)
+            pill = Pill(f"{cus} CUs", "\u00b7".join(map(str, rows)) + " WGPs" if speed == cus else f"Like {speed} CUs",
                         f"{cus} CUs with {'/'.join(map(str, rows))} WGPs on the rows SE0.SH0 to SE1.SH1. "
-                        f"A combined test of {mask}, then Install.", ACCENT)
+                        + ("" if speed == cus else f"Its two halves differ, so it runs as fast as {speed} CUs. ")
+                        + f"A combined test of {mask}, then Install.", ACCENT)
             pill.clicked.connect(lambda c=cus, m=mask: self._choose(c, m))
             self.uneven_layout.insertWidget(self.uneven_layout.count() - 1, pill)
             self.uneven_boxes.append(pill)
@@ -909,7 +912,7 @@ class MainWindow(QWidget):
             if self.p.control == "failed":
                 lines = [f"The combined test of {level} CUs failed. WGPs that pass alone can fail together.",
                          "Pick a lower level, or stay at the stock CUs."]
-                actions = self._level_actions({c: m for c, m in levels.items() if c < level}, level)
+                actions = self._level_actions({c: m for c, m in levels.items() if c < level}, level, set(levels))
                 self.uneven = [u for u in bisect.uneven() if u[0] < level]
                 if self.p.this_boot_used:
                     actions.insert(0, ("Restart", "Back to stock", "Restarts the board. The masks go back to stock.",
@@ -952,14 +955,16 @@ class MainWindow(QWidget):
         return ("Choose and install", lines, self._map(bisect), actions, installed_line,
                 f"Highest healthy level: {top} CUs." if top else "")
 
-    def _level_actions(self, levels: dict[int, str], failed: int = 0) -> list[tuple]:
-        """24 CUs, 32 CUs and 40 CUs; a level is on only when the healthy WGPs reach it on every row."""
+    def _level_actions(self, levels: dict[int, str], failed: int = 0, healthy: set[int] | None = None) -> list[tuple]:
+        """24 CUs, 32 CUs and 40 CUs; a level is on only when the healthy WGPs reach it on every row. After a failed
+        combined test of *failed* CUs, a level at or above it that the healthy WGPs do reach (*healthy*) says so;
+        one they never reached stays "Not healthy"."""
         actions = [("24 CUs", "Stay stock", "Ends the test. Nothing is installed.", GREY, self._stay_stock)]
         for cus in (32, 40):
             mask = levels.get(cus)
             if mask:
                 caption, tip = "Test, then apply", f"A combined test of {mask}, then Install."
-            elif failed and cus >= failed:
+            elif failed and cus >= failed and (healthy is None or cus in healthy):
                 caption, tip = "Failed together", f"The combined test of {failed} CUs failed."
             else:
                 caption, tip = "Not healthy", f"Not every row has {cus // 8} healthy WGPs."

@@ -4,7 +4,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3390 test functions (3778 cases counting the parametrized ones) in 39 test folders, and 40 installer tests.
+3444 test functions (3832 cases counting the parametrized ones) in 40 test folders, and 41 installer tests.
 
 ## Summary
 
@@ -14,12 +14,13 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [apps/board](#appsboard) | 4 | 35 | 1.8 s |
 | [apps/cec](#appscec) | 8 | 68 | 0.7 s |
 | [apps/clb](#appsclb) | 13 | 91 | 2.8 s |
-| [apps/compute](#appscompute) | 10 | 91 |  |
+| [apps/compute](#appscompute) | 10 | 92 |  |
 | [apps/controller](#appscontroller) | 13 | 164 | 5.8 s |
 | [apps/cores](#appscores) | 8 | 56 |  |
 | [apps/datstation](#appsdatstation) | 7 | 39 | 2.1 s |
 | [apps/fan](#appsfan) | 2 | 37 | 0.4 s |
 | [apps/gpu](#appsgpu) | 15 | 73 |  |
+| [apps/kytyps5](#appskytyps5) | 7 | 58 |  |
 | [apps/overlay](#appsoverlay) | 2 | 19 | 0.2 s |
 | [apps/password](#appspassword) | 2 | 22 | 0.4 s |
 | [apps/pcsx2](#appspcsx2) | 14 | 154 | 19.0 s |
@@ -38,7 +39,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [core](#core) | 29 | 214 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
-| [dev/deps](#devdeps) | 6 | 105 | 2.1 s |
+| [dev/deps](#devdeps) | 6 | 96 | 2.1 s |
 | [dev/flight](#devflight) | 3 | 21 |  |
 | [dev/garbage](#devgarbage) | 1 | 9 |  |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
@@ -48,8 +49,8 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 18 | 237 | 30.2 s |
-| [tools](#tools) | 43 | 246 | 10.2 s |
-| **All** | | **3390** | **153 s** |
+| [tools](#tools) | 43 | 250 | 10.2 s |
+| **All** | | **3444** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -75,6 +76,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `garbage.sh` | Exercise dev/garbage/install.sh, Nexus Garbage Remover's installer. |
 | `gpu.sh` | Exercise apps/gpu/install.sh. |
 | `itests.sh` | Exercise dev/itests/install.sh, Nexus Installer Tests's installer. |
+| `kytyps5.sh` | Exercise apps/kytyps5/install.sh. |
 | `marketing.sh` | Exercise dev/marketing/install.sh, Nexus Marketing for PS5's installer. |
 | `not-installed.sh` | Every app's installer and the portal's, with --uninstall and with --uninstall --purge, on a computer where nothing of them is installed. |
 | `nrt.sh` | Exercise dev/nrt/install.sh (and tools/nrt.sh, which forwards to it). |
@@ -358,7 +360,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## apps/compute
 
-91 tests in 10 files.
+92 tests in 10 files.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -434,7 +436,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_progress.py` | `test_the_uneven_counts_and_their_masks` |  |  | One WGP fails every time on a board with its own masks: 32 is the highest even level, 38 the healthy total. |
 | `test_progress.py` | `test_the_unlock_is_on_only_when_saved_before_this_boot` |  |  | The unlock is on only when saved before this boot. |
 | `test_progress.py` | `test_the_speed_of_a_mask_follows_the_measured_scores` |  |  | 4 CUs for each WGP in the smaller shader engine: within 1 % of what the board scored. |
-| `test_progress.py` | `test_only_counts_that_add_speed_are_offered` |  |  | Only counts that add speed are offered. |
+| `test_progress.py` | `test_every_count_above_the_highest_level_is_offered_with_its_best_rows` |  |  | Every count above the highest level is offered with its best rows. |
 | `test_resume.py` | `test_arm_and_disarm` |  |  | Arm and disarm. |
 | `test_resume.py` | `test_the_entry_opens_the_same_code_and_scripts` |  |  | Installed or from a checkout: this Python, this package's folder and the window's own scripts. |
 | `test_resume.py` | `test_restart_reports_when_it_may_not` |  |  | Restart reports when it may not. |
@@ -442,16 +444,17 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_session.py` | `test_one_terminal_for_every_run` |  |  | The second run uses the same shell and terminal, so sudo, which remembers per terminal, asks only once. |
 | `test_session.py` | `test_stop_ends_the_script_and_keeps_the_terminal` |  |  | Stop ends the script and keeps the terminal. |
 | `test_session.py` | `test_a_test_run_blocks_sleep_until_it_ends` |  |  | With block_sleep the script runs under systemd-inhibit; its exit code comes through. |
-| `test_unlock_writes.py` | `test_cc_lists_the_wgps_the_mask_leaves_off` |  |  | Cc lists the wgps the mask leaves off. |
-| `test_unlock_writes.py` | `test_the_unlock_writes_cc_and_spi_per_row_and_no_always_on_mask` |  |  | The unlock writes cc and spi per row and no always on mask. |
-| `test_unlock_writes.py` | `test_stock_masks_write_the_chips_own_cc_values` |  |  | Stock masks write the chips own cc values. |
+| `test_unlock_writes.py` | `test_the_unlock_clears_cc_writes_spi_per_row_and_the_always_on_mask` |  |  | The unlock clears cc writes spi per row and the always on mask. |
+| `test_unlock_writes.py` | `test_a_higher_count_writes_the_union_of_its_rows` |  |  | A higher count writes the union of its rows. |
 | `test_unlock_writes.py` | `test_writes_picks_the_registers` |  |  | Writes picks the registers. |
-| `test_unlock_writes.py` | `test_the_default_writes_are_cc_and_spi` |  |  | The default writes are cc and spi. |
-| `test_unlock_writes.py` | `test_the_unlock_script_never_clears_cc_or_writes_the_always_on_mask` |  |  | The unlock script never clears cc or writes the always on mask. |
+| `test_unlock_writes.py` | `test_the_default_writes_are_all_three_registers` |  |  | The default writes are all three registers. |
+| `test_unlock_writes.py` | `test_neither_script_writes_the_masks_inverse_to_cc` |  |  | The write of 27-11-2026 that hung the GPU at boot: CC = the inactive WGPs, computed from the mask. |
+| `test_unlock_writes.py` | `test_the_unlock_script_writes_what_the_test_writes` |  |  | ps5-cu-unlock.sh applies the same three writes as the test's apply_masks, with its own helpers. |
 | `test_unlock_writes.py` | `test_unlock_at_boot` |  |  | Unlock at boot. |
 | `test_unlock_writes.py` | `test_a_mask_that_runs_like_its_count_is_accepted_without_a_note` |  |  | A mask that runs like its count is accepted without a note. |
 | `test_unlock_writes.py` | `test_a_mask_with_unequal_halves_is_accepted_and_says_what_it_gives` |  |  | A mask with unequal halves is accepted and says what it gives. |
 | `test_unlock_writes.py` | `test_a_row_under_three_wgps_is_refused` |  |  | A row under three wgps is refused. |
+| `test_unlock_writes.py` | `test_the_gpu_loads_size` |  |  | The size memtest_vulkan gets: at least 1024 MiB when the memory is there (a board, 27-11-2026). |
 | `test_wheel_guard.py` | `test_the_wheel_changes_a_value_only_after_a_click` |  |  | The wheel changes a value only after a click. |
 
 ## apps/controller
@@ -857,6 +860,71 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_wheel_guard.py` | `test_the_wheel_changes_a_value_only_after_a_click` |  |  | The wheel changes a value only after a click. |
 | `test_widgets.py` | `test_tooltip_filter_is_removed_when_the_app_quits` |  |  | Tooltip filter is removed when the app quits. |
 | `test_widgets.py` | `test_tooltip_border_is_the_outline` |  |  | Framed in the theme's outline, silver, not the accent (owner, 07-11-2026). |
+
+## apps/kytyps5
+
+58 tests in 7 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_board.py` | `test_a_board_set_as_the_emulator_asks` |  |  | A board set as the emulator asks. |
+| `test_board.py` | `test_each_setting_is_judged_by_itself` |  |  | Each setting is judged by itself. |
+| `test_board.py` | `test_an_option_the_driver_does_not_have` |  |  | An option the driver does not have. |
+| `test_board.py` | `test_the_card_is_found_by_its_driver_not_its_number` |  |  | The card is found by its driver not its number. |
+| `test_board.py` | `test_no_amdgpu_card` |  |  | No amdgpu card. |
+| `test_emulator.py` | `test_install_puts_the_whole_release_in_use` |  |  | Install puts the whole release in use. |
+| `test_emulator.py` | `test_another_file_is_refused_and_nothing_changes` |  |  | Another file is refused and nothing changes. |
+| `test_emulator.py` | `test_a_bad_archive` |  |  | A bad archive. |
+| `test_emulator.py` | `test_a_failed_download` |  |  | A failed download. |
+| `test_emulator.py` | `test_the_pin_names_one_release` |  |  | The pin names one release. |
+| `test_emulator.py` | `test_a_newer_release` |  |  | A newer release. |
+| `test_emulator.py` | `test_the_emulators_processes_are_found_and_ended_with_what_they_started` |  |  | The emulators processes are found and ended with what they started. |
+| `test_games.py` | `test_a_game_is_read_from_its_param_json` |  |  | A game is read from its param json. |
+| `test_games.py` | `test_the_title_in_the_default_language_else_any` |  |  | The title in the default language else any. |
+| `test_games.py` | `test_without_or_with_a_broken_param_json_the_folder_names_the_game` |  |  | Without or with a broken param json the folder names the game. |
+| `test_games.py` | `test_depth_doubles_and_what_is_skipped` |  |  | Depth doubles and what is skipped. |
+| `test_games.py` | `test_a_games_pictures` |  |  | A games pictures. |
+| `test_library.py` | `test_the_own_folder_is_made_and_a_drives_is_added` |  |  | The own folder is made and a drives is added. |
+| `test_library.py` | `test_what_games_uninstall_offers` |  |  | What games uninstall offers. |
+| `test_library.py` | `test_a_game_folder_itself_is_never_offered` |  |  | A game folder itself is never offered. |
+| `test_main_window.py` | `test_version_is_the_single_source` |  |  | Version is the single source. |
+| `test_main_window.py` | `test_icons_are_beside_the_package` |  |  | Icons are beside the package. |
+| `test_main_window.py` | `test_before_installing` |  |  | Before installing. |
+| `test_main_window.py` | `test_installed_with_games` |  |  | Installed with games. |
+| `test_main_window.py` | `test_the_board_is_read_and_never_set` |  |  | The board is read and never set. |
+| `test_main_window.py` | `test_install_runs_off_the_window_and_uninstall_asks` |  |  | Install runs off the window and uninstall asks. |
+| `test_main_window.py` | `test_a_failed_install_is_said` |  |  | A failed install is said. |
+| `test_main_window.py` | `test_steam_added_and_taken_out` |  |  | Steam added and taken out. |
+| `test_main_window.py` | `test_update_steam_needs_the_emulator_and_the_wrapper` |  |  | Update steam needs the emulator and the wrapper. |
+| `test_main_window.py` | `test_the_gpu_helper_is_an_option` |  |  | Owner, 27-11-2026: the app changes nothing on the board by itself. |
+| `test_main_window.py` | `test_the_helper_script_runs_through_polkit_with_the_users_group` |  |  | The helper script runs through polkit with the users group. |
+| `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  |  | Start game starts the chosen game through steam. |
+| `test_main_window.py` | `test_games_uninstall_asks_what_to_keep` |  |  | Games uninstall asks what to keep. |
+| `test_main_window.py` | `test_exit_kytyps5_is_on_while_it_runs_and_ends_it_at_once` |  |  | Exit kytyps5 is on while it runs and ends it at once. |
+| `test_main_window.py` | `test_nothing_of_the_emulator_is_changed_while_it_runs` |  |  | Nothing of the emulator is changed while it runs. |
+| `test_main_window.py` | `test_kytyps5s_own_window_opens_through_the_wrapper` |  |  | Kytyps5s own window opens through the wrapper. |
+| `test_main_window.py` | `test_the_controller_and_steam_states` |  |  | The controller and steam states. |
+| `test_main_window.py` | `test_a_newer_release_is_mentioned_in_the_tip_and_the_log` |  |  | A newer release is mentioned in the tip and the log. |
+| `test_main_window.py` | `test_the_log_tab_and_clear_logs` |  |  | The log tab and clear logs. |
+| `test_main_window.py` | `test_the_layout_follows_shadps4_managers` |  |  | The icon and the title, four pills in the header, four in the row under it, the state lines, the tabs. |
+| `test_run_wrapper.py` | `test_started_by_steam_with_a_real_controller` |  |  | Started by steam with a real controller. |
+| `test_run_wrapper.py` | `test_started_by_steam_with_only_steams_controller` |  |  | Started by steam with only steams controller. |
+| `test_run_wrapper.py` | `test_started_outside_steam` |  |  | Started outside steam. |
+| `test_run_wrapper.py` | `test_started_by_steam_on_a_wayland_desktop` |  |  | Started by steam on a wayland desktop. |
+| `test_run_wrapper.py` | `test_the_game_started_goes_to_the_apps_log` |  |  | One line in the app's log file, in its form, with the game's folder name (not its path) and from where; a start without a game says nothing. |
+| `test_run_wrapper.py` | `test_a_game_that_is_gone_is_not_started` |  |  | A shortcut to a game renamed, moved or deleted: the emulator is not started, the wrapper says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone. |
+| `test_run_wrapper.py` | `test_what_the_emulator_prints_goes_to_its_log` |  |  | Its output and errors in the app's emulator log (the View logs tab shows it), between a started and an ended line in the app's form, with the home folder written as ~; a last line without a newline is ended before the wrapper's own. |
+| `test_run_wrapper.py` | `test_a_stop_is_passed_on` |  |  | Steam's stop (SIGTERM) and Ctrl+C in a terminal (SIGINT, passed on as SIGTERM) reach the emulator, which saves and ends as on any close; the wrapper waits for it and ends with its exit code. |
+| `test_run_wrapper.py` | `test_the_log_turns_over_at_1_mb` |  |  | As the app's own log: at 1 MB the file becomes emulator.log.1 when a game starts, three older ones kept. |
+| `test_run_wrapper.py` | `test_it_starts_from_the_emulators_own_data_folder` |  |  | KytyPS5-Native keeps its saves in the folder it is started from: its own data folder, never the build's. |
+| `test_run_wrapper.py` | `test_the_launcher_and_no_emulator` |  |  | --launcher starts KytyPS5-Native's own window with the rest of the arguments; without an installed emulator the wrapper says so and ends with 1. |
+| `test_shortcuts.py` | `test_the_launch_line_and_whose_shortcut_it_is` |  |  | The launch line and whose shortcut it is. |
+| `test_shortcuts.py` | `test_names_are_unique` |  |  | Names are unique. |
+| `test_shortcuts.py` | `test_add_then_take_out` |  |  | Add then take out. |
+| `test_shortcuts.py` | `test_a_shortcut_taken_out_under_the_name_it_has` |  |  | A shortcut taken out under the name it has. |
+| `test_shortcuts.py` | `test_artwork_sizes_with_and_without_the_games_pictures` |  |  | Artwork sizes with and without the games pictures. |
+| `test_shortcuts.py` | `test_pictures_from_steamgriddb_in_place_of_the_drawn_ones` |  |  | Pictures from steamgriddb in place of the drawn ones. |
+| `test_shortcuts.py` | `test_a_shortcut_made_without_a_logo` |  |  | A shortcut made without a logo. |
 
 ## apps/overlay
 
@@ -2760,7 +2828,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## dev/deps
 
-105 tests in 6 files, 2.1 s in a local run.
+96 tests in 6 files, 2.1 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2832,21 +2900,12 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_system.py` | `test_dnf_with_nothing_newer_or_failing` |  |  | Dnf with nothing newer or failing. |
 | `test_system.py` | `test_a_flattened_image_has_dnf_instead_of_the_image` |  |  | A flattened image has dnf instead of the image. |
 | `test_system.py` | `test_mprime_is_checked_against_mersenne_orgs_page_and_updated_by_board_tests_installer` |  |  | Prime95's mprime, when Quickfix installed it: the release in ~/mprime/.release against the one the download page lists; Update runs Board Test's installer, which installs that release (owner, 20-11-2026). |
-| `test_upstreams.py` | `test_the_catalog_is_in_sync_with_the_apps` |  |  | The pins, repos, names and launchers are the apps' own: dev/deps/run.sh --sync-upstreams fixes this. |
-| `test_upstreams.py` | `test_every_app_with_a_pinned_upstream_is_listed` |  |  | Every app with a pinned upstream is listed. |
-| `test_upstreams.py` | `test_the_constants_are_read_without_running_the_module` |  |  | The constants are read without running the module. |
-| `test_upstreams.py` | `test_a_moved_pin_makes_the_catalog_stale` |  | 0.1 s | A moved pin makes the catalog stale. |
-| `test_upstreams.py` | `test_an_emulator_at_its_pin_with_nothing_newer` |  |  | An emulator at its pin with nothing newer. |
-| `test_upstreams.py` | `test_installed_behind_the_pin_and_upstream_past_it` |  |  | Installed behind the pin and upstream past it. |
-| `test_upstreams.py` | `test_an_app_without_its_program_is_no_update` |  |  | An app without its program is no update. |
-| `test_upstreams.py` | `test_github_offline` |  |  | Github offline. |
-| `test_upstreams.py` | `test_the_comparisons` |  |  | The comparisons. |
+| `test_upstreams.py` | `test_the_catalog_is_in_sync_with_the_apps` |  |  | The apps' names and launchers are the portal's: dev/deps/run.sh --sync-upstreams fixes this. |
+| `test_upstreams.py` | `test_no_emulator_is_listed` |  |  | Each emulator app chooses its version from GitHub's list itself (owner, 28-11-2026). |
+| `test_upstreams.py` | `test_a_renamed_app_makes_the_catalog_stale` |  |  | A renamed app makes the catalog stale. |
 | `test_upstreams.py` | `test_sonys_firmware_is_news_once` |  |  | The first look learns the versions; a later one names what changed; the one after says nothing again. |
 | `test_upstreams.py` | `test_the_ps4_list_is_read_by_its_one_attribute` |  |  | The ps4 list is read by its one attribute. |
 | `test_upstreams.py` | `test_devices_with_no_list_say_where_to_look` |  |  | Devices with no list say where to look. |
-| `test_upstreams.py` | `test_the_reminder_names_an_upstream_once` |  |  | The reminder names an upstream once. |
-| `test_upstreams.py` | `test_github_is_asked_signed_in` |  |  | Without a sign-in GitHub allows 60 requests an hour for the whole address, which the checks of a morning use up (owner, 14-11-2026: every card said "HTTP Error 403: rate limit exceeded"). |
-| `test_upstreams.py` | `test_the_token_is_gh_s_and_only_for_github` |  |  | The token is gh s and only for github. |
 | `test_window.py` | `test_window_displays_package_and_tool_results` |  | 0.1 s | Window displays package and tool results. |
 | `test_window.py` | `test_missing_package_in_an_app_environment_is_reported` |  | 0.1 s | Missing package in an app environment is reported. |
 | `test_window.py` | `test_tools_that_need_root_say_so` |  | 0.1 s | Tools that need root say so. |
@@ -2865,7 +2924,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_a_cards_update_asks_for_its_own_step_alone` |  | 0.1 s | A cards update asks for its own step alone. |
 | `test_window.py` | `test_fix_offered_for_the_machines_updates_alone` |  | 0.1 s | --fix from a notification about Homebrew alone: the question comes once both checks are done. |
 | `test_window.py` | `test_an_image_of_a_new_fedora_release_is_by_hand` |  | 0.1 s | A system-wide change has no Update: the card says why, and its i gives the steps. |
-| `test_window.py` | `test_the_emulators_and_firmware_have_a_section_of_their_own` |  | 0.1 s | The emulators and firmware have a section of their own. |
+| `test_window.py` | `test_the_firmware_has_a_section_of_its_own` |  |  | The firmware has a section of its own. |
 | `test_window.py` | `test_the_question_has_a_checkbox_per_package` |  |  | Only what stays checked is updated (owner, 19-11-2026: "no checkmark, no update/install"). |
 | `test_window.py` | `test_the_question_for_dnf_names_pkexec_and_the_kernels_restart` |  |  | The question for dnf names pkexec and the kernels restart. |
 | `test_window.py` | `test_a_dnf_card_updates_the_checked_packages_alone` |  |  | A dnf card updates the checked packages alone. |
@@ -3512,7 +3571,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-246 tests in 43 files, 10.2 s in a local run.
+250 tests in 43 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3559,6 +3618,10 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_check_upstream.py` | `test_the_shadps4_pin_is_read_from_emulator_py` |  |  | The shadps4 pin is read from emulator py. |
 | `test_check_upstream.py` | `test_shadps4_in_step` |  |  | Shadps4 in step. |
 | `test_check_upstream.py` | `test_a_newer_shadps4_gives_what_the_pin_needs` | 3 |  | A newer shadps4 gives what the pin needs. |
+| `test_check_upstream.py` | `test_the_kytyps5_pin_is_read_from_emulator_py_and_matches_it` |  |  | The kytyps5 pin is read from emulator py and matches it. |
+| `test_check_upstream.py` | `test_kytyps5_in_step` |  |  | Kytyps5 in step. |
+| `test_check_upstream.py` | `test_a_newer_kytyps5_gives_what_the_pin_needs` |  |  | A newer kytyps5 gives what the pin needs. |
+| `test_check_upstream.py` | `test_the_pinned_kytyps5_archive_replaced` |  |  | The pinned kytyps5 archive replaced. |
 | `test_check_upstream.py` | `test_exit_codes` |  |  | Exit codes. |
 | `test_check_upstream.py` | `test_an_older_shadps4_is_not_newer` |  |  | An older shadps4 is not newer. |
 | `test_check_upstream.py` | `test_a_replaced_shadps4_zip` |  |  | A replaced shadps4 zip. |

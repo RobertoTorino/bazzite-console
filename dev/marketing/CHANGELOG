@@ -1,3 +1,7 @@
+Changelog: 28-11-2026 00:10:28
+
+Added. The article has a line for KytyPS5 Manager.
+
 Changelog: 26-11-2026 11:44:33
 
 Fixed. Publish takes only a checkout of this suite's own website repository. The PS5 article was pushed to the BC-250 website, because both twins kept one website folder in the settings file they share (owner, 26-11-2026). Each twin now keeps its website and export folders under its own name, so each asks for its folder once.

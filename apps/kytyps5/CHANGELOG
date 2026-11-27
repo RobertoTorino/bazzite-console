@@ -1,0 +1,15 @@
+Changelog: 28-11-2026 00:26:08
+
+Fixed. The app folder's .gitignore opens with its license line.
+
+Changelog: 28-11-2026 00:10:28
+
+Added. KytyPS5 Manager, a new app for PS5 games with the KytyPS5-Native emulator, built like shadPS4 Manager. It
+installs the KytyPS5-Native release it was tried with, checked against its SHA-256. It reads the VRAM split, the GTT
+limit and the three GPU driver options and sets them beside what the emulator asks. It changes none of them. It
+finds the games in Games/PS5, reads each title from the game's param.json and adds the checked games to Steam. Start
+game, Games Uninstall, Exit KytyPS5, KytyPS5 settings, Steam artwork and the log work as in shadPS4 Manager. The
+emulator's GPU helper is an option behind its own pill, which asks first and then asks for your password. The run
+wrapper starts the emulator from its own data folder, so the saves never sit in a build's folder. A version chooser
+and a Settings tab are not in this version. KytyPS5-Native is written for the AMD BC-250. It is not tried on
+PlayStation 5 hardware yet.

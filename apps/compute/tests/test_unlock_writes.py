@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The register writes of a CU unlock, in ps5-cu-bisect.sh and ps5-cu-unlock.sh: CC_GC_SHADER_ARRAY_CONFIG lists as
-inactive exactly the WGPs a row's mask leaves off, and the always-on mask is not written. The values are the ones
-read from a board at stock (0x07 with 0xfff80000, 0x0b with 0xfff40000). The scripts' own functions run in bash
-with a reg_write that only prints."""
+"""The register writes of a CU unlock, in ps5-cu-bisect.sh and ps5-cu-unlock.sh: CC_GC_SHADER_ARRAY_CONFIG is
+cleared, SPI_PG_ENABLE_STATIC_WGP_MASK gets each row's mask, and RLC_PG_ALWAYS_ON_WGP_MASK the union of the rows.
+This is the write every boot unlock used until 27-11-2026. A write that set CC to the mask's inverse and left RLC
+alone hung the GPU when the boot service wrote it (two boards, 27-11-2026); these tests keep it out until it has
+passed at boot. The scripts' own functions run in bash with a reg_write that only prints."""
 
 from __future__ import annotations
 
@@ -18,7 +19,6 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="runs the script
 APP = Path(__file__).resolve().parents[1]
 BISECT = APP / "ps5-cu-bisect.sh"
 UNLOCK = APP / "ps5-cu-unlock.sh"
-CC = {"0x07": "0xfff80000", "0x0b": "0xfff40000", "0x0f": "0xfff00000", "0x1b": "0xffe40000", "0x1f": "0xffe00000"}
 
 
 def _bash(script: str, path: Path | None = None) -> subprocess.CompletedProcess:
@@ -37,13 +37,6 @@ def _sequence() -> str:
     return _block(BISECT, r"^writes\(\) \{.*?^apply_masks\(\) \{.*?^\}\n")
 
 
-@pytest.mark.parametrize("script", [BISECT, UNLOCK], ids=["bisect", "unlock"])
-def test_cc_lists_the_wgps_the_mask_leaves_off(script):
-    cc_of = _block(script, r"^cc_of\(\) \{.*?\}\n")
-    out = _bash(f"{cc_of}for m in {' '.join(CC)}; do cc_of $m; echo; done").stdout.split()
-    assert out == list(CC.values())
-
-
 def _writes(masks: str, writes: str) -> list[str]:
     body = (f"set -u\nWRITES={writes}\nREG_CC=CC REG_SPI=SPI REG_RLC=RLC\nCC_NOW=''\n"
             "hex2() { printf '0x%02x' $(( $1 & 31 )); }\nreg_write() { echo \"$*\"; }\n"
@@ -53,31 +46,45 @@ def _writes(masks: str, writes: str) -> list[str]:
     return out.stdout.splitlines()
 
 
-def test_the_unlock_writes_cc_and_spi_per_row_and_no_always_on_mask():
-    assert _writes("0x0f,0x0f,0x0f,0x1b", "cc,spi") == [
-        "CC 0xfff00000 0 0", "SPI 0x0f 0 0", "CC 0xfff00000 0 1", "SPI 0x0f 0 1",
-        "CC 0xfff00000 1 0", "SPI 0x0f 1 0", "CC 0xffe40000 1 1", "SPI 0x1b 1 1"]
+def test_the_unlock_clears_cc_writes_spi_per_row_and_the_always_on_mask():
+    assert _writes("0x0f,0x0f,0x0f,0x1b", "cc,spi,rlc") == [
+        "CC 0x0", "CC 0x0 0 0", "SPI 0x0f 0 0", "CC 0x0 0 1", "SPI 0x0f 0 1",
+        "CC 0x0 1 0", "SPI 0x0f 1 0", "CC 0x0 1 1", "SPI 0x1b 1 1", "RLC 0x1f"]
 
 
-def test_stock_masks_write_the_chips_own_cc_values():
-    lines = _writes("0x07,0x07,0x07,0x0b", "cc,spi")
-    assert [line for line in lines if line.startswith("CC")] == [
-        "CC 0xfff80000 0 0", "CC 0xfff80000 0 1", "CC 0xfff80000 1 0", "CC 0xfff40000 1 1"]
+def test_a_higher_count_writes_the_union_of_its_rows():
+    assert _writes("0x1f,0x1f,0x0f,0x1f", "cc,spi,rlc")[-1] == "RLC 0x1f"
+    assert _writes("0x07,0x07,0x07,0x0b", "cc,spi,rlc")[-1] == "RLC 0x0f"
 
 
 def test_writes_picks_the_registers():
     assert _writes("0x0f,0x0f,0x0f,0x1b", "spi") == ["SPI 0x0f 0 0", "SPI 0x0f 0 1", "SPI 0x0f 1 0", "SPI 0x1b 1 1"]
-    assert _writes("0x0f,0x0f,0x0f,0x1b", "spi,rlc")[-1] == "RLC 0x1f"       # the union of the rows, on request
+    assert _writes("0x0f,0x0f,0x0f,0x1b", "spi,rlc")[-1] == "RLC 0x1f"
+    assert not any(line.startswith("RLC") for line in _writes("0x0f,0x0f,0x0f,0x1b", "cc,spi"))
 
 
-def test_the_default_writes_are_cc_and_spi():
-    assert re.search(r'\bWRITES=cc,spi(\s|$)', BISECT.read_text(), re.M)
+def test_the_default_writes_are_all_three_registers():
+    assert re.search(r'\bWRITES=cc,spi,rlc(\s|$)', BISECT.read_text(), re.M)
 
 
-def test_the_unlock_script_never_clears_cc_or_writes_the_always_on_mask():
-    text = UNLOCK.read_text()
-    assert 'REG_CC" 0x0' not in text
-    assert "mmRLC_PG_ALWAYS_ON_WGP_MASK" not in text
+def test_neither_script_writes_the_masks_inverse_to_cc():
+    """The write of 27-11-2026 that hung the GPU at boot: CC = the inactive WGPs, computed from the mask."""
+    for script in (BISECT, UNLOCK):
+        text = script.read_text()
+        assert "cc_of" not in text and "~$1" not in text, script.name
+
+
+def test_the_unlock_script_writes_what_the_test_writes():
+    """ps5-cu-unlock.sh applies the same three writes as the test's apply_masks, with its own helpers."""
+    block = _block(UNLOCK, r"^  local m i union=0\n.*?^  reg_write_global \"\$REG_RLC\".*?\n")
+    body = ("set -u\nREG_CC=CC REG_SPI=SPI REG_RLC=RLC\nROWS=(a b c d)\ndie() { echo \"DIE $*\"; exit 1; }\n"
+            "hex2() { printf '0x%02x' $(( $1 & 31 )); }\nreg_write_rc() { echo \"$*\"; }\n"
+            "reg_write_global() { echo \"$*\"; }\napply() {\n" + block + "}\napply 0x1f,0x1f,0x0f,0x1f\n")
+    out = _bash(body)
+    assert out.returncode == 0, out.stderr
+    assert out.stdout.splitlines() == [
+        "CC 0x0", "CC 0x0 0 0", "SPI 0x1f 0 0", "CC 0x0 0 1", "SPI 0x1f 0 1",
+        "CC 0x0 1 0", "SPI 0x0f 1 0", "CC 0x0 1 1", "SPI 0x1f 1 1", "RLC 0x1f"]
 
 
 def _at_boot(tmp_path: Path, cc_now: str, service_active: bool) -> bool:
@@ -85,7 +92,7 @@ def _at_boot(tmp_path: Path, cc_now: str, service_active: bool) -> bool:
     fake.mkdir(exist_ok=True)
     (fake / "systemctl").write_text(f"#!/bin/sh\nexit {0 if service_active else 3}\n")
     (fake / "systemctl").chmod(0o755)
-    body = f"set -u\nWRITES=cc,spi\nCC_NOW='{cc_now}'\n{_sequence()}unlock_at_boot\n"
+    body = f"set -u\nWRITES=cc,spi,rlc\nCC_NOW='{cc_now}'\n{_sequence()}unlock_at_boot\n"
     return _bash(body, fake).returncode == 0
 
 
@@ -125,3 +132,22 @@ def test_a_mask_with_unequal_halves_is_accepted_and_says_what_it_gives(masks, co
 def test_a_row_under_three_wgps_is_refused(masks):
     result = _validate(masks)
     assert result.returncode == 1 and "Every row needs 3, 4 or 5 WGPs" in result.stderr
+
+
+@pytest.mark.parametrize(("vram_mib", "avail_mib", "size_mib"), [
+    (512, 11234, 1024),             # a 512 MB split: 384 MiB is refused by memtest_vulkan, so the floor
+    (6144, 9000, 4500),             # three quarters of 6 GB is over half the free memory: half of it
+    (2048, 9000, 1536),             # three quarters of the VRAM
+    (512, 1500, 384),               # too little memory for the floor: as before
+    (0, 8000, 4000)])               # no VRAM figure: half the free memory
+def test_the_gpu_loads_size(tmp_path, vram_mib, avail_mib, size_mib):
+    """The size memtest_vulkan gets: at least 1024 MiB when the memory is there (a board, 27-11-2026)."""
+    (tmp_path / "mem_info_vram_total").write_text(str(vram_mib << 20))
+    fake = tmp_path / "bin"
+    fake.mkdir()
+    (fake / "awk").write_text("#!/bin/sh\necho " + str(avail_mib << 10) + "\n")
+    (fake / "awk").chmod(0o755)
+    block = _block(BISECT, r"^MEMTEST_MIN_MIB=.*?^memtest_bytes\(\) \{.*?^\}\n")
+    out = _bash("GPU_DEV=" + str(tmp_path) + "\n" + block + "memtest_bytes\n", fake)
+    assert out.returncode == 0, out.stderr
+    assert int(out.stdout) == size_mib << 20

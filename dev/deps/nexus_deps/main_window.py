@@ -799,7 +799,7 @@ class DependencyWindow(QMainWindow):
                                          "development venv…")
         self.system_layout.addWidget(self.system_waiting)
         cards_layout.addLayout(self.system_layout)
-        self.apps_heading = QLabel("Emulators and firmware")
+        self.apps_heading = QLabel("Firmware")
         self.apps_heading.setStyleSheet(header_font() + "font-size:18px; font-weight:700;")
         self.apps_heading.hide()                # shown when the check has cards for it
         cards_layout.addWidget(self.apps_heading)

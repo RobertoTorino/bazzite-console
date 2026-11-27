@@ -384,20 +384,20 @@ def test_an_image_of_a_new_fedora_release_is_by_hand(qapp):
         window.close()
 
 
-def test_the_emulators_and_firmware_have_a_section_of_their_own(qapp):
+def test_the_firmware_has_a_section_of_its_own(qapp):
     from nexus_deps.system import Source, Update
-    vita = Source("upstream-vita3k", "Vita3K", (Update("Vita3K on GitHub", "4269", "4283"),), group="apps",
-                  note="it comes with a release of the app", about="<p>release work</p>")
+    ps4 = Source("upstream-ps4", "PS4 system software", (Update("PS4", "14.02", "14.03"),), group="apps",
+                 note="New from Sony: PS4 14.03.", about="<p>on the console</p>")
     pads = Source("upstream-dualsense", "DualSense firmware", group="apps", detail="Latest: DualSense Edge 0x0217.",
                   known=(("DualSense Edge (0x0044)", "0x0217"),), about="<p>USB cable</p>")
     portal = Source("upstream-psportal", "PlayStation Portal", group="apps", checked=False, detail="On the device.",
                     about="<p>Settings</p>")
-    window = _window(CheckResult([], [], frozenset()), system=(Source("flatpak", "Flatpak"), vita, pads, portal))
+    window = _window(CheckResult([], [], frozenset()), system=(Source("flatpak", "Flatpak"), ps4, pads, portal))
     try:
         assert not window.apps_heading.isHidden()
-        assert window.apps_layout.indexOf(window.system_cards["upstream-vita3k"]) == 0
+        assert window.apps_layout.indexOf(window.system_cards["upstream-ps4"]) == 0
         assert window.system_layout.indexOf(window.system_cards["flatpak"]) >= 0
-        card = window.system_cards["upstream-vita3k"]
+        card = window.system_cards["upstream-ps4"]
         assert card.status.text() == "By hand" and card.update_button.isHidden()
         assert window.system_cards["upstream-dualsense"].status.text() == "Nothing new"
         assert window.system_cards["upstream-psportal"].status.text() == "On the device"

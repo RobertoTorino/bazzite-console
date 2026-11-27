@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Starts the KytyPS5-Native that KytyPS5 Manager installed, with the arguments given:
+#
+#   ps5-kytyps5-run --fullscreen --game /path/to/game   a game, full screen (the Steam shortcuts)
+#   ps5-kytyps5-run --game /path/to/game                a game, in a window
+#   ps5-kytyps5-run --launcher                          KytyPS5-Native's own window, for its settings
+#
+# The Steam shortcuts run this, not the emulator, so they keep working when the app brings another KytyPS5-Native.
+set -euo pipefail
+
+BUILD="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/emulator/current"
+EMULATOR="$BUILD/kyty_emulator"
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    sed -n '3,9p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0
+fi
+[ -x "$EMULATOR" ] || {
+    echo "KytyPS5-Native is not installed. Open KytyPS5 Manager and press Install." >&2
+    exit 1
+}
+# KytyPS5-Native keeps what it writes (saves, trophies, its shader cache) in the folder it is started from. That is
+# its own data folder, the one its own run script uses, so nothing of the user's sits in a build's folder.
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}/KytyPS5-Native/data"
+mkdir -p "$DATA"
+cd "$DATA"
+if [ "${1:-}" = "--launcher" ]; then
+    shift
+    exec "$BUILD/kyty_launcher" "$@"
+fi
+# A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
+# (28DE:11FF) in their place: no motion sensors or touchpad, and on the desktop it follows Steam's Desktop
+# Configuration (mouse and keys). As shadPS4 Manager's wrapper does: while a real controller is connected,
+# KytyPS5-Native reads it and leaves Steam's virtual one out. Without a real one (a Steam Deck's own controls)
+# Steam's choice stands.
+INPUT_DEVICES="${PS5_INPUT_DEVICES:-/proc/bus/input/devices}"      # another file only in the tests
+real_controller() {
+    # A joystick (js handler) that is not one of Steam's (vendor 28DE).
+    awk '/^I:/ { vendor = ""; for (i = 1; i <= NF; i++) if ($i ~ /^Vendor=/) vendor = tolower(substr($i, 8)) }
+         /^H:/ && / js[0-9]/ && vendor != "28de" { found = 1 }
+         END { exit !found }' "$INPUT_DEVICES" 2>/dev/null
+}
+if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT:-}" ] && real_controller; then
+    unset SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT
+    export SDL_GAMECONTROLLER_IGNORE_DEVICES=0x28DE/0x11FF
+fi
+# On a Wayland desktop an SDL program opens its window through Wayland itself, and Steam sees only X11 windows: no
+# overlay (Shift+Tab, the PS button) over a game it started. A game Steam starts there opens its window through
+# XWayland, as shadPS4 Manager's wrapper does. Game Mode is X11 already.
+if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ] &&
+   [ -z "${SDL_VIDEO_DRIVER:-}" ]; then
+    export SDL_VIDEO_DRIVER=x11
+fi
+# The game started goes to the app's log (the View logs tab), in the app's own form, by its folder's name and from
+# where (Steam sets SteamGameId); nothing else is known here. As shadPS4 Manager's wrapper does.
+LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/ps5-kytyps5.log"
+game=""
+previous=""
+for arg in "$@"; do
+    case $previous in --game) game=$arg ;; esac
+    previous=$arg
+done
+if [ -n "$game" ]; then
+    name=${game%/}
+    name=${name##*/}
+    from="from a terminal"
+    [ -n "${SteamGameId:-}" ] && from="from Steam"
+    if real_controller; then
+        pad="with a controller"
+    else
+        pad="without a controller"
+        # Said on the desktop too (a controller switched off by its idle timer; owner, 24-10-2026): the game is
+        # starting, so the window is not where the eyes are.
+        if [ -n "${SteamGameId:-}" ] && command -v notify-send >/dev/null 2>&1; then
+            notify-send -a "KytyPS5 Manager" -i input-gaming "No controller connected" \
+                "Switch your controller on, or press its PS button to wake it. KytyPS5-Native plays with the keyboard only until then." \
+                2>/dev/null || true
+        fi
+    fi
+    if [ -d "${LOG%/*}" ]; then
+        printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
+        printf '%s INFO Started %s %s, %s.\n' "$stamp" "${name:-$game}" "$from" "$pad" >>"$LOG" 2>/dev/null || true
+    fi
+fi
+# A game that is no longer there, as in shadPS4 Manager's wrapper: renamed, moved or deleted after it was put in
+# Steam, or on a drive that is not in. KytyPS5-Native is not started; the app says so in a
+# window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
+# game end.
+if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
+    echo "This game is no longer there: $game. Open KytyPS5 Manager, press Refresh and then Update Steam." >&2
+    APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/app"
+    PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
+    if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then
+        (cd "$APP_DIR" && exec "$PYTHON" -m kytyps5_manager --gone "$game") || true
+    fi
+    exit 1
+fi
+# What KytyPS5-Native prints goes to the app's emulator log, which the View logs tab shows beside the
+# app's own. Before, it went to Steam's console only, where no one saw it. Every line has the home folder written
+# as ~, so no user name is in it. The file turns over at 1 MB with three older ones kept, as the app's own log does.
+# The wrapper stays while KytyPS5-Native runs, passes a stop on to it and ends with its exit code, so Steam sees the game
+# end as before. SIGINT is passed on as SIGTERM: a program started in the background ignores SIGINT.
+EMULATOR_LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/emulator.log"
+{ [ -d "${EMULATOR_LOG%/*}" ] && : >>"$EMULATOR_LOG"; } 2>/dev/null || exec "$EMULATOR" "$@"
+size=$(stat -c %s "$EMULATOR_LOG" 2>/dev/null) || size=0
+if [ "$size" -ge 1000000 ]; then
+    { rm -f "$EMULATOR_LOG.3"
+      for n in 2 1; do [ ! -e "$EMULATOR_LOG.$n" ] || mv -f "$EMULATOR_LOG.$n" "$EMULATOR_LOG.$((n + 1))"; done
+      mv -f "$EMULATOR_LOG" "$EMULATOR_LOG.1"; } 2>/dev/null || true
+fi
+private_lines() {
+    # Each line as it comes, the home folder written as ~ (and /home/<user> for /var/home/<user>, Bazzite's link),
+    # as core's platform.private() does: only where the next character is not part of a longer name.
+    awk 'function swap(text, from,   out, at, after) {
+             out = ""
+             while ((at = index(text, from)) > 0) {
+                 after = substr(text, at + length(from), 1)
+                 out = out substr(text, 1, at - 1) (after ~ /[A-Za-z0-9_]/ ? from : "~")
+                 text = substr(text, at + length(from))
+             }
+             return out text
+         }
+         BEGIN { home = ENVIRON["HOME"]; sub(/\/+$/, "", home)
+                 short = home ~ /^\/var\/home\// ? substr(home, 5) : "" }
+         { line = length(home) > 1 ? swap($0, home) : $0
+           if (short != "") line = swap(line, short)
+           print line; fflush() }'
+}
+printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
+printf '%s INFO KytyPS5-Native started: %s\n' "$stamp" "$*" | private_lines >>"$EMULATOR_LOG"
+exec 3> >(private_lines >>"$EMULATOR_LOG")
+writer=$!
+emulator=""
+trap '[ -z "$emulator" ] || kill -TERM "$emulator" 2>/dev/null || true' TERM INT
+trap '[ -z "$emulator" ] || kill -HUP "$emulator" 2>/dev/null || true' HUP
+"$EMULATOR" "$@" <&0 >&3 2>&3 &
+emulator=$!
+status=0
+wait "$emulator" || status=$?
+while kill -0 "$emulator" 2>/dev/null; do        # the wait above was cut short by a stop passed on: wait again
+    status=0
+    wait "$emulator" || status=$?
+done
+exec 3>&-
+wait "$writer" 2>/dev/null || true             # its last lines written, a last one without a newline ended
+printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
+printf '%s INFO KytyPS5-Native ended (exit code %s).\n' "$stamp" "$status" >>"$EMULATOR_LOG"
+exit "$status"

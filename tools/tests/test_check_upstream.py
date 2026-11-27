@@ -62,6 +62,55 @@ def test_a_newer_shadps4_gives_what_the_pin_needs(bump):
     assert "published without a SHA-256" in report.drift[0]
 
 
+# --- KytyPS5-Native -----------------------------------------------------------------------------------------------
+
+KYTY = check_upstream.load_kytyps5_pin()
+KYTY_API = check_upstream.API.format(repo=KYTY.REPO)
+
+
+def kyty_github(latest: str = KYTY.TAG, published: str = KYTY.PUBLISHED, digest: str = f"sha256:{KYTY.SHA256}",
+                new_digest: str | None = "sha256:" + "ab" * 32):
+    version = latest.removeprefix("KytyPS5-Native-")
+    answers = {
+        f"{KYTY_API}/releases/latest": {
+            "tag_name": latest, "published_at": f"{published}T08:51:18Z",
+            "html_url": f"https://github.com/{KYTY.REPO}/releases/tag/{latest}",
+            "assets": [{"name": f"KytyPS5-Native-{version}-Linux-x86_64.tar.gz", "digest": new_digest},
+                       {"name": f"KytyPS5-Native-{version}-Decky.zip", "digest": "sha256:" + "cd" * 32}]},
+        f"{KYTY_API}/releases/tags/{KYTY.TAG}": {"assets": [{"name": KYTY.ASSET, "digest": digest}]},
+    }
+    return lambda url: json.dumps(answers[url]).encode()
+
+
+def test_the_kytyps5_pin_is_read_from_emulator_py_and_matches_it():
+    assert KYTY.REPO == "superkeka/KytyPS5-Native" and len(KYTY.SHA256) == 64
+    source = check_upstream.KYTY_EMULATOR.read_text(encoding="utf-8")
+    assert 'TAG = f"KytyPS5-Native-{VERSION}"' in source and 'ASSET = f"{TAG}-Linux-x86_64.tar.gz"' in source
+    assert KYTY.TAG == f"KytyPS5-Native-{KYTY.VERSION}" and KYTY.ASSET == f"{KYTY.TAG}-Linux-x86_64.tar.gz"
+
+
+def test_kytyps5_in_step():
+    report = check_upstream.check_kytyps5(KYTY, kyty_github())
+    assert report.drift == [] and len(report.fine) == 2
+    assert report.text().startswith(f"KytyPS5-Native: pinned {KYTY.TAG}, latest release {KYTY.TAG}. In step.")
+    older = check_upstream.check_kytyps5(KYTY, kyty_github("KytyPS5-Native-2026-11-18-a5e09ee", "2026-11-18"))
+    assert older.drift == []                                    # another tag, published earlier: not newer
+
+
+def test_a_newer_kytyps5_gives_what_the_pin_needs():
+    latest = "KytyPS5-Native-2099-01-02-abcdef0"
+    report = check_upstream.check_kytyps5(KYTY, kyty_github(latest, "2099-01-02"))
+    assert len(report.drift) == 1 and report.drift[0].startswith(f"{latest} is out (2099-01-02)")
+    assert f"for the pin: {latest}-Linux-x86_64.tar.gz, sha256:{'ab' * 32}" in report.drift[0]
+    report = check_upstream.check_kytyps5(KYTY, kyty_github(latest, "2099-01-02", new_digest=None))
+    assert "published without a SHA-256" in report.drift[0]
+
+
+def test_the_pinned_kytyps5_archive_replaced():
+    report = check_upstream.check_kytyps5(KYTY, kyty_github(digest="sha256:" + "ef" * 32))
+    assert len(report.drift) == 1 and "the asset was replaced" in report.drift[0]
+
+
 def test_exit_codes(monkeypatch, capsys, tmp_path):
     summary = tmp_path / "summary.md"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))

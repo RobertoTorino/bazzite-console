@@ -15,6 +15,7 @@
 -r apps/datstation/requirements-dev.txt
 -r apps/fan/requirements-dev.txt
 -r apps/gpu/requirements-dev.txt
+-r apps/kytyps5/requirements-dev.txt
 -r apps/overlay/requirements-dev.txt
 -r apps/password/requirements-dev.txt
 -r apps/pcsx2/requirements-dev.txt

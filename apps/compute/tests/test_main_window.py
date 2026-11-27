@@ -373,7 +373,9 @@ def test_the_uneven_counts_are_pills(qapp, results):
         (r, it, "FAULT" if it == "SE1.SH0.WGP3" else "PASS") for r in (1, 2, 3) for it in items if it != "control"])
     w = window()
     assert w.uneven_row.isVisibleTo(w)
-    assert [(b.value.text(), b.caption.text()) for b in w.uneven_boxes] == [("36 CUs", "4\u00b75\u00b74\u00b75 WGPs")]
+    assert [(b.value.text(), b.caption.text()) for b in w.uneven_boxes] == [
+        ("34 CUs", "Like 32 CUs"), ("36 CUs", "4\u00b75\u00b74\u00b75 WGPs"), ("38 CUs", "Like 36 CUs")]
+    assert "runs as fast as 36 CUs" in w.uneven_boxes[2].toolTip() and "runs as fast" not in w.uneven_boxes[1].toolTip()
     assert dict(pills(w))["32 CUs"] is True and dict(pills(w))["40 CUs"] is False
     link = next(l for l in w.uneven_row.findChildren(QLabel) if "href" in l.text())
     assert main_window.WHY_EVEN in link.text() and link.openExternalLinks() and "What the counts in between give" in link.text()
@@ -386,7 +388,7 @@ def test_an_uneven_count_runs_the_combined_test_and_installs(qapp, results, runs
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: asked.append(a[2]) or QMessageBox.StandardButton.Yes)
     results(base=base, runs=full(bad=("SE1.SH0.WGP4",)))
     w = window()
-    w.uneven_boxes[-1].click()
+    w.uneven_boxes[1].click()
     assert "Test 36 CUs as a whole?" in asked[0] and "runs as fast as" not in asked[0]
     assert runs[-1] == ["--reset"] and w._after_reset[2:4] == ["--baseline", "0x0f,0x1f,0x0f,0x1f"]
     assert progress.read_wizard()["level"] == "36"
@@ -400,8 +402,9 @@ def test_a_failed_uneven_count_offers_the_lower_ones(qapp, results):
     results(base="0x0f,0x1f,0x0f,0x1f", rounds=1, runs=[(1, "control", "FAULT")], control_only=1,
             wizard="phase=combined\nlevel=36\n")
     w = window()
-    assert [b.value.text() for b in w.uneven_boxes] == []
+    assert [b.value.text() for b in w.uneven_boxes] == ["34 CUs"]
     assert dict(pills(w))["32 CUs"] is True
+    assert w.pill("40 CUs").caption.text() == "Not healthy"         # never reached: not "Failed together"
 
 
 def test_no_uneven_row_when_every_row_is_even(qapp, results):

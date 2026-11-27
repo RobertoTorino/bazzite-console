@@ -211,24 +211,29 @@ class Progress:
         return {LEVELS[n]: hex_masks(trim(rows, n)) for n in sorted(LEVELS) if n <= top}
 
     def uneven(self) -> list[tuple[int, list[int], str]]:
-        """The counts above the highest even level that add speed, as (CUs, WGPs per row, mask). The two shader
-        engines (SE0 and SE1, two rows each) run in step, and inside an engine the rows add up: measured on a board
-        with vkpeak, 27-11-2026, the speed is 4 CUs for each WGP in the smaller engine. So a count is offered when
-        both engines have the same number of WGPs, spread over an engine's two rows as evenly as its healthy WGPs
-        allow. Each row keeps its lowest healthy WGPs, as the even levels do."""
+        """Every count above the highest even level, up to all healthy WGPs, as (CUs, WGPs per row, mask), each with
+        the rows that give it the most speed (owner, 27-11-2026: what the board can already run is not shown again,
+        every count above it is). The two shader engines (SE0 and SE1, two rows each) run in step, and inside an
+        engine the rows add up: measured on a board with vkpeak, 27-11-2026, the speed is 4 CUs for each WGP in the
+        smaller engine (speed_cus). So the WGPs go to the two engines as evenly as the healthy ones allow, and inside
+        an engine to its two rows as evenly as they allow. A count with one WGP more in an engine runs like the
+        count 2 below. Each row keeps its lowest healthy WGPs, as the even levels do."""
         healthy = self.healthy_rows()
         rows = [popcount(m) for m in healthy]
         top = min(rows)
+        engines = (rows[0] + rows[1], rows[2] + rows[3])
         out = []
-        for per_engine in range(2 * top + 1, min(rows[0] + rows[1], rows[2] + rows[3]) + 1):
+        for wgps in range(4 * top + 1, sum(rows) + 1):
+            each = min(wgps // 2, *engines)
+            first = min(each + (wgps - 2 * each), engines[0])
+            totals = (first, wgps - first)
             cur = []
-            for first, second in ((rows[0], rows[1]), (rows[2], rows[3])):
-                low = min(per_engine // 2, first, second)
-                a = max(low, per_engine - second) if first >= second else low
-                cur += [a, per_engine - a]
+            for total, (a, b) in zip(totals, ((rows[0], rows[1]), (rows[2], rows[3]))):
+                low = min(total // 2, a, b)
+                one = max(low, total - b) if a >= b else low
+                cur += [one, total - one]
             out.append((sum(cur) * 2, cur, hex_masks([trim([healthy[i]], cur[i])[0] for i in range(4)])))
         return out
-
 
 def speed_cus(text: str) -> int:
     """The CUs a mask runs like: 4 for each WGP in the smaller of the two shader engines (see Progress.uneven)."""

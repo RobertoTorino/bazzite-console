@@ -1,3 +1,7 @@
+Changelog: 28-11-2026 00:45:29
+
+Release 5.6.0. Pins ps5-kytyps5-v0.1.0.
+
 Changelog: 27-11-2026 19:59:41
 
 Release 5.5.0. Pins ps5-board-v0.14.1, ps5-quickfix-v0.10.0, ps5-upscaler-v0.10.1, ps5-rpcs3-v1.9.1, ps5-remoteplay-v1.9.1, ps5-clb-v1.9.1, ps5-shadps4-v1.9.1, ps5-datstation-v1.9.1, ps5-ppsspp-v1.9.1, ps5-pcsx2-v1.9.1, ps5-vita3k-v1.10.1, ps5-xenia-v1.10.1, ps5-sftp-v1.10.1, ps5-webcam-v1.10.1, ps5-controller-v1.10.1, ps5-ssd-v1.10.1, ps5-overlay-v1.9.1, ps5-fan-v2.9.1, ps5-compute-v1.1.0, ps5-cores-v1.0.1, ps5-gpu-v0.1.2, ps5-cec-v2.10.1, ps5-bluetooth-v0.10.1, ps5-password-v0.8.1, ps5-turing-v0.4.1.

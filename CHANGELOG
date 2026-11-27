@@ -1,3 +1,10 @@
+Changelog: 28-11-2026 00:10:28
+
+Added. KytyPS5 Manager is a new app in the suite, for PS5 games with the KytyPS5-Native emulator. It is listed in
+the portal's Gaming tab, the wiki, the README, the bug report form and Nexus Deps' catalog. The upstream check
+(`tools/check_upstream.py kytyps5`) says when a KytyPS5-Native release is published after the pinned one. The
+Development chapter describes that pin.
+
 Changelog: 27-11-2026 02:04:29
 
 Added. The Development chapter of the wiki says how to start the previous Bazzite version once, under The development

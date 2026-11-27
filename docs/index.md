@@ -60,8 +60,8 @@ games, and takes it out again.
 
 [shadPS4 Manager](apps/shadps4.md) plays PS4 games, [RPCS3 Manager](apps/rpcs3.md) PS3 games,
 [PCSX2 Manager](apps/pcsx2.md) PS2 games, [PPSSPP Manager](apps/ppsspp.md) PSP games,
-[Vita3K Manager](apps/vita3k.md) PS Vita games and [Xenia Manager](apps/xenia.md) XBOX 360 games, each with its
-emulator, and [PS5 DatStation](apps/datstation.md) has a PlayStation quiz and console history.
+[Vita3K Manager](apps/vita3k.md) PS Vita games, [Xenia Manager](apps/xenia.md) XBOX 360 games and
+[KytyPS5 Manager](apps/kytyps5.md) PS5 games, each with its emulator, and [PS5 DatStation](apps/datstation.md) has a PlayStation quiz and console history.
 </div>
 <div class="home-card" markdown>
 #### :material-television-play: Streaming

@@ -455,9 +455,7 @@ gh issue close <number> --comment "PPSSPP pinned at 1.20."     # close one, sayi
 
 The run fails only when an upstream could not be checked. A moved pin means a new version of the app is due, with
 the new pin tried on the board first. Until then, users can choose the newer build themselves in the manager's
-version manager. It also moves Nexus Deps' list of the programs the apps use: run
-`dev/deps/run.sh --sync-upstreams` from the repository's root, else CI fails
-([Nexus Deps](dashboard.md#deps)).
+version manager.
 
 Each emulator manager pins the build that version of the app was tried with. **Install** installs that build and puts
 it back in use. In the manager's version manager (core's `builds`), you can download
@@ -468,6 +466,16 @@ The shadPS4 Manager was tried with one shadPS4 release, pinned in `apps/shadps4/
 (`VERSION`, `TAG`, `ASSET`, `SHA256`). The tool checks it: a newer stable release, with the Linux zip and the
 SHA-256 GitHub publishes for it that a new pin needs, and the SHA-256 of the pinned zip. A new shadPS4 can change
 what the app relies on (its `config.json`, the shadNet protocol), so a new pin also needs a look at what changed.
+
+KytyPS5 Manager was tried with one KytyPS5-Native release. It is pinned in
+`apps/kytyps5/kytyps5_manager/emulator.py` as `VERSION`, `PUBLISHED`, `SIZE_MB` and `SHA256`. KytyPS5-Native names
+a release after its date and commit, so the tool compares the dates. It checks these:
+
+- a release published later than the pinned one, with its Linux archive and the SHA-256 GitHub publishes for it
+- the SHA-256 of the pinned archive
+
+A new KytyPS5-Native can change its options, the files in its archive or its GPU helper. So a new pin also needs a
+look at what changed, and a try on the board.
 
 The PPSSPP, PCSX2 (its stable channel) and RPCS3 Managers each pin one release: `VERSION` or `LANDMARK` in the app's
 `emulator.py`. RPCS3's `emulator.py` also holds the size of the pinned AppImage (`SIZE`), by which the app sees that
@@ -535,7 +543,7 @@ known release, used only when the page cannot be read. Nexus Deps compares `~/mp
 
 ```bash
 python3 tools/check_upstream.py            # all of them
-python3 tools/check_upstream.py helixsr    # one: shadps4, helixsr, ppsspp, pcsx2, rpcs3, vita3k, xenia,
+python3 tools/check_upstream.py helixsr    # one: shadps4, kytyps5, helixsr, ppsspp, pcsx2, rpcs3, vita3k, xenia,
                                            # ffmpeg, webcam or speedtest
 ```
 

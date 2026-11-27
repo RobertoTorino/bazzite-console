@@ -101,6 +101,10 @@ launchers = ["~/.local/bin/ps5-bluetooth"]
 name = "PS5 Turing Screen"
 launchers = ["~/.local/bin/ps5-turing-screen"]
 
+[app.kytyps5]
+name = "KytyPS5 Manager"
+launchers = ["~/.local/bin/ps5-kytyps5"]
+
 [[tool]]
 name = "umr"
 rpm = "umr"
@@ -442,6 +446,10 @@ specifier = ">=6.11,<7"
 
 [[dependency.source]]
 owner = "gpu"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "kytyps5"
 specifier = ">=6.11,<7"
 
 [[dependency]]

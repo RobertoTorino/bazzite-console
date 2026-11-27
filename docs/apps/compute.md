@@ -76,7 +76,8 @@ causes.
     | 30  | 4·4·4·3      | 8 / 7             | 6610                | **+17%**       |
     | 32  | 4·4·4·4      | 8 / 8             | 7547                | **+33%**       |
 
-    CU Unlock offers a count in between in step 4 when it adds speed. `ps5-cu-unlock.sh` and the window accept
+    CU Unlock offers every count above your highest even level in step 4, each with the rows that give it the most
+    speed. A count that runs slower than its number says what it runs like. `ps5-cu-unlock.sh` and the window accept
     every mask with 3, 4 or 5 WGPs on every row. For a mask that runs slower than its count, such as
     `0x1f,0x1f,0x07,0x07` (5/5/3/3), they say what it runs like. They refuse a mask with fewer than 3 WGPs on a row.
 
@@ -186,17 +187,13 @@ different game or in a hotter room.
 
 ## How it works
 
-The script writes the registers of a runtime CU unlock with [umr](https://gitlab.freedesktop.org/tomstdenis/umr):
+The script writes the three registers of a runtime CU unlock with [umr](https://gitlab.freedesktop.org/tomstdenis/umr):
 
-| Register                         | Per shader array | Meaning                                    | Written                                  |
-|----------------------------------|------------------|--------------------------------------------|------------------------------------------|
-| `CC_GC_SHADER_ARRAY_CONFIG`      | yes              | Bits 16-20 mark WGPs inactive              | Every WGP the row's mask leaves off      |
-| `SPI_PG_ENABLE_STATIC_WGP_MASK`  | yes              | WGPs that get work, 5 bits of 2 CUs each   | The row's mask                           |
-| `RLC_PG_ALWAYS_ON_WGP_MASK`      | no               | WGPs that are always on, one value for all rows | Not written, it stays as the chip set it |
-
-At stock, the chip keeps the two per-row registers in step. `CC_GC_SHADER_ARRAY_CONFIG` marks exactly the WGPs that
-`SPI_PG_ENABLE_STATIC_WGP_MASK` leaves off. The unlock keeps it that way. So a WGP that is off, or that failed its
-test, is never listed as active. For example, the mask `0x1b` goes with `0xffe40000`, and `0x0f` with `0xfff00000`.
+| Register                         | Per shader array | Meaning                                    |
+|----------------------------------|------------------|--------------------------------------------|
+| `CC_GC_SHADER_ARRAY_CONFIG`      | yes              | Bits 16-20 mark WGPs inactive, cleared to 0 |
+| `SPI_PG_ENABLE_STATIC_WGP_MASK`  | yes              | WGPs that get work, 5 bits of 2 CUs each   |
+| `RLC_PG_ALWAYS_ON_WGP_MASK`      | no               | Union of the four SPI masks                |
 
 The board has 4 shader arrays of 5 WGPs each, which is 40 CUs. The arrays are SE0.SH0, SE0.SH1, SE1.SH0 and
 SE1.SH1. Stock is 24 CUs.
@@ -277,7 +274,7 @@ chmod +x ps5-cu-bisect.sh
 ./ps5-cu-bisect.sh --baseline 0x0f,0x0f,0x0f,0x0f --control-only --rounds 1   # re-validate a combined mask, control only
 ./ps5-cu-bisect.sh --scan          # live masks and what a run needs, writes no register
 ./ps5-cu-bisect.sh --only control  # only the control's rounds, as the window's safety check does
-./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --control-only --rounds 1 --writes spi,rlc   # SPI and the always-on mask only
+./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --control-only --rounds 1 --writes spi,rlc   # SPI and RLC only
 ./ps5-cu-bisect.sh --status        # results so far, report on the Desktop
 ./ps5-cu-bisect.sh --same-boot     # no reboots: restore the baseline live between attempts
 ./ps5-cu-bisect.sh --auto          # no prompts, auto-reboot after each attempt (see below)
@@ -534,8 +531,8 @@ Only install a mask that:
 > The two halves run in step, so the tenth WGP in SE0 has no partner. `38` CUs (`5/5/4/5`) performs the same as
 > `36` CUs (`4/5/4/5`). The extra WGP only adds power and heat.
 >
-> So the window offers `4/5/4/5`, which is `0x0f,0x1f,0x0f,0x1f`, as **36 CUs**. From the terminal, retest that
-> mask as a whole first:
+> So the window offers `4/5/4/5`, which is `0x0f,0x1f,0x0f,0x1f`, as **36 CUs**. It offers **38 CUs** too, marked
+> **Like 36 CUs**. From the terminal, retest the mask you choose as a whole first:
 > ```
 > ./ps5-cu-bisect.sh --reset && ./ps5-cu-bisect.sh --baseline 0x0f,0x1f,0x0f,0x1f --control-only --rounds 1
 > ```
@@ -661,9 +658,10 @@ During an attempt, the line under the pills shows the round, the WGP, the load t
 - **32 CUs** needs 4 healthy WGPs on every row.
 - **40 CUs** needs all 5 WGPs healthy on every row.
 
-A level that the healthy WGPs don't reach is off and says **Not healthy**. Under the pills, a second row offers the
-counts above your highest even level that add speed, for example **36 CUs** with **4·5·4·5 WGPs**. You test and
-install such a count the same way as a level. The link **What the counts in between give** leads to
+A level that the healthy WGPs don't reach is off and says **Not healthy**. Under the pills, a second row offers
+every count above your highest even level, for example **34 CUs**, **36 CUs** and **38 CUs**. Each gets the rows that
+give it the most speed. A count that runs as fast as its number shows its WGPs, such as **4·5·4·5 WGPs**. A slower
+one says what it runs like, such as **Like 36 CUs**. You test and install such a count the same way as a level. The link **What the counts in between give** leads to
 [24, 32 or 40 CUs, and the counts in between](#cu-levels). When you choose
 a count, the window first keeps a copy of the bisect results, in `bisect-runs.tsv` and `bisect-config`. Then it runs
 the combined test of that mask for one round. That is `--reset`, then `--baseline <mask> --control-only --rounds 1`.

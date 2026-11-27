@@ -51,6 +51,7 @@ Every app with its icon and its category.
 | ![](../assets/apps/vita3k.webp){ .app-icon } [Vita3K Manager](vita3k.md) | Gaming |
 | ![](../assets/apps/clb.webp){ .app-icon } [XBOX Remote Play](clb.md) | Gaming |
 | ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Gaming |
+| ![](../assets/apps/kytyps5.webp){ .app-icon } [KytyPS5 Manager](kytyps5.md) | Gaming |
 | ![](../assets/apps/bluetooth.webp){ .app-icon } [PS5 Bluetooth](bluetooth.md) | Utilities |
 | ![](../assets/apps/controller.webp){ .app-icon } [PS5 Controller](controller.md) | Utilities |
 | ![](../assets/apps/cec.webp){ .app-icon } [PS5 CEC Manager](cec.md) | Utilities |

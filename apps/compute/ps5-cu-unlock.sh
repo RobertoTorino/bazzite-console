@@ -17,9 +17,7 @@
 # 36, 5/5/4/5 is 38 CUs and runs like 36 too. The script says so when a mask runs slower than its count.
 #
 # This repeats the exact register writes ps5-cu-bisect.sh uses, with umr, at every boot. The
-# registers are CC_GC_SHADER_ARRAY_CONFIG and SPI_PG_ENABLE_STATIC_WGP_MASK. On every row, CC lists
-# as inactive exactly the WGPs the mask leaves off, as the chip itself does at stock. A WGP that
-# failed the test is so never listed as active. RLC_PG_ALWAYS_ON_WGP_MASK stays as the chip set it.
+# registers are CC_GC_SHADER_ARRAY_CONFIG, SPI_PG_ENABLE_STATIC_WGP_MASK and RLC_PG_ALWAYS_ON_WGP_MASK.
 # A root systemd service writes them as early as its unit ordering allows. That is before the
 # display manager starts using the GPU. It is not a diagnostic. It does not retest anything, and
 # it trusts the masks you give it.
@@ -46,6 +44,7 @@ UNIT_PATH="/etc/systemd/system/$UNIT_NAME"
 ASIC="${UMR_ASIC:-cyan_skillfish.gfx1013}"
 REG_CC="mmCC_GC_SHADER_ARRAY_CONFIG"
 REG_SPI="mmSPI_PG_ENABLE_STATIC_WGP_MASK"
+REG_RLC="mmRLC_PG_ALWAYS_ON_WGP_MASK"
 ROWS=(SE0.SH0 SE0.SH1 SE1.SH0 SE1.SH1)
 MASK_RE='^0x[0-9a-fA-F]{1,2}(,0x[0-9a-fA-F]{1,2}){3}$'
 
@@ -53,8 +52,6 @@ say()  { printf '%s\n' "$*"; }
 die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 usage() { sed -n '4,/^$/{s/^# \{0,1\}//;p;}' "$0"; }   # the header comment, after the SPDX line and the blank
 hex2() { printf '0x%02x' $(( $1 & 31 )); }
-# CC_GC_SHADER_ARRAY_CONFIG for a row's mask: bits 16-31 list the inactive WGPs, so every WGP the mask leaves off.
-cc_of() { printf '0x%08x' $(( (~$1 & 0xffff) << 16 )); }
 popcount() { local n=$(( $1 )) c=0; while (( n )); do (( c += n & 1, n >>= 1 )); done; echo "$c"; }
 cu_count() { local t=0 m; IFS=, read -ra M <<<"$1"; for m in "${M[@]}"; do (( t += $(popcount "$m") * 2 )); done; echo "$t"; }
 
@@ -112,25 +109,29 @@ apply_masks() { # masks (must run as root)
   reg_write_rc() { # reg value se sh
     local out; out=$("$UMR" "${UMR_I[@]}" -w "$ASIC.$1" "$2" -b "$3" "$4" 0xffffffff 2>&1); ! umr_failed "$out"
   }
+  reg_write_global() { # reg value, no se/sh
+    local out; out=$("$UMR" "${UMR_I[@]}" -w "$ASIC.$1" "$2" 2>&1); ! umr_failed "$out"
+  }
   reg_read_rc() { # reg se sh
     local v; v=$("$UMR" "${UMR_I[@]}" -r "$ASIC.$1" -b "$2" "$3" 0xffffffff 2>&1 | parse_hex)
     [[ -n $v ]] || v=$("$UMR" "${UMR_I[@]}" -r "$ASIC.$1" -b "$2" "$3" 2>&1 | parse_hex)
     [[ -n $v ]] && echo "$v"
   }
 
-  local m i
+  local m i union=0
   IFS=, read -ra m <<<"$1"
+  reg_write_global "$REG_CC" 0x0 || true
   for i in 0 1 2 3; do
-    reg_write_rc "$REG_CC" "$(cc_of "${m[$i]}")" $((i / 2)) $((i % 2)) || die "could not write $REG_CC on ${ROWS[$i]}"
+    reg_write_rc "$REG_CC" 0x0 $((i / 2)) $((i % 2)) || die "could not clear $REG_CC on ${ROWS[$i]}"
     reg_write_rc "$REG_SPI" "$(hex2 "${m[$i]}")" $((i / 2)) $((i % 2)) || die "could not write $REG_SPI on ${ROWS[$i]}"
+    (( union |= m[i] ))
   done
+  reg_write_global "$REG_RLC" "$(hex2 $union)" || true
 
   local now ok=1
   for i in 0 1 2 3; do
     now=$(reg_read_rc "$REG_SPI" $((i / 2)) $((i % 2))) || { ok=0; continue; }
     [[ $(hex2 "$now") == $(hex2 "${m[$i]}") ]] || ok=0
-    now=$(reg_read_rc "$REG_CC" $((i / 2)) $((i % 2))) || { ok=0; continue; }
-    [[ $(hex2 $(( ~(now >> 16) ))) == $(hex2 "${m[$i]}") ]] || ok=0
   done
   (( ok )) || die "masks did not read back as written. The CU unlock may be partially applied. Restart."
   say "CU unlock applied: $1 ($(cu_count "$1") CUs)"

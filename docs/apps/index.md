@@ -57,6 +57,7 @@ of it.
 | ![](../assets/apps/vita3k.webp){ .app-icon } [Vita3K Manager](vita3k.md) | Install Vita3K for PS Vita games and add installed titles to Game Mode. |
 | ![](../assets/apps/clb.webp){ .app-icon } [XBOX Remote Play](clb.md) | Stream XBOX consoles or XBOX Cloud Gaming after signing in with a Microsoft account. |
 | ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Install Xenia Canary for XBOX 360 games and add games to Game Mode. |
+| ![](../assets/apps/kytyps5.webp){ .app-icon } [KytyPS5 Manager](kytyps5.md) | PS5 games with the KytyPS5-Native emulator. It sets up a tested KytyPS5-Native release, checks what the emulator needs from the board, finds your games and adds them to Steam. |
 
 **Utilities**: Tools for files, peripherals, and storage.
 

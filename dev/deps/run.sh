@@ -3,7 +3,7 @@
 # Starts Nexus Deps with the checkout's dev venv, on the checkout it lives in.
 #
 #   dev/deps/run.sh            # open the window; --fix offers Fix at once, --remind is the hourly check
-#   dev/deps/run.sh --sync-upstreams   # nexus_deps/catalogs/upstreams.json in line with the apps' pins again
+#   dev/deps/run.sh --sync-upstreams   # nexus_deps/catalogs/upstreams.json in line with apps.toml again
 #   dev/deps/install.sh        # app menu entry, Desktop icon and the hourly reminder for this checkout
 set -euo pipefail
 APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)

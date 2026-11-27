@@ -1,33 +1,27 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The programs and firmware the suite's apps use, and their updates (owner, 09-11-2026: "we also check for app
-dependencies we use, like emulator updates, and for PlayStation firmware updates"). catalogs/upstreams.json lists
-them, kept in sync with the apps (owner, 09-11-2026: a separate JSON file, kept in sync): the pins, repos, names and
-launchers are read from each app's code and its portal's apps.toml by sync() (`dev/deps/run.sh
---sync-upstreams`), without importing the apps; tests/test_upstreams.py fails while the file is stale or misses an app.
+"""The firmware the suite's apps work with, and its updates (owner, 09-11-2026: "we also check [...] for PlayStation
+firmware updates"). catalogs/upstreams.json lists it, kept in sync with the apps (owner, 09-11-2026: a separate JSON
+file, kept in sync): the names and launchers of the apps that use it are read from their portal's apps.toml by
+sync() (`dev/deps/run.sh --sync-upstreams`); tests/test_upstreams.py fails while the file is stale.
 
-* github: an emulator, which each app pins at a build tested on a board. Two kinds of update: the
-  installed one is not the pin (the app's Install puts the pin in place), or upstream has a newer release than the
-  pin (it comes with a release of the app, after a test on a board: release work). Neither is installed from here.
-* sony: firmware Sony publishes a version list for (the DualSense controllers, the PS4), compared with what was seen
-  before, so a new version is news once; and firmware with no list a program can read (the PS5, the PlayStation
-  Portal), whose card says how to check on the device.
+No emulator is listed (owner, 28-11-2026): each emulator app fetches the versions from GitHub and installs the one
+chosen there, which is the only way to choose one.
+
+* Sony publishes a version list for some firmware (the DualSense controllers, the PS4), compared with what was seen
+  before, so a new version is news once.
+* Other firmware has no list a program can read (the PS5, the PlayStation Portal), and its card says how to check
+  on the device.
 
 Every card is "by hand": its about (the card's "i") says what the update does and how to handle it."""
 
 from __future__ import annotations
 
 import argparse
-import ast
-import copy
 import json
 import os
 import re
-import shutil
-import subprocess
 import sys
-import time
 import tomllib
-import urllib.error
 import urllib.request
 from collections.abc import Callable
 from html import escape
@@ -39,9 +33,6 @@ from .system import Source, Update
 CATALOG = CATALOGS / "upstreams.json"
 TIMEOUT = 15
 USER_AGENT = "nexus-deps"
-SYNCED = ("repo", "pin", "version", "home", "name", "launcher")
-
-Fetch = Callable[[str], object]          # a GitHub API URL -> its decoded JSON
 Get = Callable[[str], bytes]             # a URL -> its body
 
 
@@ -55,45 +46,6 @@ def load(path: Path = CATALOG) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _value(node: ast.AST, names: dict[str, object]) -> object:
-    """A module constant's value: a literal, a name defined above it, an f-string of those, or str() of one."""
-    if isinstance(node, ast.Constant):
-        return node.value
-    if isinstance(node, ast.Name) and node.id in names:
-        return names[node.id]
-    if isinstance(node, ast.JoinedStr):
-        parts = []
-        for part in node.values:
-            if isinstance(part, ast.FormattedValue):
-                if part.format_spec is not None:
-                    raise ValueError("a format spec")
-                parts.append(str(_value(part.value, names)))
-            else:
-                parts.append(str(_value(part, names)))
-        return "".join(parts)
-    if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "str"
-            and len(node.args) == 1 and not node.keywords):
-        return str(_value(node.args[0], names))
-    raise ValueError(f"not a constant: {ast.dump(node)[:60]}")
-
-
-def constants(path: Path) -> dict[str, object]:
-    """The module-level constants of a Python file, read without running it."""
-    names: dict[str, object] = {}
-    for node in ast.parse(path.read_text(encoding="utf-8")).body:
-        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
-            target, value = node.targets[0].id, node.value
-        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
-            target, value = node.target.id, node.value
-        else:
-            continue
-        try:
-            names[target] = _value(value, names)
-        except ValueError:
-            pass
-    return names
-
-
 def _portal_app(checkout: Path, app: str) -> dict:
     path = checkout / "portal" / "apps.toml"
     entry = tomllib.loads(path.read_text(encoding="utf-8")).get("apps", {}).get(app)
@@ -103,40 +55,14 @@ def _portal_app(checkout: Path, app: str) -> dict:
 
 
 def sync(data: dict, checkout: Path = CHECKOUT) -> dict:
-    """The catalog with its synced fields read from the apps again (SYNCED); the hand-written ones as they are."""
-    data = copy.deepcopy(data)
-    for entry in [*data.get("github", []), *data.get("sony", [])]:
+    """The catalog with each app's name and launcher read from the portal's apps.toml again; the rest as it is."""
+    data = json.loads(json.dumps(data))
+    for entry in data.get("sony", []):
         for app in entry.get("apps", []):
             portal = _portal_app(checkout, app["app"])
             app["name"] = portal["name"]
             app["launcher"] = (portal.get("detect") or [""])[0]
-            if "module" not in app:
-                continue
-            folder = checkout / "apps" / app["app"]
-            module = folder / app["module"]
-            if not module.is_file():
-                raise UpstreamError(f"{module.relative_to(checkout)} is missing")
-            values = constants(module)
-            for field, constant in app["constants"].items():
-                if constant not in values:
-                    raise UpstreamError(f"{module.relative_to(checkout)} has no constant {constant}")
-                app[field] = str(values[constant])
-            app_id = constants(module.parent / "__init__.py").get("APP_ID")
-            app["home"] = f"~/.local/share/{app_id}/emulator"             # its emulator_home(): current -> <version>
-            # The synced fields after the hand-written ones, in one order
-            for field in SYNCED:
-                if field in app:
-                    app[field] = app.pop(field)
     return data
-
-
-def apps_with_upstreams(checkout: Path = CHECKOUT) -> set[str]:
-    """Every app of the suite with a pinned upstream: an emulator.py."""
-    found = set()
-    for module in (checkout / "apps").glob("*/*/emulator.py"):
-        if "REPO" in constants(module) and "VERSION" in constants(module):
-            found.add(module.parents[1].name)
-    return found
 
 
 def write(path: Path = CATALOG, checkout: Path = CHECKOUT) -> bool:
@@ -158,136 +84,6 @@ def _get(url: str) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
         return response.read(4 * 1024 * 1024)
-
-
-GH_FALLBACK = "/home/linuxbrew/.linuxbrew/bin/gh"       # Homebrew's gh, which a launcher's PATH lacks
-_token: str | None = None                               # found once per run; "" when there is none
-
-
-def github_token(run=subprocess.run) -> str:
-    """GITHUB_TOKEN or GH_TOKEN, else the token of a gh login (gh auth token); "" without one. With a token GitHub
-    allows 5,000 requests an hour instead of 60 for the whole address. It is only sent to GitHub's API and never
-    stored here."""
-    global _token
-    if _token is None:
-        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or ""
-        gh = shutil.which("gh") or (GH_FALLBACK if os.access(GH_FALLBACK, os.X_OK) else "")
-        if not token and gh:
-            try:
-                out = run([gh, "auth", "token"], capture_output=True, text=True, timeout=10)
-                token = out.stdout.strip() if out.returncode == 0 else ""
-            except (OSError, subprocess.SubprocessError):
-                token = ""
-        _token = token
-    return _token
-
-
-def _fetch(url: str, opener=urllib.request.urlopen) -> object:
-    """GitHub's answer to an API request, signed in when the machine is (github_token). A refused token (401) is
-    asked again without it; the hourly limit says until when and how to get the larger one."""
-    headers = {"User-Agent": USER_AGENT, "Accept": "application/vnd.github+json"}
-    token = github_token() if url.startswith("https://api.github.com/") else ""
-    for signed in ([True, False] if token else [False]):
-        if signed:
-            headers["Authorization"] = f"Bearer {token}"
-        else:
-            headers.pop("Authorization", None)
-        try:
-            with opener(urllib.request.Request(url, headers=headers), timeout=TIMEOUT) as response:
-                return json.loads(response.read(4 * 1024 * 1024))
-        except urllib.error.HTTPError as exc:
-            if signed and exc.code == 401:
-                continue
-            if exc.code in (403, 429) and exc.headers.get("x-ratelimit-remaining") == "0":
-                try:
-                    until = time.strftime(" until %H:%M", time.localtime(int(exc.headers.get("x-ratelimit-reset"))))
-                except (TypeError, ValueError):
-                    until = ""
-                raise OSError(f"its hourly limit is used up{until}" + ("" if signed else
-                              ". Signed in with gh (gh auth login) it is 5,000 requests an hour instead of 60")
-                              ) from None
-            raise
-    raise OSError("no answer")              # not reached: the unsigned request returns or raises
-
-
-def numbers(version: str) -> tuple[int, ...]:
-    """"v.0.21.0" -> (0, 21, 0), "0.0.43-20395" -> (0, 0, 43, 20395); trailing zeros dropped for comparing."""
-    values = [int(found) for found in re.findall(r"\d+", version)]
-    while values and values[-1] == 0:
-        values.pop()
-    return tuple(values)
-
-
-def newer(compare: str, latest: dict, pin: str) -> bool:
-    """Whether GitHub's latest release (tag_name, published_at) is newer than the app's pin."""
-    tag = str(latest.get("tag_name", "")).strip()
-    if compare == "build":
-        return tag.isdigit() and pin.isdigit() and int(tag) > int(pin)
-    if compare == "published":
-        return str(latest.get("published_at", "")) > pin                # ISO 8601 in UTC: compared as text
-    return bool(numbers(tag)) and numbers(tag) > numbers(pin)
-
-
-def installed_version(app: dict, home: Path) -> str | None:
-    """The version of the app's upstream on this machine: the folder current links to.
-    None when the app is not installed (its launcher is missing); "" when the app is but the upstream is not."""
-    if not (home / app["launcher"].removeprefix("~/")).exists():
-        return None
-    current = home / app["home"].removeprefix("~/") / "current"
-    return os.path.basename(os.readlink(current)) if current.is_symlink() else ""
-
-
-def _app_label(app: dict) -> str:
-    return app["name"]
-
-
-def check_github(entry: dict, fetch: Fetch = _fetch, home: Path = Path.home()) -> Source:
-    name, key = entry["name"], f"upstream-{entry['id']}"
-    apps = entry["apps"]
-    try:
-        latest = fetch(f"https://api.github.com/repos/{apps[0]['repo']}/releases/latest")
-        if not isinstance(latest, dict):
-            raise ValueError("not a release")
-    except (OSError, ValueError) as exc:
-        return Source(key, name, error=f"GitHub could not be asked: {exc}", group="apps",
-                      about=_github_about(entry, {}))
-    tag = str(latest.get("tag_name", ""))
-    updates, notes, without = [], [], []
-    for app in apps:
-        installed = installed_version(app, home)
-        if installed is None or installed == app["version"]:
-            continue
-        if not installed:
-            without.append(app["name"])             # the app is there, the program not (yet): a choice, no update
-            continue
-        updates.append(Update(f"{_app_label(app)}: installed", installed, app["version"]))
-        notes.append(f"Open {app['name']} and use its Install: it puts its tested {name} in place.")
-    late = [app for app in apps if newer(entry["compare"], latest, app["pin"])]
-    if late:
-        pins = sorted({app["version"] for app in late})
-        updates.append(Update(f"{name} on GitHub", ", ".join(pins), tag))
-        notes.append(f"{name} {tag} is newer than the tested one of {', '.join(_app_label(app) for app in late)}: "
-                     "it comes with a release of the app, after a test on a board.")
-    detail = f"Latest on GitHub: {tag} ({str(latest.get('published_at', ''))[:10]})."
-    if without:
-        detail += f" Installed without {name} so far: {', '.join(dict.fromkeys(without))}."
-    return Source(key, name, tuple(updates), note=" ".join(dict.fromkeys(notes)), group="apps", detail=detail,
-                  about=_github_about(entry, latest))
-
-
-def _github_about(entry: dict, latest: dict) -> str:
-    name = escape(entry["name"])
-    pins = "".join(f"<li>{escape(_app_label(app))}: {escape(app['version'])}</li>" for app in entry["apps"])
-    page = escape(str(latest.get("html_url") or f"https://github.com/{entry['apps'][0]['repo']}/releases"),
-                  quote=True)
-    text = (f"<p>{name}, {escape(entry['what'])}. Each app installs the build of {name} it was tested with on a "
-            f"board (its pin):</p><ul>{pins}</ul>"
-            f"<p><b>Installed is not the pin</b>: open the app and use its Install; it downloads the pin, checks it "
-            "and swaps it in. Close the program first.</p>"
-            f"<p><b>Newer on GitHub</b>: it is not installed from here. A newer {name} comes with a release of the "
-            "app, once it has been tried on a board (release work); until then the app keeps the tested one. "
-            f"See <a href='{page}'>the release</a> for what changed.</p>")
-    return text
 
 
 def parse_controllers(text: bytes, targets: dict[str, str]) -> dict[str, str]:
@@ -361,14 +157,14 @@ def write_state(data: dict, path: Path | None = None) -> None:
         pass                            # nothing remembered: the next look says it again
 
 
-def read(section: str = "seen", catalog: dict | None = None, fetch: Fetch = _fetch, get: Get = _get,
-         home: Path = Path.home(), state: Path | None = None) -> tuple[Source, ...]:
-    """Every upstream's card. Sony's versions are compared with *section* of the state ("seen": the window,
+def read(section: str = "seen", catalog: dict | None = None, get: Get = _get,
+         state: Path | None = None) -> tuple[Source, ...]:
+    """Every firmware's card. Sony's versions are compared with *section* of the state ("seen": the window,
     "notified": the reminder), which then holds the versions just read."""
     catalog = catalog or load()
     remembered = read_state(state)
     known = remembered.setdefault(section, {})
-    sources = [check_github(entry, fetch, home) for entry in catalog.get("github", [])]
+    sources = []
     for entry in catalog.get("sony", []):
         source = check_sony(entry, known.get(entry["id"]), get)
         sources.append(source)
@@ -378,28 +174,9 @@ def read(section: str = "seen", catalog: dict | None = None, fetch: Fetch = _fet
     return tuple(sources)
 
 
-def unnotified(sources: tuple[Source, ...], state: Path | None = None) -> tuple[Source, ...]:
-    """The reminder's view: the GitHub cards without the updates it named before (a newer upstream stays until a
-    release; the notification says it once). Remembers what it names now."""
-    remembered = read_state(state)
-    named = remembered.setdefault("named", {})
-    result = []
-    for source in sources:
-        if not source.key.startswith("upstream-") or source.error:
-            result.append(source)
-            continue
-        before = set(named.get(source.key, []))
-        fresh = tuple(update for update in source.updates if f"{update.name}={update.latest}" not in before)
-        named[source.key] = sorted(before | {f"{update.name}={update.latest}" for update in source.updates})
-        result.append(Source(source.key, source.name, fresh, note=source.note if fresh else "", group=source.group,
-                             about=source.about))
-    write_state(remembered, state)
-    return tuple(result)
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="nexus_deps.upstreams", description="catalogs/upstreams.json, in sync with "
-                                     "the apps' pins and their portals' apps.toml")
+                                     "the portal's apps.toml")
     parser.add_argument("--write", action="store_true", help="write the synced catalog")
     args = parser.parse_args(argv)
     if args.write:

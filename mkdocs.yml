@@ -75,6 +75,7 @@ nav:
       - Graphics:
           - PS5 Upscaler Manager: apps/upscaler.md
       - Gaming:
+          - KytyPS5 Manager: apps/kytyps5.md
           - PCSX2 Manager: apps/pcsx2.md
           - PPSSPP Manager: apps/ppsspp.md
           - PS5 DatStation: apps/datstation.md

@@ -456,3 +456,16 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/ps5-turing-screen"]
 launch = [["Open", "~/.local/bin/ps5-turing-screen"]]
+
+[apps.kytyps5]
+name = "KytyPS5 Manager"
+summary = "PS5 games with the KytyPS5-Native emulator. It sets up a tested KytyPS5-Native release, checks what the emulator needs from the board, finds your games and adds them to Steam."
+tag = "ps5-kytyps5-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-kytyps5"]
+launch = [["Open", "~/.local/bin/ps5-kytyps5"]]

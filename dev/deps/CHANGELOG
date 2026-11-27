@@ -1,3 +1,10 @@
+Changelog: 28-11-2026 00:38:32
+
+Breaking. Nexus Deps no longer lists the emulators (owner, 28-11-2026). Each emulator manager fetches the versions
+from GitHub and installs the one you choose, and that is the only way to choose one. The GitHub cards, their pins
+and the check that every emulator app is listed are gone. The window's section is called Firmware now and holds
+Sony's firmware cards. `--sync-upstreams` reads only the names and launchers of the apps from `apps.toml`.
+
 Changelog: 24-11-2026 16:36:23
 
 Added. The catalog lists PS5 GPU Manager and what it uses that the catalog has: memtest_vulkan, vkpeak, vkmark,

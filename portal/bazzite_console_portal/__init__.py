@@ -3,7 +3,7 @@
 
 APP_NAME = "Bazzite Console Suite"
 APP_ID = "bazzite-console-suite"
-__version__ = "5.5.0"
+__version__ = "5.6.0"
 # The suite's stage, shown beside the version in the header and in a portal release's notes; "" when it leaves
 # active development. The README's badge and the wiki's home page say the same (tools/tests/test_stage.py).
 STAGE = "Beta"

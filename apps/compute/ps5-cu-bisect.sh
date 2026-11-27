@@ -3,9 +3,8 @@
 
 # ps5-cu-bisect.sh - finds out whether CU-unlock crashes come from bad WGPs or from the unlock itself.
 #
-# The script writes the WGP masks itself with umr. A runtime CU unlock writes two GPU registers per row.
-# They are CC_GC_SHADER_ARRAY_CONFIG and SPI_PG_ENABLE_STATIC_WGP_MASK. CC lists as inactive exactly the WGPs
-# the mask leaves off, as the chip itself does at stock. RLC_PG_ALWAYS_ON_WGP_MASK stays as the chip set it.
+# The script writes the WGP masks itself with umr. A runtime CU unlock uses three GPU registers.
+# They are CC_GC_SHADER_ARRAY_CONFIG, SPI_PG_ENABLE_STATIC_WGP_MASK and RLC_PG_ALWAYS_ON_WGP_MASK.
 #
 #   control   the same register writes, but with your baseline masks, so no extra CUs. If the
 #             control crashes, the unlock method, power or heat is at fault, not your CUs.
@@ -45,9 +44,8 @@
 #                         control's rounds first this way. The results and the report stay as they are.
 #       --scan            read the live masks and what a run needs, then exit. Writes no register.
 #       --writes LIST     a test of the unlock method itself: write only these registers, comma-separated,
-#                         from cc, spi and rlc (default cc,spi, the full unlock). rlc also writes the
-#                         always-on mask, as the union of the rows. Use it with --control-only, and
-#                         --reset between tests.
+#                         from cc, spi and rlc (default cc,spi,rlc, the full unlock). Use it with
+#                         --control-only, and --reset between tests.
 #       --status          show the results so far and write the report, then exit
 #       --reset           delete the results and start over
 #   -V, --version         show the version
@@ -59,7 +57,7 @@ set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
 VERSION="1.1.0"
-STRESS_SECS="" ROUNDS_OPT="" BASE_OPT="" SAME_BOOT=0 AUTO=0 WATCH=1 MODE=run CONTROL_ONLY_OPT="" ONLY="" WRITES=cc,spi
+STRESS_SECS="" ROUNDS_OPT="" BASE_OPT="" SAME_BOOT=0 AUTO=0 WATCH=1 MODE=run CONTROL_ONLY_OPT="" ONLY="" WRITES=cc,spi,rlc
 
 say()  { printf '%s\n' "$*"; }
 hdr()  { printf '\n=== %s ===\n' "$*"; }
@@ -426,12 +424,11 @@ reg_write() { # reg value [se sh]
 read_spi_all() { local i v out=(); for i in 0 1 2 3; do v=$(reg_read "$REG_SPI" $((i / 2)) $((i % 2))) || return 1; out+=("$(hex2 "$v")"); done; (IFS=,; echo "${out[*]}"); }
 read_cc_all()  { local i v out=(); for i in 0 1 2 3; do v=$(reg_read "$REG_CC" $((i / 2)) $((i % 2))) || return 1; out+=("$v"); done; echo "${out[*]}"; }
 
-# Runtime unlock sequence, per row: CC lists every WGP the mask leaves off as inactive, SPI is the mask. A WGP that
-# is off, or failed its test, is so never listed as active. RLC stays as the chip set it.
-# --writes picks the registers that are written, to test the method itself (default: cc and spi). With rlc, the
-# always-on mask is written too, as the union of the rows.
+# Runtime unlock sequence: clear CC, write SPI per row, RLC = union of the rows. This is the write every boot
+# unlock used until 27-11-2026. A write that set CC to the mask's inverse and left RLC alone hung the GPU when the
+# boot service wrote 38 CUs (two boards, 27-11-2026), and it was never tested at boot; it is gone until it is.
+# --writes picks which of the three registers are written, to test the method itself (default: all three).
 writes() { [[ ,$WRITES, == *,$1,* ]]; }
-cc_of() { printf '0x%08x' $(( (~$1 & 0xffff) << 16 )); }
 # The unlock is on since boot: the boot service ran, or CC lists no WGP of any row as inactive.
 unlock_at_boot() {
   systemctl is-active --quiet ps5-cu-unlock.service 2>/dev/null && return 0
@@ -441,8 +438,9 @@ unlock_at_boot() {
 }
 apply_masks() {
   local i union=0 m; IFS=, read -ra m <<<"$1"
+  if writes cc; then reg_write "$REG_CC" 0x0 || true; fi
   for i in 0 1 2 3; do
-    if writes cc; then reg_write "$REG_CC" "$(cc_of "${m[$i]}")" $((i / 2)) $((i % 2)) || return 1; fi
+    if writes cc; then reg_write "$REG_CC" 0x0 $((i / 2)) $((i % 2)) || return 1; fi
     if writes spi; then reg_write "$REG_SPI" "$(hex2 "${m[$i]}")" $((i / 2)) $((i % 2)) || return 1; fi
     (( union |= m[i] ))
   done
@@ -570,7 +568,7 @@ build_plan
 
 hdr "PS5 CU unlock test $VERSION"
 say "Baseline: $BASE ($(cu_count "$BASE") CUs)   Live now: $SPI_NOW   CC: ${CC_NOW:-?}   RLC: ${RLC_NOW:-?}"
-[[ $WRITES == cc,spi ]] || say "Writes only: $WRITES (a test of the unlock method itself)"
+[[ $WRITES == cc,spi,rlc ]] || say "Writes only: $WRITES (a test of the unlock method itself)"
 say "Items: ${ITEMS[*]}$([[ $CONTROL_ONLY == 1 ]] && echo '   (--control-only: per-WGP bisecting skipped)')"
 say "Rounds: $ROUNDS   Load: $LOAD, ${STRESS_SECS}s   Mode: $([[ $SAME_BOOT == 1 ]] && echo 'same boot' || echo 'one attempt per boot')"
 draw_cu_map
@@ -660,17 +658,21 @@ wait_idle() {
   done
 }
 
+MEMTEST_MIN_MIB=1024
 memtest_bytes() {
   local avail vram mib
   avail=$(( $(awk '/^MemAvailable:/ {print $2}' /proc/meminfo) / 1024 ))
   vram=$(( $(cat "$GPU_DEV/mem_info_vram_total" 2>/dev/null || echo 0) / 1048576 ))
   mib=$(( vram * 3 / 4 )); (( mib <= 0 || mib > avail / 2 )) && mib=$(( avail / 2 ))
+  # memtest_vulkan refuses a size under about half a GiB (384 MiB failed, 512 MiB ran, on a board with a 512 MB
+  # VRAM split, 27-11-2026). A small split still gets a real load: the memory then comes from the GTT.
+  (( mib < MEMTEST_MIN_MIB && avail / 2 >= MEMTEST_MIN_MIB )) && mib=$MEMTEST_MIN_MIB
   echo $(( mib * 1048576 ))
 }
 
 run_attempt() { # round item
   local r=$1 it=$2 masks=${ITEM_MASKS[$2]} t0 now drift="" faults errs=0 rc note="" o
-  [[ $WRITES == cc,spi ]] || note="writes $WRITES"
+  [[ $WRITES == cc,spi,rlc ]] || note="writes $WRITES"
   local maxt=0 maxf=0 maxb=0 log="$LOGS/$(date '+%Y%m%d-%H%M%S')-r$1-$2.log"
   hdr "Round $r/$ROUNDS: $it  ($masks = $(cu_count "$masks") CUs)"
   ev attempt "$r" "$it" "$masks"

@@ -126,3 +126,8 @@ tile = "portal/images/apps/password.webp"
 category = "utilities"
 icons = ["apps/turing/images/ps5-turing-screen"]
 tile = "portal/images/apps/turing.webp"
+
+[kytyps5]
+category = "gaming"
+icons = ["apps/kytyps5/images/ps5-kytyps5"]
+tile = "portal/images/apps/kytyps5.webp"

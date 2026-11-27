@@ -68,6 +68,7 @@ asks before it installs or opens them. Every change is software-only, and you ca
 | remoteplay | Find, wake and register your PS4 and PS5 consoles on the network, then stream Remote Play. |
 | clb | Stream your XBOX or XBOX Cloud Gaming, signed in with your Microsoft account. |
 | shadps4 | PS4 games in Game Mode. It installs shadPS4, manages your game libraries and adds your games. |
+| kytyps5 | PS5 games in Steam. It installs KytyPS5-Native, checks the memory settings and adds your games. |
 | datstation | A PlayStation quiz, plus console history, system versions, region codes, manuals and news. |
 | ppsspp | PSP games in Game Mode. It installs PPSSPP, manages your game libraries and adds your games. |
 | pcsx2 | PS2 favorites in Game Mode. It installs PCSX2, manages your BIOS and game libraries, and adds your games. |

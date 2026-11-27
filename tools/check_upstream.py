@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Upstream check: are the apps that pin an upstream release still in step with it?
 
-    python3 tools/check_upstream.py [--report FILE] [shadps4] [helixsr] [ppsspp] [pcsx2] [rpcs3] [vita3k] [xenia]
-                                    [ffmpeg] [webcam] [speedtest]
+    python3 tools/check_upstream.py [--report FILE] [shadps4] [kytyps5] [helixsr] [ppsspp] [pcsx2] [rpcs3]
+                                    [vita3k] [xenia] [ffmpeg] [webcam] [speedtest]
                                     # all when none is named
 
 The shadPS4 Manager pins one shadPS4 release (apps/shadps4/shadps4_manager/emulator.py: VERSION, TAG,
@@ -11,6 +11,13 @@ ASSET, SHA256), read here without importing the app:
  * the latest stable release: newer than the pin means a new version of the app; the report gives the new release's
    Linux zip and the SHA-256 GitHub publishes for it, for the pin;
  * the pinned release's zip: the SHA-256 GitHub publishes for it must still be the pinned one.
+
+KytyPS5 Manager pins one KytyPS5-Native release the same way (apps/kytyps5/kytyps5_manager/emulator.py: VERSION,
+PUBLISHED, SHA256; TAG and ASSET follow from VERSION). Its releases are named after their date and commit, so a
+release is newer when it has another tag and was published on a later day:
+ * the latest release: newer than the pin means a new version of the app; the report gives its Linux archive and
+   the SHA-256 GitHub publishes for it, for the pin;
+ * the pinned release's archive: the SHA-256 GitHub publishes for it must still be the pinned one.
 
 The PS5 Upscaler Manager gets the latest HelixSR release of one major version, or the fallback its developer names
 (apps/upscaler/upscaler/acquire.py: SUPPORTED_MAJOR, KNOWN_VERSION, FALLBACK_VERSION), read here without
@@ -138,6 +145,33 @@ def load_shadps4_pin(path: Path = EMULATOR) -> Pin:
     return Pin(**{name: values[name] for name in ("REPO", "VERSION", "TAG", "ASSET", "SHA256")})
 
 
+KYTY_EMULATOR = SUITE / "apps" / "kytyps5" / "kytyps5_manager" / "emulator.py"
+KYTY_TAG = "KytyPS5-Native-{version}"                       # as emulator.py's TAG and ASSET, which follow VERSION
+KYTY_ASSET = "KytyPS5-Native-{version}-Linux-x86_64.tar.gz"
+
+
+@dataclass
+class KytyPin:
+    """KytyPS5-Native's pin: the constants of KytyPS5 Manager's emulator.py."""
+    REPO: str
+    VERSION: str
+    PUBLISHED: str
+    SHA256: str
+
+    @property
+    def TAG(self) -> str:  # noqa: N802 (as the constant it stands for)
+        return KYTY_TAG.format(version=self.VERSION)
+
+    @property
+    def ASSET(self) -> str:  # noqa: N802
+        return KYTY_ASSET.format(version=self.VERSION)
+
+
+def load_kytyps5_pin(path: Path = KYTY_EMULATOR) -> KytyPin:
+    values = _string_constants(path)
+    return KytyPin(**{name: values[name] for name in ("REPO", "VERSION", "PUBLISHED", "SHA256")})
+
+
 @dataclass
 class HelixPin:
     """What the PS5 Upscaler Manager knows of HelixSR: the constants of acquire.py."""
@@ -154,6 +188,40 @@ def load_helixsr_pin(path: Path = ACQUIRE) -> HelixPin:
 def _version(tag: str) -> tuple[int, ...]:
     parts = tag.lstrip("v.").split("-")[0].split(".")
     return tuple(int(p) for p in parts if p.isdigit())
+
+
+def check_kytyps5(pin: KytyPin, get: Fetch = fetch) -> Report:
+    report = Report(pin.TAG, name="KytyPS5-Native", short="KytyPS5-Native", newest="latest release")
+    api = API.format(repo=pin.REPO)
+
+    latest = json.loads(get(f"{api}/releases/latest"))
+    report.latest = str(latest.get("tag_name", ""))
+    published = str(latest.get("published_at", ""))[:10]
+    if report.latest != pin.TAG and published > pin.PUBLISHED:
+        asset = KYTY_ASSET.format(version=report.latest.removeprefix(KYTY_TAG.format(version="")))
+        found = {a.get("name"): a for a in latest.get("assets", [])}.get(asset)
+        if found is None:
+            line = f"it has no {asset}: look at its assets before pinning it."
+        else:
+            digest = str(found.get("digest") or "")
+            line = (f"for the pin: {asset}, {digest}" if digest.startswith("sha256:")
+                    else f"{asset} is published without a SHA-256: check it before pinning it.")
+        report.drift.append(f"{report.latest} is out ({published}): a new version of KytyPS5 Manager pins it, "
+                            f"after it is tried on the board; {line} {latest.get('html_url', '')}")
+    else:
+        report.fine.append(f"no release newer than {pin.TAG}")
+
+    pinned = json.loads(get(f"{api}/releases/tags/{pin.TAG}"))
+    assets = {a.get("name"): a for a in pinned.get("assets", [])}
+    digest = str(assets.get(pin.ASSET, {}).get("digest") or "")
+    if pin.ASSET not in assets:
+        report.drift.append(f"{pin.TAG} has no {pin.ASSET} any more.")
+    elif digest != f"sha256:{pin.SHA256}":
+        report.drift.append(f"{pin.TAG}'s {pin.ASSET} is published with {digest or 'no SHA-256'}, not the pinned "
+                            f"sha256:{pin.SHA256}: the asset was replaced.")
+    else:
+        report.fine.append(f"{pin.TAG}'s {pin.ASSET} is still the pinned file")
+    return report
 
 
 @dataclass
@@ -497,6 +565,7 @@ def check_speedtest(version: str, get: Fetch = fetch) -> Report:
 
 
 CHECKS = {"shadps4": ("shadPS4", lambda: check_shadps4(load_shadps4_pin())),
+          "kytyps5": ("KytyPS5-Native", lambda: check_kytyps5(load_kytyps5_pin())),
           "helixsr": ("HelixSR", lambda: check_helixsr(load_helixsr_pin())),
           "ppsspp": ("PPSSPP", lambda: check_release(load_release("ppsspp"))),
           "pcsx2": ("PCSX2", lambda: check_release(load_release("pcsx2"))),

@@ -1,3 +1,32 @@
+Changelog: 27-11-2026 23:15:51
+
+Fixed. After a failed combined test, a level the healthy WGPs never reached says "Not healthy" again. It said
+"Failed together", which read as if that level had been tested (a board, 27-11-2026: 40 CUs after a test of 38).
+The old write is confirmed on that board: 38 CUs passed the combined test, were installed and came up at boot.
+
+Changelog: 27-11-2026 22:49:57
+
+Fixed. The test's GPU load runs with a small VRAM split too. The load's size was three quarters of the VRAM, which is
+384 MiB with a 512 MB split, and memtest_vulkan refuses that. The test then ended as LOAD-FAIL although nothing was
+wrong with the CUs (a board, 27-11-2026). The size is now at least 1024 MiB when the memory is there.
+
+Changelog: 27-11-2026 22:07:43
+
+Fixed. The CU unlock is written the old way again: `CC_GC_SHADER_ARRAY_CONFIG` cleared, each row's mask in
+`SPI_PG_ENABLE_STATIC_WGP_MASK`, and the union of the rows in `RLC_PG_ALWAYS_ON_WGP_MASK`. That is the write every
+boot unlock used until 27-11-2026. The write of that day set CC to the mask's inverse and left RLC alone. It was
+tested live but never at boot. On 27-11-2026 a boot unlock of 38 CUs written that way hung the GPU two seconds after
+the login screen started, on a board whose live test of the same mask had passed. Do not install a boot unlock with
+the two releases that carry that write. `--writes` defaults to `cc,spi,rlc` again. The wiki's register table says so
+again. A test now keeps the other write out.
+
+Changelog: 27-11-2026 20:55:57
+
+Added. Step 4 offers every count above the highest even level, up to all healthy WGPs, each with the rows that give
+it the most speed. On a board with one failing WGP that is 34, 36 and 38 CUs. A count that runs slower than its number
+says what it runs like, such as "Like 36 CUs" for 38. Before, only the counts that add speed were shown, so 34 and 38
+were missing (owner, 27-11-2026).
+
 Changelog: 27-11-2026 19:59:41
 
 Release 1.1.0.
