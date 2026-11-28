@@ -114,3 +114,15 @@ def test_private_writes_the_home_folder_as_a_tilde(monkeypatch):
     wherever it is in the text."""
     monkeypatch.setattr(Path, "home", lambda: Path("/home/someone"))
     assert platform.private("/home/someone/Games and /home/someone2") == "~/Games and /home/someone2"
+
+
+def test_notify_sends_through_notify_send_or_says_it_cannot(monkeypatch):
+    """A desktop notification is notify-send's, with the app's name and an icon; without notify-send, False."""
+    started = []
+    monkeypatch.setattr(platform.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(platform.subprocess, "Popen", lambda args, **kwargs: started.append(args))
+    assert platform.notify("App", "No controller connected", "Press its PS button.")
+    assert started == [["/usr/bin/notify-send", "-a", "App", "-i", "input-gaming", "No controller connected",
+                        "Press its PS button."]]
+    monkeypatch.setattr(platform.shutil, "which", lambda name: None)
+    assert not platform.notify("App", "title", "text")

@@ -45,10 +45,10 @@ chmod +x "$D/$APP/emulator/2026-11-27-8278d03/kyty_emulator" "$D/$APP/emulator/2
 ln -sfn 2026-11-27-8278d03 "$D/$APP/emulator/current"
 mkdir -p "$T/games/My Game"                                                # a game that is there (the wrapper's gone check)
 bash "$RUN" --fullscreen --game "$T/games/My Game" > "$T/run.log" 2>&1; rc=$?
-check "starts the current KytyPS5-Native with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: --fullscreen --game $T/games/My Game' $T/run.log $D/$APP/emulator.log"
-check "from the emulator's own data folder, the home folder written as ~" "grep -qxF 'from: ~/.local/share/KytyPS5-Native/data' $D/$APP/emulator.log"
+check "starts the current KytyPS5-Native with the arguments as given" "[ $rc -eq 0 ] && grep -qF ' INFO args: --fullscreen --game $T/games/My Game' $D/$APP/emulator.log"
+check "from the emulator's own data folder, the home folder written as ~" "grep -qF ' INFO from: ~/.local/share/KytyPS5-Native/data' $D/$APP/emulator.log"
 bash "$RUN" --launcher > "$T/run.log" 2>&1; rc=$?
-check "--launcher starts its own window" "[ $rc -eq 0 ] && grep -qxF 'launcher: ' $T/run.log"
+check "--launcher starts its own window, its output in the emulator log" "[ $rc -eq 0 ] && grep -qF ' INFO launcher: ' $D/$APP/emulator.log"
 
 echo "== 3. install a staged release (core bundled in the tarball) without the Desktop icon"
 rm -rf "$T/stage"; /usr/bin/python3 "$NEXUS/tools/stage_app.py" kytyps5 "$T/stage" > /dev/null

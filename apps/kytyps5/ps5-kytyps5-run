@@ -25,9 +25,14 @@ fi
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}/KytyPS5-Native/data"
 mkdir -p "$DATA"
 cd "$DATA"
+# KytyPS5-Native's own window goes through the same log as a game: the games it starts run under it.
+PROGRAM=$EMULATOR
+LAUNCHER=""
+STARTED_WITH="$*"                                  # for the log, --launcher too
 if [ "${1:-}" = "--launcher" ]; then
     shift
-    exec "$BUILD/kyty_launcher" "$@"
+    PROGRAM="$BUILD/kyty_launcher"
+    LAUNCHER=1
 fi
 # A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
 # (28DE:11FF) in their place: no motion sensors or touchpad, and on the desktop it follows Steam's Desktop
@@ -56,9 +61,15 @@ fi
 # where (Steam sets SteamGameId); nothing else is known here. As PS5 shadPS4 Manager's wrapper does.
 LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/ps5-kytyps5.log"
 game=""
+width=""
+height=""
 previous=""
 for arg in "$@"; do
-    case $previous in --game) game=$arg ;; esac
+    case $previous in
+        --game) game=$arg ;;
+        --screen-width) width=$arg ;;
+        --screen-height) height=$arg ;;
+    esac
     previous=$arg
 done
 if [ -n "$game" ]; then
@@ -96,54 +107,51 @@ if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
     fi
     exit 1
 fi
-# What KytyPS5-Native prints goes to the app's emulator log, which the View logs tab shows beside the
-# app's own. Before, it went to Steam's console only, where no one saw it. Every line has the home folder written
-# as ~, so no user name is in it. The file turns over at 1 MB with three older ones kept, as the app's own log does.
-# The wrapper stays while KytyPS5-Native runs, passes a stop on to it and ends with its exit code, so Steam sees the game
-# end as before. SIGINT is passed on as SIGTERM: a program started in the background ignores SIGINT.
+# What KytyPS5-Native prints goes to the app's emulator log, which the View logs tab shows beside the app's own, with
+# what the game ran with and how it ended: core's gamelog.sh, bundled with the app (in the checkout, core's own).
+GAMELOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/app/bazzite_console_core/gamelog.sh"
+[ -f "$GAMELOG" ] || GAMELOG="$(dirname "$(readlink -f "$0")")/../../core/bazzite_console_core/gamelog.sh"
+[ -f "$GAMELOG" ] || exec "$PROGRAM" "$@"
+# shellcheck source=core/bazzite_console_core/gamelog.sh
+. "$GAMELOG"
+GAMELOG_NAME="KytyPS5-Native"
+GAMELOG_BUILD=$BUILD
 EMULATOR_LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/emulator.log"
-{ [ -d "${EMULATOR_LOG%/*}" ] && : >>"$EMULATOR_LOG"; } 2>/dev/null || exec "$EMULATOR" "$@"
-size=$(stat -c %s "$EMULATOR_LOG" 2>/dev/null) || size=0
-if [ "$size" -ge 1000000 ]; then
-    { rm -f "$EMULATOR_LOG.3"
-      for n in 2 1; do [ ! -e "$EMULATOR_LOG.$n" ] || mv -f "$EMULATOR_LOG.$n" "$EMULATOR_LOG.$((n + 1))"; done
-      mv -f "$EMULATOR_LOG" "$EMULATOR_LOG.1"; } 2>/dev/null || true
+# The game's title, title ID and version from its param.json, read as the app reads them (its games module, with the
+# suite's Python); the folder's name when the app is not installed or the game has no param.json.
+if [ -n "$game" ]; then
+    APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/app"
+    PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
+    if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then
+        GAMELOG_TITLE=$("$PYTHON" -I -c 'import sys
+sys.path.insert(0, sys.argv[1])
+from pathlib import Path
+from kytyps5_manager.games import read_param, title_of
+param = read_param((Path(sys.argv[2]) / "sce_sys" / "param.json").read_text(encoding="utf-8", errors="replace"))
+code, version = param.get("titleId") or "", param.get("contentVersion") or ""
+print(" ".join(filter(None, [title_of(param), f"({code})" if code else "", f"version {version}" if version else ""])))' \
+                "$APP_DIR" "$game" 2>/dev/null) || GAMELOG_TITLE=""
+    fi
 fi
-private_lines() {
-    # Each line as it comes, the home folder written as ~ (and /home/<user> for /var/home/<user>, Bazzite's link),
-    # as core's platform.private() does: only where the next character is not part of a longer name.
-    awk 'function swap(text, from,   out, at, after) {
-             out = ""
-             while ((at = index(text, from)) > 0) {
-                 after = substr(text, at + length(from), 1)
-                 out = out substr(text, 1, at - 1) (after ~ /[A-Za-z0-9_]/ ? from : "~")
-                 text = substr(text, at + length(from))
-             }
-             return out text
-         }
-         BEGIN { home = ENVIRON["HOME"]; sub(/\/+$/, "", home)
-                 short = home ~ /^\/var\/home\// ? substr(home, 5) : "" }
-         { line = length(home) > 1 ? swap($0, home) : $0
-           if (short != "") line = swap(line, short)
-           print line; fflush() }'
+gamelog_details() {
+    # KytyPS5-Native's own lines: the size the game gets and its GPU helper.
+    local resolution fullscreen helper ini="${XDG_CONFIG_HOME:-$HOME/.config}/Kyty/Kyty.ini"
+    if [ -n "$LAUNCHER" ]; then
+        resolution=$(sed -n 's/^screen_resolution=//p' "$ini" 2>/dev/null | head -n 1) || true
+        fullscreen=$(sed -n 's/^fullscreen_enabled=//p' "$ini" 2>/dev/null | head -n 1) || true
+        note INFO "Game size: set in KytyPS5-Native's own window, screen_resolution=${resolution:-not set}, fullscreen_enabled=${fullscreen:-not set}."
+    elif [ -n "$width$height" ]; then
+        note INFO "Game size: ${width:-not given}x${height:-not given}, from --screen-width and --screen-height."
+    else
+        note INFO "Game size: not given, so KytyPS5-Native's own default applies."
+    fi
+    if command -v systemctl >/dev/null 2>&1; then
+        helper=$(systemctl show kyty-lodhw.service -p LoadState -p ActiveState --value 2>/dev/null | paste -sd ' ') ||
+            helper=""
+        case $helper in
+            "not-found "*|"") note INFO "GPU helper kyty-lodhw: not installed." ;;
+            *) note INFO "GPU helper kyty-lodhw: ${helper#* }." ;;
+        esac
+    fi
 }
-printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
-printf '%s INFO KytyPS5-Native started: %s\n' "$stamp" "$*" | private_lines >>"$EMULATOR_LOG"
-exec 3> >(private_lines >>"$EMULATOR_LOG")
-writer=$!
-emulator=""
-trap '[ -z "$emulator" ] || kill -TERM "$emulator" 2>/dev/null || true' TERM INT
-trap '[ -z "$emulator" ] || kill -HUP "$emulator" 2>/dev/null || true' HUP
-"$EMULATOR" "$@" <&0 >&3 2>&3 &
-emulator=$!
-status=0
-wait "$emulator" || status=$?
-while kill -0 "$emulator" 2>/dev/null; do        # the wait above was cut short by a stop passed on: wait again
-    status=0
-    wait "$emulator" || status=$?
-done
-exec 3>&-
-wait "$writer" 2>/dev/null || true             # its last lines written, a last one without a newline ended
-printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
-printf '%s INFO KytyPS5-Native ended (exit code %s).\n' "$stamp" "$status" >>"$EMULATOR_LOG"
-exit "$status"
+gamelog_run "$PROGRAM" "$@"

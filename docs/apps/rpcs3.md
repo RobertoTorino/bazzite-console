@@ -58,6 +58,9 @@ and red when not. Hold the pointer over a state to read it in full.
 - **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds
 - **Steam**: green while Steam runs and is signed in, red when it is not
 
+When the window opens without a controller, a desktop notification says so too. It asks you to switch the
+controller on or press its PS button.
+
 A game started from Steam reads the controller that is connected when it starts. So switch yours on before you
 start a game, or press its PS button to wake it. When Steam starts a game without a controller, the app also says
 so in a desktop notification. A game in Steam starts only while Steam is signed in. So start Steam and sign in
@@ -288,10 +291,33 @@ the file and the View logs tab and removes the three older files. The log holds 
 keeps it; `--purge` removes it.
 
 Two buttons sit above the log. **PS5 RPCS3 Manager** shows the app's own log. **RPCS3** shows what RPCS3
-printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-rpcs3-manager/emulator.log`. Each
-game's part opens with a line that says how the wrapper started RPCS3. It ends with a line that gives RPCS3's exit
-code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-rpcs3-manager/emulator.log`.
+Every line starts with its time and a level: INFO, WARNING or ERROR. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
 the three older files. With **RPCS3** chosen, **Clear logs** empties that log and removes its three older files.
+
+Each game's part opens with these lines, written before the game starts:
+
+- how the wrapper started RPCS3
+- the RPCS3 build
+- the board by its name, with its BIOS
+- the processor, its threads and the kernel
+- the game and where it is
+- each controller, or a warning that none is connected
+- the session, such as Wayland on KDE
+- each connected display with its name and preferred mode
+- the desktop's mode, such as 1920x1080 at 120 Hz
+- the memory and swap left
+
+It ends with these lines:
+
+- the exit code and the signal that ended it, as an error for a crash
+- how long the game ran
+- the memory and swap left
+- the system log's out-of-memory kills, GPU hangs, resets and faults, and core dumps while the game ran
+
+A line RPCS3 prints is an ERROR when it starts with error or tells of a crash. It is a WARNING when it starts with
+warning or tells of something that failed. A game can be killed together with the wrapper that logs it. The next
+start then says so first, with what the system log has from that start on.
 
 ## RPCN
 

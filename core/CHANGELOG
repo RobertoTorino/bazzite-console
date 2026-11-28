@@ -1,3 +1,15 @@
+Changelog: 28-11-2026 15:53:09
+
+Fixed. gamelog.sh names bash as its shell for shellcheck, so the shell check in CI passes.
+
+Changelog: 28-11-2026 15:48:05
+
+Added. platform.notify sends a desktop notification through notify-send, as the run wrappers do (owner, 28-11-2026).
+
+Changelog: 28-11-2026 15:36:57
+
+Added. gamelog.sh writes the emulator log of the game managers' run wrappers (owner, 28-11-2026). Every line has the time and a level: INFO, WARNING or ERROR. Before the game it names the build, the board by its host name, the processor, the game and each controller. It also gives the session, each display by its EDID name, the desktop's mode and the memory left. After the game it gives the exit code with its signal, the time the game ran and the memory left. It copies the system log's out-of-memory kills, GPU faults and core dumps from that time. A start whose wrapper was killed with the game is reported at the next start. No serial number or MAC address is read.
+
 Changelog: 28-11-2026 13:22:41
 
 Version 4.9.2.

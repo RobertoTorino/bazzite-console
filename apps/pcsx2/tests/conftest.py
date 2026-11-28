@@ -155,3 +155,12 @@ def fixed_time(monkeypatch):
     for module in (ps2mc, ps2mc_dir, ps2save, mymc):
         if hasattr(module, "tod_now"):
             monkeypatch.setattr(module, "tod_now", tod_now)
+
+
+@pytest.fixture(autouse=True)
+def notifications(monkeypatch):
+    """No real desktop notification from a window in the tests: what each would say is kept here."""
+    from pcsx2_manager.main_window import MainWindow
+    sent: list[tuple] = []
+    monkeypatch.setattr(MainWindow, "notify_desktop", staticmethod(lambda *args: sent.append(args) or True))
+    return sent

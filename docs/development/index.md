@@ -130,7 +130,7 @@ It reads the jobs from the workflow itself and runs its plan job as GitHub does,
 `origin/main`, so it runs the same jobs the push will, and a new app needs no change. The first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's
 runner has) and Remote Play's FFmpeg; both are kept, with the venvs and the logs, in
 `~/.cache/bazzite-console-ci-local`. FFmpeg is built again when `apps/remoteplay/native/ffmpeg/build.sh` changes, as GitHub's cache
-is keyed on that file. It works on a copy of the checkout with every change staged, as the commit will
+is keyed on that file. The build folder of the native job's cargo is kept in the cache folder too. So cargo builds only what changed since the last run. The folder starts empty again when `Cargo.lock` changes, as GitHub's cache is keyed on that file. It works on a copy of the checkout with every change staged, as the commit will
 have it. The copy is named as the checkout, as GitHub's is named after the repository. The installers job gets a copy of its own,
 made before any job starts. The other jobs write in theirs while they run, such as pytest's cache in an app's folder.
 An installer copies an app's folder with tar, which stops when the folder changes during the copy. On GitHub each
@@ -140,6 +140,7 @@ it ends, as the two would share the venvs and the logs. Within a run the jobs go
 1.5 GB, at least two; `--workers N` sets the number yourself), except a job that compiles (`native`, with
 cargo): it runs after the others, alone, since its compilers need the computer's memory for themselves. The push commands Nexus Release Tool shows run it first
 (`tools/ci-local.sh && git push`): no push when a job fails.
+Each job's line shows when the job ends, with the seconds it ran.
 
 Before each run it removes what earlier runs and tests left on the computer (`tools/clean_caches.py`): a venv no run
 used for a week, the files pytest kept in `/tmp` of runs a day ago or longer, an AI assistant's scratch folders in
@@ -567,6 +568,7 @@ Code shared by the suite's apps (`core/`). Nothing in it imports an app: each ap
 | `card` | `CardWindow`: the template of a small window, with the header's two symbols and rows of five even places |
 | `action_tab` | `ActionTab`: the last tab of a `QTabWidget` as a button (Start game in the game managers): a click acts and the open page stays open |
 | `log_page` | `LogPage`, the View logs tab of a game manager. Two radio buttons choose the app's log or `emulator.log` beside it, which the run wrapper writes. Clear logs empties the log shown |
+| `gamelog.sh` | The emulator log of a game manager's run wrapper. The wrapper sources it and ends with `gamelog_run`. It writes the game's build, board, game, controllers, displays and memory before the start. After the end it writes the exit code, the time the game ran and the system log's crashes. Every line has its time and a level |
 | `settings` | `open_settings(info)` at each app's existing file, geometry helpers, `SettingsStore` (typed defaults) |
 | `help` | `HelpView` (the content stays in the app) |
 | `updates` | `latest_release()` (with a tag prefix for the per-app tags: GitHub's release pages, newest first, are followed until one holds the prefix, since other releases can fill the first page), `UpdateStatus`, `UpdateChecker` (any job, off the GUI thread) |

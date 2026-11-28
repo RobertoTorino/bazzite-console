@@ -65,6 +65,17 @@ def xdg_open(target: str | Path) -> bool:
     return True
 
 
+def notify(app: str, title: str, text: str, icon: str = "input-gaming") -> bool:
+    """A desktop notification from *app* (notify-send), as the run wrappers send one; False when notify-send is
+    missing."""
+    sender = shutil.which("notify-send")
+    if sender is None:
+        return False
+    subprocess.Popen([sender, "-a", app, "-i", icon, title, text], start_new_session=True, stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return True
+
+
 def show_in_folder(path: str | Path) -> bool:
     """The folder of the file at *path* in the file manager, with the file selected: the desktop's file manager
     over D-Bus (org.freedesktop.FileManager1, Dolphin on Bazzite), else the folder opened with xdg-open. False when nothing opened it. A saved screenshot shows itself so (owner, 06-11-2026)."""

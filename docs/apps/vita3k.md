@@ -64,6 +64,9 @@ and red when not. Hold the pointer over a state to read it in full.
 - **Controller**: **Controller connected**, or **No controller** when none is, checked again every few seconds
 - **Steam**: green while Steam runs and is signed in, red when it is not
 
+When the window opens without a controller, a desktop notification says so too. It asks you to switch the
+controller on or press its PS button.
+
 A game started from Steam reads the controller that is connected when it starts, so switch yours on first. A game
 in Steam starts only while Steam is signed in. So start Steam and sign in before you start a game.
 
@@ -241,10 +244,33 @@ the file and the View logs tab and removes the three older files. The log holds 
 SteamGridDB key. `install.sh --uninstall` keeps it; `--purge` removes it.
 
 Two buttons sit above the log. **PS5 Vita3K Manager** shows the app's own log. **Vita3K** shows what Vita3K
-printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-vita3k-manager/emulator.log`. Each
-game's part opens with a line that says how the wrapper started Vita3K. It ends with a line that gives Vita3K's exit
-code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
+printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-vita3k-manager/emulator.log`.
+Every line starts with its time and a level: INFO, WARNING or ERROR. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps
 the three older files. With **Vita3K** chosen, **Clear logs** empties that log and removes its three older files.
+
+Each game's part opens with these lines, written before the game starts:
+
+- how the wrapper started Vita3K
+- the Vita3K build
+- the board by its name, with its BIOS
+- the processor, its threads and the kernel
+- the game, by its title ID
+- each controller, or a warning that none is connected
+- the session, such as Wayland on KDE
+- each connected display with its name and preferred mode
+- the desktop's mode, such as 1920x1080 at 120 Hz
+- the memory and swap left
+
+It ends with these lines:
+
+- the exit code and the signal that ended it, as an error for a crash
+- how long the game ran
+- the memory and swap left
+- the system log's out-of-memory kills, GPU hangs, resets and faults, and core dumps while the game ran
+
+A line Vita3K prints is an ERROR when it starts with error or tells of a crash. It is a WARNING when it starts with
+warning or tells of something that failed. A game can be killed together with the wrapper that logs it. The next
+start then says so first, with what the system log has from that start on.
 
 ## From a terminal
 

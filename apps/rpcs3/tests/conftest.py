@@ -148,3 +148,12 @@ class FakeRpcn:
             sock.sendall(header.pack(2, 7, header.size + 1, 0) + b"\0")             # a notification first
             sock.sendall(header.pack(1, command, header.size + 1, number) + bytes([self.error]))
             sock.recv(64)                                                         # until the client closes
+
+
+@pytest.fixture(autouse=True)
+def notifications(monkeypatch):
+    """No real desktop notification from a window in the tests: what each would say is kept here."""
+    from rpcs3_manager.main_window import MainWindow
+    sent: list[tuple] = []
+    monkeypatch.setattr(MainWindow, "notify_desktop", staticmethod(lambda *args: sent.append(args) or True))
+    return sent

@@ -4,6 +4,7 @@ fills in, which jobs a name selects, and the requirement files that key a job's 
 
 from __future__ import annotations
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -210,3 +211,49 @@ def test_a_cache_is_a_hit_only_under_its_key(tmp_path, monkeypatch):
     (work / "build.sh").write_text("three", encoding="utf-8")
     assert not ci_local.run_job(ci_local.Job("native", spec), "").ok
     assert not ci_local.cache_hit(*ci_local.cache_of("kept", spec["steps"], ci_local.Job("native", spec), ""))
+
+
+def test_a_cached_folder_in_the_checkout_is_kept_between_runs(tmp_path, monkeypatch):
+    """A folder in the checkout that an actions/cache step names (native/target) outlives the copy, which every run
+    makes new, while the key stays the same; another key starts it empty, as on GitHub (owner, 28-11-2026: cargo
+    built every crate again in every run)."""
+    work, cache = tmp_path / "work", tmp_path / "cache"
+    work.mkdir()
+    (work / "Cargo.lock").write_text("one", encoding="utf-8")
+    monkeypatch.setattr(ci_local, "WORK", work)
+    monkeypatch.setattr(ci_local, "CACHE", cache)
+    spec = {"runs-on": "ubuntu-latest", "steps": [
+        {"uses": "actions/cache@v6",
+         "with": {"path": "~/.cargo/registry\nnative/target\n", "key": "cargo-${{ hashFiles('Cargo.lock') }}"}},
+        {"run": "mkdir -p native/target && echo built >> native/target/builds"}]}
+
+    def builds() -> int:
+        shutil.rmtree(work / "native", ignore_errors=True)        # a new copy, as prepare_copy makes it
+        assert ci_local.run_job(ci_local.Job("native", spec), "").ok
+        return len((work / "native" / "target" / "builds").read_text(encoding="utf-8").split())
+
+    assert builds() == 1
+    assert builds() == 2                                           # the same key: what was built is there
+    (work / "Cargo.lock").write_text("two", encoding="utf-8")
+    assert builds() == 1                                           # another key: an empty folder
+    assert not (cache / "kept" / "native" / "~").exists()          # the home folder's paths stay where they are
+
+
+def test_each_job_is_named_as_it_ends(monkeypatch, capsys):
+    """A job's line comes when the job ends, not after the jobs before it in the list (owner, 28-11-2026: a long
+    job held back the lines of the jobs after it, and they came at once)."""
+    import time
+
+    lasts = {"slow": 0.6, "quick": 0.0, "middle": 0.3}
+    jobs = [ci_local.Job(name, {"runs-on": "ubuntu-latest", "steps": []}) for name in lasts]
+    monkeypatch.setattr(ci_local, "prepare_copy", lambda: "")
+    monkeypatch.setattr(ci_local, "all_jobs", lambda *args, **kwargs: jobs)
+
+    def run_job(job, base, root=None):
+        time.sleep(lasts[job.name])
+        return ci_local.Result(job.name, True, lasts[job.name])
+
+    monkeypatch.setattr(ci_local, "run_job", run_job)
+    assert ci_local.main(["--workers", "3", *lasts]) == 0
+    named = [line.split()[1] for line in capsys.readouterr().out.splitlines() if line.startswith("  ok")]
+    assert named == ["quick", "middle", "slow"]

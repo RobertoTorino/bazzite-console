@@ -875,3 +875,22 @@ def test_view_logs_shows_the_emulators_log_too(qapp, folders):
     page.app_button.click()
     assert "the app's line" in window.output.toPlainText()
     window.close()
+    window.close()
+
+
+def test_a_window_without_a_controller_says_so_on_the_desktop_once(qapp, folders, tmp_path, notifications):
+    """Opened without a controller, the window sends one desktop notification (owner, 28-11-2026); a controller
+    gone later, or a window opened with one, sends none."""
+    devices = tmp_path / "devices"
+    devices.write_text('I: Bus=0003 Vendor=054c Product=0ce6 Version=8111\nN: Name="DualSense"\n'
+                       "H: Handlers=event3 js0\n")
+    window = _window(folders, devices=devices)
+    devices.write_text("")
+    window.show_controller()
+    assert notifications == []
+    window.close()
+    window = _window(folders, devices=devices)
+    window.show_controller()
+    assert [args[1] for args in notifications] == ["No controller connected"]
+    assert "PS button" in notifications[0][2]
+    window.close()

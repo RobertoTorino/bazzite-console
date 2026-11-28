@@ -149,3 +149,12 @@ def write_shad_files(home: Path) -> Path:
 @pytest.fixture
 def shad_files(tmp_path):
     return write_shad_files(tmp_path / "shadPS4")
+
+
+@pytest.fixture(autouse=True)
+def notifications(monkeypatch):
+    """No real desktop notification from a window in the tests: what each would say is kept here."""
+    from shadps4_manager.main_window import MainWindow
+    sent: list[tuple] = []
+    monkeypatch.setattr(MainWindow, "notify_desktop", staticmethod(lambda *args: sent.append(args) or True))
+    return sent

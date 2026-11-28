@@ -93,3 +93,12 @@ def settings_dir(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     monkeypatch.setenv("XDG_CURRENT_DESKTOP", "KDE")
     return tmp_path / "settings"
+
+
+@pytest.fixture(autouse=True)
+def notifications(monkeypatch):
+    """No real desktop notification from a window in the tests: what each would say is kept here."""
+    from vita3k_manager.main_window import MainWindow
+    sent: list[tuple] = []
+    monkeypatch.setattr(MainWindow, "notify_desktop", staticmethod(lambda *args: sent.append(args) or True))
+    return sent

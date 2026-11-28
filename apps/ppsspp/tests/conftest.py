@@ -189,3 +189,12 @@ def settings_dir(tmp_path, monkeypatch):
 @pytest.fixture
 def memstick(tmp_path):
     return make_memstick(tmp_path / "ppsspp")
+
+
+@pytest.fixture(autouse=True)
+def notifications(monkeypatch):
+    """No real desktop notification from a window in the tests: what each would say is kept here."""
+    from ppsspp_manager.main_window import MainWindow
+    sent: list[tuple] = []
+    monkeypatch.setattr(MainWindow, "notify_desktop", staticmethod(lambda *args: sent.append(args) or True))
+    return sent

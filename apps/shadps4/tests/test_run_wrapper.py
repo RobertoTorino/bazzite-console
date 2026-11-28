@@ -51,9 +51,10 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="a bash script f
 def _printed(log: Path) -> dict[str, str]:
     """What the fake emulator printed, from the app's emulator log, where the wrapper writes it (owner, 26-11-2026):
     its own started and ended lines left out. The log is removed, so the next start has its own."""
-    lines = [line for line in log.read_text().splitlines() if not re.match(r"\d\d-\d\d-\d{4} ", line)]
+    found = [re.fullmatch(r"\d\d-\d\d-\d{4} \d\d:\d\d:\d\d INFO (\w+)=(.*)", line)
+             for line in log.read_text().splitlines()]
     log.unlink()
-    return dict(line.split("=", 1) for line in lines)
+    return {match[1]: match[2] for match in found if match}
 
 
 @pytest.fixture
@@ -70,7 +71,7 @@ def run(tmp_path):
         devices.write_text(inputs)
         environ = {k: v for k, v in os.environ.items()
                    if not k.startswith("SDL_") and k not in ("SteamGameId", "WAYLAND_DISPLAY", "DISPLAY")}
-        environ.update(XDG_DATA_HOME=str(tmp_path / "data"), PS5_INPUT_DEVICES=str(devices), **env)
+        environ.update(XDG_DATA_HOME=str(tmp_path / "data"), PS5_INPUT_DEVICES=str(devices), GAMELOG_WAIT="0", **env)
         done = subprocess.run(["/bin/bash", str(WRAPPER), *args], capture_output=True, text=True, env=environ,
                               check=True)
         return _printed(tmp_path / "data" / "ps5-shadps4-manager" / "emulator.log")
@@ -111,7 +112,7 @@ def test_the_game_started_goes_to_the_apps_log(run, tmp_path):
     import re
     tools = tmp_path / "tools"
     tools.mkdir()
-    for name in ("awk", "dirname", "grep", "ldconfig"):
+    for name in ("awk", "dirname", "grep", "ldconfig", "readlink"):
         found = subprocess.run(["bash", "-c", f"command -v {name}"], capture_output=True, text=True)
         if found.stdout.strip():
             (tools / name).symlink_to(found.stdout.strip())
@@ -153,7 +154,7 @@ def _emulator(tmp_path: Path, script: str) -> tuple[Path, dict[str, str]]:
     appimage.chmod(0o755)
     environ = {k: v for k, v in os.environ.items() if not k.startswith(("SDL_", "QT_")) and k != "SteamGameId"}
     environ.update(XDG_DATA_HOME=str(tmp_path / "data"), HOME=str(tmp_path / "home"),
-                   PS5_INPUT_DEVICES=str(tmp_path / "none"))
+                   PS5_INPUT_DEVICES=str(tmp_path / "none"), GAMELOG_WAIT="0")
     return tmp_path / "data" / "ps5-shadps4-manager" / "emulator.log", environ
 
 
@@ -169,10 +170,14 @@ def test_what_the_emulator_prints_goes_to_its_log(tmp_path):
     done = subprocess.run(["/bin/bash", str(WRAPPER), f"{home}/game"], capture_output=True, text=True, env=environ)
     assert done.returncode == 3 and done.stdout == ""
     lines = log.read_text().splitlines()
-    assert all(re.fullmatch(r"\d\d-\d\d-\d{4} \d\d:\d\d:\d\d", line[:19]) for line in (lines[0], lines[-1]))
-    assert [lines[0][20:], *lines[1:-1], lines[-1][20:]] == [
-        "INFO shadPS4 started: ~/game", "out ~/x", "error at ~", f"not {home}2", "last",
-        "INFO shadPS4 ended (exit code 3)."]
+    assert all(re.match(r"\d\d-\d\d-\d{4} \d\d:\d\d:\d\d (INFO|WARNING|ERROR) ", line) for line in lines)
+    lines = [line[20:] for line in lines]
+    assert lines[0] == "INFO shadPS4 started: ~/game"
+    printed = ["INFO out ~/x", "ERROR error at ~", f"INFO not {home}2", "INFO last"]
+    assert [line for line in lines if line in printed] == printed
+    ended = next(i for i, line in enumerate(lines) if "shadPS4 ended" in line)
+    assert re.fullmatch(r"WARNING shadPS4 ended \(exit code 3\) after \d+ s\.", lines[ended])
+    assert lines.index("INFO last") < ended
 
 
 def test_a_stop_is_passed_on(tmp_path):
@@ -189,8 +194,8 @@ def test_a_stop_is_passed_on(tmp_path):
             time.sleep(0.05)
         wrapper.send_signal(signal)
         assert wrapper.wait(timeout=10) == 5
-        assert log.read_text().splitlines()[-2:][0] == "stopped"
-        assert log.read_text().endswith("INFO shadPS4 ended (exit code 5).\n")
+        assert any(line.endswith(" INFO stopped") for line in log.read_text().splitlines())
+        assert re.search(r"WARNING shadPS4 ended \(exit code 5\) after \d+ s\.\n", log.read_text())
 
 
 def test_the_log_turns_over_at_1_mb(tmp_path):
@@ -203,4 +208,4 @@ def test_the_log_turns_over_at_1_mb(tmp_path):
     subprocess.run(["/bin/bash", str(WRAPPER)], env=environ, capture_output=True, check=True)
     assert log.with_name("emulator.log.1").stat().st_size == 1_000_000
     assert [log.with_name(f"emulator.log.{n}").read_text() for n in (2, 3)] == ["old 1", "old 2"]
-    assert "new" in log.read_text() and len(log.read_text()) < 1000
+    assert " INFO new\n" in log.read_text() and len(log.read_text()) < 10_000     # a new file

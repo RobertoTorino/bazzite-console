@@ -1,3 +1,11 @@
+Changelog: 28-11-2026 16:17:39
+
+Fixed. tools/ci-local.sh names each job when it ends (owner, 28-11-2026). Before, the lines came in the list's order, so a long job held back the lines of the jobs after it.
+
+Changelog: 28-11-2026 16:06:09
+
+Fixed. tools/ci-local.sh keeps the native job's cargo build folder between runs, as GitHub's cargo cache does (owner, 28-11-2026). Every run built all crates again, about 30 seconds of each full run. The folder starts empty again when Cargo.lock changes.
+
 Changelog: 28-11-2026 12:38:25
 
 Fixed. The wiki, the README, DESIGN.md, ALL-TESTS.md and the tools name the emulator managers with the device's name in front, such as PS5 PCSX2 Manager (owner, 28-11-2026). The wiki's navigation lists the Gaming apps in the new alphabetical order. The portal's tiles show the short names as before, so tools/portal-tour.stamp marks the wiki's Portal Tour as current.

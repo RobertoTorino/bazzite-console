@@ -1,3 +1,23 @@
+Changelog: 28-11-2026 15:54:35
+
+Fixed. The run wrapper points shellcheck at core's gamelog.sh from the repository's root, so the shell check in CI reads it.
+
+Changelog: 28-11-2026 15:48:05
+
+Added. When the window opens without a controller, a desktop notification says so and asks to switch it on or press its PS button (owner, 28-11-2026). The app's log notes it as a warning.
+
+Changelog: 28-11-2026 15:36:57
+
+Added. The emulator log is now written by core's gamelog.sh, as in the other game managers, and names the board by its host name (owner, 28-11-2026).
+
+Changelog: 28-11-2026 15:14:28
+
+Added. Every line of the emulator log now has the time and a level: INFO, WARNING or ERROR (owner, 28-11-2026). What KytyPS5-Native prints gets its level from its words, and its own ERROR or WARNING in front goes. Before the start the log also names the board, the processor, the game with its title ID and version, and each controller. Each display is named as its EDID gives it, without its serial number. No controller is a WARNING. A game that ends by a signal other than a stop is an ERROR, another exit code than 0 a WARNING.
+
+Changelog: 28-11-2026 15:05:55
+
+Added. The emulator log says what each game ran with and how it ended (owner, 28-11-2026). Before the start it names the build, the session, the displays and the desktop's mode. It also gives the game's size, the memory left and the GPU helper's state. After the end it gives the exit code with its signal, the time the game ran and the memory left. It then copies what the system log has from that time on out-of-memory kills, GPU faults and core dumps. A start whose wrapper was killed with the game is reported at the next start. KytyPS5-Native's own window now writes to the emulator log too, with the screen size set in its Kyty.ini.
+
 Changelog: 28-11-2026 13:22:41
 
 Release 0.1.1.
