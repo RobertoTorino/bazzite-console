@@ -8,8 +8,8 @@
 [apps.board]
 name = "PS5 Board Test"
 summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
-tag = "ps5-board-v0.14.1"
-sha256 = "e02d2ef2040070312e4308f03a5c974f27a2ed302d9b579a8345e2c288d79e49"
+tag = "ps5-board-v0.14.2"
+sha256 = ""
 required = true
 changes_board = false
 category = "sustainable"
@@ -21,8 +21,8 @@ launch = [["Open", "~/.local/bin/ps5-board-test"]]
 [apps.upscaler]
 name = "PS5 Upscaler Manager"
 summary = "Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games."
-tag = "ps5-upscaler-v0.10.1"
-sha256 = "92e2ee2c8f5bbbe08f37a7b173b5bc52699e776bda2453189dc4ff2c4fe2f5b4"
+tag = "ps5-upscaler-v0.10.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "graphics"
@@ -34,8 +34,8 @@ launch = [["Open", "~/.local/bin/ps5-upscaler"]]
 [apps.rpcs3]
 name = "PS5 RPCS3 Manager"
 summary = "Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode."
-tag = "ps5-rpcs3-v1.9.1"
-sha256 = "1c585b4f3fa335de36d7db82d65f5dfd8401b8e23e5b42a546bb248c15879bdd"
+tag = "ps5-rpcs3-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -47,8 +47,8 @@ launch = [["Open", "~/.local/bin/ps5-rpcs3-manager"]]
 [apps.remoteplay]
 name = "Remote Play"
 summary = "Find, wake, and register PS4 and PS5 consoles on the network, and stream Remote Play."
-tag = "ps5-remoteplay-v1.9.1"
-sha256 = "b6fb5b5c357bdb0abe0b158fed50256a714ee40b8390e490b3105f2dec80e8f7"
+tag = "ps5-remoteplay-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -60,8 +60,8 @@ launch = [["Open", "~/.local/bin/ps5-remoteplay"]]
 [apps.clb]
 name = "XBOX Remote Play"
 summary = "Stream XBOX consoles or XBOX Cloud Gaming after signing in with a Microsoft account."
-tag = "ps5-clb-v1.9.1"
-sha256 = "d0afed96283ed4b1c4aac0f79a11fe2ddb9b55ea091e15778e53ced6828cd2a9"
+tag = "ps5-clb-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -73,8 +73,8 @@ launch = [["Open", "~/.local/bin/ps5-xbox-remoteplay"]]
 [apps.shadps4]
 name = "PS5 shadPS4 Manager"
 summary = "Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode."
-tag = "ps5-shadps4-v1.9.1"
-sha256 = "5ccbff4f612a06e8e222c09c7f9f9edd27890bc4cece40f3bbde79790a9fa1f9"
+tag = "ps5-shadps4-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -86,8 +86,8 @@ launch = [["Open", "~/.local/bin/ps5-shadps4-manager"]]
 [apps.datstation]
 name = "PS5 DatStation"
 summary = "Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news."
-tag = "ps5-datstation-v1.9.1"
-sha256 = "8a62d549a4fa3cb6d0b2b2afad365bc086bfa1239ad50baf9dacb7878cb77d81"
+tag = "ps5-datstation-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -99,8 +99,8 @@ launch = [["Open", "~/.local/bin/ps5-datstation"]]
 [apps.ppsspp]
 name = "PS5 PPSSPP Manager"
 summary = "Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode."
-tag = "ps5-ppsspp-v1.9.1"
-sha256 = "3d5e084ade72f9e674898e9b81129fc7056b78a1b756cdd4f81a5e850406c198"
+tag = "ps5-ppsspp-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -112,8 +112,8 @@ launch = [["Open", "~/.local/bin/ps5-ppsspp-manager"]]
 [apps.pcsx2]
 name = "PS5 PCSX2 Manager"
 summary = "Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode."
-tag = "ps5-pcsx2-v1.9.1"
-sha256 = "9934d2d56bd96d42238ffc44361e8b16b4fa17cc3d48edf1826a7f5d44e325a4"
+tag = "ps5-pcsx2-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -125,8 +125,8 @@ launch = [["Open", "~/.local/bin/ps5-pcsx2-manager"]]
 [apps.vita3k]
 name = "PS5 Vita3K Manager"
 summary = "Install Vita3K for PS Vita games and add installed titles to Game Mode."
-tag = "ps5-vita3k-v1.10.1"
-sha256 = "85a70ffba7a15780040a723fdd4b77cc6a8a16b1d5cf84f72c0d75fecafb3271"
+tag = "ps5-vita3k-v1.10.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -138,8 +138,8 @@ launch = [["Open", "~/.local/bin/ps5-vita3k-manager"]]
 [apps.xenia]
 name = "PS5 Xenia Manager"
 summary = "Install Xenia Canary for XBOX 360 games and add games to Game Mode."
-tag = "ps5-xenia-v1.10.1"
-sha256 = "9b7d5a0086f0762119f0ff0975c0061bd14059e514db64545e4a23c5db0cc06b"
+tag = "ps5-xenia-v1.10.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"
@@ -151,8 +151,8 @@ launch = [["Open", "~/.local/bin/ps5-xenia-manager"]]
 [apps.sftp]
 name = "PS5 SFTP Tools"
 summary = "Transfer files over SFTP and manage SSH servers on Bazzite hosts."
-tag = "ps5-sftp-v1.10.1"
-sha256 = "717eb4a4e5aacedd6d6586f2b2747ac1d4e96d233e01846077162fecb5d091f0"
+tag = "ps5-sftp-v1.10.2"
+sha256 = ""
 required = false
 changes_board = true
 board_change = "Starting or configuring an SSH server changes the local or remote Bazzite host. Starting the local server enables it at boot and may open the firewall for SSH. Review access and firewall rules before enabling it."
@@ -165,8 +165,8 @@ launch = [["Open", "~/.local/bin/ps5-sftp-tools"]]
 [apps.webcam]
 name = "PS5 Webcam"
 summary = "Use supported Sony PlayStation cameras as webcams on Bazzite."
-tag = "ps5-webcam-v1.10.1"
-sha256 = "d38b1c76ace5c9b8ce615bb1d8979f3642af1e315f98a29a84712ba9d68c59c9"
+tag = "ps5-webcam-v1.10.2"
+sha256 = ""
 required = false
 changes_board = true
 board_change = "Allow access installs a system-wide udev rule for supported camera identifiers. A per-user service loads camera firmware when the camera connects. The udev rule is removed when the app is uninstalled."
@@ -179,8 +179,8 @@ launch = [["Open", "~/.local/bin/ps5-webcam"]]
 [apps.controller]
 name = "PS5 Controller"
 summary = "Manage DualSense and DualSense Edge controllers on Bazzite."
-tag = "ps5-controller-v1.10.1"
-sha256 = "3f74f44b519c0b9c1614a643ef2b4edbc0b3e398b7067f80d8b061883b74a6a2"
+tag = "ps5-controller-v1.10.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "utilities"
@@ -192,8 +192,8 @@ launch = [["Open", "~/.local/bin/ps5-controller"]]
 [apps.ssd]
 name = "PS5 SSD Check"
 summary = "Inspect drive health and information exposed by Bazzite; run an optional filesystem speed test."
-tag = "ps5-ssd-v1.10.1"
-sha256 = "6dedfeab5f3ede65bccf80d4ab026dd6ad2b4b89c8d1588b1dd14b9ef2f40372"
+tag = "ps5-ssd-v1.10.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "utilities"
@@ -205,8 +205,8 @@ launch = [["Open", "~/.local/bin/ps5-ssd-check"]]
 [apps.overlay]
 name = "PS5 System Overlay"
 summary = "A small always-on-top window with the PS5's live CPU, GPU, memory, fan and temperature values."
-tag = "ps5-overlay-v1.9.1"
-sha256 = "ddfa16901f12370b47511a735d780885b85a61c6f9ba29198e4c2ea8b52d2c4f"
+tag = "ps5-overlay-v1.9.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "sustainable"
@@ -218,8 +218,8 @@ launch = [["Open", "~/.local/bin/ps5-system-overlay"]]
 [apps.fan]
 name = "PS5 Fan Controller"
 summary = "The PS5's temperatures and fan, and a thermal guard that warns, cools and shuts down cleanly at a critical temperature."
-tag = "ps5-fan-v2.9.1"
-sha256 = "c1ca5266c06fe84512536e73f7ade7a2b5f0d48100d8c2e1712a0e37ae95d65b"
+tag = "ps5-fan-v2.9.2"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
@@ -266,8 +266,8 @@ launch = [["Open", "~/.local/bin/ps5-bisect-gui"]]
 [apps.cores]
 name = "PS5 Core Unlock"
 summary = "Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock."
-tag = "ps5-cores-v1.0.1"
-sha256 = "1e5bc1f1c8c51bd5b4684a96e5425eaaf00823c67a359a961f6abe3d1bd5c0e2"
+tag = "ps5-cores-v1.0.2"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
@@ -317,8 +317,8 @@ launch = [["Open", "~/.local/bin/ps5-governor-manager"]]
 [apps.cec]
 name = "PS5 CEC Manager"
 summary = "Turn the TV on and off with the PS5, switch its input and use its remote, over HDMI-CEC."
-tag = "ps5-cec-v2.10.1"
-sha256 = "2b8305934a3af06430921a40f40f7490fb385c9efb23a7aac7109435d09708b1"
+tag = "ps5-cec-v2.10.2"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """
@@ -340,8 +340,8 @@ launch = [["Open", "~/.local/bin/ps5-cec-manager"]]
 [apps.bluetooth]
 name = "PS5 Bluetooth"
 summary = "Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed."
-tag = "ps5-bluetooth-v0.10.1"
-sha256 = "cafceed0ae36f42c9d6ff9d19136e1e89cd9b47a53b677accc1ceab8f30949ea"
+tag = "ps5-bluetooth-v0.10.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "utilities"
@@ -353,8 +353,8 @@ launch = [["Open", "~/.local/bin/ps5-bluetooth"]]
 [apps.quickfix]
 name = "PS5 Quickfix"
 summary = "Small quickfixes for one job each: Board Test's optional tools, MangoHud's config, the memory map, the journal, Ethernet First and the boot command line. Always installed."
-tag = "ps5-quickfix-v0.10.0"
-sha256 = "3c2cac5540987ed3c894316d7649978a2ed085f8a6872a3c1fbe81d15b40a60c"
+tag = "ps5-quickfix-v0.10.1"
+sha256 = ""
 required = true
 changes_board = false
 category = "utilities"
@@ -434,8 +434,8 @@ saved. Nothing is written to the board's firmware. To undo it, edit the line bac
 [apps.password]
 name = "PS5 Password Generator"
 summary = "Makes a random password of 8 or 15 characters with a capital letter, a small letter, a number and a special character, and keeps it nowhere."
-tag = "ps5-password-v0.8.1"
-sha256 = "92693b2235630487fbbd1e07ffe352925430fb4899ff7941ac0d039ce03117e0"
+tag = "ps5-password-v0.8.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "utilities"
@@ -447,8 +447,8 @@ launch = [["Open", "~/.local/bin/ps5-password"]]
 [apps.turing]
 name = "PS5 Turing Screen"
 summary = "CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5\")."
-tag = "ps5-turing-v0.4.1"
-sha256 = "5422696965875814b7a111eaac51f9ae03033c486df8b02abeeadc942cd93f1a"
+tag = "ps5-turing-v0.4.2"
+sha256 = ""
 required = false
 changes_board = false
 category = "utilities"
@@ -460,8 +460,8 @@ launch = [["Open", "~/.local/bin/ps5-turing-screen"]]
 [apps.kytyps5]
 name = "PS5 KytyPS5 Manager"
 summary = "PS5 games with the KytyPS5-Native emulator. It sets up a tested KytyPS5-Native release, checks what the emulator needs from the board, finds your games and adds them to Steam."
-tag = "ps5-kytyps5-v0.1.0"
-sha256 = "dfa280b3d6ee993e5bbde1b56f6c7993a420642648f8b342ae8f4f46092217b0"
+tag = "ps5-kytyps5-v0.1.1"
+sha256 = ""
 required = false
 changes_board = false
 category = "gaming"

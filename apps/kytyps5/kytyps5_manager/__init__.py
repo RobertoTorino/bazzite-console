@@ -3,7 +3,7 @@
 
 APP_NAME = "PS5 KytyPS5 Manager"
 APP_ID = "ps5-kytyps5"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from pathlib import Path
 

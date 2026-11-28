@@ -1,3 +1,7 @@
+Changelog: 28-11-2026 13:22:41
+
+Release 0.14.2.
+
 Changelog: 28-11-2026 11:31:59
 
 Fixed. A comment in development/tools/install-requirements.sh names Nexus Dependencies, the new name of Nexus Deps.

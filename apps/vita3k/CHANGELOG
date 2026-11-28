@@ -1,3 +1,7 @@
+Changelog: 28-11-2026 13:22:41
+
+Release 1.10.2.
+
 Changelog: 28-11-2026 12:38:25
 
 Fixed. The app is called PS5 Vita3K Manager now, with the device's name in front (owner, 28-11-2026). The window, the menu entry, the run script's messages and the wiki use that name. The Steam collection keeps the tag Vita3K Manager, so the shortcuts already in Steam stay in one collection.

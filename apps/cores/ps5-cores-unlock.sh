@@ -33,7 +33,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="1.0.1"
+VERSION="1.0.2"
 SELF=$(readlink -f -- "$0")
 # --install copies the script here so the boot service never executes a user-owned file as root.
 INSTALL_BIN=/usr/local/sbin/ps5-cores-unlock.sh
