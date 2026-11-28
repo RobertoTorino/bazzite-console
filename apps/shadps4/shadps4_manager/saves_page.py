@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Memory cards tab (owner, 18-11-2026: as PCSX2 Manager has one): the saves shadPS4 keeps, each under its
+"""The Memory cards tab (owner, 18-11-2026: as PS5 PCSX2 Manager has one): the saves shadPS4 keeps, each under its
 game's title, the selected save's picture and what the game says of it, and export, import and delete (saves.py).
 A PS4 keeps each save as a folder, so there is no card to choose or to format. Nothing is taken in or deleted while
 shadPS4 runs."""
@@ -59,7 +59,7 @@ class SavesPage(QWidget):
             head.setSectionResizeMode(column, mode)
         self.table.itemSelectionChanged.connect(self._selection_changed)
 
-        # The selected save beside the table: its picture and a few lines about it, as PCSX2 Manager's tab.
+        # The selected save beside the table: its picture and a few lines about it, as PS5 PCSX2 Manager's tab.
         self.picture = QLabel()
         self.picture.setFixedSize(PICTURE, PICTURE)
         self.picture.setAlignment(Qt.AlignmentFlag.AlignCenter)

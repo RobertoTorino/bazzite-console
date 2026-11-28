@@ -2,7 +2,7 @@
 """The PS5 games in the chosen folders: an installed game is a folder with eboot.bin and, beside it,
 sce_sys/param.json with its title, title ID (PPSA00001) and version.
 
-The scan is shadPS4 Manager's (an eboot.bin found below a folder, a path found twice counted once). The title comes
+The scan is PS5 shadPS4 Manager's (an eboot.bin found below a folder, a path found twice counted once). The title comes
 from param.json: localizedParameters holds a titleName per language, and defaultLanguage names the one to take.
 Without param.json the folder's name is the title. KytyPS5-Native starts the game's folder (--game <folder>)."""
 
@@ -13,7 +13,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-MAX_DEPTH = 5                           # as deep as shadPS4 Manager looks for a game in a game folder
+MAX_DEPTH = 5                           # as deep as PS5 shadPS4 Manager looks for a game in a game folder
 
 
 def is_file(path: Path) -> bool:

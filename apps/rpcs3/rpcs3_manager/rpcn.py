@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""RPCN, RPCS3's online service (github.com/RipleyTom/rpcn; owner, 18-11-2026: as shadPS4 Manager has shadNet):
+"""RPCN, RPCS3's online service (github.com/RipleyTom/rpcn; owner, 18-11-2026: as PS5 shadPS4 Manager has shadNet):
 creating an account on an RPCN server and trying a sign-in, as RPCS3's own client speaks to it
 (rpcs3/Emu/NP/rpcn_client.cpp and rpcs3qt/rpcn_settings_dialog.cpp at the build the app brings), and the account in
 RPCS3's own files.

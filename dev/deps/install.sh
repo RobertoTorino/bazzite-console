@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Nexus Deps for the current user: a launcher, an app menu entry, a Desktop icon and the hourly reminder,
+# Installs Nexus Dependencies for the current user: a launcher, an app menu entry, a Desktop icon and the hourly reminder,
 # all starting run.sh in this checkout (Linux). Nothing is copied: the app runs from the checkout it lives in, so it
 # always runs the checkout's own code. It is not part of a portal's releases. Moving the checkout needs install.sh
 # again.
@@ -10,7 +10,7 @@
 #   ./install.sh --uninstall             # remove them; the checkout and the settings stay
 #   ./install.sh --uninstall --purge     # also remove the settings; the checkout stays
 #
-#  * ~/.config/systemd/user/nexus-deps-reminder.service and .timer: every hour Nexus Deps checks the suite's
+#  * ~/.config/systemd/user/nexus-deps-reminder.service and .timer: every hour Nexus Dependencies checks the suite's
 #    dependencies, Bazzite's update state and the machine's updates (Flatpaks, Homebrew, Rust, the dev venv), and
 #    shows a desktop notification when something needs you, with buttons to open it or to fix what is missing or
 #    newer (it asks before it changes anything).
@@ -19,7 +19,7 @@ APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venvs
 
 APP_ID="nexus-deps"
-APP_NAME="Nexus Deps"
+APP_NAME="Nexus Dependencies for PS5"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 LAUNCHER="$HOME/.local/bin/$APP_ID"

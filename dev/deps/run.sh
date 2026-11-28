@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts Nexus Deps with the checkout's dev venv, on the checkout it lives in.
+# Starts Nexus Dependencies with the checkout's dev venv, on the checkout it lives in.
 #
 #   dev/deps/run.sh            # open the window; --fix offers Fix at once, --remind is the hourly check
 #   dev/deps/run.sh --sync-upstreams   # nexus_deps/catalogs/upstreams.json in line with apps.toml again

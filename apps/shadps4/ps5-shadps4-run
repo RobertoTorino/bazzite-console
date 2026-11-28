@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts the shadPS4 that shadPS4 Manager installed, with the arguments given:
+# Starts the shadPS4 that PS5 shadPS4 Manager installed, with the arguments given:
 #
 #   ps5-shadps4-run -f true -g /path/to/game/eboot.bin   a game, full screen (the Steam shortcuts)
 #   ps5-shadps4-run -g /path/to/game/eboot.bin           a game, as shadPS4's settings say
@@ -16,7 +16,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 [ -x "$APPIMAGE" ] || {
-    echo "shadPS4 is not installed: open shadPS4 Manager and press Install." >&2
+    echo "shadPS4 is not installed: open PS5 shadPS4 Manager and press Install." >&2
     exit 1
 }
 # shadPS4 takes a folder named "user" in the current folder as its own folder (portable mode), so start it where
@@ -51,7 +51,7 @@ if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY
     export SDL_VIDEO_DRIVER=x11
 fi
 # The game started goes to the app's log (the View logs tab), in the app's own form, by its folder's name (the game's ID
-# as Extract PKG names it) and from where (Steam sets SteamGameId); nothing else is known here. As PCSX2 Manager's
+# as Extract PKG names it) and from where (Steam sets SteamGameId); nothing else is known here. As PS5 PCSX2 Manager's
 # wrapper does (owner, 24-10-2026).
 LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-shadps4-manager/ps5-shadps4-manager.log"
 game=""
@@ -72,7 +72,7 @@ if [ -n "$game" ]; then
         # Said on the desktop too (a controller switched off by its idle timer; owner, 24-10-2026): the game is
         # starting, so the window is not where the eyes are.
         if [ -n "${SteamGameId:-}" ] && command -v notify-send >/dev/null 2>&1; then
-            notify-send -a "shadPS4 Manager" -i input-gaming "No controller connected" \
+            notify-send -a "PS5 shadPS4 Manager" -i input-gaming "No controller connected" \
                 "Switch your controller on, or press its PS button to wake it. shadPS4 plays with the keyboard only until then." \
                 2>/dev/null || true
         fi
@@ -87,7 +87,7 @@ fi
 # window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
 # game end.
 if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
-    echo "This game is no longer there: $game. Open shadPS4 Manager, press Refresh and then Update Steam." >&2
+    echo "This game is no longer there: $game. Open PS5 shadPS4 Manager, press Refresh and then Update Steam." >&2
     APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-shadps4-manager/app"
     PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
     if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then

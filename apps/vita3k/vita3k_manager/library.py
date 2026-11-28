@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's own folders (owner, 03-11-2026, from the earlier implementation's Vita3K Manager, 30-10-2026: fixed
+"""The app's own folders (owner, 03-11-2026, from the earlier implementation's PS5 Vita3K Manager, 30-10-2026: fixed
 folders, no folder choosing): Games/Vita in the user's home folder, made with its Firmware folder when the app opens,
 and Games/Vita on each removable drive that has one (a USB drive or an SD card; core's drives). The PS Vita's
 firmware files (PSP2UPDAT.PUP, Sony names all three so) go in Games/Vita/Firmware, or in a folder right below it,

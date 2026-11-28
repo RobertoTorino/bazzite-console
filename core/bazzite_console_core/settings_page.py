@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A settings page for an emulator manager, and the window that holds it (owner, 03-11-2026: the settings that
-matter for playing offered in the app, as PCSX2 Manager's and RPCS3 Manager's Settings tabs do, for the managers
+matter for playing offered in the app, as PS5 PCSX2 Manager's and PS5 RPCS3 Manager's Settings tabs do, for the managers
 whose window has no tabs: PPSSPP, Vita3K and Xenia). One box per group, each setting a choice, a switch or a
 percentage, read from the emulator's settings file and written the moment it is changed, while the emulator does
 not run.
@@ -11,7 +11,7 @@ a setting with choices is shown as a choice whatever its kind (an app's own kind
 PERCENT as a percentage (it may give *top*, 100 when it does not), anything else as a switch. *read()* gives every
 value by key, a SWITCH as "true" or "false", a PERCENT as a number, a CHOICE as one of its values (a value the app
 does not offer is shown as it is); *write(setting, value)* writes one in the same form. The first group's box
-stands on the left, the whole height; the others under each other on the right (as PCSX2 Manager's).
+stands on the left, the whole height; the others under each other on the right (as PS5 PCSX2 Manager's).
 
 SettingsDialog is the page in a window of its own, opened by the window's Settings… button."""
 

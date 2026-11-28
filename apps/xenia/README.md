@@ -4,13 +4,13 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Xenia Manager
+# PS5 Xenia Manager
 
-Xenia Manager installs [Xenia Canary](https://xenia.jp) on **Bazzite** running on PlayStation 5 hardware, scans
+PS5 Xenia Manager installs [Xenia Canary](https://xenia.jp) on **Bazzite** running on PlayStation 5 hardware, scans
 folders for XBOX 360 games, and creates Steam entries for Game Mode. Game compatibility and performance vary by
 title and are not guaranteed on this hardware.
 
-How to install and use it: [Xenia Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/xenia/).
+How to install and use it: [PS5 Xenia Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/xenia/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

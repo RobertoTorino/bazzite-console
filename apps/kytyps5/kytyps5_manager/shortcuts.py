@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""A Steam shortcut per game, as shadPS4 Manager's: a non-Steam game that runs the run wrapper with KytyPS5-Native's
+"""A Steam shortcut per game, as PS5 shadPS4 Manager's: a non-Steam game that runs the run wrapper with KytyPS5-Native's
 launch line, full screen (ps5-kytyps5-run --fullscreen --game "<game folder>"), with the game's own pictures as
 its artwork.
 

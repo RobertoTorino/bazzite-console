@@ -32,7 +32,7 @@ detect = ["~/.local/bin/ps5-upscaler"]
 launch = [["Open", "~/.local/bin/ps5-upscaler"]]
 
 [apps.rpcs3]
-name = "RPCS3 Manager"
+name = "PS5 RPCS3 Manager"
 summary = "Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode."
 tag = "ps5-rpcs3-v1.9.1"
 sha256 = "1c585b4f3fa335de36d7db82d65f5dfd8401b8e23e5b42a546bb248c15879bdd"
@@ -71,7 +71,7 @@ detect = ["~/.local/bin/ps5-xbox-remoteplay"]
 launch = [["Open", "~/.local/bin/ps5-xbox-remoteplay"]]
 
 [apps.shadps4]
-name = "shadPS4 Manager"
+name = "PS5 shadPS4 Manager"
 summary = "Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode."
 tag = "ps5-shadps4-v1.9.1"
 sha256 = "5ccbff4f612a06e8e222c09c7f9f9edd27890bc4cece40f3bbde79790a9fa1f9"
@@ -97,7 +97,7 @@ detect = ["~/.local/bin/ps5-datstation"]
 launch = [["Open", "~/.local/bin/ps5-datstation"]]
 
 [apps.ppsspp]
-name = "PPSSPP Manager"
+name = "PS5 PPSSPP Manager"
 summary = "Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode."
 tag = "ps5-ppsspp-v1.9.1"
 sha256 = "3d5e084ade72f9e674898e9b81129fc7056b78a1b756cdd4f81a5e850406c198"
@@ -110,7 +110,7 @@ detect = ["~/.local/bin/ps5-ppsspp-manager"]
 launch = [["Open", "~/.local/bin/ps5-ppsspp-manager"]]
 
 [apps.pcsx2]
-name = "PCSX2 Manager"
+name = "PS5 PCSX2 Manager"
 summary = "Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode."
 tag = "ps5-pcsx2-v1.9.1"
 sha256 = "9934d2d56bd96d42238ffc44361e8b16b4fa17cc3d48edf1826a7f5d44e325a4"
@@ -123,7 +123,7 @@ detect = ["~/.local/bin/ps5-pcsx2-manager"]
 launch = [["Open", "~/.local/bin/ps5-pcsx2-manager"]]
 
 [apps.vita3k]
-name = "Vita3K Manager"
+name = "PS5 Vita3K Manager"
 summary = "Install Vita3K for PS Vita games and add installed titles to Game Mode."
 tag = "ps5-vita3k-v1.10.1"
 sha256 = "85a70ffba7a15780040a723fdd4b77cc6a8a16b1d5cf84f72c0d75fecafb3271"
@@ -136,7 +136,7 @@ detect = ["~/.local/bin/ps5-vita3k-manager"]
 launch = [["Open", "~/.local/bin/ps5-vita3k-manager"]]
 
 [apps.xenia]
-name = "Xenia Manager"
+name = "PS5 Xenia Manager"
 summary = "Install Xenia Canary for XBOX 360 games and add games to Game Mode."
 tag = "ps5-xenia-v1.10.1"
 sha256 = "9b7d5a0086f0762119f0ff0975c0061bd14059e514db64545e4a23c5db0cc06b"
@@ -458,7 +458,7 @@ detect = ["~/.local/bin/ps5-turing-screen"]
 launch = [["Open", "~/.local/bin/ps5-turing-screen"]]
 
 [apps.kytyps5]
-name = "KytyPS5 Manager"
+name = "PS5 KytyPS5 Manager"
 summary = "PS5 games with the KytyPS5-Native emulator. It sets up a tested KytyPS5-Native release, checks what the emulator needs from the board, finds your games and adds them to Steam."
 tag = "ps5-kytyps5-v0.1.0"
 sha256 = "dfa280b3d6ee993e5bbde1b56f6c7993a420642648f8b342ae8f4f46092217b0"

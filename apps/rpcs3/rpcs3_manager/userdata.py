@@ -15,10 +15,10 @@ RPCS3 also counts the time spent in each game, in GuiConfigs/persistent_settings
 as RPCS3 0.0.43 writes it: gui_application::UpdatePlaytime, persistent_settings): [Playtime] holds the milliseconds
 per serial, [LastPlayed] when it was last played, as an ISO date and time ("2026-10-24T20:15:30"; older RPCS3
 wrote "October 24, 2026", which RPCS3 still reads, so the app does too). The app shows the sum in its header, each
-game in the tip (owner, 24-10-2026: as PCSX2 Manager does).
+game in the tip (owner, 24-10-2026: as PS5 PCSX2 Manager does).
 
 What the app writes for RPCS3 (owner, 24-10-2026: the emulator only runs the game, the manager does the rest; as
-PCSX2 Manager's pcsx2_settings), never while RPCS3 runs, since RPCS3 writes its own files when it closes:
+PS5 PCSX2 Manager's pcsx2_settings), never while RPCS3 runs, since RPCS3 writes its own files when it closes:
 
 * RPCS3's GUI settings, GuiConfigs/CurrentSettings.ini (a Qt INI, gui_settings.h): its welcome dialog off
   (ib_show_welcome; the dialog waits for a tick in "I have read the Quickstart guide" before RPCS3's window opens,
@@ -229,7 +229,7 @@ GUI_OWNED = (("main_window", "infoBoxEnabledWelcome", "false", "its welcome dial
              ("Meta", "checkUpdateStart", "false", "its own update check off"))
 DARK_STYLE = "Darker Style by TheMitoSan"      # RPCS3's own dark style (gui::DarkStylesheet)
 INPUT_CONFIG = Path("input_configs") / "global" / "Default.yml"
-PAD_MARK = "# Written by RPCS3 Manager: player 1 on the first controller, through RPCS3's SDL handler."
+PAD_MARK = "# Written by PS5 RPCS3 Manager: player 1 on the first controller, through RPCS3's SDL handler."
 PAD_NOTE = "# RPCS3's own Pads settings replace this file when they are saved; the app leaves that file alone."
 # RPCS3's default mapping for its SDL handler (sdl_pad_handler::init_config), as RPCS3 0.0.43 writes it.
 SDL_MAPPING = (("Left Stick Left", "LS X-"), ("Left Stick Down", "LS Y-"), ("Left Stick Right", "LS X+"),

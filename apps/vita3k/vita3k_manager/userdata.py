@@ -2,7 +2,7 @@
 """Vita3K's own folders as build 4186 lays them out on Linux (app::init_paths): its settings in ~/.config/Vita3K
 (config.yml), and the PS Vita's storage, its "Vita FS", in ~/.local/share/Vita3K/Vita3K, or where config.yml's
 pref-path says (Settings > Emulator > storage folder). The app reads config.yml, and writes the two lines it owns
-(OWNED; owner, 03-11-2026, from the earlier implementation's Vita3K Manager): Vita3K's welcome window off
+(OWNED; owner, 03-11-2026, from the earlier implementation's PS5 Vita3K Manager): Vita3K's welcome window off
 (show-welcome) and its own update check off (check-for-updates-mode 0, UPDATE_STARTUP_OFF), which could replace the
 pinned build. Never while Vita3K runs: it writes its settings back when it closes.
 

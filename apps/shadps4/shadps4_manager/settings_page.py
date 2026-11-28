@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Settings tab: shadPS4's settings that matter for playing, in the app (owner, 24-10-2026: every manager takes
-the Settings tab when it is rebuilt on PCSX2 Manager's). One box per group (shadps4_settings.SETTINGS: the picture,
+the Settings tab when it is rebuilt on PS5 PCSX2 Manager's). One box per group (shadps4_settings.SETTINGS: the picture,
 the sound, the controller and mouse, what shows in a game), each setting a choice, a switch or a percentage, read
-from config.json and written the moment it is changed, while shadPS4 does not run. Built as RPCS3 Manager's
+from config.json and written the moment it is changed, while shadPS4 does not run. Built as PS5 RPCS3 Manager's
 settings_page. The Sound box also shows, beside shadPS4's volume, the volume Bazzite's sound settings remember for
 shadPS4 (muted there, a game plays without a sound; seen on the board, 24-10-2026): the window passes it
 (show_sound), and Unmute beside it turns a muted one on again (core's sound.unmute; owner, 24-10-2026)."""
@@ -58,7 +58,7 @@ class SettingsPage(QWidget):
         self.status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
         # The picture's box on the left, the whole height; the three others under each other on the right (as
-        # PCSX2 Manager's).
+        # PS5 PCSX2 Manager's).
         groups: dict[str, QFormLayout] = {}
         grid = QGridLayout()
         grid.setHorizontalSpacing(14)

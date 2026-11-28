@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Settings tab: RPCS3's settings that matter for playing, in the app (owner, 24-10-2026: the picture settings
-PCSX2 Manager has, at least). One box per group (rpcs3_settings.SETTINGS: the picture, the emulation, the sound, the
+PS5 PCSX2 Manager has, at least). One box per group (rpcs3_settings.SETTINGS: the picture, the emulation, the sound, the
 messages in a game), each setting a choice, a switch or a percentage, read from config.yml and written the moment it
-is changed, while RPCS3 does not run. Built as PCSX2 Manager's settings_page. The Sound box also shows, beside
+is changed, while RPCS3 does not run. Built as PS5 PCSX2 Manager's settings_page. The Sound box also shows, beside
 RPCS3's volume, the volume Bazzite's sound settings remember for RPCS3 (muted there, a game plays without a sound;
 found on the board, 24-10-2026): the window passes it (show_sound), and Unmute beside it turns a muted one on again
 (core's sound.unmute; owner, 24-10-2026)."""
@@ -58,7 +58,7 @@ class SettingsPage(QWidget):
         self.status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
         # The picture's box on the left, the whole height; the three others under each other on the right (as
-        # PCSX2 Manager's).
+        # PS5 PCSX2 Manager's).
         groups: dict[str, QFormLayout] = {}
         grid = QGridLayout()
         grid.setHorizontalSpacing(14)

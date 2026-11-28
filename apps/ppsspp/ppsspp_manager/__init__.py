@@ -2,7 +2,7 @@
 """PSP games on the system with PPSSPP: installs a pinned PPSSPP release, finds the games in the chosen folders and
 on PPSSPP's memory stick and adds them to Steam for Game Mode."""
 
-APP_NAME = "PPSSPP Manager"
+APP_NAME = "PS5 PPSSPP Manager"
 APP_ID = "ps5-ppsspp-manager"
 __version__ = "1.9.1"
 

@@ -22,11 +22,11 @@ def test_the_checkout_is_the_suite_with_its_development_apps():
     assert checkout.suite_name(CHECKOUT) == "Bazzite Console Suite"
     apps = checkout.dev_apps(CHECKOUT)
     assert [app.key for app in apps] == ["nrt", "demo", "deps", "flight", "garbage", "itests", "marketing",
-                                          "studio", "sounds", "text"]   # the release tool, then by name
-    assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps",
+                                          "studio", "sounds", "text", "textcheck"]   # the release tool, then by name
+    assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Dependencies for PS5",
                                           "Nexus Flight Recorder", "Nexus Garbage Remover", "Nexus Installer Tests",
                                           "Nexus Marketing for PS5", "Nexus Remix Studio", "Nexus Sound Lab",
-                                          "Nexus TTS"]
+                                          "Nexus TTS", "Nexus Text Check for PS5"]
     assert all(app.icon is not None and app.icon.is_file() for app in apps)
     assert all(app.script.is_file() for app in apps)
     assert apps[1].log.name == "demo.log"
@@ -37,12 +37,13 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
 
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
-    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps", "Nexus Flight Recorder",
+    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Dependencies for PS5", "Nexus Flight Recorder",
                      "Nexus Garbage Remover",
                      "Nexus Installer Tests", "Nexus Marketing for PS5", "Nexus Remix Studio", "Nexus Sound Lab",
-                     "Nexus TTS", "Portal video tour", "Apps video tour", "Convert icons", "Close issues"]
+                     "Nexus TTS", "Nexus Text Check for PS5", "Portal video tour", "Apps video tour", "Convert icons",
+                     "Close issues"]
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
-    assert enabled == [True] * 14
+    assert enabled == [True] * 15
     window.close()
 
 
@@ -54,7 +55,7 @@ def test_a_click_on_an_app_starts_it_and_says_so(qapp, tmp_path):
     window.click(tiles["Nexus Release Tool"].data(Qt.ItemDataRole.UserRole))
     window.click(tiles["Nexus Installer Tests"].data(Qt.ItemDataRole.UserRole))
     window.click(tiles["Nexus Demo Recorder"].data(Qt.ItemDataRole.UserRole))
-    window.click(tiles["Nexus Deps"].data(Qt.ItemDataRole.UserRole))
+    window.click(tiles["Nexus Dependencies for PS5"].data(Qt.ItemDataRole.UserRole))
 
     assert started == ["nrt", "itests", "demo", "deps"]
     assert "Nexus Release Tool" in window.output.toPlainText() and "started from" in window.output.toPlainText()

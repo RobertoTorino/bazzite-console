@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What the app writes in PPSSPP's settings (userdata.py): the notice of a newer release off, every other line as
-PPSSPP wrote it (owner, 03-11-2026, from the earlier implementation's PPSSPP Manager)."""
+PPSSPP wrote it (owner, 03-11-2026, from the earlier implementation's PS5 PPSSPP Manager)."""
 
 from __future__ import annotations
 

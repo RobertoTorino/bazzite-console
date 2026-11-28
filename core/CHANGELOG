@@ -1,3 +1,11 @@
+Changelog: 28-11-2026 12:38:25
+
+Fixed. The comments and texts that name an emulator manager use its new name, such as PS5 PCSX2 Manager (owner, 28-11-2026).
+
+Changelog: 28-11-2026 11:31:59
+
+Fixed. The docstring of nexus.py names Nexus Dependencies, the new name of Nexus Deps.
+
 Changelog: 27-11-2026 19:59:41
 
 Version 4.9.1.

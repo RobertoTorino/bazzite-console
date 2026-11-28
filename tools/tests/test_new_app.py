@@ -310,7 +310,7 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     # The installer says when there is nothing to remove.
     assert 'info "$APP_NAME is not installed: nothing to remove."' in installer
     assert '"${VENV_USERS:?}/${APP_ID:?}" \\\n        && found=true' in installer
-    # Nexus Deps' catalog of the suite: the app before the tools, PyQt6 with the app as a source.
+    # Nexus Dependencies' catalog of the suite: the app before the tools, PyQt6 with the app as a source.
     catalog = (checkout / "dev" / "deps" / "nexus_deps" / "catalogs" / f"{suite.name}.toml").read_text()
     assert ('launchers = ["~/.local/bin/ps5-alpha"]\n\n[app.fan2]\nname = "PS5 Fan Two"\n'
             'launchers = ["~/.local/bin/ps5-fan2"]\n\n[[tool]]') in catalog

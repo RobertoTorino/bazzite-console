@@ -58,10 +58,10 @@ games, and takes it out again.
 <div class="home-card" markdown>
 #### :material-gamepad-variant: Gaming
 
-[shadPS4 Manager](apps/shadps4.md) plays PS4 games, [RPCS3 Manager](apps/rpcs3.md) PS3 games,
-[PCSX2 Manager](apps/pcsx2.md) PS2 games, [PPSSPP Manager](apps/ppsspp.md) PSP games,
-[Vita3K Manager](apps/vita3k.md) PS Vita games, [Xenia Manager](apps/xenia.md) XBOX 360 games and
-[KytyPS5 Manager](apps/kytyps5.md) PS5 games, each with its emulator, and [PS5 DatStation](apps/datstation.md) has a PlayStation quiz and console history.
+[PS5 shadPS4 Manager](apps/shadps4.md) plays PS4 games, [PS5 RPCS3 Manager](apps/rpcs3.md) PS3 games,
+[PS5 PCSX2 Manager](apps/pcsx2.md) PS2 games, [PS5 PPSSPP Manager](apps/ppsspp.md) PSP games,
+[PS5 Vita3K Manager](apps/vita3k.md) PS Vita games, [PS5 Xenia Manager](apps/xenia.md) XBOX 360 games and
+[PS5 KytyPS5 Manager](apps/kytyps5.md) PS5 games, each with its emulator, and [PS5 DatStation](apps/datstation.md) has a PlayStation quiz and console history.
 </div>
 <div class="home-card" markdown>
 #### :material-television-play: Streaming

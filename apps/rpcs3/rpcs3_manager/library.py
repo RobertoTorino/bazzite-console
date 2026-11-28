@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's RPCS3 Manager, 30-10-2026: fixed
+"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's PS5 RPCS3 Manager, 30-10-2026: fixed
 folders, no folder choosing): Games/PS3 in the user's home folder, made with its Firmware folder when the app opens,
 and Games/PS3 on each removable drive that has one (a USB drive or an SD card; core's drives). The disc games are
 dropped there; the PS3's firmware (PS3UPDAT.PUP) goes in Games/PS3/Firmware, and the app gives it to RPCS3."""

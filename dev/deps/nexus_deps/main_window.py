@@ -1,17 +1,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Nexus Deps window: Bazzite's update state (bazzite.py) and the machine's updates (system.py) on top, then the
-Python packages and the external tools, with Fix (fixes.py) for what is missing, outdated or newer. In Nexus's
-design (create_app(theme=NEXUS)): the colors come from the theme the widgets draw with, not the suite's."""
+"""The Nexus Dependencies window: Bazzite's update state (bazzite.py) and the machine's updates (system.py) on top,
+the firmware and the emulators (upstreams.py), then the Python packages and the external tools, with Fix (fixes.py)
+for what is missing, outdated or newer. In Nexus's design (create_app(theme=NEXUS)): the colors come from the theme
+the widgets draw with, not the suite's."""
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Iterable
 from html import escape
 from pathlib import Path
 from urllib.parse import quote
 
-from PyQt6.QtCore import QProcess, QSize, Qt
-from PyQt6.QtGui import QColor, QIcon, QPainter
+from PyQt6.QtCore import QPoint, QProcess, QSize, Qt
+from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton,
     QScrollArea, QSizePolicy, QStyle, QToolButton, QVBoxLayout, QWidget,
@@ -472,14 +474,26 @@ def _set_box_colour(box: MetricBox, colour: str) -> None:
     box.set_colour(colour)
 
 
-def _text_icon(icon: QIcon, size: int) -> QIcon:
-    """The icon in the theme's text color, like the text of the boxes, whatever the desktop theme."""
+def _text_icon(icon: QIcon, size: int, heavier: float = 0.0) -> QIcon:
+    """The icon in the theme's text color, like the text of the boxes, whatever the desktop theme. *heavier* draws
+    its strokes that many pixels thicker (owner, 28-11-2026: the refresh icon was too thin beside the bold Fix)."""
     pixmap = icon.pixmap(size, size)
     painter = QPainter(pixmap)
     painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
     painter.fillRect(pixmap.rect(), QColor(current_theme().text))
     painter.end()
-    return QIcon(pixmap)
+    if heavier <= 0:
+        return QIcon(pixmap)
+    heavy = QPixmap(pixmap.size())
+    heavy.setDevicePixelRatio(pixmap.devicePixelRatio())
+    heavy.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(heavy)
+    for step in range(16):                  # the icon drawn around a circle of that radius, then over its middle
+        angle = 2 * math.pi * step / 16
+        painter.drawPixmap(QPoint(round(heavier * math.cos(angle)), round(heavier * math.sin(angle))), pixmap)
+    painter.drawPixmap(0, 0, pixmap)
+    painter.end()
+    return QIcon(heavy)
 
 
 def summary(result: CheckResult) -> tuple[list[str], list[str]]:
@@ -743,7 +757,7 @@ class DependencyWindow(QMainWindow):
         # An icon-only button the size of the boxes beside it
         self.check_button = QPushButton()
         self.check_button.setIcon(_text_icon(QIcon.fromTheme(
-            "view-refresh", self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)), 32))
+            "view-refresh", self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)), 32, heavier=1.5))
         self.check_button.setIconSize(QSize(32, 32))
         self.check_button.setAccessibleName("Check again")
         self.check_button.setToolTip("Check again: Bazzite's update state, the machine's updates, the apps, their "
@@ -781,7 +795,7 @@ class DependencyWindow(QMainWindow):
             "with rpm-ostree, and the machine's updates (a new image and layered tools are there after a restart, "
             f"<code>{RESTART}</code>, which this app never does by itself). It shows every command first and asks. "
             "Optional tools are left out; each app's manual says how to install them. Click the information button "
-            "beside a name for what it is.", "What Nexus Deps checks and fixes"))
+            "beside a name for what it is.", "What Nexus Dependencies checks and fixes"))
         root.addLayout(about)
 
         content = QWidget()
@@ -806,6 +820,13 @@ class DependencyWindow(QMainWindow):
         self.apps_layout = QVBoxLayout()
         self.apps_layout.setSpacing(10)
         cards_layout.addLayout(self.apps_layout)
+        self.emulators_heading = QLabel("Emulators")
+        self.emulators_heading.setStyleSheet(header_font() + "font-size:18px; font-weight:700;")
+        self.emulators_heading.hide()           # shown when the check has cards for it
+        cards_layout.addWidget(self.emulators_heading)
+        self.emulators_layout = QVBoxLayout()
+        self.emulators_layout.setSpacing(10)
+        cards_layout.addLayout(self.emulators_layout)
         packages_heading = QLabel("Python packages")
         packages_heading.setStyleSheet(header_font() + "font-size:18px; font-weight:700;")
         cards_layout.addWidget(packages_heading)
@@ -875,8 +896,10 @@ class DependencyWindow(QMainWindow):
         for source in sources:
             card = SystemCard(source, self.update_source)
             self.system_cards[source.key] = card
-            (self.apps_layout if source.group == "apps" else self.system_layout).addWidget(card)
+            {"apps": self.apps_layout, "emulators": self.emulators_layout}.get(
+                source.group, self.system_layout).addWidget(card)
         self.apps_heading.setVisible(any(source.group == "apps" for source in sources))
+        self.emulators_heading.setVisible(any(source.group == "emulators" for source in sources))
         count = sum(len(source.updates) for source in sources if source.outdated)
         failed = [source.name for source in sources if source.error]
         tip = system_summary(sources) or "Nothing newer on this machine."

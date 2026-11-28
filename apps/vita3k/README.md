@@ -4,13 +4,13 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Vita3K Manager
+# PS5 Vita3K Manager
 
-Vita3K Manager installs [Vita3K](https://vita3k.org) on **Bazzite** running on PlayStation 5 hardware, provides
+PS5 Vita3K Manager installs [Vita3K](https://vita3k.org) on **Bazzite** running on PlayStation 5 hardware, provides
 access to its firmware and game installers, and creates Steam entries for installed titles. Game compatibility and
 performance vary and are not guaranteed on this hardware.
 
-How to install and use it: [Vita3K Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/vita3k/).
+How to install and use it: [PS5 Vita3K Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/vita3k/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

@@ -640,7 +640,7 @@ Every app has the icon of its category. `icons/categories.toml` assigns them, an
 
 | Icon | Category | Apps |
 | --- | --- | --- |
-| <img src="icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | KytyPS5 Manager (`kytyps5`)<br>PCSX2 Manager (`pcsx2`)<br>PPSSPP Manager (`ppsspp`)<br>PS5 DatStation (`datstation`)<br>RPCS3 Manager (`rpcs3`)<br>Remote Play (`remoteplay`)<br>Vita3K Manager (`vita3k`)<br>XBOX Remote Play (`clb`)<br>Xenia Manager (`xenia`)<br>shadPS4 Manager (`shadps4`) |
+| <img src="icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | PS5 DatStation (`datstation`)<br>PS5 KytyPS5 Manager (`kytyps5`)<br>PS5 PCSX2 Manager (`pcsx2`)<br>PS5 PPSSPP Manager (`ppsspp`)<br>PS5 RPCS3 Manager (`rpcs3`)<br>PS5 Vita3K Manager (`vita3k`)<br>PS5 Xenia Manager (`xenia`)<br>PS5 shadPS4 Manager (`shadps4`)<br>Remote Play (`remoteplay`)<br>XBOX Remote Play (`clb`) |
 | <img src="icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | PS5 Upscaler Manager (`upscaler`) |
 | <img src="icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | PS5 Board Test (`board`)<br>PS5 CU Unlock (`compute`)<br>PS5 Core Unlock (`cores`)<br>PS5 Fan Controller (`fan`)<br>PS5 GPU Manager (`gpu`)<br>PS5 System Overlay (`overlay`) |
 | <img src="icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | PS5 Bluetooth (`bluetooth`)<br>PS5 CEC Manager (`cec`)<br>PS5 Controller (`controller`)<br>PS5 Password Generator (`password`)<br>PS5 Quickfix (`quickfix`)<br>PS5 SFTP Tools (`sftp`)<br>PS5 SSD Check (`ssd`)<br>PS5 Turing Screen (`turing`)<br>PS5 Webcam (`webcam`) |
@@ -678,10 +678,10 @@ Icons the apps take from the desktop's style or icon theme, so they look differe
 
 | Name | Used by |
 | --- | --- |
-| `SP_BrowserReload` | Nexus Deps |
-| `SP_MessageBoxInformation` | PS5 Board Test, Nexus Deps |
+| `SP_BrowserReload` | Nexus Dependencies for PS5 |
+| `SP_MessageBoxInformation` | PS5 Board Test, Nexus Dependencies for PS5 |
 | `SP_MessageBoxWarning` | PS5 Board Test |
-| `view-refresh` | Nexus Deps |
+| `view-refresh` | Nexus Dependencies for PS5 |
 
 ### Material Design icons in the wiki
 
@@ -723,7 +723,7 @@ Characters of the font that the apps use as icons in labels and buttons.
 | --- | --- |
 | Portal | ● ☰ |
 | Every app on core | ✓ ● ↻ |
-| Nexus Deps | ✓ ✗ |
+| Nexus Dependencies for PS5 | ✓ ✗ |
 | Nexus Installer Tests | ✓ ✗ |
 | Nexus Release Tool | ✓ ▶ ● ↓ ↑ |
 | PS5 Board Test | ✔ ✖ ✕ ⚠ ▶ ■ ↓ ↑ › 💡 🎮 |

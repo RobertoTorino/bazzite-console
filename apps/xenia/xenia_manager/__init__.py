@@ -2,7 +2,7 @@
 """XBOX 360 games on the system with Xenia: installs a tested Xenia Canary build, finds the games in the chosen
 folders and adds them to Steam for Game Mode."""
 
-APP_NAME = "Xenia Manager"
+APP_NAME = "PS5 Xenia Manager"
 APP_ID = "ps5-xenia-manager"
 __version__ = "1.10.1"
 

@@ -83,7 +83,7 @@ def write_key(key: str, path: Path | None = None) -> None:
 
 def edit_key(parent=None, path: Path | None = None, button: str = "Update Game Mode") -> bool:
     """Asks for the key in a dialog; True when it was changed. *button*: the app's name for the button that puts
-    the games in Steam, as the text names it (PCSX2 Manager's is Update Steam; owner, 24-10-2026)."""
+    the games in Steam, as the text names it (PS5 PCSX2 Manager's is Update Steam; owner, 24-10-2026)."""
     from PyQt6.QtWidgets import QInputDialog, QLabel, QLineEdit
     dialog = QInputDialog(parent)
     dialog.setWindowTitle("Covers")

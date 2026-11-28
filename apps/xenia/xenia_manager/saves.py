@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The saves Xenia keeps (owner, 18-11-2026: a Memory cards tab, as PCSX2 Manager has). Xenia keeps a game's saved
+"""The saves Xenia keeps (owner, 18-11-2026: a Memory cards tab, as PS5 PCSX2 Manager has). Xenia keeps a game's saved
 games as folders in its content folder: content/<profile>/<game's code>/00000001/<save's name>, <profile> the 16
 hexadecimal digits of a profile's XUID, the game's code its 8 (4D5307E6), 00000001 the console's content type for
 a saved game (Xenia Canary's content_manager.cc, ResolvePackageRoot). What Xenia notes of a save beside it, in

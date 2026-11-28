@@ -4,7 +4,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3445 test functions (3833 cases counting the parametrized ones) in 40 test folders, and 41 installer tests.
+3471 test functions (3859 cases counting the parametrized ones) in 41 test folders, and 42 installer tests.
 
 ## Summary
 
@@ -39,7 +39,7 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [core](#core) | 29 | 214 | 3.5 s |
 | [dev/dash](#devdash) | 6 | 50 | 2.3 s |
 | [dev/demo](#devdemo) | 3 | 32 | 0.4 s |
-| [dev/deps](#devdeps) | 6 | 96 | 2.1 s |
+| [dev/deps](#devdeps) | 6 | 103 | 2.1 s |
 | [dev/flight](#devflight) | 3 | 21 |  |
 | [dev/garbage](#devgarbage) | 1 | 9 |  |
 | [dev/itests](#devitests) | 1 | 15 | 0.3 s |
@@ -48,9 +48,10 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/sounds](#devsounds) | 2 | 22 | 0.6 s |
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
+| [dev/textcheck](#devtextcheck) | 2 | 19 |  |
 | [portal](#portal) | 18 | 237 | 30.2 s |
 | [tools](#tools) | 43 | 251 | 10.2 s |
-| **All** | | **3445** | **153 s** |
+| **All** | | **3471** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -70,7 +71,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `dash.sh` | Exercise dev/dash/install.sh, Nexus Dashboard for PS5's installer. |
 | `datstation.sh` | Exercise apps/datstation/install.sh. |
 | `demo.sh` | Exercise dev/demo/install.sh, Nexus Demo Recorder's installer. |
-| `deps.sh` | Exercise dev/deps/install.sh, Nexus Deps' installer. |
+| `deps.sh` | Exercise dev/deps/install.sh, Nexus Dependencies' installer. |
 | `fan.sh` | Exercise apps/fan/install.sh. |
 | `flight.sh` | Exercise dev/flight/install.sh, Nexus Flight Recorder's installer. |
 | `garbage.sh` | Exercise dev/garbage/install.sh, Nexus Garbage Remover's installer. |
@@ -96,6 +97,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `ssd.sh` | Exercise apps/ssd/install.sh. |
 | `studio.sh` | Exercise dev/studio/install.sh, Nexus Remix Studio's installer. |
 | `text.sh` | Exercise dev/text/install.sh, Nexus TTS's installer. |
+| `textcheck.sh` | Exercise dev/textcheck/install.sh, Nexus Text Check for PS5's installer. |
 | `turing.sh` | Exercise apps/turing/install.sh. |
 | `upscaler.sh` | Exercise apps/upscaler/install.sh. |
 | `vita3k.sh` | Exercise apps/vita3k/install.sh. |
@@ -1038,21 +1040,21 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_newer_pcsx2_is_mentioned` |  | 0.1 s | A newer pcsx2 is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  | 0.1 s | What the window says goes to the Log tab with the time, after what the log file held already; the Settings and Memory cards tabs write there too. |
 | `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
-| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
 | `test_main_window.py` | `test_the_steam_link` |  |  | The info symbol under the games (owner, 18-11-2026, in place of the line of text): a click shows what the boxes, Screen setting and Start game do, and Steam in it is a link the app opens itself. |
-| `test_main_window.py` | `test_pcsx2s_window` |  |  | PCSX2 settings, left of Games Uninstall (Remove game… until 20-11-2026; owner, 18-11-2026, as PPSSPP Manager's): PCSX2's own window, through the run wrapper and without a game; off until PCSX2 is installed. |
+| `test_main_window.py` | `test_pcsx2s_window` |  |  | PCSX2 settings, left of Games Uninstall (Remove game… until 20-11-2026; owner, 18-11-2026, as PS5 PPSSPP Manager's): PCSX2's own window, through the run wrapper and without a game; off until PCSX2 is installed. |
 | `test_main_window.py` | `test_pcsx2s_last_run_is_logged_once` |  | 0.2 s | PCSX2's own log of its last run (the game, the play time, the controller) goes into the app's log the next time the window looks, once per run; a run without a game is nothing to say. |
 | `test_main_window.py` | `test_the_tabs_follow_pcsx2s_folder` |  | 0.2 s | The Settings and Memory cards tabs read PCSX2's folder when the window refreshes, and nothing of theirs is written while PCSX2 runs. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 1.0 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts all four pictures in place of the drawn ones, and a game in Steam not looked up yet makes the button do something again. |
-| `test_main_window.py` | `test_bazzites_volume_for_pcsx2` |  | 0.1 s | The volume Bazzite remembers for PCSX2 (WirePlumber's stream-properties, core's sound): in the Settings tab's Sound box, and said once while PCSX2 is muted there (owner, 24-10-2026, as RPCS3 Manager's). |
-| `test_main_window.py` | `test_the_tabs_are_not_squeezed_under_the_introduction` |  | 0.1 s | The introduction's lines count in the window's minimum height (core's WrappedLabel; owner, 24-10-2026, from RPCS3 Manager), so the tabs below get their minimum. |
-| `test_main_window.py` | `test_the_state_lines_links_take_a_click` |  |  | The PCSX2 and BIOS lines hold links (the release notes, PCSX2's BIOS page): a state line takes a click on a link, not only a selection of its text (owner, 24-10-2026: found in shadPS4 Manager's window, built the same way, where a click on a link did nothing). |
+| `test_main_window.py` | `test_bazzites_volume_for_pcsx2` |  | 0.1 s | The volume Bazzite remembers for PCSX2 (WirePlumber's stream-properties, core's sound): in the Settings tab's Sound box, and said once while PCSX2 is muted there (owner, 24-10-2026, as PS5 RPCS3 Manager's). |
+| `test_main_window.py` | `test_the_tabs_are_not_squeezed_under_the_introduction` |  | 0.1 s | The introduction's lines count in the window's minimum height (core's WrappedLabel; owner, 24-10-2026, from PS5 RPCS3 Manager), so the tabs below get their minimum. |
+| `test_main_window.py` | `test_the_state_lines_links_take_a_click` |  |  | The PCSX2 and BIOS lines hold links (the release notes, PCSX2's BIOS page): a state line takes a click on a link, not only a selection of its text (owner, 24-10-2026: found in PS5 shadPS4 Manager's window, built the same way, where a click on a link did nothing). |
 | `test_main_window.py` | `test_unmute_bazzites_volume` |  | 0.2 s | Unmute beside Bazzite's volume (owner, 24-10-2026): shown while PCSX2 is muted there only; a click runs core's unmute off the window and the row follows what WirePlumber stored; a failure is said in red. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.2 s | Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.4 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
-| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
-| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
+| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... |
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_pcsx2_is_on_while_pcsx2_runs_and_ends_it_at_once` |  |  | Exit PCSX2 (owner, 22-11-2026): the first button of the row under Your games, on only while PCSX2 runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_pcsx2_running_and_end_read_proc` |  |  | PCSX2's process is found by its name, and ending it ends what it started first. |
@@ -1188,7 +1190,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_shortcut_named_before_the_system_prefix_is_renamed` |  | 0.3 s | A shortcut named by the title alone, as before "[PSP] ": Update Steam is on for it and renames it, with its play time; the artwork under its old number goes. |
 | `test_main_window.py` | `test_a_shortcut_of_a_game_no_longer_found_is_taken_out` |  |  | A shortcut of a game no longer found is taken out. |
 | `test_main_window.py` | `test_no_steam_game_mode_or_no_wrapper` |  | 0.1 s | No steam game mode or no wrapper. |
-| `test_main_window.py` | `test_the_blue_look` |  |  | RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, the tabs. |
+| `test_main_window.py` | `test_the_blue_look` |  |  | PS5 RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, the tabs. |
 | `test_main_window.py` | `test_a_newer_ppsspp_is_mentioned` |  | 0.1 s | A newer ppsspp is mentioned. |
 | `test_main_window.py` | `test_another_ppsspp_is_installed` |  |  | Another release than the app brings: the line stays the state, the tip says Install puts the app's in, and the log says it once. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
@@ -1201,8 +1203,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
-| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
-| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
+| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... |
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_ppsspp_is_on_while_ppsspp_runs_and_ends_it_at_once` |  |  | Exit PPSSPP (owner, 22-11-2026): the first button of the row under Your games, on only while PPSSPP runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_ppsspp_running_and_end_read_proc` |  |  | PPSSPP's process is found by its name, and ending it ends what it started first. |
@@ -1412,7 +1414,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_console_box_shows_model_software_and_what_runs` |  |  | Console box shows model software and what runs. |
 | `test_main_window.py` | `test_settings_box_opens_the_app_settings` |  |  | Settings box opens the app settings. |
 | `test_main_window.py` | `test_address_field_searches_on_enter` |  |  | Address field searches on enter. |
-| `test_main_window.py` | `test_the_window_looks_like_the_other_gaming_apps` |  |  | As the shadPS4 Manager (owner, 20-10-2026): the gaming blue, numbered steps with their buttons the same size, Settings… in the header, both lists as tables with a blue header, Stream the filled main button; a double click on a registered console streams it. |
+| `test_main_window.py` | `test_the_window_looks_like_the_other_gaming_apps` |  |  | As the PS5 shadPS4 Manager (owner, 20-10-2026): the gaming blue, numbered steps with their buttons the same size, Settings… in the header, both lists as tables with a blue header, Stream the filled main button; a double click on a registered console streams it. |
 | `test_native.py` | `test_gkcrypt` |  |  | Gkcrypt. (Not run here: it needs the built native module, which CI's native job tests.) |
 | `test_native.py` | `test_ecdh` |  |  | Ecdh. (Not run here: it needs the built native module, which CI's native job tests.) |
 | `test_native.py` | `test_ecdh_both_sides_agree_and_bad_keys` |  |  | Ecdh both sides agree and bad keys. (Not run here: it needs the built native module, which CI's native job tests.) |
@@ -1610,8 +1612,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_newer_rpcs3_is_mentioned` |  | 0.1 s | A newer rpcs3 is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
 | `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
-| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
-| `test_main_window.py` | `test_rpcn_off_online_offline` |  |  | RPCN (owner, 18-11-2026: as shadPS4 Manager's shadNet): the Account pill, the RPCN line with the name that signs in, and beside the app's state RPCN Off, Online when the server answers (asked, not signed in) or Offline. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_rpcn_off_online_offline` |  |  | RPCN (owner, 18-11-2026: as PS5 shadPS4 Manager's shadNet): the Account pill, the RPCN line with the name that signs in, and beside the app's state RPCN Off, Online when the server answers (asked, not signed in) or Offline. |
 | `test_main_window.py` | `test_rpcn_from_rpcs3_while_it_runs` |  |  | While RPCS3 runs its log says whether it signed in; the server is not asked then. |
 | `test_main_window.py` | `test_rpcn_set_up_from_the_window` |  |  | Rpcn set up from the window. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.5 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts the cover on the portrait, and a game in Steam not looked up yet makes the button do something again. |
@@ -1621,8 +1623,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.1 s | Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.2 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
-| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
-| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
+| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... |
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_rpcs3_is_on_while_rpcs3_runs_and_ends_it_at_once` |  |  | Exit RPCS3 (owner, 22-11-2026): the first button of the row under Your games, on only while RPCS3 runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_rpcs3_running_and_end_read_proc` |  |  | RPCS3's process is found by its name, and ending it ends what it started first. |
@@ -1853,7 +1855,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_installed_with_games` |  |  | Installed with games. |
 | `test_main_window.py` | `test_system_modules_are_taken_from_the_apps_folder` |  |  | The .sprx files put in Games/PS4/Modules are copied into shadPS4's module folder when the window opens and on Refresh, only what is new or changed (owner, 03-11-2026); the state follows at once. |
 | `test_main_window.py` | `test_install_runs_off_the_window` |  | 0.1 s | Install runs off the window. |
-| `test_main_window.py` | `test_another_version_installed_than_the_app_brings` |  |  | The line shows the state alone (owner, 07-11-2026), the box the version, the advice in the tooltip and the log once (as RPCS3 Manager's); a nightly build from before the channel went is too long for the box. |
+| `test_main_window.py` | `test_another_version_installed_than_the_app_brings` |  |  | The line shows the state alone (owner, 07-11-2026), the box the version, the advice in the tooltip and the log once (as PS5 RPCS3 Manager's); a nightly build from before the channel went is too long for the box. |
 | `test_main_window.py` | `test_steam_added_and_taken_out` |  | 0.3 s | Steam added and taken out. |
 | `test_main_window.py` | `test_a_shortcut_without_its_logo_is_brought_up_to_date` |  | 0.3 s | A shortcut made before the app set a logo: Update Steam is on for it until the logo is there. |
 | `test_main_window.py` | `test_a_shortcut_with_the_tags_of_the_old_name_is_brought_up_to_date` |  | 0.2 s | A shortcut with older tags: Update Steam is on until it has the current tags. |
@@ -1870,9 +1872,9 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_shadps4s_window` |  |  | shadPS4 settings opens shadPS4's own window (Big Picture) through the run wrapper. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
 | `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
-| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
 | `test_main_window.py` | `test_the_blue_look` |  | 0.1 s | The blue look. |
-| `test_main_window.py` | `test_the_settings_tab_is_not_squeezed` |  |  | The introduction and the state lines may wrap; their minimum heights count, so the tabs below get their minimum and the Settings tab's rows keep their height (as RPCS3 Manager's). |
+| `test_main_window.py` | `test_the_settings_tab_is_not_squeezed` |  |  | The introduction and the state lines may wrap; their minimum heights count, so the tabs below get their minimum and the Settings tab's rows keep their height (as PS5 RPCS3 Manager's). |
 | `test_main_window.py` | `test_a_newer_shadps4_is_mentioned` |  | 0.1 s | A newer shadps4 is mentioned. |
 | `test_main_window.py` | `test_shadnet_set_up_from_the_window` |  | 0.1 s | Shadnet set up from the window. |
 | `test_main_window.py` | `test_shadnet_not_saved_while_shadps4_runs` |  |  | Shadnet not saved while shadps4 runs. |
@@ -2251,11 +2253,11 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_steam_added_and_taken_out` |  | 0.3 s | Steam added and taken out. |
 | `test_main_window.py` | `test_a_shortcut_of_a_game_no_longer_installed_is_taken_out` |  |  | A shortcut of a game no longer installed is taken out. |
 | `test_main_window.py` | `test_no_steam_game_mode_or_no_wrapper` |  | 0.1 s | No steam game mode or no wrapper. |
-| `test_main_window.py` | `test_the_blue_look` |  |  | RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, the tabs; Games Install opens the menu of what to install from. |
+| `test_main_window.py` | `test_the_blue_look` |  |  | PS5 RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, the tabs; Games Install opens the menu of what to install from. |
 | `test_main_window.py` | `test_a_newer_vita3k_is_mentioned` |  | 0.1 s | A newer vita3k is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
 | `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
-| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
 | `test_main_window.py` | `test_the_play_time_in_the_second_row` |  |  | Play time, the last pill of the second row (owner, 18-11-2026): all games together, as Vita3K counts it in its time.xml, each game's time in the tip under its title. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.6 s | Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts the cover on the portrait, and a game in Steam not looked up yet makes the button do something again. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.2 s | Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
@@ -2263,8 +2265,8 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
-| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
-| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
+| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... |
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_vita3k_is_on_while_vita3k_runs_and_ends_it_at_once` |  |  | Exit Vita3K (owner, 22-11-2026): the first button of the row under Your games, on only while Vita3K runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_vita3k_running_and_end_read_proc` |  |  | Vita3K's process is found by its name, and ending it ends what it started first. |
@@ -2465,19 +2467,19 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_main_window.py` | `test_a_shortcut_of_a_game_no_longer_found_is_taken_out` |  |  | A shortcut of a game no longer found is taken out. |
 | `test_main_window.py` | `test_games_need_xenia_for_game_mode` |  |  | Games need xenia for game mode. |
 | `test_main_window.py` | `test_no_steam_game_mode_or_no_wrapper` |  | 0.1 s | No steam game mode or no wrapper. |
-| `test_main_window.py` | `test_the_blue_look` |  | 0.1 s | RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, a third of the width each, the tabs. |
+| `test_main_window.py` | `test_the_blue_look` |  | 0.1 s | PS5 RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills under the introduction, a third of the width each, the tabs. |
 | `test_main_window.py` | `test_a_newer_build_is_mentioned` |  |  | A newer build is mentioned. |
 | `test_main_window.py` | `test_the_log_tab` |  |  | What the window says goes to the Log tab with the time, after what the log file held already. |
 | `test_main_window.py` | `test_clear_logs_empties_the_log` |  |  | Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones beside it removed and the Log tab emptied with them, the open page kept. |
-| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more (no Play time: Xenia counts none); the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
+| `test_main_window.py` | `test_the_blueprint_layout` |  |  | The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also its narrowest, and what is in it asks for no more (no Play time: Xenia counts none); the six tabs share the whole width, the last one up to the margin, with no line over them; under the header's pills the two links alone, in the type of a pill's caption, each still a link. |
 | `test_main_window.py` | `test_covers_with_the_suites_key` |  | 0.9 s | Steam artwork… keeps the suite's key; Update Steam then looks up the game by its title and puts SteamGridDB's pictures in place of all four drawn ones, and a game in Steam not looked up yet makes the button do something again. |
 | `test_main_window.py` | `test_remove_game_asks_what_to_keep` |  | 0.1 s | Games Uninstall (Remove game… until 20-11-2026; owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked deletes the rows still ticked off the window's thread and says what went and what stayed. |
 | `test_main_window.py` | `test_the_settings_tab` |  |  | The Settings tab holds Xenia's settings in the app (core's settings_page): Xenia's defaults while there is no file, a change written into Xenia's own folder at once, and nothing while Xenia runs. |
 | `test_main_window.py` | `test_start_game_starts_the_chosen_game_through_steam` |  | 0.3 s | The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your games through Steam, by its shortcut's number, and the open tab stays open. |
 | `test_main_window.py` | `test_the_controller_state_beside_the_title` |  |  | Controller connected or No controller (owner, 18-11-2026: as the other managers show it), from the kernel's list of input devices, looked at again every few seconds; Steam's own virtual controller does not count. |
 | `test_main_window.py` | `test_the_version_pill` |  |  | The version is a pill (owner, 20-11-2026, as shadPS4's own launcher): its menu lists the builds installed and puts another in use; Manage versions… opens the version manager (core's BuildsDialog) on the same folder. |
-| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
-| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... |
+| `test_main_window.py` | `test_start_game_waits_for_a_steam_that_does_not_run` |  |  | Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never started, while the line said it did): Steam is started and waited for before the game's address is given, and what went wrong is said. |
+| `test_main_window.py` | `test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one` |  |  | Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... |
 | `test_main_window.py` | `test_the_steam_state_follows_the_sign_in` |  |  | Steam beside the title (owner, 22-11-2026): a green dot while Steam runs and is signed in, a red one otherwise, looked at again with the controller. |
 | `test_main_window.py` | `test_exit_xenia_is_on_while_xenia_runs_and_ends_it_at_once` |  |  | Exit Xenia (owner, 22-11-2026): the first button of the row under Your games, on only while Xenia runs; a click ends it with no question and the line under the tabs says so. |
 | `test_main_window.py` | `test_xenia_running_and_end_read_proc` |  |  | Xenia's process is found by its name, and ending it ends what it started first. |
@@ -2828,7 +2830,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## dev/deps
 
-96 tests in 6 files, 2.1 s in a local run.
+103 tests in 6 files, 2.1 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -2846,10 +2848,11 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_dependencies.py` | `test_catalog_apps_match_the_portal_manifest` |  |  | Names and launchers come from portal/apps.toml (name, detect), so an installed app is found. |
 | `test_dependencies.py` | `test_every_tool_names_its_need_and_root` |  |  | Every tool names its need and root. |
 | `test_dependencies.py` | `test_external_tool_catalog_covers_app_specific_tools` |  |  | External tool catalog covers app specific tools. |
-| `test_dependencies.py` | `test_catalog_tools_are_used_by_the_apps_that_list_them` |  |  | Catalog tools are used by the apps that list them. |
+| `test_dependencies.py` | `test_catalog_tools_are_used_by_the_apps_that_list_them` |  |  | Each tool is named in the code of each owner: an app's folder, or core's or the portal's at the root. |
 | `test_dependencies.py` | `test_unknown_owner_and_need_are_catalog_errors` |  |  | Unknown owner and need are catalog errors. |
 | `test_dependencies.py` | `test_launcher_python_reads_the_exec_line` |  |  | Launcher python reads the exec line. |
 | `test_dependencies.py` | `test_installed_environments_follow_each_launcher` |  |  | Installed environments follow each launcher. |
+| `test_dependencies.py` | `test_core_is_installed_with_any_app` |  |  | core has no launcher: the tools it runs are needed while any app is installed, and not without one. |
 | `test_dependencies.py` | `test_environment_versions_read_site_packages` |  |  | Environment versions read site packages. |
 | `test_dependencies.py` | `test_environment_versions_read_lib64_too` |  |  | Fedora's Python 3.15 keeps lib64/ apart from lib/: a compiled package (PyQt6) is in lib64/, pip in lib/. |
 | `test_dependencies.py` | `test_packages_are_checked_in_each_app_environment` |  |  | A package of an app with its own venv is found there, not reported missing from the shared one. |
@@ -2883,7 +2886,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_fixes.py` | `test_the_notification_waits_for_a_button` |  |  | The notification waits for a button. |
 | `test_fixes.py` | `test_remind_opens_the_app_on_a_click` |  |  | Remind opens the app on a click. |
 | `test_fixes.py` | `test_an_empty_plan_is_false` |  |  | An empty plan is false. |
-| `test_fixes.py` | `test_the_machines_updates_alone_make_a_notification_with_fix` |  |  | The hourly timer's sources are Nexus Deps' since 09-11-2026: Homebrew's updates alone are worth a word. |
+| `test_fixes.py` | `test_the_machines_updates_alone_make_a_notification_with_fix` |  |  | The hourly timer's sources are Nexus Dependencies' since 09-11-2026: Homebrew's updates alone are worth a word. |
 | `test_fixes.py` | `test_a_flattened_image_installs_with_dnf_and_a_checkbox_per_package` |  |  | No ostree (a PS5 image): the Fedora package with dnf through pkexec, there at once, no rpm-ostree. |
 | `test_fixes.py` | `test_chosen_keeps_the_checked_packages_and_a_kernel_restarts` |  |  | Chosen keeps the checked packages and a kernel restarts. |
 | `test_system.py` | `test_every_source_with_its_updates_and_its_step` |  |  | Every source with its updates and its step. |
@@ -2901,11 +2904,16 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_system.py` | `test_a_flattened_image_has_dnf_instead_of_the_image` |  |  | A flattened image has dnf instead of the image. |
 | `test_system.py` | `test_mprime_is_checked_against_mersenne_orgs_page_and_updated_by_board_tests_installer` |  |  | Prime95's mprime, when Quickfix installed it: the release in ~/mprime/.release against the one the download page lists; Update runs Board Test's installer, which installs that release (owner, 20-11-2026). |
 | `test_upstreams.py` | `test_the_catalog_is_in_sync_with_the_apps` |  |  | The apps' names and launchers are the portal's: dev/deps/run.sh --sync-upstreams fixes this. |
-| `test_upstreams.py` | `test_no_emulator_is_listed` |  |  | Each emulator app chooses its version from GitHub's list itself (owner, 28-11-2026). |
+| `test_upstreams.py` | `test_every_emulator_app_is_listed` |  |  | Every app with an emulator.py has its card, with its pins read from that file (owner, 28-11-2026). |
+| `test_upstreams.py` | `test_a_new_pin_makes_the_catalog_stale` |  |  | A new pin makes the catalog stale. |
+| `test_upstreams.py` | `test_newer_by_version_build_and_date` |  |  | Newer by version build and date. |
+| `test_upstreams.py` | `test_an_emulator_card_compares_the_pin_with_github` |  |  | An emulator card compares the pin with github. |
+| `test_upstreams.py` | `test_the_reminder_names_a_newer_build_once` |  |  | The reminder names a newer build once. |
 | `test_upstreams.py` | `test_a_renamed_app_makes_the_catalog_stale` |  |  | A renamed app makes the catalog stale. |
 | `test_upstreams.py` | `test_sonys_firmware_is_news_once` |  |  | The first look learns the versions; a later one names what changed; the one after says nothing again. |
 | `test_upstreams.py` | `test_the_ps4_list_is_read_by_its_one_attribute` |  |  | The ps4 list is read by its one attribute. |
-| `test_upstreams.py` | `test_devices_with_no_list_say_where_to_look` |  |  | Devices with no list say where to look. |
+| `test_upstreams.py` | `test_the_system_software_pages_give_their_newest_version` |  |  | The PS5's and the Portal's pages: the first version a person reads, not the site's own numbers. |
+| `test_upstreams.py` | `test_every_card_links_to_sonys_pages` |  |  | Every card links to sonys pages. |
 | `test_window.py` | `test_window_displays_package_and_tool_results` |  | 0.1 s | Window displays package and tool results. |
 | `test_window.py` | `test_missing_package_in_an_app_environment_is_reported` |  | 0.1 s | Missing package in an app environment is reported. |
 | `test_window.py` | `test_tools_that_need_root_say_so` |  | 0.1 s | Tools that need root say so. |
@@ -2925,6 +2933,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_window.py` | `test_fix_offered_for_the_machines_updates_alone` |  | 0.1 s | --fix from a notification about Homebrew alone: the question comes once both checks are done. |
 | `test_window.py` | `test_an_image_of_a_new_fedora_release_is_by_hand` |  | 0.1 s | A system-wide change has no Update: the card says why, and its i gives the steps. |
 | `test_window.py` | `test_the_firmware_has_a_section_of_its_own` |  |  | The firmware has a section of its own. |
+| `test_window.py` | `test_the_emulators_have_a_section_of_their_own` |  |  | The emulators have a section of their own. |
 | `test_window.py` | `test_the_question_has_a_checkbox_per_package` |  |  | Only what stays checked is updated (owner, 19-11-2026: "no checkmark, no update/install"). |
 | `test_window.py` | `test_the_question_for_dnf_names_pkexec_and_the_kernels_restart` |  |  | The question for dnf names pkexec and the kernels restart. |
 | `test_window.py` | `test_a_dnf_card_updates_the_checked_packages_alone` |  |  | A dnf card updates the checked packages alone. |
@@ -3324,6 +3333,32 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_speech.py` | `test_the_engine_starts_speaks_saves_and_quits` |  |  | The engine starts speaks saves and quits. |
 | `test_speech.py` | `test_an_engine_that_ends_by_itself_is_said` |  |  | An engine that ends by itself is said. |
 | `test_speech.py` | `test_an_engine_that_cannot_start_is_said` |  |  | An engine that cannot start is said. |
+
+## dev/textcheck
+
+19 tests in 2 files.
+
+| File | Test | Cases | Time | What it checks |
+|---|---|---|---|---|
+| `test_main_window.py` | `test_the_header_is_nexus_with_the_pills` |  |  | The header is nexus with the pills. |
+| `test_main_window.py` | `test_the_pills_follow_the_server` |  |  | The pills follow the server. |
+| `test_main_window.py` | `test_without_podman_nothing_runs` |  |  | Without podman nothing runs. |
+| `test_main_window.py` | `test_before_the_download_the_window_says_its_size` |  |  | Before the download the window says its size. |
+| `test_main_window.py` | `test_check_all_fills_the_files_worst_first_and_a_file_shows_its_problems` |  |  | Check all fills the files worst first and a file shows its problems. |
+| `test_main_window.py` | `test_nothing_to_fix` |  |  | Nothing to fix. |
+| `test_main_window.py` | `test_only_a_path_in_the_checkout` |  |  | Only a path in the checkout. |
+| `test_main_window.py` | `test_a_failing_tool_says_why` |  |  | A failing tool says why. |
+| `test_main_window.py` | `test_a_broken_json_file_is_a_failure` |  |  | A broken json file is a failure. |
+| `test_main_window.py` | `test_start_and_stop_run_the_tools_server_and_look_again` |  |  | Start and stop run the tools server and look again. |
+| `test_main_window.py` | `test_a_server_that_does_not_start` |  |  | A server that does not start. |
+| `test_main_window.py` | `test_closing_during_a_check_ends_the_tool` |  |  | Closing during a check ends the tool. |
+| `test_results.py` | `test_the_files_come_in_the_tools_order_with_their_counts` |  |  | The files come in the tools order with their counts. |
+| `test_results.py` | `test_a_file_the_table_left_out_comes_last_by_its_count` |  |  | A file the table left out comes last by its count. |
+| `test_results.py` | `test_the_first_line_and_the_summary` |  |  | The first line and the summary. |
+| `test_results.py` | `test_the_end_of_the_output_says_why_it_stopped` |  |  | The end of the output says why it stopped. |
+| `test_results.py` | `test_a_problem_has_the_fields_of_the_tools_json` |  |  | The tool's Problem and this one stay alike: the --json file fills every field. |
+| `test_results.py` | `test_without_podman_nothing_else_is_asked` |  |  | Without podman nothing else is asked. |
+| `test_results.py` | `test_the_server_as_the_tool_sees_it` |  |  | The tool's own podman call and shared_server(), with podman replaced: no test runs podman. |
 
 ## portal
 

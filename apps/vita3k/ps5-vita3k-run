@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts the Vita3K that Vita3K Manager installed, with the arguments given:
+# Starts the Vita3K that PS5 Vita3K Manager installed, with the arguments given:
 #
 #   ps5-vita3k-run --frontend sdl -r PCSB00245              a game alone, quits with it (Game Mode, Play)
 #   ps5-vita3k-run --firmware /path/to/PSP2UPDAT.PUP        install a part of the PS Vita firmware, no window
@@ -18,7 +18,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 [ -x "$APPIMAGE" ] || {
-    echo "Vita3K is not installed: open Vita3K Manager and press Install." >&2
+    echo "Vita3K is not installed: open PS5 Vita3K Manager and press Install." >&2
     exit 1
 }
 # Vita3K's AppImage mounts itself with its own FUSE library and the system's fusermount (part of Bazzite); without
@@ -32,7 +32,7 @@ fi
 export DISABLE_AUTO_UPDATES=1
 # A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
 # (28DE:11FF) in their place: no motion sensors or touchpad, and on the desktop it follows Steam's Desktop
-# Configuration (mouse and keys). As shadPS4 Manager and Remote Play do: while a real controller is connected,
+# Configuration (mouse and keys). As PS5 shadPS4 Manager and Remote Play do: while a real controller is connected,
 # Vita3K reads it and leaves Steam's virtual one out. Without a real one (a Steam Deck's own controls) Steam's choice
 # stands.
 INPUT_DEVICES="${PS5_INPUT_DEVICES:-/proc/bus/input/devices}"      # another file only in the tests
@@ -48,7 +48,7 @@ if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVIC
 fi
 # On a Wayland desktop Vita3K opens its windows through Wayland itself (SDL for a game alone, Qt for its own window),
 # and Steam sees only X11 windows: no overlay (Shift+Tab, the PS button) over a game it started. A game Steam starts
-# there opens its window through XWayland, as shadPS4 Manager does for shadPS4. Game Mode is X11 already.
+# there opens its window through XWayland, as PS5 shadPS4 Manager does for shadPS4. Game Mode is X11 already.
 if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ]; then
     [ -n "${SDL_VIDEO_DRIVER:-}" ] || export SDL_VIDEO_DRIVER=x11
     [ -n "${QT_QPA_PLATFORM:-}" ] || export QT_QPA_PLATFORM=xcb

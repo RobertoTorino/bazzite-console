@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's Xenia Manager, 30-10-2026: fixed
+"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's PS5 Xenia Manager, 30-10-2026: fixed
 folders, no folder choosing): Games/XBOX360 in the user's home folder, made when the app opens, and Games/XBOX360 on
 each removable drive that has one (a USB drive or an SD card; core's drives). The games are dropped there."""
 

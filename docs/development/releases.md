@@ -282,7 +282,7 @@ tests pin their own local builds instead of the published ones.
 ## The releases on GitHub
 
 Each release's title names the suite and the app, from the portal's name and `apps.toml`: *Bazzite Console Suite:
-Portal 12.0.0*, *Bazzite Console Suite: Xenia Manager 0.11.0* (`tools/build_release.py` writes it). The tags start
+Portal 12.0.0*, *Bazzite Console Suite: PS5 Xenia Manager 0.11.0* (`tools/build_release.py` writes it). The tags start
 with the suite's prefix, `ps5-` (`TAG_PREFIX`): `ps5-<app>-v<x.y.z>` and `ps5-portal-v<x.y.z>`.
 
 A release is built and published by the release workflow (**Release**, `release.yml`): started on a release commit

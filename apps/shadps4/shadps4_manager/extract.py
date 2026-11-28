@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The packages waiting in the game folders (owner, 05-11-2026, as the earlier implementation's shadPS4 Manager
+"""The packages waiting in the game folders (owner, 05-11-2026, as the earlier implementation's PS5 shadPS4 Manager
 since 30-10-2026: drop a .pkg in a game folder, the manager takes care of it), unpacked with the same pkgxtractor as
 the Extract PKG window (extract_dialog.py, ExtractionWorker in normal mode), which stays for its own tools: the
 preview, salvage mode, the comparisons and the rename. A copy of the Windows app's extract.py, so both suites place

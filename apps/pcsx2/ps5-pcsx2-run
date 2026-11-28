@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts the PCSX2 that PCSX2 Manager installed, with the arguments given:
+# Starts the PCSX2 that PS5 PCSX2 Manager installed, with the arguments given:
 #
 #   ps5-pcsx2-run -nogui -fullscreen -- /path/to/game.iso   a game alone, full screen (Game Mode)
 #   ps5-pcsx2-run -nogui -- /path/to/game.iso               a game alone, in a window
@@ -16,7 +16,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 [ -x "$APPIMAGE" ] || {
-    echo "PCSX2 is not installed: open PCSX2 Manager and press Install." >&2
+    echo "PCSX2 is not installed: open PS5 PCSX2 Manager and press Install." >&2
     exit 1
 }
 # The AppImage mounts itself with its own FUSE library and the system's fusermount (part of Bazzite); without
@@ -26,7 +26,7 @@ if ! command -v fusermount3 >/dev/null 2>&1 && ! command -v fusermount >/dev/nul
 fi
 # A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
 # (28DE:11FF) in their place: no motion sensors, and on the desktop it follows Steam's Desktop Configuration (mouse
-# and keys). As RPCS3 Manager and Remote Play do: while a real controller is connected, PCSX2's SDL
+# and keys). As PS5 RPCS3 Manager and Remote Play do: while a real controller is connected, PCSX2's SDL
 # input reads it and leaves Steam's virtual one out. Without a real one (a Steam Deck's own controls) Steam's
 # choice stands.
 INPUT_DEVICES="${PS5_INPUT_DEVICES:-/proc/bus/input/devices}"      # another file only in the tests
@@ -42,7 +42,7 @@ if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVIC
 fi
 # On a Wayland desktop PCSX2 (a Qt program) opens its windows through Wayland when it can, and Steam on the desktop
 # only sees windows that go through X11: no overlay (Shift+Tab, the PS button) over a game it started. A game Steam
-# starts there opens its windows through XWayland, as RPCS3 Manager does for RPCS3. Game Mode is X11 already.
+# starts there opens its windows through XWayland, as PS5 RPCS3 Manager does for RPCS3. Game Mode is X11 already.
 if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ] &&
    [ -z "${QT_QPA_PLATFORM:-}" ]; then
     export QT_QPA_PLATFORM=xcb
@@ -63,7 +63,7 @@ if [ -n "$game" ] && [ "${game#-}" = "$game" ]; then
         # Said on the desktop too (a controller switched off by its idle timer; owner, 24-10-2026): the game is
         # starting, so the window is not where the eyes are.
         if [ -n "${SteamGameId:-}" ] && command -v notify-send >/dev/null 2>&1; then
-            notify-send -a "PCSX2 Manager" -i input-gaming "No controller connected" \
+            notify-send -a "PS5 PCSX2 Manager" -i input-gaming "No controller connected" \
                 "Switch your controller on, or press its PS button to wake it. PCSX2 plays with the keyboard only until then." \
                 2>/dev/null || true
         fi
@@ -78,7 +78,7 @@ fi
 # window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
 # game end.
 if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
-    echo "This game is no longer there: $game. Open PCSX2 Manager, press Refresh and then Update Steam." >&2
+    echo "This game is no longer there: $game. Open PS5 PCSX2 Manager, press Refresh and then Update Steam." >&2
     APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-pcsx2-manager/app"
     PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
     if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then

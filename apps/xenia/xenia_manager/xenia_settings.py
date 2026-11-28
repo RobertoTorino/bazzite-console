@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The settings the Settings window offers (owner, 03-11-2026, from the earlier implementation's Xenia Manager):
+"""The settings the Settings window offers (owner, 03-11-2026, from the earlier implementation's PS5 Xenia Manager):
 Xenia's settings that matter for playing, each a key of Xenia's xenia-canary.config.toml in its own folder
 (emulator.xenia_home, emulator.CONFIG), which Xenia reads when it starts: the picture, the speed, the sound and the
 console. The keys, values and defaults are build e6cd2e4's (their DEFINE_ lines: gpu_flags.cc, texture_cache.cc,

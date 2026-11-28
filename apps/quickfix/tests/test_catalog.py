@@ -44,7 +44,7 @@ def test_mprime_goes_where_cpu_tools_looks_and_is_checked_first():
     assert 'ln -sfn "$MPRIME_DIR/mprime" "$BIN_DIR/mprime"' in script
     assert re.search(r'^MPRIME_SHA256="[0-9a-f]{64}"$', script, re.M)                 # the release it falls back to
     assert "if mprime_latest; then" in script and 'MPRIME_PAGE="${MPRIME_PAGE:-https://www.mersenne.org/download/}"' in script
-    assert 'echo "$MPRIME_FILE" >"$MPRIME_DIR/.release"' in script                    # what Nexus Deps compares
+    assert 'echo "$MPRIME_FILE" >"$MPRIME_DIR/.release"' in script                    # what Nexus Dependencies compares
     assert re.search(r'^MPRIME_URL="https://download\.mersenne\.ca/gimps/', script, re.M)
     body = script[script.index("install_mprime() {"):]
     assert body.index("sha256sum -c") < body.index("tar -xzf")

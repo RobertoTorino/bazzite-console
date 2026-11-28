@@ -6,13 +6,13 @@
                                     [vita3k] [xenia] [ffmpeg] [webcam] [speedtest]
                                     # all when none is named
 
-The shadPS4 Manager pins one shadPS4 release (apps/shadps4/shadps4_manager/emulator.py: VERSION, TAG,
+The PS5 shadPS4 Manager pins one shadPS4 release (apps/shadps4/shadps4_manager/emulator.py: VERSION, TAG,
 ASSET, SHA256), read here without importing the app:
  * the latest stable release: newer than the pin means a new version of the app; the report gives the new release's
    Linux zip and the SHA-256 GitHub publishes for it, for the pin;
  * the pinned release's zip: the SHA-256 GitHub publishes for it must still be the pinned one.
 
-KytyPS5 Manager pins one KytyPS5-Native release the same way (apps/kytyps5/kytyps5_manager/emulator.py: VERSION,
+PS5 KytyPS5 Manager pins one KytyPS5-Native release the same way (apps/kytyps5/kytyps5_manager/emulator.py: VERSION,
 PUBLISHED, SHA256; TAG and ASSET follow from VERSION). Its releases are named after their date and commit, so a
 release is newer when it has another tag and was published on a later day:
  * the latest release: newer than the pin means a new version of the app; the report gives its Linux archive and
@@ -152,7 +152,7 @@ KYTY_ASSET = "KytyPS5-Native-{version}-Linux-x86_64.tar.gz"
 
 @dataclass
 class KytyPin:
-    """KytyPS5-Native's pin: the constants of KytyPS5 Manager's emulator.py."""
+    """KytyPS5-Native's pin: the constants of PS5 KytyPS5 Manager's emulator.py."""
     REPO: str
     VERSION: str
     PUBLISHED: str
@@ -206,7 +206,7 @@ def check_kytyps5(pin: KytyPin, get: Fetch = fetch) -> Report:
             digest = str(found.get("digest") or "")
             line = (f"for the pin: {asset}, {digest}" if digest.startswith("sha256:")
                     else f"{asset} is published without a SHA-256: check it before pinning it.")
-        report.drift.append(f"{report.latest} is out ({published}): a new version of KytyPS5 Manager pins it, "
+        report.drift.append(f"{report.latest} is out ({published}): a new version of PS5 KytyPS5 Manager pins it, "
                             f"after it is tried on the board; {line} {latest.get('html_url', '')}")
     else:
         report.fine.append(f"no release newer than {pin.TAG}")
@@ -258,7 +258,7 @@ def check_shadps4(pin: Pin, get: Fetch = fetch) -> Report:
             zip_line = (f"for the pin: {asset}, {digest}" if digest.startswith("sha256:")
                         else f"{asset} is published without a SHA-256: check it before pinning it.")
         report.drift.append(f"{report.latest} is out ({str(latest.get('published_at', ''))[:10]}): a new version of "
-                            f"the shadPS4 Manager pins it, after it is tried on the board; {zip_line} "
+                            f"the PS5 shadPS4 Manager pins it, after it is tried on the board; {zip_line} "
                             f"{latest.get('html_url', '')}")
     else:
         report.fine.append(f"no stable release newer than {pin.TAG}")
@@ -326,7 +326,7 @@ def check_helixsr(pin: HelixPin, get: Fetch = fetch) -> Report:
 class Release:
     """A pinned release that only a newer one can move: what an app brings, read from its files."""
     name: str                                   # "PPSSPP"
-    app: str                                    # "the PPSSPP Manager"
+    app: str                                    # "the PS5 PPSSPP Manager"
     repo: str                                   # where its releases are
     pinned: str                                 # "1.20.4", "v1.3.1"
     where: str                                  # the constant to move: "VERSION in apps/ppsspp/.../emulator.py"
@@ -334,9 +334,9 @@ class Release:
 
 
 def load_release(name: str) -> Release:
-    path, constant, app = {"ppsspp": (PPSSPP, "VERSION", "the PPSSPP Manager"),
-                           "pcsx2": (PCSX2, "VERSION", "the PCSX2 Manager (its stable channel)"),
-                           "rpcs3": (RPCS3, "LANDMARK", "the RPCS3 Manager")}[name]
+    path, constant, app = {"ppsspp": (PPSSPP, "VERSION", "the PS5 PPSSPP Manager"),
+                           "pcsx2": (PCSX2, "VERSION", "the PS5 PCSX2 Manager (its stable channel)"),
+                           "rpcs3": (RPCS3, "LANDMARK", "the PS5 RPCS3 Manager")}[name]
     values = _string_constants(path)
     title = {"ppsspp": "PPSSPP", "pcsx2": "PCSX2", "rpcs3": "RPCS3"}[name]
     return Release(title, app, values["REPO"], values[constant], f"{constant} in {path.relative_to(SUITE)}")
@@ -371,7 +371,7 @@ def check_release(pin: Release, get: Fetch = fetch) -> Report:
 class Build:
     """The build a daily-built emulator's manager brings (Vita3K, Xenia), read from its emulator.py."""
     name: str                                   # "Vita3K"
-    app: str                                    # "the Vita3K Manager"
+    app: str                                    # "the PS5 Vita3K Manager"
     repo: str                                   # where its builds are released
     build: str                                  # the tag: "4186", "e6cd2e4"
     asset: str
@@ -385,9 +385,9 @@ def load_build(name: str) -> Build:
     values = _string_constants(path, (str, int))
     where = f"BUILD, SHA256 in {path.relative_to(SUITE)}"
     if name == "vita3k":
-        return Build("Vita3K", "the Vita3K Manager", values["BUILDS"], str(values["BUILD"]), values["ASSET"],
+        return Build("Vita3K", "the PS5 Vita3K Manager", values["BUILDS"], str(values["BUILD"]), values["ASSET"],
                      values["SHA256"], where=where)
-    return Build("Xenia", "the Xenia Manager", values["REPO"], values["BUILD"], values["ASSET"], values["SHA256"],
+    return Build("Xenia", "the PS5 Xenia Manager", values["REPO"], values["BUILD"], values["ASSET"], values["SHA256"],
                  values["PUBLISHED"], where + " (and PUBLISHED)")
 
 

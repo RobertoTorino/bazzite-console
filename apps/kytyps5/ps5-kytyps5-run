@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts the KytyPS5-Native that KytyPS5 Manager installed, with the arguments given:
+# Starts the KytyPS5-Native that PS5 KytyPS5 Manager installed, with the arguments given:
 #
 #   ps5-kytyps5-run --fullscreen --game /path/to/game   a game, full screen (the Steam shortcuts)
 #   ps5-kytyps5-run --game /path/to/game                a game, in a window
@@ -17,7 +17,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 [ -x "$EMULATOR" ] || {
-    echo "KytyPS5-Native is not installed. Open KytyPS5 Manager and press Install." >&2
+    echo "KytyPS5-Native is not installed. Open PS5 KytyPS5 Manager and press Install." >&2
     exit 1
 }
 # KytyPS5-Native keeps what it writes (saves, trophies, its shader cache) in the folder it is started from. That is
@@ -31,7 +31,7 @@ if [ "${1:-}" = "--launcher" ]; then
 fi
 # A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
 # (28DE:11FF) in their place: no motion sensors or touchpad, and on the desktop it follows Steam's Desktop
-# Configuration (mouse and keys). As shadPS4 Manager's wrapper does: while a real controller is connected,
+# Configuration (mouse and keys). As PS5 shadPS4 Manager's wrapper does: while a real controller is connected,
 # KytyPS5-Native reads it and leaves Steam's virtual one out. Without a real one (a Steam Deck's own controls)
 # Steam's choice stands.
 INPUT_DEVICES="${PS5_INPUT_DEVICES:-/proc/bus/input/devices}"      # another file only in the tests
@@ -47,13 +47,13 @@ if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVIC
 fi
 # On a Wayland desktop an SDL program opens its window through Wayland itself, and Steam sees only X11 windows: no
 # overlay (Shift+Tab, the PS button) over a game it started. A game Steam starts there opens its window through
-# XWayland, as shadPS4 Manager's wrapper does. Game Mode is X11 already.
+# XWayland, as PS5 shadPS4 Manager's wrapper does. Game Mode is X11 already.
 if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ] &&
    [ -z "${SDL_VIDEO_DRIVER:-}" ]; then
     export SDL_VIDEO_DRIVER=x11
 fi
 # The game started goes to the app's log (the View logs tab), in the app's own form, by its folder's name and from
-# where (Steam sets SteamGameId); nothing else is known here. As shadPS4 Manager's wrapper does.
+# where (Steam sets SteamGameId); nothing else is known here. As PS5 shadPS4 Manager's wrapper does.
 LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/ps5-kytyps5.log"
 game=""
 previous=""
@@ -73,7 +73,7 @@ if [ -n "$game" ]; then
         # Said on the desktop too (a controller switched off by its idle timer; owner, 24-10-2026): the game is
         # starting, so the window is not where the eyes are.
         if [ -n "${SteamGameId:-}" ] && command -v notify-send >/dev/null 2>&1; then
-            notify-send -a "KytyPS5 Manager" -i input-gaming "No controller connected" \
+            notify-send -a "PS5 KytyPS5 Manager" -i input-gaming "No controller connected" \
                 "Switch your controller on, or press its PS button to wake it. KytyPS5-Native plays with the keyboard only until then." \
                 2>/dev/null || true
         fi
@@ -83,12 +83,12 @@ if [ -n "$game" ]; then
         printf '%s INFO Started %s %s, %s.\n' "$stamp" "${name:-$game}" "$from" "$pad" >>"$LOG" 2>/dev/null || true
     fi
 fi
-# A game that is no longer there, as in shadPS4 Manager's wrapper: renamed, moved or deleted after it was put in
+# A game that is no longer there, as in PS5 shadPS4 Manager's wrapper: renamed, moved or deleted after it was put in
 # Steam, or on a drive that is not in. KytyPS5-Native is not started; the app says so in a
 # window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
 # game end.
 if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
-    echo "This game is no longer there: $game. Open KytyPS5 Manager, press Refresh and then Update Steam." >&2
+    echo "This game is no longer there: $game. Open PS5 KytyPS5 Manager, press Refresh and then Update Steam." >&2
     APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-kytyps5/app"
     PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
     if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then

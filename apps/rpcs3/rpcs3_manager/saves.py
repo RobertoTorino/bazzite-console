@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The saves on RPCS3's hard disk (owner, 18-11-2026: a Memory cards tab, as PCSX2 Manager has). A PS3 game keeps
+"""The saves on RPCS3's hard disk (owner, 18-11-2026: a Memory cards tab, as PS5 PCSX2 Manager has). A PS3 game keeps
 each save as a folder in dev_hdd0/home/<user>/savedata, <user> a number of eight digits (00000001 for the first
 one), named after the game's code and the save's own name (BLUS30001-SAVE00), with a PARAM.SFO that names the save
 (TITLE, mostly the game's name), its line under it (SUB_TITLE) and what is in it (DETAIL), a picture (ICON0.PNG) and

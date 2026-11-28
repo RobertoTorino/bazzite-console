@@ -49,15 +49,15 @@ of it.
 | App | What it does |
 |---|---|
 | ![](../assets/apps/datstation.webp){ .app-icon } [PS5 DatStation](datstation.md) | Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news. |
-| ![](../assets/apps/pcsx2.webp){ .app-icon } [PCSX2 Manager](pcsx2.md) | Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode. |
-| ![](../assets/apps/ppsspp.webp){ .app-icon } [PPSSPP Manager](ppsspp.md) | Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode. |
+| ![](../assets/apps/pcsx2.webp){ .app-icon } [PS5 PCSX2 Manager](pcsx2.md) | Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode. |
+| ![](../assets/apps/ppsspp.webp){ .app-icon } [PS5 PPSSPP Manager](ppsspp.md) | Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode. |
 | ![](../assets/apps/remoteplay.webp){ .app-icon } [Remote Play](remoteplay.md) | Find, wake, and register PS4 and PS5 consoles on the network, and stream Remote Play. |
-| ![](../assets/apps/rpcs3.webp){ .app-icon } [RPCS3 Manager](rpcs3.md) | Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode. |
-| ![](../assets/apps/shadps4.webp){ .app-icon } [shadPS4 Manager](shadps4.md) | Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode. |
-| ![](../assets/apps/vita3k.webp){ .app-icon } [Vita3K Manager](vita3k.md) | Install Vita3K for PS Vita games and add installed titles to Game Mode. |
+| ![](../assets/apps/rpcs3.webp){ .app-icon } [PS5 RPCS3 Manager](rpcs3.md) | Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode. |
+| ![](../assets/apps/shadps4.webp){ .app-icon } [PS5 shadPS4 Manager](shadps4.md) | Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode. |
+| ![](../assets/apps/vita3k.webp){ .app-icon } [PS5 Vita3K Manager](vita3k.md) | Install Vita3K for PS Vita games and add installed titles to Game Mode. |
 | ![](../assets/apps/clb.webp){ .app-icon } [XBOX Remote Play](clb.md) | Stream XBOX consoles or XBOX Cloud Gaming after signing in with a Microsoft account. |
-| ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Install Xenia Canary for XBOX 360 games and add games to Game Mode. |
-| ![](../assets/apps/kytyps5.webp){ .app-icon } [KytyPS5 Manager](kytyps5.md) | PS5 games with the KytyPS5-Native emulator. It sets up a tested KytyPS5-Native release, checks what the emulator needs from the board, finds your games and adds them to Steam. |
+| ![](../assets/apps/xenia.webp){ .app-icon } [PS5 Xenia Manager](xenia.md) | Install Xenia Canary for XBOX 360 games and add games to Game Mode. |
+| ![](../assets/apps/kytyps5.webp){ .app-icon } [PS5 KytyPS5 Manager](kytyps5.md) | PS5 games with the KytyPS5-Native emulator. It sets up a tested KytyPS5-Native release, checks what the emulator needs from the board, finds your games and adds them to Steam. |
 
 **Utilities**: Tools for files, peripherals, and storage.
 

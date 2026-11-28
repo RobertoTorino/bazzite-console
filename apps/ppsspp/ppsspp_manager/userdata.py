@@ -8,7 +8,7 @@ UTF-8 byte order mark first (its IniFile::Save); it reads a missing key as its d
 line: every other line and its order stay as PPSSPP wrote it, and the mark too (read_lines, write_lines).
 
 What the app owns, set when the window opens, after an install and before PPSSPP opens (prepare; owner, 03-11-2026,
-from the earlier implementation's PPSSPP Manager): PPSSPP's notice of a newer release off ([General]
+from the earlier implementation's PS5 PPSSPP Manager): PPSSPP's notice of a newer release off ([General]
 CheckForNewVersion). A newer PPSSPP comes with a later app version so the manager's release pin stays aligned; the
 notice is on PPSSPP's main screen, which Game Mode never shows."""
 

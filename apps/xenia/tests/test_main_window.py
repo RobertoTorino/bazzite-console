@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window on folders made in a temp folder: the states before and after installing, the games in the table, the
 game folders, the plan for Steam, installing through the worker, Steam's shortcuts changed with a fake "close
-Steam", a newer Xenia build, the Settings and Log tabs, and the blue look of RPCS3 Manager's design."""
+Steam", a newer Xenia build, the Settings and Log tabs, and the blue look of PS5 RPCS3 Manager's design."""
 
 from __future__ import annotations
 
@@ -257,13 +257,13 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, tmp_path, monkeypatch):
     window = _window(folders)
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     window.on_update_steam()
-    assert "install Xenia Manager through the portal first" in window.running.text()
+    assert "install PS5 Xenia Manager through the portal first" in window.running.text()
     assert not window.worker.running
     window.close()
 
 
 def test_the_blue_look(qapp, folders):
-    """RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills
+    """PS5 RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills
     under the introduction, a third of the width each, the tabs."""
     _install(folders["home"])
     window = _window(folders)
@@ -310,9 +310,9 @@ def test_a_newer_build_is_mentioned(qapp, folders):
 
 def test_the_log_tab(qapp, folders):
     """What the window says goes to the Log tab with the time, after what the log file held already."""
-    folders["log_path"].write_text("07-11-2026 22:14:00 INFO Xenia Manager 2.2.0 started\n")
+    folders["log_path"].write_text("07-11-2026 22:14:00 INFO PS5 Xenia Manager 2.2.0 started\n")
     window = _window(folders)
-    assert window.output.toPlainText().splitlines() == ["07-11-2026 22:14:00 INFO Xenia Manager 2.2.0 started"]
+    assert window.output.toPlainText().splitlines() == ["07-11-2026 22:14:00 INFO PS5 Xenia Manager 2.2.0 started"]
     window.say("Steam was not changed: no Steam", ok=False)
     lines = window.output.toPlainText().splitlines()
     assert lines[-1][:19].count("-") == 2 and lines[-1][10] == " "               # DD-MM-YYYY HH:MM:SS
@@ -325,7 +325,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
     """Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones
     beside it removed and the Log tab emptied with them, the open page kept."""
     log = folders["log_path"]
-    log.write_text("18-11-2026 10:00:00 INFO Xenia Manager started\n")
+    log.write_text("18-11-2026 10:00:00 INFO PS5 Xenia Manager started\n")
     older = log.with_name(log.name + ".1")
     older.write_text("17-11-2026 10:00:00 INFO older\n")
     window = _window(folders)
@@ -342,7 +342,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
 
 
 def test_the_blueprint_layout(qapp, folders):
-    """The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also
+    """The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also
     its narrowest, and what is in it asks for no more (no Play time: Xenia counts none); the six tabs
     share the whole width, the last one up to the margin, with no line over them; under the header's pills the two
     links alone, in the type of a pill's caption, each still a link."""
@@ -569,7 +569,7 @@ def test_the_version_pill(qapp, folders, monkeypatch):
 
 
 def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypatch):
-    """Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never
+    """Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never
     started, while the line said it did): Steam is started and waited for before the game's address is given, and
     what went wrong is said. While Xenia runs, no second one is started."""
     _install(folders["home"])
@@ -604,7 +604,7 @@ def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypat
 
 
 def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp, folders, monkeypatch):
-    """Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
+    """Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
     that and a feature to fix it"): the window says which game is there more than once, the box's tooltip too, and
     Update Steam, lit for it, leaves one shortcut."""
     _install(folders["home"])

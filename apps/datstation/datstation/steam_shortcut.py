@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The app as a non-Steam game, for Game Mode: a shortcut that runs the launcher install.sh wrote
 (~/.local/bin/ps5-datstation), with artwork drawn from the app's logo by core's steam_art. The file and its format are core's
-(bazzite_console_core.steam); the pattern is the shadPS4 Manager's."""
+(bazzite_console_core.steam); the pattern is the PS5 shadPS4 Manager's."""
 
 from __future__ import annotations
 

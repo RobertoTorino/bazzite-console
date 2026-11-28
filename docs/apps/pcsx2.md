@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![PCSX2 Manager](../assets/pcsx2/ps5-pcsx2-manager.webp){ .app-logo }
+![PS5 PCSX2 Manager](../assets/pcsx2/ps5-pcsx2-manager.webp){ .app-logo }
 
-# PCSX2 Manager
+# PS5 PCSX2 Manager
 
 Plays **PS2 games** on the board with [PCSX2](https://pcsx2.net), an open-source PS2 emulator. The app installs
 the PCSX2 release pinned for this version of the app and sets it up, takes your PS2 BIOS, finds your games and adds
@@ -296,7 +296,7 @@ kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
 keeps it; `--purge` removes it.
 
-Two buttons sit above the log. **PCSX2 Manager** shows the app's own log. **PCSX2** shows what PCSX2
+Two buttons sit above the log. **PS5 PCSX2 Manager** shows the app's own log. **PCSX2** shows what PCSX2
 printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-pcsx2-manager/emulator.log`. Each
 game's part opens with a line that says how the wrapper started PCSX2. It ends with a line that gives PCSX2's exit
 code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps

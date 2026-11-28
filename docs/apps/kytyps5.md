@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![KytyPS5 Manager](../assets/kytyps5/ps5-kytyps5.webp){ .app-logo }
+![PS5 KytyPS5 Manager](../assets/kytyps5/ps5-kytyps5.webp){ .app-logo }
 
-# KytyPS5 Manager
+# PS5 KytyPS5 Manager
 
-KytyPS5 Manager plays **PS5 games** on the board with
+PS5 KytyPS5 Manager plays **PS5 games** on the board with
 [KytyPS5-Native](https://github.com/superkeka/KytyPS5-Native), an open-source PS5 emulator. The app does these
 things for you:
 

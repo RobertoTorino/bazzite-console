@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The main window, built as PCSX2 Manager's and RPCS3 Manager's (owner, 24-10-2026: the manager that works is the pattern
+"""The main window, built as PS5 PCSX2 Manager's and PS5 RPCS3 Manager's (owner, 24-10-2026: the manager that works is the pattern
 for the others). The owner's order of 20-11-2026: the header's pills are shadPS4's (its version, Install, Uninstall)
 and Refresh; the row under them the games' (Install, which is Extract PKG, and Uninstall), Available in Steam,
 shadNet's Account and Play time; then two columns, the state of each (shadPS4, the system modules, the game folders,

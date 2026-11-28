@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """PS5 games with the KytyPS5-Native emulator. It sets up a tested KytyPS5-Native release, checks what the emulator needs from the board, finds your games and adds them to Steam."""
 
-APP_NAME = "KytyPS5 Manager"
+APP_NAME = "PS5 KytyPS5 Manager"
 APP_ID = "ps5-kytyps5"
 __version__ = "0.1.0"
 

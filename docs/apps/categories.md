@@ -43,15 +43,15 @@ Every app with its icon and its category.
 | ![](../assets/apps/overlay.webp){ .app-icon } [PS5 System Overlay](overlay.md) | Sustainable |
 | ![](../assets/apps/upscaler.webp){ .app-icon } [PS5 Upscaler Manager](upscaler.md) | Graphics |
 | ![](../assets/apps/datstation.webp){ .app-icon } [PS5 DatStation](datstation.md) | Gaming |
-| ![](../assets/apps/pcsx2.webp){ .app-icon } [PCSX2 Manager](pcsx2.md) | Gaming |
-| ![](../assets/apps/ppsspp.webp){ .app-icon } [PPSSPP Manager](ppsspp.md) | Gaming |
+| ![](../assets/apps/pcsx2.webp){ .app-icon } [PS5 PCSX2 Manager](pcsx2.md) | Gaming |
+| ![](../assets/apps/ppsspp.webp){ .app-icon } [PS5 PPSSPP Manager](ppsspp.md) | Gaming |
 | ![](../assets/apps/remoteplay.webp){ .app-icon } [Remote Play](remoteplay.md) | Gaming |
-| ![](../assets/apps/rpcs3.webp){ .app-icon } [RPCS3 Manager](rpcs3.md) | Gaming |
-| ![](../assets/apps/shadps4.webp){ .app-icon } [shadPS4 Manager](shadps4.md) | Gaming |
-| ![](../assets/apps/vita3k.webp){ .app-icon } [Vita3K Manager](vita3k.md) | Gaming |
+| ![](../assets/apps/rpcs3.webp){ .app-icon } [PS5 RPCS3 Manager](rpcs3.md) | Gaming |
+| ![](../assets/apps/shadps4.webp){ .app-icon } [PS5 shadPS4 Manager](shadps4.md) | Gaming |
+| ![](../assets/apps/vita3k.webp){ .app-icon } [PS5 Vita3K Manager](vita3k.md) | Gaming |
 | ![](../assets/apps/clb.webp){ .app-icon } [XBOX Remote Play](clb.md) | Gaming |
-| ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Gaming |
-| ![](../assets/apps/kytyps5.webp){ .app-icon } [KytyPS5 Manager](kytyps5.md) | Gaming |
+| ![](../assets/apps/xenia.webp){ .app-icon } [PS5 Xenia Manager](xenia.md) | Gaming |
+| ![](../assets/apps/kytyps5.webp){ .app-icon } [PS5 KytyPS5 Manager](kytyps5.md) | Gaming |
 | ![](../assets/apps/bluetooth.webp){ .app-icon } [PS5 Bluetooth](bluetooth.md) | Utilities |
 | ![](../assets/apps/controller.webp){ .app-icon } [PS5 Controller](controller.md) | Utilities |
 | ![](../assets/apps/cec.webp){ .app-icon } [PS5 CEC Manager](cec.md) | Utilities |

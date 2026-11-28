@@ -4,13 +4,13 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# shadPS4 Manager
+# PS5 shadPS4 Manager
 
-shadPS4 Manager installs [shadPS4](https://github.com/shadps4-emu/shadPS4) on **Bazzite** running on PlayStation 5
+PS5 shadPS4 Manager installs [shadPS4](https://github.com/shadps4-emu/shadPS4) on **Bazzite** running on PlayStation 5
 hardware, scans game folders, creates Steam entries, and provides shadNet sign-in and PKG extraction. Game
 compatibility and performance vary by title and are not guaranteed on this hardware.
 
-How to install and use it: [shadPS4 Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/shadps4/).
+How to install and use it: [PS5 shadPS4 Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/shadps4/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

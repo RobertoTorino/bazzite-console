@@ -39,7 +39,7 @@ controllers' latest firmware (at most once a day), and downloads the firmware wh
   stream; the sign-in happens in your browser, with a device code. It keeps the account's refresh token and its
   settings in `~/.config/ps5-xbox-remoteplay`. Its log masks the account's tokens, your gamertag, the consoles' IDs
   and network addresses.
-- [shadPS4 Manager](apps/shadps4.md): shadPS4 signs in to the shadNet server you set, with the account you set.
+- [PS5 shadPS4 Manager](apps/shadps4.md): shadPS4 signs in to the shadNet server you set, with the account you set.
   shadPS4 keeps the password as it is and shadNet sends it unencrypted: use one you use nowhere else.
 - [PS5 SFTP Tools](apps/sftp.md) connects only to the host you enter.
 - [PS5 DatStation](apps/datstation.md) loads the PlayStation Blog's feed on its news page.

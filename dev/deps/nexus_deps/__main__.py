@@ -4,8 +4,8 @@
 --fix opens the window and offers Fix as soon as the check is done (the hourly notification's Fix… button).
 --sync-upstreams writes catalogs/upstreams.json again from the portal's apps.toml (upstreams.py).
 --remind shows no window: it checks the suite's dependencies, reads Bazzite's update state, looks for the machine's
-updates (Flatpaks, Homebrew, Rust, the development venv) and the PlayStation firmware (once per new
-version) and, when something needs the user, says so in a desktop notification with buttons to open the
+updates (Flatpaks, Homebrew, Rust, the development venv), the PlayStation firmware and the emulators
+(each new version once) and, when something needs the user, says so in a desktop notification with buttons to open the
 app or fix what is missing or newer. The hourly systemd user timer that install.sh writes runs it."""
 
 from __future__ import annotations

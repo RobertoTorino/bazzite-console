@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The settings of the Settings tab (owner, 24-10-2026: the picture settings PCSX2 Manager has, and what goes with
+"""The settings of the Settings tab (owner, 24-10-2026: the picture settings PS5 PCSX2 Manager has, and what goes with
 them), each one key of RPCS3's config.yml, which RPCS3 reads when a game starts: the picture (Video), the emulation
 (Core), the sound (Audio) and the messages RPCS3 shows in a game (Miscellaneous). The values and defaults are RPCS3
 0.0.43's (system_config.h, system_config_types.cpp). A setting is read from the file (RPCS3's default while the

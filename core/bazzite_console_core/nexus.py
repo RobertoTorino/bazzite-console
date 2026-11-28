@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Nexus's design for the development apps (dev/: Nexus Dashboard for PS5, Nexus Release Tool, Nexus Demo Recorder,
-Nexus Installer Tests, Nexus Sound Lab, Nexus Deps; owner, 26-10-2026: a development app takes Nexus's look, not a
+Nexus Installer Tests, Nexus Sound Lab, Nexus Dependencies; owner, 26-10-2026: a development app takes Nexus's look, not a
 suite's): the colors of the Nexus page, ink, silver and teal, as a theme for core's widgets, set with
 create_app(theme=NEXUS). The states (the working tree, a build, a release) keep the state family every app shares.
 

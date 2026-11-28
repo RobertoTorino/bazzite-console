@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![RPCS3 Manager](../assets/rpcs3/ps5-rpcs3-manager.webp){ .app-logo }
+![PS5 RPCS3 Manager](../assets/rpcs3/ps5-rpcs3-manager.webp){ .app-logo }
 
-# RPCS3 Manager
+# PS5 RPCS3 Manager
 
 Plays **PS3 games** on the board with [RPCS3](https://rpcs3.net), an open-source PS3 emulator. The app installs
 the RPCS3 build pinned for this version of the app, takes the PS3's firmware, finds your games and adds them to
@@ -287,7 +287,7 @@ kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, not your SteamGridDB key or anything personal. `install.sh --uninstall`
 keeps it; `--purge` removes it.
 
-Two buttons sit above the log. **RPCS3 Manager** shows the app's own log. **RPCS3** shows what RPCS3
+Two buttons sit above the log. **PS5 RPCS3 Manager** shows the app's own log. **RPCS3** shows what RPCS3
 printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-rpcs3-manager/emulator.log`. Each
 game's part opens with a line that says how the wrapper started RPCS3. It ends with a line that gives RPCS3's exit
 code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps

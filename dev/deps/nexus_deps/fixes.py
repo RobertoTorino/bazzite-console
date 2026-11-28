@@ -196,7 +196,7 @@ def reminder_text(state: BazziteState, result: CheckResult | None, which: Which 
     if not lines:
         return Reminder()
     actions = {"fix": "Fix…"} if fixable else {}
-    actions["open"] = "Open Nexus Deps"
+    actions["open"] = "Open Nexus Dependencies"
     return Reminder(" ".join(lines), actions)
 
 
@@ -207,7 +207,7 @@ def notify(title: str, text: str, icon: str, actions: dict[str, str] | None = No
     exe = which("notify-send")
     if not exe or not text:
         return None
-    argv = [exe, "--app-name", "Nexus Deps", "--icon", icon]
+    argv = [exe, "--app-name", title, "--icon", icon]
     if actions:
         argv.append("--wait")
         argv.extend(f"--action={key}={label}" for key, label in actions.items())
@@ -220,7 +220,7 @@ def notify(title: str, text: str, icon: str, actions: dict[str, str] | None = No
         return None
     if done.returncode != 0 and actions:              # a notify-send without actions: show the text alone
         try:
-            run([exe, "--app-name", "Nexus Deps", "--icon", icon, title, text], timeout=20)
+            run([exe, "--app-name", title, "--icon", icon, title, text], timeout=20)
         except (OSError, subprocess.SubprocessError):
             return None
         return ""

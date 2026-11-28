@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Vita3K Manager as a desktop app, from a clone or the extracted release tarball:
+# Installs PS5 Vita3K Manager as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -21,7 +21,7 @@
 set -euo pipefail
 
 APP_ID="ps5-vita3k-manager"
-APP_NAME="Vita3K Manager"
+APP_NAME="PS5 Vita3K Manager"
 RUN_NAME="ps5-vita3k-run"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"

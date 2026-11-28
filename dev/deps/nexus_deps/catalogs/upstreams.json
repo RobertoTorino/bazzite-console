@@ -1,5 +1,168 @@
 {
-  "about": "The firmware the suite's apps work with, and where Nexus Deps learns of its updates (nexus_deps/upstreams.py). No emulator is listed: each emulator app chooses its version from GitHub's list itself. Hand-written: id, name, what, kind, url, targets, how, and per app its app. Synced from the portal's apps.toml by `dev/deps/run.sh --sync-upstreams` (tests/test_upstreams.py fails while it is stale): name and launcher.",
+  "about": "The firmware and the emulators the suite's apps work with, and where Nexus Dependencies learns of their updates (nexus_deps/upstreams.py). Hand-written: id, name, what, kind, url, targets, label, how, pages, compare, stable, and per app its app, module and constants. Synced from the portal's apps.toml and each app's emulator.py by `dev/deps/run.sh --sync-upstreams` (tests/test_upstreams.py fails while it is stale): name and launcher, and an emulator's repo, pin and version.",
+  "github": [
+    {
+      "id": "kytyps5",
+      "name": "KytyPS5",
+      "what": "the PlayStation 5 emulator KytyPS5-Native",
+      "compare": "published",
+      "stable": false,
+      "apps": [
+        {
+          "app": "kytyps5",
+          "module": "kytyps5_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "PUBLISHED",
+            "version": "VERSION"
+          },
+          "repo": "superkeka/KytyPS5-Native",
+          "pin": "2026-11-27",
+          "version": "2026-11-27-8278d03",
+          "name": "PS5 KytyPS5 Manager",
+          "launcher": "~/.local/bin/ps5-kytyps5"
+        }
+      ]
+    },
+    {
+      "id": "pcsx2",
+      "name": "PCSX2",
+      "what": "the PlayStation 2 emulator",
+      "compare": "version",
+      "stable": true,
+      "apps": [
+        {
+          "app": "pcsx2",
+          "module": "pcsx2_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "PCSX2/pcsx2",
+          "pin": "2.8.2",
+          "version": "2.8.2",
+          "name": "PS5 PCSX2 Manager",
+          "launcher": "~/.local/bin/ps5-pcsx2-manager"
+        }
+      ]
+    },
+    {
+      "id": "ppsspp",
+      "name": "PPSSPP",
+      "what": "the PSP emulator",
+      "compare": "version",
+      "stable": true,
+      "apps": [
+        {
+          "app": "ppsspp",
+          "module": "ppsspp_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "hrydgard/ppsspp",
+          "pin": "1.20.4",
+          "version": "1.20.4",
+          "name": "PS5 PPSSPP Manager",
+          "launcher": "~/.local/bin/ps5-ppsspp-manager"
+        }
+      ]
+    },
+    {
+      "id": "rpcs3",
+      "name": "RPCS3",
+      "what": "the PlayStation 3 emulator",
+      "compare": "version",
+      "stable": true,
+      "apps": [
+        {
+          "app": "rpcs3",
+          "module": "rpcs3_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "LANDMARK",
+            "version": "VERSION"
+          },
+          "repo": "RPCS3/rpcs3",
+          "pin": "0.0.43",
+          "version": "0.0.43-20395",
+          "name": "PS5 RPCS3 Manager",
+          "launcher": "~/.local/bin/ps5-rpcs3-manager"
+        }
+      ]
+    },
+    {
+      "id": "shadps4",
+      "name": "shadPS4",
+      "what": "the PlayStation 4 emulator",
+      "compare": "version",
+      "stable": true,
+      "apps": [
+        {
+          "app": "shadps4",
+          "module": "shadps4_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "shadps4-emu/shadPS4",
+          "pin": "0.21.0",
+          "version": "0.21.0",
+          "name": "PS5 shadPS4 Manager",
+          "launcher": "~/.local/bin/ps5-shadps4-manager"
+        }
+      ]
+    },
+    {
+      "id": "vita3k",
+      "name": "Vita3K",
+      "what": "the PlayStation Vita emulator",
+      "compare": "build",
+      "stable": false,
+      "apps": [
+        {
+          "app": "vita3k",
+          "module": "vita3k_manager/emulator.py",
+          "constants": {
+            "repo": "BUILDS",
+            "pin": "BUILD",
+            "version": "VERSION"
+          },
+          "repo": "Vita3K/Vita3K-builds",
+          "pin": "4377",
+          "version": "4377",
+          "name": "PS5 Vita3K Manager",
+          "launcher": "~/.local/bin/ps5-vita3k-manager"
+        }
+      ]
+    },
+    {
+      "id": "xenia",
+      "name": "Xenia",
+      "what": "the Xbox 360 emulator Xenia Canary",
+      "compare": "published",
+      "stable": false,
+      "apps": [
+        {
+          "app": "xenia",
+          "module": "xenia_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "PUBLISHED",
+            "version": "VERSION"
+          },
+          "repo": "xenia-canary/xenia-canary",
+          "pin": "2026-11-19T20:05:38Z",
+          "version": "54386cb",
+          "name": "PS5 Xenia Manager",
+          "launcher": "~/.local/bin/ps5-xenia-manager"
+        }
+      ]
+    }
+  ],
   "sony": [
     {
       "id": "dualsense",
@@ -20,7 +183,17 @@
           "launcher": "~/.local/bin/ps5-controller"
         }
       ],
-      "how": "Connect the controller with a USB cable and open {apps}: it reads the controller's firmware, compares it with Sony's and updates it (the Edge's profiles are backed up first). Bluetooth is not enough for an update."
+      "how": "Connect the controller with a USB cable and open {apps}: it reads the controller's firmware, compares it with Sony's and updates it (the Edge's profiles are backed up first). Bluetooth is not enough for an update.",
+      "pages": [
+        {
+          "text": "Sony's steps to update a DualSense on a PC or PS5",
+          "url": "https://www.playstation.com/en-us/support/hardware/accessories/?category=dualsense-wireless-controller&subCategory=update"
+        },
+        {
+          "text": "Sony's steps to update a DualSense Edge on a PC",
+          "url": "https://www.playstation.com/en-us/support/hardware/set-up-edge-pc/#firmware"
+        }
+      ]
     },
     {
       "id": "ps4",
@@ -35,13 +208,21 @@
           "launcher": "~/.local/bin/ps5-remoteplay"
         }
       ],
-      "how": "Update on the console: Settings, System Software Update. Remote Play with {apps} may need the console's newest system software."
+      "how": "Update on the console: Settings, System Software Update. Remote Play with {apps} may need the console's newest system software.",
+      "pages": [
+        {
+          "text": "Sony's PS4 system software page",
+          "url": "https://www.playstation.com/en-us/support/hardware/ps4/system-software-info/"
+        }
+      ]
     },
     {
       "id": "ps5",
       "name": "PS5 system software",
-      "what": "the PlayStation 5's system software",
-      "kind": "on-device",
+      "what": "the PlayStation 5's system software, from Sony's system software page",
+      "kind": "page",
+      "url": "https://www.playstation.com/en-us/support/hardware/ps5/system-software-info/",
+      "label": "PS5",
       "apps": [
         {
           "app": "remoteplay",
@@ -49,15 +230,29 @@
           "launcher": "~/.local/bin/ps5-remoteplay"
         }
       ],
-      "how": "Sony publishes no update list a program can read safely. The console says when an update is out: Settings, System, System Software, System Software Update and Settings. Remote Play with {apps} may need the newest one."
+      "how": "Update on the console: Settings, System, System Software, System Software Update and Settings. Remote Play with {apps} may need the newest one.",
+      "pages": [
+        {
+          "text": "Sony's PS5 system software page",
+          "url": "https://www.playstation.com/en-us/support/hardware/ps5/system-software-info/"
+        }
+      ]
     },
     {
       "id": "psportal",
       "name": "PlayStation Portal",
-      "what": "the PlayStation Portal remote player's system software",
-      "kind": "on-device",
+      "what": "the PlayStation Portal remote player's system software, from Sony's system software page",
+      "kind": "page",
+      "url": "https://www.playstation.com/en-us/support/hardware/psportal/system-software-info/",
+      "label": "PlayStation Portal",
       "apps": [],
-      "how": "Sony publishes no update list for it. The Portal updates itself when it is online: Settings, System Software, System Software Update. Its latest version is listed at playstation.com."
+      "how": "The Portal updates itself when it is online: Settings, System Software, System Software Update.",
+      "pages": [
+        {
+          "text": "Sony's PlayStation Portal system software page",
+          "url": "https://www.playstation.com/en-us/support/hardware/psportal/system-software-info/"
+        }
+      ]
     }
   ]
 }

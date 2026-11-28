@@ -3,7 +3,7 @@
 sheet goes on the main window, so everything in it takes the blue and the rest of the suite keeps core's purple.
 The tabs are pills as the ones above them (owner, 18-11-2026), the chosen one filled blue, and the choice boxes (the
 Remove folder question) are flat, outlined like the buttons, on no background of their own (owner, 24-10-2026, for
-PCSX2 Manager, the pattern for every manager)."""
+PS5 PCSX2 Manager, the pattern for every manager)."""
 
 from __future__ import annotations
 

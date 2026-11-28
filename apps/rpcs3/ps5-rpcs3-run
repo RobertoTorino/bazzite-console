@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts the RPCS3 that RPCS3 Manager installed, with the arguments given:
+# Starts the RPCS3 that PS5 RPCS3 Manager installed, with the arguments given:
 #
 #   ps5-rpcs3-run --no-gui --fullscreen /path/to/USRDIR/EBOOT.BIN   a game alone, full screen (the Steam shortcuts)
 #   ps5-rpcs3-run --no-gui /path/to/USRDIR/EBOOT.BIN                a game alone, in a window
@@ -19,7 +19,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 [ -x "$APPIMAGE" ] || {
-    echo "RPCS3 is not installed: open RPCS3 Manager and press Install." >&2
+    echo "RPCS3 is not installed: open PS5 RPCS3 Manager and press Install." >&2
     exit 1
 }
 # RPCS3's AppImage mounts itself with its own FUSE library and the system's fusermount (part of Bazzite); without
@@ -29,7 +29,7 @@ if ! command -v fusermount3 >/dev/null 2>&1 && ! command -v fusermount >/dev/nul
 fi
 # A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
 # (28DE:11FF) in their place: no motion sensors, and on the desktop it follows Steam's Desktop Configuration (mouse
-# and keys). As shadPS4 Manager and Remote Play do: while a real controller is connected, RPCS3's SDL
+# and keys). As PS5 shadPS4 Manager and Remote Play do: while a real controller is connected, RPCS3's SDL
 # handler reads it and leaves Steam's virtual one out. Without a real one (a Steam Deck's own controls) Steam's
 # choice stands.
 INPUT_DEVICES="${PS5_INPUT_DEVICES:-/proc/bus/input/devices}"      # another file only in the tests
@@ -45,13 +45,13 @@ if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVIC
 fi
 # On a Wayland desktop RPCS3 (a Qt program) opens its windows through Wayland itself, and Steam sees only X11
 # windows: no overlay (Shift+Tab, the PS button) over a game it started. A game Steam starts there opens its window
-# through XWayland, as shadPS4 Manager does for shadPS4. Game Mode is X11 already.
+# through XWayland, as PS5 shadPS4 Manager does for shadPS4. Game Mode is X11 already.
 if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ] &&
    [ -z "${QT_QPA_PLATFORM:-}" ]; then
     export QT_QPA_PLATFORM=xcb
 fi
 # The game started goes to the app's log (the View logs tab), in the app's own form, by its folder's name (the disc's, or
-# the installed game's ID) and from where (Steam sets SteamGameId); nothing else is known here. As PCSX2 Manager's
+# the installed game's ID) and from where (Steam sets SteamGameId); nothing else is known here. As PS5 PCSX2 Manager's
 # wrapper does (owner, 24-10-2026).
 LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-rpcs3-manager/ps5-rpcs3-manager.log"
 game=""
@@ -73,7 +73,7 @@ if [ -n "$game" ] && [ "${game#-}" = "$game" ] && [ -z "$install" ]; then
         # Said on the desktop too (a controller switched off by its idle timer; owner, 24-10-2026): the game is
         # starting, so the window is not where the eyes are.
         if [ -n "${SteamGameId:-}" ] && command -v notify-send >/dev/null 2>&1; then
-            notify-send -a "RPCS3 Manager" -i input-gaming "No controller connected" \
+            notify-send -a "PS5 RPCS3 Manager" -i input-gaming "No controller connected" \
                 "Switch your controller on, or press its PS button to wake it. RPCS3 plays with the keyboard only until then." \
                 2>/dev/null || true
         fi
@@ -88,7 +88,7 @@ fi
 # window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
 # game end.
 if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ -z "${install:-}" ] && [ ! -e "$game" ]; then
-    echo "This game is no longer there: $game. Open RPCS3 Manager, press Refresh and then Update Steam." >&2
+    echo "This game is no longer there: $game. Open PS5 RPCS3 Manager, press Refresh and then Update Steam." >&2
     APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-rpcs3-manager/app"
     PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
     if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then

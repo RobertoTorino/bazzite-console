@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Xenia Manager](../assets/xenia/ps5-xenia-manager.webp){ .app-logo }
+![PS5 Xenia Manager](../assets/xenia/ps5-xenia-manager.webp){ .app-logo }
 
-# Xenia Manager
+# PS5 Xenia Manager
 
 Plays **XBOX 360 games** on the board with [Xenia](https://xenia.jp), an XBOX 360 emulator, in its
 [Xenia Canary](https://github.com/xenia-canary/xenia-canary) builds. The app installs the build pinned for this
@@ -222,7 +222,7 @@ over at 1 MB (the three older files are kept). **Clear logs**, the tab beside Vi
 the file and the View logs tab and removes the three older files. The log holds what the app did, with your home folder written as
 `~`, and not your SteamGridDB key. `install.sh --uninstall` keeps it; `--purge` removes it.
 
-Two buttons sit above the log. **Xenia Manager** shows the app's own log. **Xenia** shows what Xenia
+Two buttons sit above the log. **PS5 Xenia Manager** shows the app's own log. **Xenia** shows what Xenia
 printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-xenia-manager/emulator.log`. Each
 game's part opens with a line that says how the wrapper started Xenia. It ends with a line that gives Xenia's exit
 code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps

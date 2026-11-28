@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The saves Vita3K keeps (owner, 18-11-2026: a Memory cards tab, as PCSX2 Manager has). A PS Vita game keeps its
+"""The saves Vita3K keeps (owner, 18-11-2026: a Memory cards tab, as PS5 PCSX2 Manager has). A PS Vita game keeps its
 save as a folder in ux0/user/<user>/savedata on Vita3K's storage, <user> a number of two digits (00 for the first
 one), named after the game's code (PCSB00001). A save that came from a PS Vita has sce_sys/param.sfo, which may
 name it; one a game made in Vita3K is the game's own files alone, so the tab names the game by its code.

@@ -338,7 +338,7 @@ def page_header(title: str) -> tuple[QHBoxLayout, QLabel]:
 class WrappedLabel(QLabel):
     """A word-wrapped label whose minimum height follows its width. A wrapped QLabel tells its layout a minimum of
     one line, whatever it wraps to, so a window at its minimum height takes the extra lines from the widget below
-    with the stretch (owner, 24-10-2026: RPCS3 Manager's Settings tab, its Sound box squeezed unreadable under the
+    with the stretch (owner, 24-10-2026: PS5 RPCS3 Manager's Settings tab, its Sound box squeezed unreadable under the
     three-line introduction). Here the minimum is the height the text needs at the label's width."""
 
     def __init__(self, text: str = "", parent: QWidget | None = None):

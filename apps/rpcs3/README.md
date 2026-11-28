@@ -4,13 +4,13 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# RPCS3 Manager
+# PS5 RPCS3 Manager
 
-RPCS3 Manager installs and configures [RPCS3](https://rpcs3.net) on **Bazzite** running on PlayStation 5 hardware. It
+PS5 RPCS3 Manager installs and configures [RPCS3](https://rpcs3.net) on **Bazzite** running on PlayStation 5 hardware. It
 offers PS3 firmware setup, game-library scanning, Steam entries, and an activity log. Game compatibility and
 performance vary by title and are not guaranteed on this hardware.
 
-How to install and use it: [RPCS3 Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/rpcs3/).
+How to install and use it: [PS5 RPCS3 Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/rpcs3/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog. Firmware installation results are read from the RPCS3 log.
 

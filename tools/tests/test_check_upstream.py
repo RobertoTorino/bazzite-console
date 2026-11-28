@@ -280,7 +280,7 @@ def test_vita3k_a_higher_build_number_is_newer():
     assert report.drift == [] and "newest build" in report.text() and "In step." in report.text()
     later = str(int(pin.build) + 3)
     report = check_upstream.check_build(pin, build_github(pin, later, "2026-11-04T12:00:00Z"))
-    assert report.drift[0].startswith(f"build {later} is out (2026-11-04, 3 builds later): a new version of the Vita3K")
+    assert report.drift[0].startswith(f"build {later} is out (2026-11-04, 3 builds later): a new version of the PS5 Vita3K")
     assert check_upstream.check_build(pin, build_github(pin, "continuous", "2026-11-04T12:00:00Z")).drift == []
 
 
@@ -289,7 +289,7 @@ def test_xenia_a_build_published_later_is_newer():
     assert check_upstream.check_build(pin, build_github(pin, pin.build, pin.published)).drift == []
     assert check_upstream.check_build(pin, build_github(pin, "0000001", "2020-01-01T00:00:00Z")).drift == []
     report = check_upstream.check_build(pin, build_github(pin, "abc1234", "2099-01-01T00:00:00Z"))
-    assert report.drift[0].startswith("build abc1234 is out (2099-01-01): a new version of the Xenia Manager")
+    assert report.drift[0].startswith("build abc1234 is out (2099-01-01): a new version of the PS5 Xenia Manager")
 
 
 @pytest.mark.parametrize("name", ["vita3k", "xenia"])

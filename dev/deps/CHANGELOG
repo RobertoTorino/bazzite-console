@@ -1,3 +1,36 @@
+Changelog: 28-11-2026 12:38:25
+
+Fixed. The comments and texts that name an emulator manager use its new name, such as PS5 PCSX2 Manager (owner, 28-11-2026).
+
+Changelog: 28-11-2026 12:17:30
+
+Fixed. The catalog lists the programs that the portal, the apps and core run and that it lacked (owner, 28-11-2026: add them).
+It has 51 more tools, 79 in all, and 104 more sources, each found in the code.
+Board Test had no tools listed, and now has its own, as the twin lists them.
+pkexec is optional for SFTP Tools, not required. The app offers the local SSH server only where systemctl and pkexec are there.
+firewall-cmd's description says what the program is, since Board Test uses it too.
+Core counts as installed while any app is installed, because every app carries it. Before, core's tools showed as not needed.
+The test that each tool is named in the code of each owner reads core/ and portal/ for the owners core and portal.
+The test's TOOLS set has the new tools.
+
+Changelog: 28-11-2026 11:51:20
+
+Added. An Emulators section follows the firmware (owner, 28-11-2026). It has a card for each emulator manager: KytyPS5, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.
+A card shows the build the manager was tested with and the latest release on GitHub.
+PCSX2, PPSSPP, RPCS3 and shadPS4 are compared with their latest stable release. KytyPS5, Vita3K and Xenia publish builds only.
+A newer one stays on the card until a release of the manager has it, and the hourly reminder names it once. Nothing is installed from here.
+The pins and repositories are read from each manager's emulator.py by --sync-upstreams, and tests/test_upstreams.py fails while the catalog misses a manager.
+This brings back what the change of 28-11-2026 00:38:32 removed, with Nexus's GitHub check: a sign-in with gh raises GitHub's limit from 60 to 5,000 requests an hour.
+The Check again button's icon is drawn 1.5 pixels heavier, so it matches the bold Fix beside it (owner, 28-11-2026).
+
+Changelog: 28-11-2026 11:31:59
+
+Added. Nexus Deps is called Nexus Dependencies for PS5 now (owner, 28-11-2026). The window, the menu entry, the notifications and the wiki use that name.
+The PS5 system software card and the PlayStation Portal card read the newest version from Sony's system software pages.
+A new version there is news once, as on the PS4 card. Both cards were checked on the device before.
+Each firmware card's information box links to Sony's pages for it.
+The DualSense card links to Sony's steps to update a DualSense on a PC or PS5, and a DualSense Edge on a PC.
+
 Changelog: 28-11-2026 00:38:32
 
 Breaking. Nexus Deps no longer lists the emulators (owner, 28-11-2026). Each emulator manager fetches the versions

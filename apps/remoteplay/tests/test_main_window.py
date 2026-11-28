@@ -541,7 +541,7 @@ def test_address_field_searches_on_enter(window, config_dir):
 
 
 def test_the_window_looks_like_the_other_gaming_apps(qapp, config_dir):
-    """As the shadPS4 Manager (owner, 20-10-2026): the gaming blue, numbered steps with their buttons the same size,
+    """As the PS5 shadPS4 Manager (owner, 20-10-2026): the gaming blue, numbered steps with their buttons the same size,
     Settings… in the header, both lists as tables with a blue header, Stream the filled main button; a double click
     on a registered console streams it."""
     from remoteplay import style

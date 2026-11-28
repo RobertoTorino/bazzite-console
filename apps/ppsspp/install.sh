@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs PPSSPP Manager as a desktop app, from a clone or the extracted release tarball:
+# Installs PS5 PPSSPP Manager as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -21,7 +21,7 @@
 set -euo pipefail
 
 APP_ID="ps5-ppsspp-manager"
-APP_NAME="PPSSPP Manager"
+APP_NAME="PS5 PPSSPP Manager"
 RUN_NAME="ps5-ppsspp-run"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"

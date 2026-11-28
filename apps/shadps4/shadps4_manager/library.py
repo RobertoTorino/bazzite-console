@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's shadPS4 Manager, 30-10-2026:
+"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's PS5 shadPS4 Manager, 30-10-2026:
 fixed folders, no folder choosing): Games/PS4 in the user's home folder, made with its Modules folder when the app
 opens, and Games/PS4 on each removable drive that has one (a USB drive or an SD card; core's drives). The games are
 dropped there, each in a folder of its own; the PS4's system modules (.sprx) go in Games/PS4/Modules, and the app

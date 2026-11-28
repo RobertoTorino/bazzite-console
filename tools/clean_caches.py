@@ -13,7 +13,7 @@ tools/ci-local.sh runs it before every run, so nobody has to remember it. What g
 - a venv of tools/ci-local.sh that no run used for a week (tools/ci_local.py marks the ones it uses): a job whose
   requirements changed gets a new venv, and the old one stayed for good (61 venvs, 18 GB);
 - the folders pytest keeps of its last runs in /tmp, once they are a day old (./test.sh keeps none of a test that
-  passed; a run by hand keeps its last three, 1.1 GB each for PCSX2 Manager's memory cards);
+  passed; a run by hand keeps its last three, 1.1 GB each for PS5 PCSX2 Manager's memory cards);
 - the scratch folders an AI assistant left in /tmp (claude-<user id>), once nothing in one changed for six
   hours (owner, 20-11-2026: "make sure your cache is cleaned up frequently"; two held 2.4 GB of memory);
 - container images without a name (podman image prune): what a rebuilt image leaves.

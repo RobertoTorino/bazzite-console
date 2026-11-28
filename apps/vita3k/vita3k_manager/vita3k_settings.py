@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The settings the Settings window offers (owner, 03-11-2026, from the earlier implementation's Vita3K Manager):
+"""The settings the Settings window offers (owner, 03-11-2026, from the earlier implementation's PS5 Vita3K Manager):
 Vita3K's settings that matter for playing, each one top-level key of Vita3K's config.yml (userdata), which Vita3K
 reads when it starts: the picture, the speed, the sound and the PS Vita's system settings. The keys, values and
 defaults are build 4186's (config/config.h; the choices as its settings window offers them,

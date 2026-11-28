@@ -800,7 +800,7 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     # The development venv (./test.sh, the wiki) takes in every app's requirements-dev.txt.
     requirements = suite.folder / "requirements-dev.txt"
     change(requirements, insert_requirement(requirements.read_text(encoding="utf-8"), app.name, "requirements-dev.txt"))
-    # Nexus Deps' catalog of the suite (dev/deps): the app with its launcher, and PyQt6 as one of its packages.
+    # Nexus Dependencies' catalog of the suite (dev/deps): the app with its launcher, and PyQt6 as one of its packages.
     catalogs = sorted((root / "dev" / "deps" / "nexus_deps" / "catalogs").glob("*.toml"))
     catalog = catalogs[0] if len(catalogs) == 1 else None
     if catalog is not None:
@@ -832,7 +832,7 @@ def checks(root: Path, suite: Suite, app: NewApp) -> list[tuple[str, bool, str]]
         ("the suite's installer, icon and manifest tests",
          [*pytest, "tests/test_installer_tests.py", "tests/test_icons.py", "tests/test_check_manifest.py"],
          suite.folder / "tools"),
-        ("Nexus Deps' catalog tests", [*pytest, "tests/test_dependencies.py", "-k", "catalog"],
+        ("Nexus Dependencies' catalog tests", [*pytest, "tests/test_dependencies.py", "-k", "catalog"],
          root / "dev" / "deps"),
         ("the manifest check", [python, str(suite.folder / "tools" / "check_manifest.py")], root),
         ("bash -n", ["bash", "-n", *scripts], root),
@@ -889,7 +889,7 @@ def main(argv: list[str] | None = None) -> int:
             failed = True
             print("       " + output.replace("\n", "\n       "))
     print("Next: the window and its tests, the chapter, the app's sentence on the home page (docs/index.md: its "
-          "line at the end of the last card), the app's CHANGELOG entries, Nexus Deps' catalog "
+          "line at the end of the last card), the app's CHANGELOG entries, Nexus Dependencies' catalog "
           "for a package or tool beyond PyQt6, and the portal bump the new entry asks for (check_manifest.py --base; "
           "the release stays the owner's).")
     return 1 if failed else 0

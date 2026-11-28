@@ -128,7 +128,7 @@ install_speedtest() {
 # -------------------------------------------------------------------- mprime
 # No test uses it: PS5 Core Unlock's bisect does, for its longer burn-in (--load mprime). The whole download stays
 # together in $MPRIME_DIR, where the bisect looks; the link in $BIN_DIR puts it on PATH. A run with a newer
-# release on the page installs that one over it (Nexus Deps does so with its Update); mprime's own files stay.
+# release on the page installs that one over it (Nexus Dependencies does so with its Update); mprime's own files stay.
 mprime_latest() {  # sets MPRIME_URL, MPRIME_FILE and MPRIME_SHA256 from the download page; 1 when it cannot
     local page row url sha
     page=$(curl -fsSL --max-time 30 "$MPRIME_PAGE" | tr -d '\n') || return 1

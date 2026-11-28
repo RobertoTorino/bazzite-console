@@ -87,7 +87,7 @@ def portal_stage() -> tuple[str, str]:
 
 def release_title(app: str, version: str) -> str:
     """The GitHub release's title: the suite's name (the portal's APP_NAME), then the app's name in apps.toml, so a
-    release names what it is among every suite's releases ("Bazzite Console Suite: Xenia Manager 0.11.0")."""
+    release names what it is among every suite's releases ("Bazzite Console Suite: PS5 Xenia Manager 0.11.0")."""
     text = (portal_package() / "__init__.py").read_text(encoding="utf-8")
     found = re.search(r'^APP_NAME = "(.*)"$', text, re.M)
     suite_name = found[1] if found else SUITE.name

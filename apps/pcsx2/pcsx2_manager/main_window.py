@@ -15,7 +15,7 @@ PCSX2's settings at what the app owns (pcsx2_settings.py), so a game started fro
 What the window says it also writes to the app's log (core's applog), shown in the View logs tab; PCSX2's last run (the game,
 the play time, the controller, from PCSX2's own log) goes there too, once, when the window next looks.
 
-The owner's order of 20-11-2026, shadPS4 Manager's, replaces the one above: the header's pills are PCSX2's (its
+The owner's order of 20-11-2026, PS5 shadPS4 Manager's, replaces the one above: the header's pills are PCSX2's (its
 version, Install, Uninstall) and Refresh; the row under them the games' pills and Available in Steam, with Play
 time where the emulator counts it; then two columns, the state lines and the installed version beside them; then the
 tabs, Memory cards before Settings and the log's as View logs."""
@@ -224,7 +224,7 @@ class MainWindow(QMainWindow):
         self.remove_game_pill.clicked.connect(self.on_remove_game)
         # Play time (owner, 18-11-2026): all games together, as PCSX2 counts it
         self.time_box = MetricBox("Play time", style.BLUE)
-        # The owner's order (20-11-2026), as shadPS4 Manager's. The header: PCSX2's version, Install and
+        # The owner's order (20-11-2026), as PS5 shadPS4 Manager's. The header: PCSX2's version, Install and
         # Uninstall, then Refresh. The row under it: the games' Uninstall, Available in Steam, the BIOS's Uninstall and Play time
         # (the Your games box went: the table lists them). Each row's pills share the width in equal parts.
         self.header_pills = [self.emulator_box, self.install_pill, self.remove_pill, self.refresh_pill]
@@ -389,7 +389,7 @@ class MainWindow(QMainWindow):
     def _state_label() -> QLabel:
         label = WrappedLabel()                  # its lines count in the window's minimum height
         # Its links take a click too: without the second flag a click on one did nothing (owner, 24-10-2026, in
-        # shadPS4 Manager's window, built the same way).
+        # PS5 shadPS4 Manager's window, built the same way).
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse
                                       | Qt.TextInteractionFlag.LinksAccessibleByMouse)
         return label
@@ -446,7 +446,7 @@ class MainWindow(QMainWindow):
 
     def show_sound(self) -> None:
         """The volume Bazzite remembers for PCSX2 (muted or turned down, a game plays without a sound; owner,
-        24-10-2026, as RPCS3 Manager's): in the Settings tab's Sound box, and said once while it stays off."""
+        24-10-2026, as PS5 RPCS3 Manager's): in the Settings tab's Sound box, and said once while it stays off."""
         self.sound = sound.stream_sound(settings_page.STREAM, self.sound_state)
         text, off = self.settings_page.show_sound(self.sound)
         if off and not self._sound_said:
@@ -515,9 +515,9 @@ class MainWindow(QMainWindow):
         self.show_exit()
 
     def on_open_pcsx2(self) -> None:
-        """PCSX2 settings (owner, 18-11-2026, as PPSSPP Manager's): PCSX2's own window, through the run wrapper and
+        """PCSX2 settings (owner, 18-11-2026, as PS5 PPSSPP Manager's): PCSX2's own window, through the run wrapper and
         without a game. The wrapper from the app folder when it is not installed yet (the app run from a checkout),
-        as PPSSPP Manager does."""
+        as PS5 PPSSPP Manager does."""
         run = self.run_path if self.run_path.is_file() else ROOT / shortcuts.RUN_NAME
         if QProcess.startDetached(str(run), [])[0]:
             self.note("PCSX2's own window was opened.")
@@ -917,7 +917,7 @@ class MainWindow(QMainWindow):
         """The Start game tab (owner, 12-11-2026): the chosen game started through Steam, as its shortcut there
         starts it (steam://rungameid/ with the shortcut's number). Off the window's thread, with core's play(): a
         Steam that does not run is started and waited for before the game's address is given, and the line says
-        the game runs only once PCSX2 does (owner, 20-11-2026, first in shadPS4 Manager: Steam, started with
+        the game runs only once PCSX2 does (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam, started with
         the address, came up and never started the game)."""
         game = self.chosen()
         if game is None:

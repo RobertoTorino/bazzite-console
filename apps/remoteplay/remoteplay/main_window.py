@@ -423,7 +423,7 @@ class MainWindow(QMainWindow):
         lay.addWidget(version, 0, Qt.AlignmentFlag.AlignRight)
         self.setCentralWidget(central)
         style.apply(self)
-        # As in the shadPS4 Manager: the buttons of the steps the size of the widest, in two columns on the right.
+        # As in the PS5 shadPS4 Manager: the buttons of the steps the size of the widest, in two columns on the right.
         # Sized here, in the window, so their size includes the style sheet's padding.
         steps = [b for _, _, buttons in rows for b in buttons]
         for button in steps:

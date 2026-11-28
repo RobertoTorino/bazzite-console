@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The saves on PPSSPP's memory stick (owner, 18-11-2026: a Memory cards tab, as PCSX2 Manager has). A PSP has no
+"""The saves on PPSSPP's memory stick (owner, 18-11-2026: a Memory cards tab, as PS5 PCSX2 Manager has). A PSP has no
 memory card files: a game keeps each save as a folder in PSP/SAVEDATA on the memory stick, named after the game's
 code and the save's own name (ULUS10521DATA00), with a PARAM.SFO that names the game (TITLE), the save
 (SAVEDATA_TITLE) and what is in it (SAVEDATA_DETAIL), a picture (ICON0.PNG) and the data itself.

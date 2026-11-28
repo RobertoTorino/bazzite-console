@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Memory cards tab (owner, 18-11-2026: as PCSX2 Manager has one): the saved games Xenia keeps, each under its
+"""The Memory cards tab (owner, 18-11-2026: as PS5 PCSX2 Manager has one): the saved games Xenia keeps, each under its
 game's title, and export, import and delete (saves.py). The console keeps each saved game as a folder, so there is
 no card to choose or to format. Nothing is taken in or deleted while Xenia runs."""
 

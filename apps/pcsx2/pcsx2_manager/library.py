@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's PCSX2 Manager, 30-10-2026: fixed
+"""The app's own game folders (owner, 03-11-2026, from the earlier implementation's PS5 PCSX2 Manager, 30-10-2026: fixed
 folders, no folder choosing): Games/PS2 in the user's home folder, made with its BIOS folder when the app opens, and
 Games/PS2 on each removable drive that has one (a USB drive or an SD card; core's drives). The games are dropped
 there; the BIOS dump goes in Games/PS2/BIOS, and the app copies it into PCSX2."""

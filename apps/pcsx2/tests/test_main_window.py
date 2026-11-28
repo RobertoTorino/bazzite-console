@@ -89,7 +89,7 @@ def test_before_installing(qapp, folders):
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
                                                                              "Memory cards", "Settings",
                                                                              "View logs", "Clear logs"]
-    # The owner's order (20-11-2026), as shadPS4 Manager's: the version, Install, Uninstall and Refresh in the
+    # The owner's order (20-11-2026), as PS5 shadPS4 Manager's: the version, Install, Uninstall and Refresh in the
     # header, the games' pills, Available in Steam and Play time under it. The Your games box went.
     assert [b.caption.text() for b in window.header_pills] == ["PCSX2 version", "Install", "Uninstall",
                                                                "Click to refresh"]
@@ -479,7 +479,7 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, monkeypatch, tmp_path):
     window = _window(folders)
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     window.on_update_steam()
-    assert "install PCSX2 Manager through the portal first" in window.running.text()
+    assert "install PS5 PCSX2 Manager through the portal first" in window.running.text()
     assert not window.worker.running
     window.close()
 
@@ -535,11 +535,11 @@ def test_a_newer_pcsx2_is_mentioned(qapp, folders):
 def test_the_log_tab(qapp, folders, tmp_path):
     """What the window says goes to the Log tab with the time, after what the log file held already; the Settings
     and Memory cards tabs write there too."""
-    folders["log_path"].write_text("23-10-2026 22:14:00 INFO PCSX2 Manager 0.9.1 started\n")
+    folders["log_path"].write_text("23-10-2026 22:14:00 INFO PS5 PCSX2 Manager 0.9.1 started\n")
     _install(folders["home"])
     window = _window(folders)
     lines = window.output.toPlainText().splitlines()
-    assert lines[0] == "23-10-2026 22:14:00 INFO PCSX2 Manager 0.9.1 started"
+    assert lines[0] == "23-10-2026 22:14:00 INFO PS5 PCSX2 Manager 0.9.1 started"
     assert lines[1].endswith(" INFO PCSX2 set up: PCSX2's settings made from its own defaults, its own updates off, "
                              "the mouse pointer hidden in a game, player 1 on the first controller, Select + Start "
                              "quits a game.")
@@ -558,7 +558,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
     """Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones
     beside it removed and the Log tab emptied with them, the open page kept."""
     log = folders["log_path"]
-    log.write_text("18-11-2026 10:00:00 INFO PCSX2 Manager started\n")
+    log.write_text("18-11-2026 10:00:00 INFO PS5 PCSX2 Manager started\n")
     older = log.with_name(log.name + ".1")
     older.write_text("17-11-2026 10:00:00 INFO older\n")
     window = _window(folders)
@@ -575,7 +575,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
 
 
 def test_the_blueprint_layout(qapp, folders):
-    """The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also
+    """The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also
     its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs
     share the whole width, the last one up to the margin, with no line over them; under the header's pills the two
     links alone, in the type of a pill's caption, each still a link."""
@@ -620,7 +620,7 @@ def test_the_steam_link(qapp, folders):
 
 
 def test_pcsx2s_window(qapp, folders, tmp_path, monkeypatch):
-    """PCSX2 settings, left of Games Uninstall (Remove game… until 20-11-2026; owner, 18-11-2026, as PPSSPP Manager's): PCSX2's own window, through
+    """PCSX2 settings, left of Games Uninstall (Remove game… until 20-11-2026; owner, 18-11-2026, as PS5 PPSSPP Manager's): PCSX2's own window, through
     the run wrapper and without a game; off until PCSX2 is installed."""
     window = _window(folders)
     assert window.pcsx2_button.text() == "PCSX2 settings" and not window.pcsx2_button.isEnabled()
@@ -769,7 +769,7 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
 
 def test_bazzites_volume_for_pcsx2(qapp, folders, tmp_path):
     """The volume Bazzite remembers for PCSX2 (WirePlumber's stream-properties, core's sound): in the Settings tab's
-    Sound box, and said once while PCSX2 is muted there (owner, 24-10-2026, as RPCS3 Manager's)."""
+    Sound box, and said once while PCSX2 is muted there (owner, 24-10-2026, as PS5 RPCS3 Manager's)."""
     from pcsx2_manager.settings_page import SOUND_MUTED
     state = tmp_path / "state" / "wireplumber" / "stream-properties"
     state.parent.mkdir(parents=True)
@@ -791,7 +791,7 @@ def test_bazzites_volume_for_pcsx2(qapp, folders, tmp_path):
 
 def test_the_tabs_are_not_squeezed_under_the_introduction(qapp, folders):
     """The introduction's lines count in the window's minimum height (core's WrappedLabel; owner, 24-10-2026,
-    from RPCS3 Manager), so the tabs below get their minimum."""
+    from PS5 RPCS3 Manager), so the tabs below get their minimum."""
     window = _window(folders)
     window.tabs.setCurrentIndex(3)                      # Settings
     window.show()
@@ -803,7 +803,7 @@ def test_the_tabs_are_not_squeezed_under_the_introduction(qapp, folders):
 
 def test_the_state_lines_links_take_a_click(qapp, folders):
     """The PCSX2 and BIOS lines hold links (the release notes, PCSX2's BIOS page): a state line takes a click on a
-    link, not only a selection of its text (owner, 24-10-2026: found in shadPS4 Manager's window, built the same
+    link, not only a selection of its text (owner, 24-10-2026: found in PS5 shadPS4 Manager's window, built the same
     way, where a click on a link did nothing)."""
     window = _window(folders)
     for label in (window.emulator_state, window.bios_state, window.folders_state):
@@ -962,7 +962,7 @@ def test_the_version_pill(qapp, folders, monkeypatch):
 
 
 def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypatch):
-    """Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never
+    """Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never
     started, while the line said it did): Steam is started and waited for before the game's address is given, and
     what went wrong is said. While PCSX2 runs, no second one is started."""
     _install(folders["home"])
@@ -997,7 +997,7 @@ def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypat
 
 
 def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp, folders, monkeypatch):
-    """Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
+    """Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
     that and a feature to fix it"): the window says which game is there more than once, the box's tooltip too, and
     Update Steam, lit for it, leaves one shortcut."""
     _install(folders["home"])

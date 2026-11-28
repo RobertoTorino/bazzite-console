@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The RPCN account window (owner, 18-11-2026: as shadPS4 Manager's shadNet window): the account RPCS3 signs in with and
+"""The RPCN account window (owner, 18-11-2026: as PS5 shadPS4 Manager's shadNet window): the account RPCS3 signs in with and
 on which server; creating an account, trying a sign-in and asking for the token again (off the GUI thread); saving it
 all in RPCS3's own files, from where RPCS3 signs in when a game starts."""
 

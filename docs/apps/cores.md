@@ -295,7 +295,7 @@ tar -xzf p95v3019b20.linux64.tar.gz
 ```
 
 The third line compares the download with the SHA-256 that mersenne.org's download page lists, and prints
-`p95v3019b20.linux64.tar.gz: OK`. You need nothing more. PS5 Core Unlock and Nexus Deps look for `mprime` in these
+`p95v3019b20.linux64.tar.gz: OK`. You need nothing more. PS5 Core Unlock and Nexus Dependencies look for `mprime` in these
 places, in this order:
 
 1. `$PATH`

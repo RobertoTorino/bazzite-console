@@ -4,13 +4,13 @@
 [![CI](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bazzite-console/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# PPSSPP Manager
+# PS5 PPSSPP Manager
 
-PPSSPP Manager installs [PPSSPP](https://www.ppsspp.org) on **Bazzite** running on PlayStation 5 hardware, scans
+PS5 PPSSPP Manager installs [PPSSPP](https://www.ppsspp.org) on **Bazzite** running on PlayStation 5 hardware, scans
 folders for PSP games, and creates Steam entries for Game Mode. Game compatibility and performance vary by title
 and are not guaranteed on this hardware.
 
-How to install and use it: [PPSSPP Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/ppsspp/).
+How to install and use it: [PS5 PPSSPP Manager in the manual](https://robertotorino.github.io/bazzite-console/apps/ppsspp/).
 
 Select a game in **Your games** and use **Start game** to launch its existing Steam shortcut. Press Escape or the controller’s B/back button to close the active window or dialog.
 

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The main window, built as shadPS4 Manager's (owner, 27-11-2026: take shadPS4 as the example). The header's pills
+"""The main window, built as PS5 shadPS4 Manager's (owner, 27-11-2026: take shadPS4 as the example). The header's pills
 are the emulator's (its version, Install, Uninstall) and Refresh; the row under them the games' Uninstall, Available
 in Steam, the emulator's optional GPU helper and what the board has of what the emulator asks; then two columns, the
 state of each (KytyPS5-Native, the board, the game folders, the GPU helper) in a short line and the installed version
@@ -48,7 +48,7 @@ STEAM_ON = "Steam runs and is signed in. The games in Steam can start."
 STEAM_OFF = "Steam does not run or is not signed in. Start Steam and sign in before you start a game."
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER = range(5)             # the table's columns
-WIDTH = 900                             # as shadPS4 Manager's window
+WIDTH = 900                             # as PS5 shadPS4 Manager's window
 HEIGHT = 606
 NOT_INSTALLED = "Not installed. Install it with the Install button."
 INSTALLED = "Installed. Uninstall with the Uninstall button."
@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
             pill.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             actions.addWidget(pill, 1)
 
-        # Two columns under the pills, as shadPS4 Manager's. The first: the state of each, each name with a colon.
+        # Two columns under the pills, as PS5 shadPS4 Manager's. The first: the state of each, each name with a colon.
         # The second: the KytyPS5-Native version installed.
         grid = QGridLayout()
         grid.setColumnStretch(1, 1)
@@ -651,7 +651,7 @@ class MainWindow(QMainWindow):
             self.say(f"KytyPS5-Native could not be started: {private(command[0])} did not run.", ok=False)
 
     def on_remove_game(self) -> None:
-        """Games Uninstall, as shadPS4 Manager's: a window lists what of the chosen game would go, a row each with
+        """Games Uninstall, as PS5 shadPS4 Manager's: a window lists what of the chosen game would go, a row each with
         its size; unticking keeps it, and nothing is deleted before the user confirms. The saves stay."""
         game = self.chosen()
         if game is None:
@@ -693,7 +693,7 @@ class MainWindow(QMainWindow):
         self._start(f"Deleting {title}…", job)
 
     def on_start_game(self) -> None:
-        """The Start game tab, as shadPS4 Manager's: the chosen game started through Steam, as its shortcut there
+        """The Start game tab, as PS5 shadPS4 Manager's: the chosen game started through Steam, as its shortcut there
         starts it. Off the window's thread, with core's play(): a Steam that does not run is started and waited
         for, and the line says the game runs only once KytyPS5-Native does."""
         game = self.chosen()

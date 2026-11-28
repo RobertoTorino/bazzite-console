@@ -2,7 +2,7 @@
 """The window on folders made in a temp folder: the states before and after installing, the system modules, the
 games in the table, the game folders, the plan for Steam, installing through the worker, Steam's shortcuts changed
 with a fake "close Steam", shadNet, the controller state, the play time, the Settings and Log tabs, the Steam link
-and the blue look; built as PCSX2 Manager's and RPCS3 Manager's window (owner, 24-10-2026)."""
+and the blue look; built as PS5 PCSX2 Manager's and PS5 RPCS3 Manager's window (owner, 24-10-2026)."""
 
 from __future__ import annotations
 
@@ -221,7 +221,7 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
 
 def test_another_version_installed_than_the_app_brings(qapp, folders):
     """The line shows the state alone (owner, 07-11-2026), the box the version, the advice in the tooltip and the
-    log once (as RPCS3 Manager's); a nightly build from before the channel went is too long for the box."""
+    log once (as PS5 RPCS3 Manager's); a nightly build from before the channel went is too long for the box."""
     (folders["home"] / "2026-10-15-b2d7ec7").mkdir(parents=True)
     (folders["home"] / "2026-10-15-b2d7ec7" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("2026-10-15-b2d7ec7")
@@ -346,7 +346,7 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, monkeypatch):
     window = _window(folders)
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     window.on_update_steam()
-    assert "install shadPS4 Manager through the portal first" in window.running.text()
+    assert "install PS5 shadPS4 Manager through the portal first" in window.running.text()
     assert not window.worker.running
     window.close()
 
@@ -518,10 +518,10 @@ def test_shadps4s_window(qapp, folders, tmp_path):
 
 def test_the_log_tab(qapp, folders, tmp_path):
     """What the window says goes to the Log tab with the time, after what the log file held already."""
-    folders["log_path"].write_text("24-10-2026 22:14:00 INFO shadPS4 Manager 0.11.1 started\n")
+    folders["log_path"].write_text("24-10-2026 22:14:00 INFO PS5 shadPS4 Manager 0.11.1 started\n")
     window = _window(folders)
     lines = window.output.toPlainText().splitlines()
-    assert lines[0] == "24-10-2026 22:14:00 INFO shadPS4 Manager 0.11.1 started"
+    assert lines[0] == "24-10-2026 22:14:00 INFO PS5 shadPS4 Manager 0.11.1 started"
     window.say("Steam was not changed: no Steam", ok=False)
     lines = window.output.toPlainText().splitlines()
     assert lines[-1].endswith(" ERROR Steam was not changed: no Steam") and "c62828" in window.running.styleSheet()
@@ -534,7 +534,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
     """Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones
     beside it removed and the Log tab emptied with them, the open page kept."""
     log = folders["log_path"]
-    log.write_text("18-11-2026 10:00:00 INFO shadPS4 Manager started\n")
+    log.write_text("18-11-2026 10:00:00 INFO PS5 shadPS4 Manager started\n")
     older = log.with_name(log.name + ".1")
     older.write_text("17-11-2026 10:00:00 INFO older\n")
     window = _window(folders)
@@ -551,7 +551,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
 
 
 def test_the_blueprint_layout(qapp, folders):
-    """The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also
+    """The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also
     its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs
     share the whole width, the last one up to the margin, with no line over them; under the header's pills the two
     links alone, in the type of a pill's caption, each still a link."""
@@ -607,7 +607,7 @@ def test_the_blue_look(qapp, folders):
 
 def test_the_settings_tab_is_not_squeezed(qapp, folders):
     """The introduction and the state lines may wrap; their minimum heights count, so the tabs below get their
-    minimum and the Settings tab's rows keep their height (as RPCS3 Manager's)."""
+    minimum and the Settings tab's rows keep their height (as PS5 RPCS3 Manager's)."""
     _install(folders["home"])
     window = _window(folders)
     window.tabs.setCurrentIndex(3)                      # Settings

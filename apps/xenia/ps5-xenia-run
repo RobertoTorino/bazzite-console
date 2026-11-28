@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts the Xenia that Xenia Manager installed, with the arguments given:
+# Starts the Xenia that PS5 Xenia Manager installed, with the arguments given:
 #
 #   ps5-xenia-run --fullscreen=true /path/to/game.iso   a game full screen (Game Mode)
 #   ps5-xenia-run /path/to/game.iso                     a game in a window
@@ -16,7 +16,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 [ -x "$APPIMAGE" ] || {
-    echo "Xenia is not installed: open Xenia Manager and press Install." >&2
+    echo "Xenia is not installed: open PS5 Xenia Manager and press Install." >&2
     exit 1
 }
 # The AppImage mounts itself with its own FUSE library and the system's fusermount (part of Bazzite); without
@@ -48,7 +48,7 @@ fi
 game=""
 for arg in "$@"; do game=$arg; done
 if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
-    echo "This game is no longer there: $game. Open Xenia Manager, press Refresh and then Update Steam." >&2
+    echo "This game is no longer there: $game. Open PS5 Xenia Manager, press Refresh and then Update Steam." >&2
     APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-xenia-manager/app"
     PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
     if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then

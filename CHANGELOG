@@ -1,3 +1,19 @@
+Changelog: 28-11-2026 12:38:25
+
+Fixed. The wiki, the README, DESIGN.md, ALL-TESTS.md and the tools name the emulator managers with the device's name in front, such as PS5 PCSX2 Manager (owner, 28-11-2026). The wiki's navigation lists the Gaming apps in the new alphabetical order. The portal's tiles show the short names as before, so tools/portal-tour.stamp marks the wiki's Portal Tour as current.
+
+Changelog: 28-11-2026 12:11:39
+
+Added. Nexus Text Check for PS5 (dev/textcheck/), the twin of Nexus Text Check for BC-250, a development app around tools/text_check.py, with its installer test tools/installer-tests/textcheck.sh. The wiki's Dashboard chapter has its Text Check section and a row in the table of apps. The Development chapter's layout and the README list it.
+
+Changelog: 28-11-2026 12:01:34
+
+Fixed. The wiki, the README, DESIGN.md and tools/check_upstream.py name PS5 KytyPS5 Manager, the new name of KytyPS5 Manager (owner, 28-11-2026).
+
+Changelog: 28-11-2026 11:31:59
+
+Fixed. The wiki, the README, DESIGN.md, ALL-TESTS.md and the tools name Nexus Dependencies for PS5, the new name of Nexus Deps (owner, 28-11-2026). The wiki's Dependencies section keeps its address, #deps.
+
 Changelog: 28-11-2026 09:58:27
 
 Fixed. The local CI (`tools/ci-local.sh`) runs the installers job in a copy of the checkout of its own. In the

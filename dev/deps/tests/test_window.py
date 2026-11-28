@@ -16,7 +16,7 @@ from nexus_deps.main_window import ConfirmDialog, DependencyWindow, FixDialog, a
 
 SHARED = "/home/test/.local/share/bazzite-console-suite/venv"
 SFTP = "/home/test/.local/share/ps5-sftp-tools/venv"               # an app with a venv of its own
-# Tools of the kinds this suite's catalog has none of: one that works only as root, one of two commands, and a
+# Tools made for these checks, apart from the catalog: one that works only as root, one of two commands, and a
 # flashrom that must have the internal programmer.
 ROOTED = ExternalTool("umr", ("umr",), (ToolSource("board", "Reads the GPU's registers."),),
                       description="AMD's register debugger.", root=True)
@@ -171,7 +171,8 @@ def test_missing_tools_advise_what_they_are_needed_for(qapp):
     assert "Install speedtest or speedtest-cli" in tool_advice(SPEEDTEST, installed, load_apps(CATALOG))
     assert "Install a flashrom that has it" in tool_advice(FLASHROM, installed, load_apps(CATALOG),
                                                            "No internal programmer found.")
-    assert tool_advice(tools["cec-ctl"], installed, load_apps(CATALOG)) == ""  # PS5 CEC Manager is not installed
+    # Neither PS5 CEC Manager nor Board Test is installed.
+    assert tool_advice(tools["cec-ctl"], installed - {"board"}, load_apps(CATALOG)) == ""
     window = _window(CheckResult(
         [DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), ""),), "2.5.8")],
         [ToolStatus(tools["paplay"]), ToolStatus(tools["pkexec"], "/usr/bin/pkexec")], installed | {"sftp"}))
@@ -405,6 +406,21 @@ def test_the_firmware_has_a_section_of_its_own(qapp):
     finally:
         window.close()
 
+
+def test_the_emulators_have_a_section_of_their_own(qapp):
+    from nexus_deps.system import Source, Update
+    xenia = Source("upstream-xenia", "Xenia", (Update("Xenia on GitHub", "54386cb", "b85977e"),), group="emulators",
+                   note="A newer build is out.", detail="Tested build: 54386cb.", about="<p>GitHub</p>")
+    pcsx2 = Source("upstream-pcsx2", "PCSX2", group="emulators", detail="Latest stable on GitHub: v2.8.2.")
+    window = _window(CheckResult([], [], frozenset()), system=(Source("flatpak", "Flatpak"), xenia, pcsx2))
+    try:
+        assert not window.emulators_heading.isHidden() and window.apps_heading.isHidden()
+        assert window.emulators_layout.indexOf(window.system_cards["upstream-xenia"]) == 0
+        assert window.system_cards["upstream-xenia"].status.text() == "By hand"
+        assert window.system_cards["upstream-pcsx2"].status.text() == "Up to date"
+        assert not window.fix_button.isEnabled()                    # nothing here is installed by a click
+    finally:
+        window.close()
 
 def _dnf_plan():
     from nexus_deps.fixes import dnf_step

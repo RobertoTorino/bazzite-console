@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Exercise dev/deps/install.sh, Nexus Deps' installer: the launcher, menu entry and Desktop icon point at this
+# Exercise dev/deps/install.sh, Nexus Dependencies' installer: the launcher, menu entry and Desktop icon point at this
 # checkout, the hourly reminder is a systemd user timer (systemctl only records what it is asked), an installed
 # Dependency Checker of the suite (the app it was) and its timer go, the development machine's hourly
 # nexus-dev-updates timer goes, --no-desktop-shortcut drops the icon, root and

@@ -6,7 +6,7 @@
 
 How the repository is laid out, how to set it up and test it, how the wiki's pictures and tours are made, and how
 the versions and releases fit together. How every app is built, and how to add one:
-[Architecture and consistency](architecture.md). The development apps, from Nexus Dashboard for PS5 to Nexus Deps:
+[Architecture and consistency](architecture.md). The development apps, from Nexus Dashboard for PS5 to Nexus Dependencies:
 [Dashboard](dashboard.md). How a release is made and published: [Releases](releases.md). The repository's settings
 on GitHub and Dependabot's pull requests: [GitHub settings](github-settings.md).
 
@@ -26,8 +26,9 @@ tools/                        release and CI (build_release, stage_app, check_ve
 dev/<name>/                   the development apps, run from the checkout and never released: dev/dash/ is Nexus
                               Dashboard (the door to the others), dev/nrt/ Nexus Release Tool, dev/demo/ Nexus
                               Demo Recorder, dev/itests/ Nexus Installer Tests, dev/sounds/ Nexus Sound Lab,
-                              dev/deps/ Nexus Deps, dev/text/ Nexus TTS, dev/studio/ Nexus Remix Studio,
-                              dev/garbage/ Nexus Garbage Remover, dev/flight/ Nexus Flight Recorder
+                              dev/deps/ Nexus Dependencies for PS5, dev/text/ Nexus TTS, dev/studio/ Nexus Remix Studio,
+                              dev/garbage/ Nexus Garbage Remover, dev/flight/ Nexus Flight Recorder,
+                              dev/textcheck/ Nexus Text Check for PS5
 docs/ mkdocs.yml              this wiki (MkDocs Material)
 icons/                        the category icons
 DESIGN.md design/colors/      every color of the suite and its samples (tools/make_design.py writes them)
@@ -221,7 +222,7 @@ Each one serves one tool or one kind of work. Without it, that tool does not run
 | Nexus TTS's speech engine | the voice of the Portal Tour, `tools/record-tour.sh` | **Set up the speech engine** in [Nexus TTS](dashboard.md#nexus-tts). It needs uv (`brew install uv`) or a Python from 3.10 to 3.13 |
 | Rust, maturin, nasm and the libva headers | Remote Play's native core, for `cargo test` or `maturin build` on the machine itself | rustup from [rustup.rs](https://rustup.rs), `brew install nasm`, and maturin with pip in the venv |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | the Flatpak `com.obsproject.Studio` |
-| notify-send | the hourly notifications of Nexus Deps and Nexus Garbage Remover | comes with Bazzite |
+| notify-send | the hourly notifications of Nexus Dependencies and Nexus Garbage Remover | comes with Bazzite |
 | setools (`sesearch`, `seinfo`) | reading the SELinux policy on the board, such as which label a file needs | in a distrobox, see below |
 
 The container of `tools/ci-local.sh` has Rust, maturin, nasm and the libva headers, so a CI run needs none of
@@ -251,12 +252,12 @@ machine was off. It updates the image, the Flatpaks and Homebrew's packages. `uj
 image is used after a restart. The venv is pip's and the Rust toolchain is rustup's, so nothing updates those for
 you.
 
-[Nexus Deps](dashboard.md#deps) shows every source with a newer version at once: Bazzite's image, the Flatpaks,
+[Nexus Dependencies](dashboard.md#deps) shows every source with a newer version at once: Bazzite's image, the Flatpaks,
 Homebrew's packages, the Rust toolchain and the packages of `.venv-linux`. **Update** on a card installs that
 source's updates after it shows the command and asks. Its hourly notification says when something is newer.
 
 The venv's packages are upgraded within what `requirements-dev.txt` allows. The venv's `python` links to Bazzite's
-`/usr/bin/python3`, so a Bazzite image with a newer Python leaves the venv without its packages. Nexus Deps says so,
+`/usr/bin/python3`, so a Bazzite image with a newer Python leaves the venv without its packages. Nexus Dependencies says so,
 and **Update** installs `requirements-dev.txt` for the new Python.
 
 ### Starting the previous Bazzite version once
@@ -465,12 +466,12 @@ it back in use. In the manager's version manager (core's `builds`), you can down
 any other build the emulator publishes on GitHub, a stable release or a nightly. The app checks it against the
 SHA-256 GitHub publishes. So the pin says which build was tried on the board, not which builds users may run.
 
-The shadPS4 Manager was tried with one shadPS4 release, pinned in `apps/shadps4/shadps4_manager/emulator.py`
+The PS5 shadPS4 Manager was tried with one shadPS4 release, pinned in `apps/shadps4/shadps4_manager/emulator.py`
 (`VERSION`, `TAG`, `ASSET`, `SHA256`). The tool checks it: a newer stable release, with the Linux zip and the
 SHA-256 GitHub publishes for it that a new pin needs, and the SHA-256 of the pinned zip. A new shadPS4 can change
 what the app relies on (its `config.json`, the shadNet protocol), so a new pin also needs a look at what changed.
 
-KytyPS5 Manager was tried with one KytyPS5-Native release. It is pinned in
+PS5 KytyPS5 Manager was tried with one KytyPS5-Native release. It is pinned in
 `apps/kytyps5/kytyps5_manager/emulator.py` as `VERSION`, `PUBLISHED`, `SIZE_MB` and `SHA256`. KytyPS5-Native names
 a release after its date and commit, so the tool compares the dates. It checks these:
 
@@ -493,7 +494,7 @@ a try on the board; then `KNOWN_VERSION` moves), a newer major version (users do
 to it), a fallback named in the latest release's notes that is not `FALLBACK_VERSION`, and a fallback release
 without its zip.
 
-The Vita3K Manager was tried with one Vita3K build, pinned in `apps/vita3k/vita3k_manager/emulator.py`
+The PS5 Vita3K Manager was tried with one Vita3K build, pinned in `apps/vita3k/vita3k_manager/emulator.py`
 (`BUILD`, `SEMVER`, `COMMIT`, `SHA256`, `SIZE`). Vita3K has no stable releases: every change is a build, kept as a
 release of `Vita3K/Vita3K-builds` tagged with its number, with `Vita3K-x86_64.AppImage` and the SHA-256 GitHub
 publishes for it. Builds come almost daily; the tool reports the newest build when it is past the pin (with how many
@@ -517,7 +518,7 @@ the new build:
 The tests hold the `config.yml` a Vita3K build writes on its first start (`tests/fixtures/config-4377.yml`); a new
 pin replaces it with the new build's, renamed for it.
 
-The Xenia Manager was tried with one Xenia Canary build, pinned in `apps/xenia/xenia_manager/emulator.py` (`BUILD`,
+The PS5 Xenia Manager was tried with one Xenia Canary build, pinned in `apps/xenia/xenia_manager/emulator.py` (`BUILD`,
 `COMMIT`, `PUBLISHED`, `SHA256`, `SIZE`). Xenia has no stable releases either: every change is a release of
 `xenia-canary/xenia-canary`, tagged with its commit, with `xenia_canary_linux.AppImage` and the SHA-256 GitHub
 publishes for it. A tag is no number, so the app and the tool take a release published after `PUBLISHED` as a newer
@@ -542,7 +543,7 @@ PS5 Board Test runs whichever speedtest CLI is installed; its development tool i
 (`SPEEDTEST_VERSION` in `apps/board/development/tools/install-requirements.sh`). Ookla publishes no API;
 the tool reads the version from Ookla's Homebrew formula. The same script installs Prime95's mprime: the release
 mersenne.org's download page lists, with the SHA-256 listed there. `MPRIME_URL` and `MPRIME_SHA256` in it are one
-known release, used only when the page cannot be read. Nexus Deps compares `~/mprime/.release` with the page.
+known release, used only when the page cannot be read. Nexus Dependencies compares `~/mprime/.release` with the page.
 
 ```bash
 python3 tools/check_upstream.py            # all of them

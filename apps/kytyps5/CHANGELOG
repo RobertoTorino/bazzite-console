@@ -1,3 +1,11 @@
+Changelog: 28-11-2026 12:38:25
+
+Fixed. The comments and texts that name an emulator manager use its new name, such as PS5 PCSX2 Manager (owner, 28-11-2026).
+
+Changelog: 28-11-2026 12:01:34
+
+Fixed. The app is called PS5 KytyPS5 Manager now, with the device's name in front (owner, 28-11-2026). The window, the menu entry, the run script's messages and the wiki use that name. The Steam collection keeps the tag KytyPS5 Manager, so the shortcuts already in Steam stay in one collection.
+
 Changelog: 28-11-2026 11:08:46
 
 Release 0.1.0.

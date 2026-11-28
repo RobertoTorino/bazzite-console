@@ -18,7 +18,7 @@ import pytest
 
 WRAPPER = Path(__file__).resolve().parents[1] / "ps5-kytyps5-run"
 
-# /proc/bus/input/devices on a board with Steam running (shadPS4 Manager's fixture): a DualShock 4 on USB, its motion
+# /proc/bus/input/devices on a board with Steam running (PS5 shadPS4 Manager's fixture): a DualShock 4 on USB, its motion
 # sensors and touchpad, and Steam's virtual controller.
 DS4_AND_STEAM = """\
 I: Bus=0003 Vendor=054c Product=09cc Version=8111

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The settings the Settings window offers (owner, 03-11-2026, from the earlier implementation's PPSSPP Manager):
+"""The settings the Settings window offers (owner, 03-11-2026, from the earlier implementation's PS5 PPSSPP Manager):
 PPSSPP's settings that matter for playing, each one key of ppsspp.ini on PPSSPP's memory stick (userdata), read from
 the file (or PPSSPP's default while it names none) and written one at a time, every other line kept. Never while
 PPSSPP runs: it writes the whole file back when it closes.

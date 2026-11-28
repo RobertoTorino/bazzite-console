@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts the PPSSPP that PPSSPP Manager installed, with the arguments given:
+# Starts the PPSSPP that PS5 PPSSPP Manager installed, with the arguments given:
 #
 #   ps5-ppsspp-run --fullscreen --pause-menu-exit /path/to/game.iso   a game full screen (Game Mode)
 #   ps5-ppsspp-run /path/to/game.iso                                  a game as PPSSPP is set up
@@ -16,7 +16,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 [ -x "$APPIMAGE" ] || {
-    echo "PPSSPP is not installed: open PPSSPP Manager and press Install." >&2
+    echo "PPSSPP is not installed: open PS5 PPSSPP Manager and press Install." >&2
     exit 1
 }
 # The AppImage mounts itself with its own FUSE library and the system's fusermount (part of Bazzite); without
@@ -26,7 +26,7 @@ if ! command -v fusermount3 >/dev/null 2>&1 && ! command -v fusermount >/dev/nul
 fi
 # A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
 # (28DE:11FF) in their place: no motion sensors, and on the desktop it follows Steam's Desktop Configuration (mouse
-# and keys). As RPCS3 Manager and Remote Play do: while a real controller is connected, PPSSPP's SDL
+# and keys). As PS5 RPCS3 Manager and Remote Play do: while a real controller is connected, PPSSPP's SDL
 # input reads it and leaves Steam's virtual one out. Without a real one (a Steam Deck's own controls) Steam's
 # choice stands.
 INPUT_DEVICES="${PS5_INPUT_DEVICES:-/proc/bus/input/devices}"      # another file only in the tests
@@ -42,7 +42,7 @@ if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVIC
 fi
 # On a Wayland desktop PPSSPP (an SDL program) may open its window through Wayland, and Steam sees only X11
 # windows: no overlay (Shift+Tab, the PS button) over a game it started. A game Steam starts there opens its window
-# through XWayland, as RPCS3 Manager does for RPCS3 with Qt. Game Mode is X11 already. SDL_VIDEO_DRIVER is the same
+# through XWayland, as PS5 RPCS3 Manager does for RPCS3 with Qt. Game Mode is X11 already. SDL_VIDEO_DRIVER is the same
 # setting under SDL 3, should a later PPSSPP build on it.
 if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ] &&
    [ -z "${SDL_VIDEODRIVER:-}" ] && [ -z "${SDL_VIDEO_DRIVER:-}" ]; then
@@ -56,7 +56,7 @@ fi
 game=""
 for arg in "$@"; do game=$arg; done
 if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
-    echo "This game is no longer there: $game. Open PPSSPP Manager, press Refresh and then Update Steam." >&2
+    echo "This game is no longer there: $game. Open PS5 PPSSPP Manager, press Refresh and then Update Steam." >&2
     APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-ppsspp-manager/app"
     PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
     if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then

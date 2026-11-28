@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![PPSSPP Manager](../assets/ppsspp/ps5-ppsspp-manager.webp){ .app-logo }
+![PS5 PPSSPP Manager](../assets/ppsspp/ps5-ppsspp-manager.webp){ .app-logo }
 
-# PPSSPP Manager
+# PS5 PPSSPP Manager
 
 Plays **PSP games** on the board with [PPSSPP](https://www.ppsspp.org), an open-source PSP emulator. The app
 installs the PPSSPP release pinned for this version of the app, finds your games and adds them to Steam, so they
@@ -225,7 +225,7 @@ kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, with your home folder written as `~`, and not your SteamGridDB key.
 `install.sh --uninstall` keeps it; `--purge` removes it.
 
-Two buttons sit above the log. **PPSSPP Manager** shows the app's own log. **PPSSPP** shows what PPSSPP
+Two buttons sit above the log. **PS5 PPSSPP Manager** shows the app's own log. **PPSSPP** shows what PPSSPP
 printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-ppsspp-manager/emulator.log`. Each
 game's part opens with a line that says how the wrapper started PPSSPP. It ends with a line that gives PPSSPP's exit
 code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps

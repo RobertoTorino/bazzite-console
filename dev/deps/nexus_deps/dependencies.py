@@ -620,4 +620,11 @@ def check_all(dependencies: list[Dependency], tools: list[ExternalTool], apps: d
               user_agent: str) -> CheckResult:
     environments = installed_environments(apps)
     return CheckResult(check_dependencies(dependencies, user_agent, environments), check_tools(tools),
-                       frozenset(environments))
+                       installed_owners(apps, environments))
+
+
+def installed_owners(apps: dict[str, App], environments: dict[str, tuple[Path, ...]]) -> frozenset[str]:
+    """The installed apps, and core with them: it has no launcher of its own and runs inside every installed app,
+    so the tools it runs are needed while any app is installed."""
+    core = {"core"} if environments and "core" in apps else set()
+    return frozenset(environments) | core

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The main window, built as RPCS3 Manager's (owner, 07-11-2026: RPCS3 Manager's design is every manager's): the header
+"""The main window, built as PS5 RPCS3 Manager's (owner, 07-11-2026: PS5 RPCS3 Manager's design is every manager's): the header
 with the Refresh pill and the state boxes, a row of action pills (Install and Uninstall for PPSSPP, Rename for the
 games), the state of each (PPSSPP, the game folder) in a line, then the tabs: the games found, each with a box for
 Steam; PPSSPP's settings (core's settings_page over ppsspp_settings); the saves on its memory stick (Memory
@@ -12,7 +12,7 @@ A game runs from Steam: the tab beside Your games, Start game, starts the chosen
 PPSSPP's own window (PPSSPP settings, under the games) stays for what the Settings tab does not set. What the window
 says it also writes to the app's log (core's applog), shown in the View logs tab.
 
-The owner's order of 20-11-2026, shadPS4 Manager's, replaces the one above: the header's pills are PPSSPP's (its
+The owner's order of 20-11-2026, PS5 shadPS4 Manager's, replaces the one above: the header's pills are PPSSPP's (its
 version, Install, Uninstall) and Refresh; the row under them the games' pills and Available in Steam, with Play
 time where the emulator counts it; then two columns, the state lines and the installed version beside them; then the
 tabs, Memory cards before Settings and the log's as View logs."""
@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
         self.remove_game_pill.clicked.connect(self.on_remove_game)
         # Play time (owner, 18-11-2026): all games together, as PPSSPP counts it
         self.time_box = MetricBox("Play time", style.BLUE)
-        # The owner's order (20-11-2026), as shadPS4 Manager's. The header: PPSSPP's version, Install and
+        # The owner's order (20-11-2026), as PS5 shadPS4 Manager's. The header: PPSSPP's version, Install and
         # Uninstall, then Refresh. The row under it: the games' Rename and Uninstall, Available in Steam and Play time
         # (the Your games box went: the table lists them). Each row's pills share the width in equal parts.
         self.header_pills = [self.emulator_box, self.install_pill, self.remove_pill, self.refresh_pill]
@@ -759,7 +759,7 @@ class MainWindow(QMainWindow):
         """The Start game tab (owner, 12-11-2026): the chosen game started through Steam, as its shortcut there
         starts it (steam://rungameid/ with the shortcut's number). Off the window's thread, with core's play(): a
         Steam that does not run is started and waited for before the game's address is given, and the line says
-        the game runs only once PPSSPP does (owner, 20-11-2026, first in shadPS4 Manager: Steam, started with
+        the game runs only once PPSSPP does (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam, started with
         the address, came up and never started the game)."""
         game = self.chosen()
         if game is None:

@@ -2,7 +2,7 @@
 """PS3 games on the system with RPCS3: installs a pinned RPCS3 build, takes the PS3 firmware, finds the games in
 RPCS3 and the chosen folders and adds them to Steam, where a game is started."""
 
-APP_NAME = "RPCS3 Manager"
+APP_NAME = "PS5 RPCS3 Manager"
 APP_ID = "ps5-rpcs3-manager"
 __version__ = "1.9.1"
 

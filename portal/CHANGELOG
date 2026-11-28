@@ -1,3 +1,15 @@
+Changelog: 28-11-2026 12:51:30
+
+Release 5.6.1.
+
+Changelog: 28-11-2026 12:38:25
+
+Fixed. The emulator managers are called PS5 RPCS3 Manager, PS5 shadPS4 Manager, PS5 PPSSPP Manager, PS5 PCSX2 Manager, PS5 Vita3K Manager and PS5 Xenia Manager (owner, 28-11-2026). Their tiles keep their short names.
+
+Changelog: 28-11-2026 12:01:34
+
+Fixed. The tile of KytyPS5 Manager is called PS5 KytyPS5 Manager (owner, 28-11-2026).
+
 Changelog: 28-11-2026 11:08:46
 
 Release 5.6.0. Pins ps5-compute-v1.2.0.

@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Vita3K Manager](../assets/vita3k/ps5-vita3k-manager.webp){ .app-logo }
+![PS5 Vita3K Manager](../assets/vita3k/ps5-vita3k-manager.webp){ .app-logo }
 
-# Vita3K Manager
+# PS5 Vita3K Manager
 
 Plays **PS Vita games** on the board with [Vita3K](https://vita3k.org), an open-source PS Vita emulator. The app
 installs the Vita3K build pinned for this version of the app, installs the PS Vita's firmware and your games
@@ -240,7 +240,7 @@ older files are kept). **Clear logs**, the tab beside View logs, empties
 the file and the View logs tab and removes the three older files. The log holds what the app did, with your home folder written as `~`, and not your
 SteamGridDB key. `install.sh --uninstall` keeps it; `--purge` removes it.
 
-Two buttons sit above the log. **Vita3K Manager** shows the app's own log. **Vita3K** shows what Vita3K
+Two buttons sit above the log. **PS5 Vita3K Manager** shows the app's own log. **Vita3K** shows what Vita3K
 printed while the last games ran. The run wrapper writes it to `~/.local/share/ps5-vita3k-manager/emulator.log`. Each
 game's part opens with a line that says how the wrapper started Vita3K. It ends with a line that gives Vita3K's exit
 code. Every line shows your home folder as `~`. This file also turns over at 1 MB, and the app keeps

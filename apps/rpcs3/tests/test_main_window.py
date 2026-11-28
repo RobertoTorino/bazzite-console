@@ -2,7 +2,7 @@
 """The window on folders made in a temp folder: the states before and after installing, the firmware, the games in
 the table, the game folders, the packages, each game's screen, RPCS3's files set up (its GUI settings, player 1),
 the plan for Steam, installing through the worker, Steam's shortcuts changed with a fake "close Steam", the
-controller state, the play time, the Log tab, the Steam link and the blue look; built as PCSX2 Manager's window
+controller state, the play time, the Log tab, the Steam link and the blue look; built as PS5 PCSX2 Manager's window
 (owner, 24-10-2026)."""
 
 from __future__ import annotations
@@ -107,7 +107,7 @@ def test_before_installing(qapp, folders):
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Start game",
                                                                             "Memory cards", "Settings",
                                                                             "View logs", "Clear logs"]
-    # The owner's order (20-11-2026), as shadPS4 Manager's: the version, Install, Uninstall and Refresh in the
+    # The owner's order (20-11-2026), as PS5 shadPS4 Manager's: the version, Install, Uninstall and Refresh in the
     # header, the games' pills, Available in Steam and Play time under it. The Your games box went.
     assert [b.caption.text() for b in window.header_pills] == ["RPCS3 version", "Install", "Uninstall",
                                                                "Click to refresh"]
@@ -666,7 +666,7 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, monkeypatch):
     window = _window(folders)
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     window.on_update_steam()
-    assert "install RPCS3 Manager through the portal first" in window.running.text()
+    assert "install PS5 RPCS3 Manager through the portal first" in window.running.text()
     assert not window.worker.running
     window.close()
 
@@ -721,11 +721,11 @@ def test_a_newer_rpcs3_is_mentioned(qapp, folders):
 
 def test_the_log_tab(qapp, folders, tmp_path):
     """What the window says goes to the Log tab with the time, after what the log file held already."""
-    folders["log_path"].write_text("24-10-2026 22:14:00 INFO RPCS3 Manager 0.9.0 started\n")
+    folders["log_path"].write_text("24-10-2026 22:14:00 INFO PS5 RPCS3 Manager 0.9.0 started\n")
     _install(folders["home"])
     window = _window(folders)
     lines = window.output.toPlainText().splitlines()
-    assert lines[0] == "24-10-2026 22:14:00 INFO RPCS3 Manager 0.9.0 started"
+    assert lines[0] == "24-10-2026 22:14:00 INFO PS5 RPCS3 Manager 0.9.0 started"
     assert len(lines) == 2 and lines[1].endswith(" INFO RPCS3 set up: its welcome dialog off, its exit question off, "
                                                  "its own update check off, its dark style.")
     window.say("Steam was not changed: no Steam", ok=False)
@@ -740,7 +740,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
     """Clear logs, the tab beside Log that is a button (owner, 18-11-2026): the log file emptied, the older ones
     beside it removed and the Log tab emptied with them, the open page kept."""
     log = folders["log_path"]
-    log.write_text("18-11-2026 10:00:00 INFO RPCS3 Manager started\n")
+    log.write_text("18-11-2026 10:00:00 INFO PS5 RPCS3 Manager started\n")
     older = log.with_name(log.name + ".1")
     older.write_text("17-11-2026 10:00:00 INFO older\n")
     window = _window(folders)
@@ -757,7 +757,7 @@ def test_clear_logs_empties_the_log(qapp, folders):
 
 
 def test_the_blueprint_layout(qapp, folders):
-    """The managers' design (owner, 18-11-2026, PPSSPP Manager's): the window 900 wide when it opens, which is also
+    """The managers' design (owner, 18-11-2026, PS5 PPSSPP Manager's): the window 900 wide when it opens, which is also
     its narrowest, and what is in it asks for no more; Play time the last pill of the second row; the six tabs
     share the whole width, the last one up to the margin, with no line over them; under the header's pills the two
     links alone, in the type of a pill's caption, each still a link."""
@@ -798,7 +798,7 @@ def _rpcn_pill(window, qapp, text: str) -> bool:
 
 
 def test_rpcn_off_online_offline(qapp, folders):
-    """RPCN (owner, 18-11-2026: as shadPS4 Manager's shadNet): the Account pill, the RPCN line with the name that
+    """RPCN (owner, 18-11-2026: as PS5 shadPS4 Manager's shadNet): the Account pill, the RPCN line with the name that
     signs in, and beside the app's state RPCN Off, Online when the server answers (asked, not signed in) or
     Offline."""
     from conftest import FakeRpcn
@@ -1089,7 +1089,7 @@ def test_the_version_pill(qapp, folders, monkeypatch):
 
 
 def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypatch):
-    """Start game with Steam closed (owner, 20-11-2026, first in shadPS4 Manager: Steam came up and the game never
+    """Start game with Steam closed (owner, 20-11-2026, first in PS5 shadPS4 Manager: Steam came up and the game never
     started, while the line said it did): Steam is started and waited for before the game's address is given, and
     what went wrong is said. While RPCS3 runs, no second one is started."""
     _install(folders["home"])
@@ -1124,7 +1124,7 @@ def test_start_game_waits_for_a_steam_that_does_not_run(qapp, folders, monkeypat
 
 
 def test_a_game_in_steam_more_than_once_is_said_and_update_steam_leaves_one(qapp, folders, monkeypatch):
-    """Owner, 20-11-2026 (first in shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
+    """Owner, 20-11-2026 (first in PS5 shadPS4 Manager: "multiple entries for the same game in Steam ... a check for
     that and a feature to fix it"): the window says which game is there more than once, the box's tooltip too, and
     Update Steam, lit for it, leaves one shortcut."""
     _install(folders["home"])

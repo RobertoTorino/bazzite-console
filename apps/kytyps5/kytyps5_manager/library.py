@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's own game folders, as shadPS4 Manager's (fixed folders, no folder choosing): Games/PS5 in the user's
+"""The app's own game folders, as PS5 shadPS4 Manager's (fixed folders, no folder choosing): Games/PS5 in the user's
 home folder, made when the app opens, and Games/PS5 on each removable drive that has one (a USB drive or an SD card;
 core's drives). The games are dropped there, each in a folder of its own."""
 

@@ -110,7 +110,7 @@ def main() -> int:
 An app that opens what it is given on the command line (a file from its menu entry's `%f`, a host and port) hands
 those arguments to the open window instead of losing them: `instance.already_running(INFO.app_id, args)` sends them
 along, and `instance.serve(INFO.app_id, window, on_args=...)` gives them to the running window, which opens them as
-it would at start-up (the shadPS4 Manager opens the package in Extract PKG).
+it would at start-up (the PS5 shadPS4 Manager opens the package in Extract PKG).
 
 `--version` prints the app's version and the core it runs on.
 
@@ -217,7 +217,7 @@ what it asks. An app in which the controller belongs to something else installs 
 Play, XBOX Remote Play, PS5 Controller, PS5 System Overlay); a window that must keep every key (a stream) sets the
 class attribute `exit_keys = False`.
 
-An app may have its own color, taken from its icon, in a `style.py` beside its window (the shadPS4 Manager's is
+An app may have its own color, taken from its icon, in a `style.py` beside its window (the PS5 shadPS4 Manager's is
 the pattern): the main buttons, the table headers, the selection and the links take it, over the theme. White text
 on the color reads at 4.5:1 or more, links on a dark window use a lighter shade of it, and the color stays easy on
 the eye. Without a `style.py` the app takes the theme's accent.
@@ -275,13 +275,13 @@ Where the pictures come from depends on what the app has:
 | App | What the Steam card shows |
 |---|---|
 | Remote Play | Drawn from the app's icon (`steam_art`), with the console's name and model |
-| PCSX2 Manager | Drawn from the app's icon (`steam_art`), with the game's title: a PS2 disc has no pictures |
+| PS5 PCSX2 Manager | Drawn from the app's icon (`steam_art`), with the game's title: a PS2 disc has no pictures |
 | PS5 DatStation | Drawn from the app's icon (`steam_art`), with the app's name |
-| shadPS4 Manager | The game's own pictures (`icon0.png`, `pic1.png`), its icon as the logo |
-| RPCS3 Manager | The game's own pictures (`ICON0.PNG`, `PIC1.PNG`), its icon as the logo |
-| Xenia Manager | Drawn from the app's icon (`steam_art`), with the game's title |
-| PPSSPP Manager | The game's own pictures (`ICON0.PNG`, `PIC1.PNG`), its icon as the logo |
-| Vita3K Manager | The game's own pictures (`icon0.png`, `pic0.png`), its icon as the logo |
+| PS5 shadPS4 Manager | The game's own pictures (`icon0.png`, `pic1.png`), its icon as the logo |
+| PS5 RPCS3 Manager | The game's own pictures (`ICON0.PNG`, `PIC1.PNG`), its icon as the logo |
+| PS5 Xenia Manager | Drawn from the app's icon (`steam_art`), with the game's title |
+| PS5 PPSSPP Manager | The game's own pictures (`ICON0.PNG`, `PIC1.PNG`), its icon as the logo |
+| PS5 Vita3K Manager | The game's own pictures (`icon0.png`, `pic0.png`), its icon as the logo |
 
 The emulator managers start a game through Steam too: their tab beside **Your games**, **Start game**, is core's
 `ActionTab` (a tab that acts on a click and leaves the open page open), which looks up the chosen game's shortcut
@@ -358,10 +358,10 @@ It installs:
   fix within that range included.
 - **A launcher** `~/.local/bin/<app-id>` that changes into the app folder and runs
   `exec "<venv>/bin/python" -m <package>`. An app that takes file or folder paths on its command line (the
-  shadPS4 Manager) stays in the folder it is started from, so a relative path means what it
+  PS5 shadPS4 Manager) stays in the folder it is started from, so a relative path means what it
   says: `exec "<venv>/bin/python" -c '$RUN_MODULE' "<app folder>" <package> "$@"`, which puts the app folder first
   on `sys.path` instead (see its `install.sh`), and its `__main__.py` makes the path absolute before it uses or
-  hands it on. Keep the `exec "<venv>/bin/python"` start of that line: Nexus Deps reads it to find the
+  hands it on. Keep the `exec "<venv>/bin/python"` start of that line: Nexus Dependencies reads it to find the
   app's Python environment.
 - **A menu entry and a Desktop icon,** both pointing at the launcher by its full path.
 
@@ -422,7 +422,7 @@ It writes `apps/<name>/` (the package with `__main__.py` and a window on the car
 the installer test `tools/installer-tests/<name>.sh` and the chapter `docs/apps/<name>.md`,
 and adds the app to `portal/apps.toml`, `icons/categories.toml` (with the icon copies), `mkdocs.yml`, the apps
 overview and categories tables, the home page (a line at the end of its last card, to work into the cards' text),
-the suite README, the bug report's App dropdown, the root `requirements-dev.txt` and Nexus Deps' catalog of the
+the suite README, the bug report's App dropdown, the root `requirements-dev.txt` and Nexus Dependencies' catalog of the
 suite. Its `install.sh --uninstall` says the app is not installed, and removes nothing, when nothing of it is
 there. CI needs no edit, as its
 pytest matrix, its installer tests and its shellcheck come from the folders. What it does by hand, step by step,
@@ -444,7 +444,7 @@ for an app that does not fit the template (the owner's decision):
    `[[apps.<name>.quickfixes]]` table instead (key, name, summary, launch, and the same `changes_board` and
    `board_change` per quickfix): the portal shows a tile per quickfix. A new quickfix of PS5 Quickfix is a window in
    its `windows.py`, an entry in its `catalog.py` and a table in `apps.toml`, kept the same by its tests.
-7. Add the app to Nexus Deps' catalog of the suite (`[app.<name>]` with its launchers), its Python packages and
+7. Add the app to Nexus Dependencies' catalog of the suite (`[app.<name>]` with its launchers), its Python packages and
    the external tools it runs, with the Homebrew formula (`brew`) or Fedora package (`rpm`) that installs a tool
    (`dev/deps/nexus_deps/catalogs/bazzite-console.toml`).
 8. Write its manual chapter, `docs/apps/<name>.md`, add it to `mkdocs.yml`, and give it a row in the apps overview,
@@ -471,6 +471,6 @@ for a package or tool beyond PyQt6, and the portal bump the new entry asks for.
 | Version copies equal `VERSION` | `tools/check_versions.py` |
 | Every app and portal entry has an installer test, and CI runs it | `tools/tests/test_installer_tests.py` |
 | Copies of `instance.py`, `theme.py`, `exit_keys.py` and `upstream.py` equal core's | `tools/tests/test_instance_copies.py` |
-| Nexus Deps' catalog matches the requirements files, the portal's apps, and the tools the apps use | `dev/deps/tests/test_dependencies.py` |
+| Nexus Dependencies' catalog matches the requirements files, the portal's apps, and the tools the apps, core and the portal use | `dev/deps/tests/test_dependencies.py` |
 | `portal/apps.toml` rules and version bumps | `tools/check_manifest.py` |
 | The manual builds with no broken link | `mkdocs build --strict` |

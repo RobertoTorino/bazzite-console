@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window on folders made in a temp folder, built as shadPS4 Manager's: the states before and after installing,
+"""The window on folders made in a temp folder, built as PS5 shadPS4 Manager's: the states before and after installing,
 the board check, the games in the table, installing through the worker, Steam's shortcuts changed with a fake "close
 Steam", the GPU helper as an option, Start game, Games Uninstall, the controller and Steam states and the log."""
 

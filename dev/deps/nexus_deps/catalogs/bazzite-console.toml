@@ -14,7 +14,7 @@ name = "PS5 Board Test"
 launchers = ["~/.local/bin/ps5-board-test"]
 
 [app.rpcs3]
-name = "RPCS3 Manager"
+name = "PS5 RPCS3 Manager"
 launchers = ["~/.local/bin/ps5-rpcs3-manager"]
 
 [app.remoteplay]
@@ -26,7 +26,7 @@ name = "XBOX Remote Play"
 launchers = ["~/.local/bin/ps5-xbox-remoteplay"]
 
 [app.shadps4]
-name = "shadPS4 Manager"
+name = "PS5 shadPS4 Manager"
 launchers = ["~/.local/bin/ps5-shadps4-manager"]
 
 [app.datstation]
@@ -34,19 +34,19 @@ name = "PS5 DatStation"
 launchers = ["~/.local/bin/ps5-datstation"]
 
 [app.ppsspp]
-name = "PPSSPP Manager"
+name = "PS5 PPSSPP Manager"
 launchers = ["~/.local/bin/ps5-ppsspp-manager"]
 
 [app.pcsx2]
-name = "PCSX2 Manager"
+name = "PS5 PCSX2 Manager"
 launchers = ["~/.local/bin/ps5-pcsx2-manager"]
 
 [app.vita3k]
-name = "Vita3K Manager"
+name = "PS5 Vita3K Manager"
 launchers = ["~/.local/bin/ps5-vita3k-manager"]
 
 [app.xenia]
-name = "Xenia Manager"
+name = "PS5 Xenia Manager"
 launchers = ["~/.local/bin/ps5-xenia-manager"]
 
 [app.sftp]
@@ -102,7 +102,7 @@ name = "PS5 Turing Screen"
 launchers = ["~/.local/bin/ps5-turing-screen"]
 
 [app.kytyps5]
-name = "KytyPS5 Manager"
+name = "PS5 KytyPS5 Manager"
 launchers = ["~/.local/bin/ps5-kytyps5"]
 
 [[tool]]
@@ -117,6 +117,11 @@ owner = "compute"
 need = "required"
 usage = "Read and change the GPU compute-unit registers."
 anchor = "requirements"
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Read live GPU registers for the active compute-unit count."
 
 [[tool]]
 name = "memtest_vulkan"
@@ -135,6 +140,11 @@ need = "optional"
 usage = "Recommended: verify GPU load results during the GPU sweep."
 anchor = "requirements"
 
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Verified GPU load for stress tests."
+
 [[tool]]
 name = "stress-ng"
 brew = "stress-ng"
@@ -147,6 +157,11 @@ owner = "cores"
 need = "required"
 usage = "Verified CPU load during core testing."
 anchor = "requirements"
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "CPU stress/load tests and CPU benchmark."
 
 [[tool]]
 name = "vkpeak"
@@ -162,6 +177,11 @@ usage = "Fallback GPU load during CU testing."
 owner = "gpu"
 need = "optional"
 usage = "Fallback GPU load during the GPU sweep."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "GPU benchmark and fallback GPU load."
 
 [[tool]]
 name = "vkmark"
@@ -179,6 +199,11 @@ owner = "gpu"
 need = "optional"
 usage = "GPU load generator for safe-point tests."
 
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Fallback GPU load during stress tests."
+
 [[tool]]
 name = "glmark2"
 rpm = "glmark2"
@@ -194,6 +219,11 @@ usage = "Fallback GPU load during CU testing."
 owner = "gpu"
 need = "optional"
 usage = "GPU load generator for safe-point tests."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Fallback GPU load during stress tests."
 
 [[tool]]
 name = "setpci"
@@ -219,6 +249,11 @@ owner = "cores"
 need = "required"
 usage = "Used with setpci to access PS5 PCI configuration space."
 anchor = "requirements"
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "The diagnostics report lists the graphics devices."
 
 [[tool]]
 name = "taskset"
@@ -279,6 +314,11 @@ need = "required"
 usage = "Privilege for governor configuration and kernel log checks."
 anchor = "requirements"
 
+[[tool.source]]
+owner = "board"
+need = "required"
+usage = "Privilege for system checks and tests that need administrator access."
+
 [[tool]]
 name = "journalctl"
 rpm = "systemd"
@@ -300,6 +340,15 @@ owner = "gpu"
 need = "required"
 usage = "Read and follow system and service logs."
 
+[[tool.source]]
+owner = "quickfix"
+need = "optional"
+usage = "Persistent Journal moves the journal to the disk and back."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Read system and kernel logs for diagnostics."
 
 [[tool]]
 name = "cyan-skillfish-governor-smu"
@@ -323,6 +372,21 @@ executables = ["busctl"]
 owner = "gpu"
 need = "required"
 usage = "Communicate with the governor service over D-Bus."
+
+[[tool.source]]
+owner = "ssd"
+need = "required"
+usage = "Reads the drives' SMART values from udisks, without root."
+
+[[tool.source]]
+owner = "cec"
+need = "optional"
+usage = "Pauses videos and music while the TV is off."
+
+[[tool.source]]
+owner = "bluetooth"
+need = "required"
+usage = "The search after boot sees with it whether a device's services are read."
 
 [[tool]]
 name = "radeontop"
@@ -548,7 +612,7 @@ executables = ["pkexec"]
 [[tool.source]]
 owner = "sftp"
 usage = "Start or stop the local SSH server."
-need = "required"
+need = "optional"
 
 [[tool.source]]
 owner = "webcam"
@@ -575,6 +639,22 @@ owner = "gpu"
 need = "required"
 usage = "Password prompt for privileged configuration, service actions and safe-point tests."
 
+[[tool.source]]
+owner = "cec"
+need = "required"
+usage = "Password prompt for turning the power button job on and off."
+
+[[tool.source]]
+owner = "turing"
+need = "required"
+usage = "Password prompt for adding the udev rule that gives your user the screen's port (Allow access)."
+anchor = "access-to-the-screen"
+
+[[tool.source]]
+owner = "kytyps5"
+need = "required"
+usage = "Password prompt for installing and removing the GPU helper."
+
 [[tool]]
 name = "udevadm"
 description = "Reloads and triggers device rules after Webcam installs a rule."
@@ -584,6 +664,12 @@ executables = ["udevadm"]
 owner = "webcam"
 usage = "Apply the camera device rule."
 need = "required"
+
+[[tool.source]]
+owner = "turing"
+need = "required"
+usage = "Applies the rule that gives your user the screen's port, at once, without unplugging it."
+anchor = "access-to-the-screen"
 
 [[tool]]
 name = "systemctl"
@@ -615,15 +701,30 @@ owner = "gpu"
 need = "required"
 usage = "Manage and inspect the GPU governor system service."
 
+[[tool.source]]
+owner = "quickfix"
+need = "optional"
+usage = "Ethernet First turns its timer on and off."
+
+[[tool.source]]
+owner = "compute"
+need = "required"
+usage = "Install and remove the CU unlock's boot service, and restart between CU tests."
+
 [[tool]]
 name = "firewall-cmd"
-description = "Checks the firewall state before SFTP Tools opens SSH access."
+description = "The command line of firewalld, the firewall."
 executables = ["firewall-cmd"]
 
 [[tool.source]]
 owner = "sftp"
 usage = "Inspect or open the SSH firewall service."
 need = "optional"
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Reports the firewall's state."
 
 [[tool]]
 name = "notify-send"
@@ -661,6 +762,11 @@ owner = "cec"
 usage = "Every message to the TV: power, input and the remote's keys."
 need = "required"
 
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Read the CEC adapter for the HDMI-CEC check (test 51)."
+
 [[tool]]
 name = "FFmpeg"
 description = "The audio and video codec library. Remote Play carries its own inside the app's native core, so nothing is installed on the system for it; checked by asking the installed core which version it holds."
@@ -682,6 +788,11 @@ executables = ["bluetoothctl"]
 owner = "bluetooth"
 usage = "The search after boot pairs, trusts and connects the listed devices; the window lists the devices Bluetooth knows and searches for nearby ones."
 need = "required"
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Reports whether Bluetooth is on."
 
 [[tool]]
 name = "dbus-python"
@@ -716,3 +827,719 @@ executables = ["kwriteconfig6"]
 owner = "bluetooth"
 usage = "Bluetooth on at every login (Plasma only)."
 need = "optional"
+
+[[tool.source]]
+owner = "cec"
+need = "optional"
+usage = "The power button job sets the desktop's power button action, and puts it back after."
+
+[[tool]]
+name = "xdg-open"
+description = "Opens a file, folder or link with the desktop's default program (xdg-utils)."
+executables = ["xdg-open"]
+
+[[tool.source]]
+owner = "kytyps5"
+need = "optional"
+usage = "The Steam link opens Steam's library with it."
+
+[[tool.source]]
+owner = "core"
+need = "optional"
+usage = "Opens folders, files and links on the desktop."
+
+[[tool.source]]
+owner = "portal"
+need = "optional"
+usage = "The file manager and GitHub shortcuts."
+
+[[tool.source]]
+owner = "upscaler"
+need = "optional"
+usage = "Opens a game in Steam, and the work folder."
+
+[[tool]]
+name = "restorecon"
+description = "Sets a file's SELinux label to the one the system's policy gives it (policycoreutils)."
+executables = ["restorecon"]
+
+[[tool.source]]
+owner = "turing"
+need = "optional"
+usage = "Gives the udev rule its SELinux label."
+
+[[tool.source]]
+owner = "webcam"
+need = "optional"
+usage = "Gives the udev rule its SELinux label."
+
+[[tool.source]]
+owner = "bluetooth"
+need = "optional"
+usage = "Gives the files of the search after boot their SELinux labels."
+
+[[tool.source]]
+owner = "fan"
+need = "optional"
+usage = "Gives the thermal guard's files their SELinux labels."
+
+[[tool]]
+name = "kreadconfig6"
+description = "Reads KDE's settings files (with kwriteconfig6)."
+executables = ["kreadconfig6"]
+
+[[tool.source]]
+owner = "cec"
+need = "optional"
+usage = "The power button job reads the desktop's power button action, to put it back later."
+
+[[tool.source]]
+owner = "bluetooth"
+need = "optional"
+usage = "Bluetooth on at every login (Plasma only)."
+
+[[tool]]
+name = "tuned-adm"
+description = "Shows and switches the tuned power profile."
+executables = ["tuned-adm"]
+
+[[tool.source]]
+owner = "cec"
+need = "optional"
+usage = "The power button job picks a power-saving tuned profile while the PS5 sleeps."
+
+[[tool]]
+name = "usermod"
+description = "Changes a user account, such as its groups (shadow-utils)."
+executables = ["usermod"]
+root = true
+
+[[tool.source]]
+owner = "cec"
+need = "required"
+usage = "The power button job adds your user to the input group, which may read the button."
+
+[[tool]]
+name = "sysctl"
+description = "Reads and sets kernel parameters while the system runs (procps-ng)."
+executables = ["sysctl"]
+
+[[tool.source]]
+owner = "quickfix"
+need = "optional"
+usage = "Game Memory Map sets vm.max_map_count at once, and puts it back when turned off."
+
+[[tool]]
+name = "systemd-tmpfiles"
+description = "Creates folders and files as the tmpfiles.d settings describe them (systemd)."
+executables = ["systemd-tmpfiles"]
+
+[[tool.source]]
+owner = "quickfix"
+need = "optional"
+usage = "Persistent Journal makes the journal's folder on the disk."
+
+[[tool]]
+name = "nmcli"
+description = "NetworkManager's command line."
+executables = ["nmcli"]
+
+[[tool.source]]
+owner = "quickfix"
+need = "optional"
+usage = "Ethernet First turns the Wi-Fi off while a network cable is connected, and on again."
+
+[[tool]]
+name = "runuser"
+description = "Runs a command as another user (util-linux)."
+executables = ["runuser"]
+
+[[tool.source]]
+owner = "fan"
+need = "optional"
+usage = "The thermal guard runs as root and shows its warnings in each desktop session with it."
+
+[[tool]]
+name = "rpm"
+description = "Fedora's package manager. The apps only ask it which packages are installed."
+executables = ["rpm"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "The diagnostics report names the governor's package version."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Lists the installed packages."
+
+[[tool]]
+name = "rpm-ostree"
+description = "Bazzite's tool for its system image. The apps read its deployments and kernel arguments with it, and change those arguments."
+executables = ["rpm-ostree"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "The diagnostics report shows the deployments."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Reports the deployments and the layered packages."
+
+[[tool]]
+name = "lscpu"
+description = "Shows the CPU's cores, threads and sockets (util-linux)."
+executables = ["lscpu"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "The diagnostics report lists the CPU cores."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Counts the CPU cores and sockets."
+
+[[tool]]
+name = "findmnt"
+description = "Lists the mounted file systems (util-linux)."
+executables = ["findmnt"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "The diagnostics report shows what is mounted over gpu_metrics."
+
+[[tool]]
+name = "free"
+description = "Shows how much memory is used and free (procps-ng)."
+executables = ["free"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "The diagnostics report shows the memory."
+
+[[tool]]
+name = "systemd-inhibit"
+description = "Holds off sleep or idle while a command runs (systemd)."
+executables = ["systemd-inhibit"]
+
+[[tool.source]]
+owner = "compute"
+need = "optional"
+usage = "Blocks sleep while a CU test runs."
+
+[[tool.source]]
+owner = "cores"
+need = "optional"
+usage = "Blocks sleep while a core test runs."
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "Blocks sleep while the GPU sweep runs."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Holds off idle and sleep during the stress test, when kde-inhibit is missing."
+
+[[tool]]
+name = "glmark2-wayland"
+rpm = "glmark2"
+description = "The Wayland build of the glmark2 OpenGL benchmark, for a desktop session without X11."
+executables = ["glmark2-wayland"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "Wayland GPU load generator for safe-point tests."
+
+[[tool]]
+name = "vkcube"
+rpm = "vulkan-tools"
+description = "The Vulkan spinning-cube demo from the Vulkan tools. A light GPU load and a quick check that Vulkan works."
+executables = ["vkcube"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "GPU load generator for safe-point tests."
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Fallback GPU load during stress tests."
+
+[[tool]]
+name = "glxgears"
+rpm = "glx-utils"
+description = "The OpenGL gears demo from the Mesa demos. A light GPU load."
+executables = ["glxgears"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "GPU load generator for safe-point tests."
+
+[[tool]]
+name = "stress"
+brew = "stress"
+rpm = "stress"
+description = "A simple CPU and memory load generator, older than stress-ng. Board Test uses it only when stress-ng is missing."
+executables = ["stress"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Fallback for CPU load during stress tests, when stress-ng is missing."
+
+[[tool]]
+name = "sensors"
+rpm = "lm_sensors"
+description = "Shows the hardware monitoring chips' readings: temperatures, fan speeds and voltages (lm_sensors)."
+executables = ["sensors"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Temperature sensor data; falls back to sysfs."
+
+[[tool]]
+name = "vulkaninfo"
+rpm = "vulkan-tools"
+description = "Prints the Vulkan drivers and the GPU's Vulkan features and limits (Vulkan tools)."
+executables = ["vulkaninfo"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Vulkan information used by graphics diagnostics."
+
+[[tool]]
+name = "glxinfo"
+rpm = "glx-utils"
+description = "Prints the OpenGL driver and its version and extensions (Mesa demos)."
+executables = ["glxinfo"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "OpenGL information used by graphics diagnostics."
+
+[[tool]]
+name = "vainfo"
+rpm = "libva-utils"
+description = "Lists the video formats the GPU can decode and encode through VA-API (libva-utils): what video playback, streaming and recording can hand to the GPU."
+executables = ["vainfo"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Video decode and encode check (H.264, HEVC, VP9, AV1)."
+
+[[tool]]
+name = "mangohud"
+rpm = "mangohud"
+description = "An in-game overlay for frame rate, frame times, temperatures and loads, which can also log them to a file."
+executables = ["mangohud"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Frame rate in the in-game monitor and the game logs it reads."
+
+[[tool]]
+name = "nvme"
+rpm = "nvme-cli"
+description = "NVMe management tool (nvme-cli): the drive's health log, temperatures, wear and error counts."
+executables = ["nvme"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "NVMe health and device information."
+
+[[tool]]
+name = "smartctl"
+brew = "smartmontools"
+rpm = "smartmontools"
+description = "Reads the SMART health data of disks and NVMe drives (smartmontools)."
+executables = ["smartctl"]
+root = true
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "SMART information for NVMe diagnostics."
+
+[[tool]]
+name = "fio"
+brew = "fio"
+rpm = "fio"
+description = "A flexible disk benchmark. Board Test uses it read-only, for the random 4K read speed of the system disk. It reads the raw partition, so it runs as root, and only a system-wide fio is used (rpm-ostree install fio)."
+executables = ["fio"]
+root = true
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Random 4K disk read test."
+
+[[tool]]
+name = "speedtest"
+brew = "speedtest-cli"
+rpm = "speedtest-cli"
+description = "An internet speed test: download, upload and latency. Board Test runs Ookla's speedtest CLI (command speedtest) when it is there, else speedtest-cli; one of the two is enough."
+executables = ["speedtest", "speedtest-cli"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Internet speed test: Ookla's speedtest, or speedtest-cli."
+
+[[tool]]
+name = "dig"
+description = "Asks DNS servers about a name (bind-utils)."
+executables = ["dig"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Checks that names resolve (DNS)."
+
+[[tool]]
+name = "coredumpctl"
+description = "Lists the crash dumps systemd keeps."
+executables = ["coredumpctl"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Lists the apps that crashed in the last 14 days."
+
+[[tool]]
+name = "getenforce"
+description = "Shows the SELinux mode (libselinux-utils)."
+executables = ["getenforce"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Reports the SELinux mode."
+
+[[tool]]
+name = "zramctl"
+description = "Shows the zram devices (util-linux)."
+executables = ["zramctl"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Reports the zram swap."
+
+[[tool]]
+name = "wpctl"
+description = "WirePlumber's command line for PipeWire."
+executables = ["wpctl"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Reports the default audio output."
+
+[[tool]]
+name = "kde-inhibit"
+description = "Holds off KDE's screen saver and sleep while a command runs (kde-cli-tools)."
+executables = ["kde-inhibit"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Holds off the screen saver and sleep during the stress test."
+
+[[tool]]
+name = "lsblk"
+description = "Lists the disks and their partitions (util-linux)."
+executables = ["lsblk"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Lists the disks and finds the system disk."
+
+[[tool]]
+name = "flatpak"
+description = "Installs and runs Flatpak apps."
+executables = ["flatpak"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Lists the Flatpak remotes and apps."
+
+[[tool.source]]
+owner = "portal"
+need = "optional"
+usage = "The YouTube, Discord, Twitch and weather shortcuts open Brave Browser's Flatpak."
+
+[[tool]]
+name = "podman"
+rpm = "podman"
+description = "Runs containers without a daemon."
+executables = ["podman"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Counts the distrobox containers."
+
+[[tool]]
+name = "kdeconnect-cli"
+description = "KDE Connect's command line. It sends files to a paired phone."
+executables = ["kdeconnect-cli"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Share sends the results to a phone paired with KDE Connect."
+
+[[tool]]
+name = "xdg-email"
+description = "Opens a new mail in the desktop's mail program (xdg-utils)."
+executables = ["xdg-email"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Share opens a new mail with the results attached."
+
+[[tool]]
+name = "Screenshot tool"
+description = "A command that saves a screenshot to a file. Board Test takes the first it finds of gamescopectl, Spectacle, grim and gnome-screenshot."
+executables = ["gamescopectl", "spectacle", "grim", "gnome-screenshot"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "One screenshot per game in the in-game monitor."
+
+[[tool]]
+name = "Steam"
+description = "Valve's game client. Bazzite starts it with bazzite-steam."
+executables = ["steam", "bazzite-steam"]
+
+[[tool.source]]
+owner = "board"
+need = "optional"
+usage = "Reports how Steam is installed."
+
+[[tool.source]]
+owner = "remoteplay"
+need = "optional"
+usage = "Add to Game Mode (a Steam shortcut per console) and the PS button setting close Steam with steam -shutdown and start it again with bazzite-steam."
+anchor = "using-it"
+
+[[tool.source]]
+owner = "shadps4"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "steam"
+
+[[tool.source]]
+owner = "rpcs3"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "steam"
+
+[[tool.source]]
+owner = "ppsspp"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "steam"
+
+[[tool.source]]
+owner = "pcsx2"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "steam"
+
+[[tool.source]]
+owner = "vita3k"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "steam"
+
+[[tool.source]]
+owner = "xenia"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "steam"
+
+[[tool.source]]
+owner = "datstation"
+need = "optional"
+usage = "Add to Steam and Remove from Steam (the app's own shortcut) close Steam with steam -shutdown and start it again with bazzite-steam."
+anchor = "install"
+
+[[tool.source]]
+owner = "core"
+need = "optional"
+usage = "Closes Steam for a change to its files, and starts it again."
+
+[[tool.source]]
+owner = "portal"
+need = "optional"
+usage = "The Steam shortcut."
+
+[[tool]]
+name = "SDL3"
+rpm = "SDL3"
+description = "The Simple DirectMedia Layer library (libSDL3): reads game controllers, with one button layout for every kind. Checked by its library file."
+executables = []
+locations = ["/usr/lib64/libSDL3.so.0", "/usr/lib/x86_64-linux-gnu/libSDL3.so.0", "/usr/lib/libSDL3.so.0"]
+probe = "path"
+
+[[tool.source]]
+owner = "remoteplay"
+need = "optional"
+usage = "Reads the controllers on the PS5 for the stream; without it the console sees a controller lying still."
+anchor = "what-you-need"
+
+[[tool]]
+name = "libva"
+rpm = "libva"
+description = "The VA-API library, the way to a GPU's video decoder. Part of Bazzite. Checked by its library files."
+executables = []
+locations = ["/usr/lib64/libva.so.2", "/usr/lib/x86_64-linux-gnu/libva.so.2", "/usr/lib/libva.so.2"]
+probe = "path"
+
+[[tool.source]]
+owner = "remoteplay"
+need = "required"
+usage = "The native core links it (with libva-drm) to use a GPU's video decoder where there is one. The core does not load without the library."
+anchor = "install"
+
+[[tool]]
+name = "Rust"
+brew = "rust"
+rpm = "cargo"
+description = "The Rust compiler and its build tool cargo (rustup puts them in ~/.cargo/bin). Checked by cargo."
+executables = ["cargo"]
+locations = ["~/.cargo/bin/cargo"]
+
+[[tool.source]]
+owner = "remoteplay"
+need = "optional"
+usage = "Only to build the native core when the app is installed from a checkout of the repository; a release brings it built."
+anchor = "install"
+
+[[tool]]
+name = "FUSE 2"
+rpm = "fuse-libs"
+description = "The FUSE 2 library (libfuse.so.2), with which an AppImage mounts itself. Checked by its library file."
+executables = []
+locations = ["/usr/lib64/libfuse.so.2", "/usr/lib/x86_64-linux-gnu/libfuse.so.2", "/usr/lib/libfuse.so.2"]
+probe = "path"
+
+[[tool.source]]
+owner = "shadps4"
+need = "optional"
+usage = "shadPS4 is an AppImage; without the library it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool]]
+name = "fusermount"
+rpm = "fuse3"
+description = "FUSE's mount helper (fusermount3, or fusermount for FUSE 2), with which an AppImage that brings its own FUSE library mounts itself."
+executables = ["fusermount3", "fusermount"]
+
+[[tool.source]]
+owner = "rpcs3"
+need = "optional"
+usage = "RPCS3 is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "ppsspp"
+need = "optional"
+usage = "PPSSPP is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "pcsx2"
+need = "optional"
+usage = "PCSX2 is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "vita3k"
+need = "optional"
+usage = "Vita3K is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "xenia"
+need = "optional"
+usage = "Xenia is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool]]
+name = "Terminal"
+description = "A terminal emulator. The apps use the one $TERMINAL names when it is set. Else they take the first they find, Konsole first."
+executables = ["konsole", "gnome-terminal", "ptyxis", "xfce4-terminal", "foot", "alacritty", "kitty", "x-terminal-emulator", "xterm"]
+
+[[tool.source]]
+owner = "core"
+need = "optional"
+usage = "Runs a command in a terminal window when an app asks for one."
+
+[[tool.source]]
+owner = "portal"
+need = "required"
+usage = "Runs the apps' installers in a terminal window."
+
+[[tool]]
+name = "gdbus"
+description = "Calls D-Bus methods from the command line (GLib)."
+executables = ["gdbus"]
+
+[[tool.source]]
+owner = "core"
+need = "optional"
+usage = "Shows a saved file selected in the file manager."
+
+[[tool]]
+name = "pactl"
+description = "PulseAudio's command line for sound streams and devices."
+executables = ["pactl"]
+
+[[tool.source]]
+owner = "core"
+need = "optional"
+usage = "Unmutes an app's sound streams."
+
+[[tool]]
+name = "xdg-settings"
+description = "Reads the desktop's default programs (xdg-utils)."
+executables = ["xdg-settings"]
+
+[[tool.source]]
+owner = "portal"
+need = "optional"
+usage = "Finds the default browser's window for the GitHub shortcut."
+
+[[tool]]
+name = "System Settings"
+description = "The desktop's settings. The portal opens KDE's System Settings, else the settings module alone, or GNOME's Settings."
+executables = ["systemsettings", "kcmshell6", "gnome-control-center"]
+
+[[tool.source]]
+owner = "portal"
+need = "optional"
+usage = "The Bluetooth, network, sound and display shortcuts."
