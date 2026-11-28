@@ -241,8 +241,8 @@ launch = [["Open", "~/.local/bin/ps5-fan-controller"]]
 [apps.compute]
 name = "PS5 CU Unlock"
 summary = "Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock."
-tag = "ps5-compute-v1.1.0"
-sha256 = "9eb66387115a041e4207f677ba3522f019612b70665051acceb7469409c94dca"
+tag = "ps5-compute-v1.2.0"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """

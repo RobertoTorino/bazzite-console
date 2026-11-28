@@ -5,7 +5,7 @@ installs a tested CU unlock. The bisecting is the script's own, exactly as if ty
 
 APP_NAME = "PS5 CU Unlock"
 APP_ID = "ps5-cu-bisect-gui"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 from pathlib import Path
 

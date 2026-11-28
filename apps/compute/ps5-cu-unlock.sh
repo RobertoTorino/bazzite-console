@@ -34,7 +34,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="1.1.0"
+VERSION="1.2.0"
 SELF=$(readlink -f -- "$0")
 CONF_DIR=/etc/ps5-cu-bisect
 CONF_FILE="$CONF_DIR/masks"
