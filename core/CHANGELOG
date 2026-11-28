@@ -1,3 +1,7 @@
+Changelog: 28-11-2026 16:24:23
+
+Version 4.10.0.
+
 Changelog: 28-11-2026 15:53:09
 
 Fixed. gamelog.sh names bash as its shell for shellcheck, so the shell check in CI passes.

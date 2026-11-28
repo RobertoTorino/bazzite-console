@@ -1,3 +1,7 @@
+Changelog: 28-11-2026 16:24:23
+
+Release 1.10.0.
+
 Changelog: 28-11-2026 15:54:35
 
 Fixed. The run wrapper points shellcheck at core's gamelog.sh from the repository's root, so the shell check in CI reads it.

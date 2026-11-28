@@ -4,7 +4,7 @@ memory, fan, temperatures, network and disk."""
 
 APP_NAME = "PS5 Turing Screen"
 APP_ID = "ps5-turing-screen"
-__version__ = "0.4.2"
+__version__ = "0.5.0"
 
 from pathlib import Path
 
