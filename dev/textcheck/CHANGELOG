@@ -1,3 +1,8 @@
+Changelog: 28-11-2026 13:16:25
+
+Fixed. The app registers tools/text_check.py in sys.modules before it runs it, as Nexus Marketing does with its tools.
+On Python 3.12, as CI runs it, the tool's dataclasses failed without it, and two tests of tests/test_results.py failed.
+
 Changelog: 28-11-2026 12:11:12
 
 Added. Nexus Text Check for PS5, the twin of Nexus Text Check for BC-250, a development app around the suite's text check, tools/text_check.py (owner, 28-11-2026: "Text check alone, build it"). Check all checks the whole suite, and Check… a file or folder of the checkout. The tool runs as a process of its own, so a long check never holds up the window. The table lists the files worst first, in the tool's order, with their problems to fix, per 1000 words, advice, and the counts of the rules, LanguageTool and Vale. A selected file shows each problem with its line, check, kind, text and suggestion. The app reads them from the tool's --json file and checks nothing itself. Start and Stop run the tool's shared LanguageTool server, and the window shows whether it runs. It says when podman is missing, when LanguageTool is not downloaded yet (about 250 MB), and why the tool stopped. Closing the window during a check ends the tool as Ctrl+C does, so it stops the LanguageTool it started.

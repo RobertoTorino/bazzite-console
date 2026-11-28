@@ -10,6 +10,7 @@ import importlib.util
 import json
 import re
 import shutil
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -116,6 +117,7 @@ def load_tool(path: Path):
     """tools/text_check.py as a module, for its names (the image, the server) and its podman calls."""
     spec = importlib.util.spec_from_file_location("text_check", path)
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module             # dataclasses look their module up while the class is built
     spec.loader.exec_module(module)
     return module
 
