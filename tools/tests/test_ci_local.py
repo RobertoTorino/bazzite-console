@@ -46,6 +46,27 @@ def test_a_job_that_compiles_runs_alone():
     assert not ci_local.Job("docs", {"steps": [{"uses": "actions/checkout@v7"}, {"run": "mkdocs build"}]}).compiles
 
 
+def test_the_installer_tests_run_in_a_copy_of_their_own(tmp_path, monkeypatch):
+    """The installers copy an app's folder with tar, which stopped when the app's tests wrote in it beside them
+    (xenia.sh, 28-11-2026). The installers job runs in a copy no other job writes in, as on GitHub."""
+    jobs = {j.name: j for j in ci_local.load_jobs(CI)}
+    assert [name for name, job in jobs.items() if job.own_copy] == ["installers"]
+    work = tmp_path / "ci-local-work" / "suite"
+    (work / "apps" / "xenia").mkdir(parents=True)
+    monkeypatch.setattr(ci_local, "WORK", work)
+    monkeypatch.setattr(ci_local, "CACHE", tmp_path / "cache")
+    copy = ci_local.own_copy(jobs["installers"])
+    assert copy == tmp_path / "ci-local-work" / "suite-own" / "installers" / "suite"
+    assert (copy / "apps" / "xenia").is_dir()
+    spec = {"runs-on": "ubuntu-latest", "steps": [{"run": "pwd > where && touch apps/xenia/.pytest_cache"}]}
+    assert ci_local.run_job(ci_local.Job("pytest/apps/xenia", spec), "").ok             # another job, in WORK
+    assert ci_local.run_job(ci_local.Job("installers", spec), "", copy).ok
+    assert (work / "where").read_text(encoding="utf-8").strip() == str(work)
+    assert (copy / "where").read_text(encoding="utf-8").strip() == str(copy)
+    assert (work / "apps" / "xenia" / ".pytest_cache").exists()
+    assert not (copy / "where").samefile(work / "where")
+
+
 def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
     """ci.yml's pytest matrix is the plan job's output (tools/ci_matrix.py, fromJSON): the plan job's steps run
     here and their $GITHUB_OUTPUT lines give the entries; the plan job itself is a job too."""

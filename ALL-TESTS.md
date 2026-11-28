@@ -4,7 +4,7 @@
 
 Every test of the suite, by test folder: the test file, the test, how many cases a parametrized test runs, the time it took when that was 0.1 s or more, and what it checks (its docstring's first sentence, else its name). `tools/all_tests.py` writes this page from the tests, and CI fails when it is not the list of the tests as they are. The cases and the times are of one local pytest run of each folder (`tools/all_tests.py --run`), without the container and package setup each CI job has first; a test added since has none yet.
 
-3444 test functions (3832 cases counting the parametrized ones) in 40 test folders, and 41 installer tests.
+3445 test functions (3833 cases counting the parametrized ones) in 40 test folders, and 41 installer tests.
 
 ## Summary
 
@@ -49,8 +49,8 @@ Every test of the suite, by test folder: the test file, the test, how many cases
 | [dev/studio](#devstudio) | 6 | 65 |  |
 | [dev/text](#devtext) | 5 | 44 |  |
 | [portal](#portal) | 18 | 237 | 30.2 s |
-| [tools](#tools) | 43 | 250 | 10.2 s |
-| **All** | | **3444** | **153 s** |
+| [tools](#tools) | 43 | 251 | 10.2 s |
+| **All** | | **3445** | **153 s** |
 
 The pytest runs together take the time above. The rest of a local CI run is the setup of each job (a container, Python 3.12 and the job's own packages, once per test folder) and the jobs that are not pytest: the installer tests, the shell checks (shellcheck), the native build (FFmpeg) and the wiki. A push runs the jobs of what it changed, not all of them.
 
@@ -3571,7 +3571,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 
 ## tools
 
-250 tests in 43 files, 10.2 s in a local run.
+251 tests in 43 files, 10.2 s in a local run.
 
 | File | Test | Cases | Time | What it checks |
 |---|---|---|---|---|
@@ -3654,6 +3654,7 @@ The pytest runs together take the time above. The rest of a local CI run is the 
 | `test_ci_local.py` | `test_every_job_of_ci_yml_and_every_matrix_entry` |  | 0.1 s | Every job of ci yml and every matrix entry. |
 | `test_ci_local.py` | `test_the_free_memory_limits_the_jobs_at_a_time` |  |  | Half the cores, fewer when the memory is short, never under two; a system that names no memory gets half. |
 | `test_ci_local.py` | `test_a_job_that_compiles_runs_alone` |  |  | The native job starts a compiler per core; beside five other jobs one of them crashed for lack of memory. |
+| `test_ci_local.py` | `test_the_installer_tests_run_in_a_copy_of_their_own` |  |  | The installers copy an app's folder with tar, which stopped when the app's tests wrote in it beside them (xenia.sh, 28-11-2026). |
 | `test_ci_local.py` | `test_a_matrix_from_a_plan_job_is_read_by_running_it` |  |  | ci.yml's pytest matrix is the plan job's output (tools/ci_matrix.py, fromJSON): the plan job's steps run here and their $GITHUB_OUTPUT lines give the entries; the plan job itself is a job too. |
 | `test_ci_local.py` | `test_a_job_the_plan_leaves_out_is_not_run_and_its_outputs_reach_the_steps` |  |  | ci.yml's plan job names what a push runs (tools/ci_matrix.py plan): a job whose if compares one of its outputs is skipped when it is false, as on GitHub, and a step reads an output as its text. |
 | `test_ci_local.py` | `test_expressions_and_selection` |  | 0.1 s | Expressions and selection. |

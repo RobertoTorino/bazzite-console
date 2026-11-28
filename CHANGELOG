@@ -1,3 +1,10 @@
+Changelog: 28-11-2026 09:58:27
+
+Fixed. The local CI (`tools/ci-local.sh`) runs the installers job in a copy of the checkout of its own. In the
+shared copy of the twin suite bc250-bazzite, xenia.sh failed once with "tar: .: file changed as we read it" while
+the xenia tests ran beside it. The installer's copy of the app folder stopped, so core was not bundled. On GitHub
+each job has its own checkout, so only the local run was affected. The Development chapter of the wiki says so.
+
 Changelog: 28-11-2026 00:10:28
 
 Added. KytyPS5 Manager is a new app in the suite, for PS5 games with the KytyPS5-Native emulator. It is listed in

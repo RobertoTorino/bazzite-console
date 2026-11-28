@@ -73,6 +73,14 @@ class Job:
         """A job that builds with cargo: a compiler per core, each with its own memory. It runs alone."""
         return any(re.search(r"\b(cargo|maturin)\b", str(step.get("run", ""))) for step in self.spec.get("steps", []))
 
+    @property
+    def own_copy(self) -> bool:
+        """A job that runs the installer tests: it gets a copy of its own, as on GitHub each job has its own
+        checkout. The installers copy an app's folder with tar, which stops when another job writes in it (owner,
+        28-11-2026: xenia.sh's tar said ". file changed as we read it" while the xenia tests ran beside it)."""
+        return any(re.search(r'\bbash\s+"?tools/installer-tests/', str(step.get("run", "")))
+                   for step in self.spec.get("steps", []))
+
 
 @dataclass
 class Result:
@@ -273,8 +281,10 @@ def cache_hit(folder: Path, key: str) -> bool:
     return stamp.is_file() and stamp.read_text(encoding="utf-8").strip() == key
 
 
-def run_job(job: Job, base: str) -> Result:
+def run_job(job: Job, base: str, root: Path | None = None) -> Result:
+    """The job's steps, run in *root*: the copy WORK when not given."""
     started = time.monotonic()
+    root = root or WORK
     steps = job.spec.get("steps", [])
     if not job.runs_here:
         return Result(job.name, True, 0, notes=[f"not run here: needs {job.spec.get('runs-on')}"], skipped=True)
@@ -303,10 +313,10 @@ def run_job(job: Job, base: str) -> Result:
             run = expand(step["run"], job, base)
             if "apt-get" in run:
                 continue                            # the image has these packages
-            workdir = WORK / expand(step.get("working-directory") or defaults.get("working-directory", "."), job,
+            workdir = root / expand(step.get("working-directory") or defaults.get("working-directory", "."), job,
                                     base)
             step_env = dict(env, **{k: expand(v, job, base) for k, v in (step.get("env") or {}).items()})
-            log.write(f"\n===== {number}. {label} (in {workdir.relative_to(WORK)})\n{run}\n")
+            log.write(f"\n===== {number}. {label} (in {workdir.relative_to(root)})\n{run}\n")
             log.flush()
             proc = subprocess.run([*SHELL, run], cwd=workdir, env=step_env, stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT, text=True, errors="replace")
@@ -324,14 +334,29 @@ def run_job(job: Job, base: str) -> Result:
 
 def prepare_copy() -> str:
     """The checkout copied to WORK with every change staged, as the commit would have it; returns origin/main."""
-    if WORK.exists():
-        shutil.rmtree(WORK)
+    for old in (WORK, own_copies()):
+        if old.exists():
+            shutil.rmtree(old)
     WORK.parent.mkdir(parents=True, exist_ok=True)
     excludes = [f"--exclude={pattern}" for pattern in COPY_EXCLUDES]
     subprocess.run(["rsync", "-a", "--delete", *excludes, f"{SRC}/", f"{WORK}/"], check=True)
     subprocess.run(["git", "add", "-A"], cwd=WORK, check=True)
     base = subprocess.run(["git", "rev-parse", "origin/main"], cwd=WORK, capture_output=True, text=True)
     return base.stdout.strip() if base.returncode == 0 else ""
+
+
+def own_copies() -> Path:
+    """The folder of the copies of the jobs that get one of their own, beside WORK."""
+    return WORK.with_name(WORK.name + "-own")
+
+
+def own_copy(job: Job) -> Path:
+    """A copy of WORK for *job* alone (Job.own_copy), made before any job runs, so no job's files are in it. It
+    keeps the folder's name and the git index with every change staged."""
+    copy = own_copies() / job.name.replace("/", "_") / WORK.name
+    copy.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["rsync", "-a", "--delete", f"{WORK}/", f"{copy}/"], check=True)
+    return copy
 
 
 def selected(jobs: list[Job], wanted: list[str]) -> list[Job]:
@@ -386,9 +411,10 @@ def main(argv: list[str]) -> int:
     # A job that compiles runs after the others, alone: beside them its compilers ran the machine short of memory
     # and one crashed (owner, 20-11-2026: rustc's SIGSEGV in a crate that builds when the job runs alone).
     light, heavy = [j for j in jobs if not j.compiles], [j for j in jobs if j.compiles]
+    roots = {j.name: own_copy(j) for j in jobs if j.own_copy and j.runs_here}
     with concurrent.futures.ThreadPoolExecutor(workers) as pool:
-        for result in itertools.chain(pool.map(lambda j: run_job(j, base), light),
-                                      (run_job(j, base) for j in heavy)):
+        for result in itertools.chain(pool.map(lambda j: run_job(j, base, roots.get(j.name)), light),
+                                      (run_job(j, base, roots.get(j.name)) for j in heavy)):
             results.append(result)
             mark = "skip" if result.skipped else "ok  " if result.ok else "FAIL"
             print(f"  {mark} {result.job:45s} {result.seconds:6.1f} s"
